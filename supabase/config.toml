@@ -1,0 +1,2 @@
+[functions.coach]
+verify_jwt = true
