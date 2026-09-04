@@ -69,7 +69,7 @@ function searchVideos(tools: unknown) {
 }
 
 export default {
-  fetch: withSupabase({ auth: 'user' }, async (req, ctx) => {
+  fetch: withSupabase({ auth: 'user' }, async (req) => {
     if (req.method !== 'POST') return Response.json({ error: 'POST required' }, { status: 405 })
 
     const apiKey = Deno.env.get('GROQ_API_KEY')
@@ -87,7 +87,7 @@ export default {
       model,
       messages: [
         { role: 'system', content: SYSTEM + (search ? '\nThe user wants a demonstration. Use web search and prefer a clear YouTube exercise demonstration. Do not claim you watched a video.' : '') },
-        { role: 'user', content: `AUTHENTICATED USER: ${ctx.userClaims?.sub || 'user'}\nACTIVE APP CONTEXT:\n${JSON.stringify(context)}\n\nUSER MESSAGE:\n${message}` },
+        { role: 'user', content: `ACTIVE APP CONTEXT:\n${JSON.stringify(context)}\n\nUSER MESSAGE:\n${message}` },
       ],
       response_format: { type: 'json_object' },
       temperature: 0.2,
