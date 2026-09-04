@@ -195,11 +195,13 @@
     const arr=messages();arr.push({role:'user',text:message,ts:Date.now()});uTrim(arr);saveData();renderMessages();input.value='';send.disabled=true;status.textContent='Coach is thinking…';
     try{
       const r=await fetch('/api/coach',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,context:coachContext()})});
+      const contentType=r.headers.get('content-type')||'';
+      if(!contentType.includes('application/json'))throw new Error('Coach returned an invalid response');
       const out=await r.json();if(!r.ok)throw new Error(out.error||'Coach request failed');
       arr.push({role:'assistant',text:out.reply||'No response.',actions:out.actions||[],videos:out.videos||[],followUps:out.followUps||[],model:out.model,ts:Date.now()});uTrim(arr);saveData();renderMessages();
       if(out.followUps?.length)renderFollowUps(out.followUps);
       status.textContent='';
-    }catch(err){arr.push({role:'assistant',text:`Coach is unavailable: ${err.message}`,ts:Date.now()});uTrim(arr);saveData();renderMessages();status.textContent='';}
+    }catch(err){arr.push({role:'assistant',text:`Coach is unavailable: ${err.message}. Please try again.`,ts:Date.now()});uTrim(arr);saveData();renderMessages();status.textContent='';}
     finally{send.disabled=false;input.focus()}
   }
 
