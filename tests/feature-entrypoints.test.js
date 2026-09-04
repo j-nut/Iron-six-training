@@ -2,12 +2,12 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 
 const required = [
-  'exercise-guide.js?v=6',
-  'exercise-visuals.js?v=6',
-  'local-ai-fallback.js?v=6',
-  'coach.js?v=6',
-  'cloud-sync.js?v=6',
-  'cloud-history-sync.js?v=6'
+  'exercise-guide.js?v=7',
+  'exercise-visuals.js?v=7',
+  'local-ai-fallback.js?v=7',
+  'coach.js?v=7',
+  'cloud-sync.js?v=7',
+  'cloud-history-sync.js?v=7'
 ];
 
 for (const page of ['index.html', 'live.html']) {
@@ -23,3 +23,8 @@ for (const page of ['index.html', 'live.html']) {
 
 const ui = fs.readFileSync('ui3.js', 'utf8');
 assert(!ui.includes('loadIronSixScript'), 'feature scripts must not depend on the old dynamic loader');
+
+const visuals = fs.readFileSync('exercise-visuals.js', 'utf8');
+const coach = fs.readFileSync('coach.js', 'utf8');
+assert(visuals.includes('window.__ironSixGuideFocus=true'), 'exercise links must request guide-first focus');
+assert(coach.includes("guide.scrollIntoView({behavior:'smooth',block:'start'})"), 'coach rendering must preserve guide-first focus');
