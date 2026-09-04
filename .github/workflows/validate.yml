@@ -45,3 +45,5 @@ jobs:
           if missing: raise SystemExit('Missing files: '+', '.join(missing))
           print('All required files present')
           PY
+      - name: Verify Coach fallback handles static-host responses
+        run: node tests/coach-fallback.test.js
