@@ -128,23 +128,28 @@
       return new Response(JSON.stringify(supabaseOutput),{status:200,headers:{'Content-Type':'application/json','X-Iron-Six-Coach':'supabase'}});
     }
 
-    // Backward-compatible Vercel route if it happens to be configured.
+    // Backward-compatible Vercel route if it happens to be configured. Static
+    // hosts commonly answer POST /api/coach with 400, 403, 405 or an HTML page;
+    // none of those responses should escape into the Coach UI.
+    let cloudTimer;
     try {
       const controller=new AbortController();
-      const timer=setTimeout(()=>controller.abort(),3000);
+      cloudTimer=setTimeout(()=>controller.abort(),3000);
       const cloudResponse = await nativeFetch(input,{...(init||{}),body:JSON.stringify(payload),signal:controller.signal});
-      clearTimeout(timer);
       if (cloudResponse.ok) return cloudResponse;
-      if (![404, 500, 502, 503].includes(cloudResponse.status)) return cloudResponse;
     } catch (_) {}
+    finally { if(cloudTimer)clearTimeout(cloudTimer); }
 
     let output;
     // Common coaching questions do not need a model download.
     if(/warm.?up|what should i do next|what next|next exercise|deload|too tired|fatigue|weight|load|too heavy|too light/.test(String(payload?.message||'').toLowerCase())){
       output=deterministicFallback(payload);output.model='Built-in adaptive coach';
     }else{
-      try { output = await localCoach(payload); }
-      catch (_) { output = deterministicFallback(payload); output.model = 'Built-in adaptive coach'; }
+      // A first-run WebLLM model download can be hundreds of MB and makes chat
+      // appear frozen on phones. Keep the session responsive when cloud AI is
+      // unavailable; authenticated users still use the deployed cloud model.
+      output = deterministicFallback(payload);
+      output.model = 'Built-in adaptive coach';
     }
 
     return new Response(JSON.stringify(output), {status:200,headers:{'Content-Type':'application/json','X-Iron-Six-Coach':'local'}});
