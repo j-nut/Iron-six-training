@@ -47,3 +47,5 @@ jobs:
           PY
       - name: Verify Coach fallback handles static-host responses
         run: node tests/coach-fallback.test.js
+      - name: Verify optional features load from every entrypoint
+        run: node tests/feature-entrypoints.test.js
