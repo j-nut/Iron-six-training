@@ -16,14 +16,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Syntax-check JavaScript
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Syntax-check browser and Vercel JavaScript
         run: |
           set -e
           for f in *.js api/*.js; do
             [ -f "$f" ] || continue
             node --check "$f"
           done
-      - name: Verify referenced browser scripts exist
+      - name: Type-check Supabase Edge Function
+        run: deno check supabase/functions/coach/index.ts
+      - name: Verify required app modules exist
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -31,7 +36,9 @@ jobs:
             'core.js','workout-lower.js','workout-shoulders.js','workout-chest.js',
             'workout-back.js','workout-lower-hypertrophy.js','workout-upper.js',
             'workout-dispatch.js','engine.js','ui1.js','ui2.js','ui3.js',
-            'exercise-guide.js','exercise-visuals.js','local-ai-fallback.js','coach.js','cloud-sync.js'
+            'exercise-guide.js','exercise-visuals.js','local-ai-fallback.js','coach.js',
+            'cloud-sync.js','cloud-history-sync.js','api/config.js',
+            'supabase/schema.sql','supabase/config.toml','supabase/functions/coach/index.ts'
           ]
           missing=[p for p in required if not Path(p).exists()]
           if missing: raise SystemExit('Missing files: '+', '.join(missing))
