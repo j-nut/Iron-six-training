@@ -16,6 +16,17 @@
     return { reply: raw || 'I could not generate a local coaching response.', actions: [], videos: [], followUps: [] };
   }
 
+  function exerciseMatch(payload) {
+    const g=window.IronSixExerciseGuide;
+    if(!g)return null;
+    return g.findInContext(payload?.message||'',payload?.context||{}) || window.__ironSixSelectedExercise || null;
+  }
+
+  function wantsExerciseTeaching(payload) {
+    const message=String(payload?.message||'').toLowerCase();
+    return !!exerciseMatch(payload) && /teach|how (do|to)|show me|demo|demonstrat|form|technique|what is|explain.*exercise/.test(message);
+  }
+
   function deterministicFallback(payload) {
     const message = String(payload?.message || '').toLowerCase();
     const c = payload?.context || {};
@@ -23,24 +34,30 @@
     const today = Array.isArray(c.today) ? c.today : [];
     const first = workout[0];
     const completed = today.filter(s => s.done).length;
+    const match=exerciseMatch(payload);
 
-    if (/warm.?up/.test(message) && first) {
-      const s = first.suggested?.weight || first.suggested?.display || '';
-      return { reply: `For ${first.name}, ramp up gradually before your work sets. A simple sequence is an easy technique set, then roughly 50%, 70%, and 85% of your planned working load with progressively fewer reps. Your current working suggestion is ${s || 'shown in the workout'}. Keep warm-ups easy; they should prepare you, not fatigue you.`, actions: [], videos: [], followUps: ['Why is this weight suggested?'] };
+    if(match && wantsExerciseTeaching(payload) && window.IronSixExerciseGuide){
+      return window.IronSixExerciseGuide.teachingResponse(match);
+    }
+    if (/warm.?up/.test(message) && (match||first)) {
+      const target=match||first;
+      const s = target.suggested?.weight || target.suggested?.display || '';
+      return { reply: `For ${target.name}, ramp up gradually before your work sets. Start with an easy technique set, then use roughly 50%, 70%, and 85% of the planned working load with progressively fewer reps. Your current working suggestion is ${s || 'shown in the workout'}. Warm-ups should prepare you, not fatigue you.`, actions: [], videos: [], followUps: [`Teach me ${target.name}`] };
     }
     if (/what should i do next|what next|next exercise/.test(message) && first) {
       const current = workout[Math.min(workout.length - 1, Math.floor(completed / Math.max(1, Number(first.sets || 1))))] || first;
-      return { reply: `Continue with ${current.name}: ${current.prescription || 'use the prescribed sets and reps'}. Keep the target RIR from today’s plan and log the actual weight, reps, and RIR so Iron Six can adjust your next recommendation.`, actions: [], videos: [], followUps: ['Are my suggested weights right?'] };
+      return { reply: `Continue with ${current.name}: ${current.prescription || 'use the prescribed sets and reps'}. Keep the target RIR from today’s plan and log the actual weight, reps, and RIR so Iron Six can adjust your next recommendation.`, actions: [], videos: [], followUps: [`Teach me ${current.name}`,'Are my suggested weights right?'] };
     }
     if (/deload|too tired|fatigue/.test(message)) {
       const energy = Number(c.readiness?.energy || 4), soreness = Number(c.readiness?.soreness || 1);
       const highFatigue = energy <= 2 || soreness >= 4;
-      return { reply: highFatigue ? 'Your readiness is currently showing enough fatigue that I would reduce today’s accessory volume and keep several reps in reserve. One low-readiness day alone does not automatically require a full deload; repeated performance drops across several sessions would be a stronger signal.' : 'Your current readiness does not, by itself, suggest a deload. I would look for repeated performance regression, unusually high soreness/fatigue, or several sessions where normal loads feel much harder than expected before scheduling one.', actions: [], videos: [], followUps: ['What should I do next?'] };
+      return { reply: highFatigue ? 'Your readiness is showing enough fatigue that I would reduce today’s accessory volume and keep several reps in reserve. One low-readiness day alone does not automatically require a full deload; repeated performance drops across several sessions would be a stronger signal.' : 'Your current readiness does not, by itself, suggest a deload. Look for repeated performance regression, unusually high soreness/fatigue, or several sessions where normal loads feel much harder than expected before scheduling one.', actions: [], videos: [], followUps: ['What should I do next?'] };
     }
     if (/weight|load|too heavy|too light/.test(message)) {
-      return { reply: 'Use the suggested load as a starting target, but your actual set performance wins. If you exceed the top of the rep range with about 2+ reps still in reserve, increase next time. If you miss the rep range or unexpectedly hit 0 RIR, hold or reduce the load. Iron Six saves those results and updates future suggestions.', actions: [], videos: [], followUps: ['Give me warm-up sets'] };
+      const target=match?.name?` for ${match.name}`:'';
+      return { reply: `Use the suggested load${target} as a starting target, but your actual set performance wins. If you exceed the top of the rep range with about 2+ reps still in reserve, increase next time. If you miss the rep range or unexpectedly hit 0 RIR, hold or reduce the load. Iron Six saves those results and updates future suggestions.`, actions: [], videos: [], followUps: match?.name?[`Teach me ${match.name}`]:['Give me warm-up sets'] };
     }
-    return { reply: 'The cloud coach is not configured, so I am using the on-device fallback. I can still use your current workout, equipment, readiness, logged sets, and recent performance to help with exercise choices, loading, warm-ups, fatigue, and workout length.', actions: [], videos: [], followUps: ['What should I do next?', 'Are my suggested weights right?'] };
+    return { reply: 'I can still coach this session even when the cloud model is unavailable. I can use your current workout, equipment, readiness, logged sets, recent performance, and the built-in exercise guide for form, loading, warm-ups, fatigue, and workout changes.', actions: [], videos: [], followUps: ['What should I do next?', 'Are my suggested weights right?'] };
   }
 
   async function getEngine() {
@@ -49,9 +66,7 @@
       enginePromise = (async () => {
         const webllm = await import('https://esm.run/@mlc-ai/web-llm@0.2.84');
         return webllm.CreateMLCEngine(MODEL, {
-          initProgressCallback: (p) => {
-            window.dispatchEvent(new CustomEvent('iron-six-local-ai-progress', { detail: p }));
-          }
+          initProgressCallback: (p) => window.dispatchEvent(new CustomEvent('iron-six-local-ai-progress', { detail: p }))
         });
       })().catch(err => { enginePromise = null; throw err; });
     }
@@ -64,14 +79,15 @@
     const allowed = Array.isArray(context.allowedSwaps) ? context.allowedSwaps : [];
     const system = `You are Iron Six Coach, an evidence-informed strength and hypertrophy assistant running locally on the user's device. Be concise. Use actual logged weight, reps and RIR before demographic estimates. Respect available equipment. Do not diagnose injuries. If sharp pain or concerning symptoms are reported, tell the user to stop the provoking movement and seek appropriate medical evaluation.\n\nReturn ONLY JSON: {"reply":"...","actions":[],"videos":[],"followUps":[]}. You may add a swap_exercise action only by copying an EXACT replacement name from allowedSwaps. You may add set_duration from 10-120 minutes. No markdown.`;
     const prompt = `APP CONTEXT:\n${JSON.stringify({ ...context, allowedSwaps: allowed }).slice(0, 14000)}\n\nUSER:\n${String(payload?.message || '').slice(0, 1400)}`;
-    const result = await engine.chat.completions.create({
-      messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }],
-      temperature: 0.2,
-      max_tokens: 650
-    });
+    const result = await engine.chat.completions.create({messages:[{role:'system',content:system},{role:'user',content:prompt}],temperature:0.2,max_tokens:650});
     const out = safeJson(result?.choices?.[0]?.message?.content);
     out.actions = Array.isArray(out.actions) ? out.actions.slice(0, 2) : [];
-    out.videos = [];
+    out.videos = Array.isArray(out.videos) ? out.videos.slice(0,2) : [];
+    const match=exerciseMatch(payload);
+    if(match && /video|demo|show me|how (do|to)|form/.test(String(payload?.message||'').toLowerCase()) && window.IronSixExerciseGuide){
+      const v=window.IronSixExerciseGuide.guideFor(match).videoUrl;
+      if(v&&!out.videos.some(x=>x.url===v))out.videos.push({title:`Find a ${match.name} video demonstration`,url:v,source:'YouTube'});
+    }
     out.followUps = Array.isArray(out.followUps) ? out.followUps.slice(0, 3) : [];
     out.model = 'On-device Qwen 0.5B';
     return out;
@@ -82,22 +98,34 @@
     const isCoach = url === '/api/coach' && String(init?.method || 'GET').toUpperCase() === 'POST';
     if (!isCoach) return nativeFetch(input, init);
 
-    let cloudResponse = null;
+    let payload = {};
+    try { payload = JSON.parse(init?.body || '{}'); } catch (_) {}
+
+    // Exercise teaching is intentionally instant and deterministic. AI handles follow-ups.
+    if(wantsExerciseTeaching(payload) && window.IronSixExerciseGuide){
+      const output=window.IronSixExerciseGuide.teachingResponse(exerciseMatch(payload));
+      return new Response(JSON.stringify(output),{status:200,headers:{'Content-Type':'application/json','X-Iron-Six-Coach':'exercise-guide'}});
+    }
+
+    // Try the cloud coach, but never let an unavailable route make the UI feel dead.
     try {
-      cloudResponse = await nativeFetch(input, init);
+      const controller=new AbortController();
+      const timer=setTimeout(()=>controller.abort(),3500);
+      const cloudResponse = await nativeFetch(input,{...(init||{}),signal:controller.signal});
+      clearTimeout(timer);
       if (cloudResponse.ok) return cloudResponse;
       if (![404, 500, 502, 503].includes(cloudResponse.status)) return cloudResponse;
     } catch (_) {}
 
-    let payload = {};
-    try { payload = JSON.parse(init?.body || '{}'); } catch (_) {}
     let output;
-    try { output = await localCoach(payload); }
-    catch (_) { output = deterministicFallback(payload); output.model = 'Built-in offline coach'; }
+    // Common coaching questions do not need a model download.
+    if(/warm.?up|what should i do next|what next|next exercise|deload|too tired|fatigue|weight|load|too heavy|too light/.test(String(payload?.message||'').toLowerCase())){
+      output=deterministicFallback(payload);output.model='Built-in adaptive coach';
+    }else{
+      try { output = await localCoach(payload); }
+      catch (_) { output = deterministicFallback(payload); output.model = 'Built-in adaptive coach'; }
+    }
 
-    return new Response(JSON.stringify(output), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json', 'X-Iron-Six-Coach': 'local' }
-    });
+    return new Response(JSON.stringify(output), {status:200,headers:{'Content-Type':'application/json','X-Iron-Six-Coach':'local'}});
   };
 })();
