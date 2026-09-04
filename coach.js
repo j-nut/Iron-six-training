@@ -158,7 +158,9 @@
     if(!arr.length){chat.innerHTML='<div class="coach-msg assistant">I can see today’s workout and your profile. Ask me to explain a suggested weight, swap an exercise, build warm-up sets, check your progress, or find a demo video.</div>';return;}
     chat.innerHTML='';
     arr.slice(-20).forEach(m=>chat.appendChild(renderMessage(m)));
-    chat.lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'});
+    const guide=document.getElementById('exerciseGuidePanel');
+    if(window.__ironSixGuideFocus&&guide)guide.scrollIntoView({behavior:'smooth',block:'start'});
+    else chat.lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
 
   function renderMessage(m){
@@ -199,6 +201,7 @@
       if(!contentType.includes('application/json'))throw new Error('Coach returned an invalid response');
       const out=await r.json();if(!r.ok)throw new Error(out.error||'Coach request failed');
       arr.push({role:'assistant',text:out.reply||'No response.',actions:out.actions||[],videos:out.videos||[],followUps:out.followUps||[],model:out.model,ts:Date.now()});uTrim(arr);saveData();renderMessages();
+      if(window.__ironSixGuideFocus){requestAnimationFrame(()=>document.getElementById('exerciseGuidePanel')?.scrollIntoView({behavior:'smooth',block:'start'}));window.__ironSixGuideFocus=false}
       if(out.followUps?.length)renderFollowUps(out.followUps);
       status.textContent='';
     }catch(err){arr.push({role:'assistant',text:`Coach is unavailable: ${err.message}. Please try again.`,ts:Date.now()});uTrim(arr);saveData();renderMessages();status.textContent='';}
