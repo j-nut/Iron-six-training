@@ -6,13 +6,14 @@ const required = [
   'exercise-visuals.js?v=7',
   'local-ai-fallback.js?v=7',
   'coach.js?v=7',
-  'cloud-sync.js?v=7',
+  'cloud-sync.js?v=10',
   'cloud-history-sync.js?v=7'
 ];
 
 for (const page of ['index.html', 'live.html']) {
   const html = fs.readFileSync(page, 'utf8');
-  assert(html.includes('ui2.js?v=9'), `${page} must load the real-time set updater`);
+  assert(html.includes('engine.js?v=10'), `${page} must load the whole-workout calibration engine`);
+  assert(html.includes('ui2.js?v=10'), `${page} must load the real-time workout updater`);
   let previous = html.indexOf('ui3.js');
   assert.notEqual(previous, -1, `${page} must load ui3.js`);
   for (const script of required) {
