@@ -3,6 +3,7 @@
   window.__ironSixCloudLoaded=true;
 
   const SDK='https://esm.sh/@supabase/supabase-js@2.112.4';
+  const DEFAULT_SUPABASE={url:'https://btfrkfbxyowglrdwclei.supabase.co',publishableKey:'sb_publishable_lhLxwVoR5VcpNpOPs1bBVQ_ik42s4wi'};
   let client=null,session=null,syncTimer=null,baseSave=window.saveData,ready=false;
 
   function cloudState(text,tone='muted'){
@@ -14,7 +15,7 @@
     if(window.IRON_SIX_SUPABASE?.url&&window.IRON_SIX_SUPABASE?.publishableKey)return window.IRON_SIX_SUPABASE;
     try{const r=await fetch('/api/config',{cache:'no-store'});if(r.ok){const j=await r.json();if(j.supabaseUrl&&j.supabasePublishableKey)return {url:j.supabaseUrl,publishableKey:j.supabasePublishableKey}}}catch(_){}
     try{const j=JSON.parse(localStorage.getItem('ironSixCloudConfig')||'null');if(j?.url&&j?.publishableKey)return j}catch(_){}
-    return null;
+    return DEFAULT_SUPABASE;
   }
 
   function installUI(){
