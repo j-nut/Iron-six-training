@@ -93,6 +93,20 @@
     return out;
   }
 
+  async function supabaseCoach(payload){
+    const cloud=window.IronSixCloud,client=cloud?.client?.(),session=cloud?.session?.();
+    if(!client||!session?.user)return null;
+    const enriched={...payload,context:{...(payload.context||{}),selectedExercise:window.__ironSixSelectedExercise||payload?.context?.selectedExercise||null}};
+    try{
+      const result=await Promise.race([
+        client.functions.invoke('coach',{body:enriched}),
+        new Promise((_,reject)=>setTimeout(()=>reject(new Error('Supabase Coach timeout')),5500))
+      ]);
+      if(result?.error||!result?.data)return null;
+      return result.data;
+    }catch(_){return null}
+  }
+
   window.fetch = async function ironSixFetch(input, init) {
     const url = typeof input === 'string' ? input : input?.url;
     const isCoach = url === '/api/coach' && String(init?.method || 'GET').toUpperCase() === 'POST';
@@ -100,6 +114,7 @@
 
     let payload = {};
     try { payload = JSON.parse(init?.body || '{}'); } catch (_) {}
+    payload.context={...(payload.context||{}),selectedExercise:window.__ironSixSelectedExercise||payload?.context?.selectedExercise||null};
 
     // Exercise teaching is intentionally instant and deterministic. AI handles follow-ups.
     if(wantsExerciseTeaching(payload) && window.IronSixExerciseGuide){
@@ -107,11 +122,17 @@
       return new Response(JSON.stringify(output),{status:200,headers:{'Content-Type':'application/json','X-Iron-Six-Coach':'exercise-guide'}});
     }
 
-    // Try the cloud coach, but never let an unavailable route make the UI feel dead.
+    // First choice when signed in: authenticated Supabase Edge Function.
+    const supabaseOutput=await supabaseCoach(payload);
+    if(supabaseOutput){
+      return new Response(JSON.stringify(supabaseOutput),{status:200,headers:{'Content-Type':'application/json','X-Iron-Six-Coach':'supabase'}});
+    }
+
+    // Backward-compatible Vercel route if it happens to be configured.
     try {
       const controller=new AbortController();
-      const timer=setTimeout(()=>controller.abort(),3500);
-      const cloudResponse = await nativeFetch(input,{...(init||{}),signal:controller.signal});
+      const timer=setTimeout(()=>controller.abort(),3000);
+      const cloudResponse = await nativeFetch(input,{...(init||{}),body:JSON.stringify(payload),signal:controller.signal});
       clearTimeout(timer);
       if (cloudResponse.ok) return cloudResponse;
       if (![404, 500, 502, 503].includes(cloudResponse.status)) return cloudResponse;
