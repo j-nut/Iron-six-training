@@ -23,6 +23,10 @@ for (const page of ['index.html', 'live.html']) {
 
 const ui = fs.readFileSync('ui3.js', 'utf8');
 assert(!ui.includes('loadIronSixScript'), 'feature scripts must not depend on the old dynamic loader');
+assert(ui.includes('function chooseWorkout(key)'), 'Today must provide a manual workout chooser');
+assert(ui.includes('u.program.currentWorkoutKey=key'), 'manual workout choice must update the active workout');
+assert(ui.includes('u.today={}'), 'changing workouts must clear incompatible current set entries');
+assert(ui.includes('Finish all sets of the first exercise'), 'Today must explain the intended exercise order');
 
 const visuals = fs.readFileSync('exercise-visuals.js', 'utf8');
 const coach = fs.readFileSync('coach.js', 'utf8');
