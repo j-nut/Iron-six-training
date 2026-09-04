@@ -32,3 +32,13 @@ assert.equal(recommend(user, exercise, 0).load, 95);
 
 user.today['0-0'] = { weight: '100', reps: '7', rir: '', done: true };
 assert.equal(recommend(user, exercise, 0).load, 100, 'blank RIR must not be treated as failure');
+
+const recalibrate = vm.runInContext('recalculateSessionCalibration', context);
+const suggest = vm.runInContext('suggestedLoadObject', context);
+const second = { name: 'Barbell Overhead Press', prescription: '4 × 6–8', seedKey: 'overhead_press' };
+user.weight = 220;
+user.trainingLevel = 'intermediate';
+user.today['0-0'] = { weight: '135', reps: '8', rir: '3', done: true };
+const session = recalibrate(user, [exercise, second]);
+assert(session.factor > 1 && session.factor <= 1.06, 'strong early performance should conservatively raise the session factor');
+assert.equal(suggest(user, second, 1).confidence, 'Live session', 'untouched later exercises must use the whole-session calibration');
