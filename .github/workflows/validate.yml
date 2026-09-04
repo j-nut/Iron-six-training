@@ -27,7 +27,7 @@ jobs:
             node --check "$f"
           done
       - name: Type-check Supabase Edge Function
-        run: deno check supabase/functions/coach/index.ts
+        run: deno check --config supabase/functions/coach/deno.json supabase/functions/coach/index.ts
       - name: Verify required app modules exist
         run: |
           python3 - <<'PY'
@@ -38,7 +38,8 @@ jobs:
             'workout-dispatch.js','engine.js','ui1.js','ui2.js','ui3.js',
             'exercise-guide.js','exercise-visuals.js','local-ai-fallback.js','coach.js',
             'cloud-sync.js','cloud-history-sync.js','api/config.js',
-            'supabase/schema.sql','supabase/config.toml','supabase/functions/coach/index.ts'
+            'supabase/schema.sql','supabase/config.toml','supabase/functions/coach/index.ts',
+            'supabase/functions/coach/deno.json'
           ]
           missing=[p for p in required if not Path(p).exists()]
           if missing: raise SystemExit('Missing files: '+', '.join(missing))
