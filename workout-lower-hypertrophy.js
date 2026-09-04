@@ -1,0 +1,13 @@
+function build_lower_hypertrophy(variant,u){
+ const v=variant%3;
+ const O={};
+
+  const squat=v===1?[ex('Landmine Hack Squat',['barbell','landmine'],'4 × 10–15',4,'Quads','Squat volume','squat',1),ex('Goblet Squat',['dumbbells'],'4 × 10–15',4,'Quads','Squat volume','squat',1),ex('High-Bar Back Squat',['barbell','rack'],'4 × 8–10',4,'Quads','Squat volume','squat',1),ex('Cyclist Squat',[],'4 × 15–25',4,'Quads','Squat volume','squat',1)]:[ex('High-Bar Back Squat',['barbell','rack'],'4 × 6–10',4,'Quads','Squat volume','squat',1),ex('Landmine Squat',['barbell','landmine'],'4 × 10–15',4,'Quads','Squat volume','squat',1),ex('Goblet Squat',['dumbbells'],'4 × 10–15',4,'Quads','Squat volume','squat',1),ex('Tempo Bodyweight Squat',[],'4 × 15–25',4,'Quads','Squat volume','squat',1)];
+  const hinge=v===2?[ex('Landmine Romanian Deadlift',['barbell','landmine'],'3 × 10–15',3,'Hamstrings','Hip hinge','hinge'),ex('Dumbbell Romanian Deadlift',['dumbbells'],'3 × 10–15',3,'Hamstrings','Hip hinge','hinge'),ex('Barbell Romanian Deadlift',['barbell'],'3 × 8–12',3,'Hamstrings','Hip hinge','hinge'),ex('Single-Leg Hip Hinge',[],'3 × 12–15 each',3,'Hamstrings','Hip hinge','hinge')]:[ex('Barbell Romanian Deadlift',['barbell'],'3 × 8–12',3,'Hamstrings','Hip hinge','hinge'),ex('Landmine Romanian Deadlift',['barbell','landmine'],'3 × 10–15',3,'Hamstrings','Hip hinge','hinge'),ex('Dumbbell Romanian Deadlift',['dumbbells'],'3 × 10–15',3,'Hamstrings','Hip hinge','hinge'),ex('Single-Leg Hip Hinge',[],'3 × 12–15 each',3,'Hamstrings','Hip hinge','hinge')];
+  const unilateral=[ex('Dumbbell Bulgarian Split Squat',['dumbbells','bench'],'3 × 10–15 each leg',3,'Legs','Single-leg volume','split_squat'),ex('Landmine Reverse Lunge',['barbell','landmine'],'3 × 10–15 each leg',3,'Legs','Single-leg volume','split_squat'),ex('Bodyweight Split Squat',[],'3 × 15–25 each leg',3,'Legs','Single-leg volume','split_squat')];
+  const glute=[ex('Barbell Hip Thrust',['barbell','bench'],'3 × 10–15',3,'Glutes','Hip extension','hip_thrust'),ex('Banded Hip Thrust',['bands'],'3 × 15–25',3,'Glutes','Hip extension','hip_thrust'),ex('Single-Leg Glute Bridge',[],'3 × 15–20 each',3,'Glutes','Hip extension','hip_thrust')];
+  const ham=[ex('Band Hamstring Curl',['bands'],'3 × 15–25',3,'Hamstrings','Knee flexion','ham_curl'),ex('Hamstring Walkout',[],'3 × 10–15',3,'Hamstrings','Knee flexion','ham_curl')];
+  const calf=[ex('Weighted Standing Calf Raise',['dumbbells'],'4 × 12–20',4,'Calves','Calves','calves'),ex('Barbell Standing Calf Raise',['barbell','rack'],'4 × 12–20',4,'Calves','Calves','calves'),ex('Single-Leg Calf Raise',[],'4 × 15–25',4,'Calves','Calves','calves')];
+  return [slot(u,squat),slot(u,hinge),slot(u,unilateral),slot(u,glute),slot(u,ham),slot(u,calf)];
+ 
+}
