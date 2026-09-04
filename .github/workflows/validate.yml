@@ -1,0 +1,39 @@
+name: Validate Iron Six
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax-check JavaScript
+        run: |
+          set -e
+          for f in *.js api/*.js; do
+            [ -f "$f" ] || continue
+            node --check "$f"
+          done
+      - name: Verify referenced browser scripts exist
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          required = [
+            'core.js','workout-lower.js','workout-shoulders.js','workout-chest.js',
+            'workout-back.js','workout-lower-hypertrophy.js','workout-upper.js',
+            'workout-dispatch.js','engine.js','ui1.js','ui2.js','ui3.js',
+            'exercise-guide.js','exercise-visuals.js','local-ai-fallback.js','coach.js','cloud-sync.js'
+          ]
+          missing=[p for p in required if not Path(p).exists()]
+          if missing: raise SystemExit('Missing files: '+', '.join(missing))
+          print('All required files present')
+          PY
