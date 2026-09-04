@@ -1,0 +1,12 @@
+function build_chest(variant,u){
+ const v=variant%3;
+ const O={};
+
+  const primary=v===1?[ex('Incline Barbell Bench Press',['barbell','rack','bench'],'4 × 5–8',4,'Priority','Horizontal press','bench',1),ex('Incline Dumbbell Press',['dumbbells','bench'],'4 × 8–12',4,'Priority','Horizontal press','bench',1),ex('Feet-Elevated Push-Up',['bench'],'4 × 8–20',4,'Priority','Horizontal press','bench',1),ex('Push-Up',[],'4 × 8–20',4,'Priority','Horizontal press','bench',1)]:v===2?[ex('Paused Barbell Bench Press',['barbell','rack','bench'],'4 × 4–6',4,'Priority','Horizontal press','bench',1),ex('Dumbbell Bench Press',['dumbbells','bench'],'4 × 8–12',4,'Priority','Horizontal press','bench',1),ex('Tempo Push-Up',[],'4 × 8–15 • 3 sec down',4,'Priority','Horizontal press','bench',1)]:[ex('Barbell Bench Press',['barbell','rack','bench'],'1 top set × 4–6, then 3 × 6–8',4,'Priority','Horizontal press','bench',1),ex('Dumbbell Bench Press',['dumbbells','bench'],'4 × 8–12',4,'Priority','Horizontal press','bench',1),ex('Push-Up',[],'4 × 8–20',4,'Priority','Horizontal press','bench',1)];
+  const secondary=v===1?[ex('Dumbbell Flat Press',['dumbbells','bench'],'3 × 8–12',3,'Chest','Secondary press','chest_press'),ex('Landmine Press',['barbell','landmine'],'3 × 8–12 each arm',3,'Chest','Secondary press','chest_press'),ex('Push-Up',[],'3 × 10–20',3,'Chest','Secondary press','chest_press')]:[ex('Incline Dumbbell Press',['dumbbells','bench'],'3 × 8–12',3,'Chest','Secondary press','chest_press'),ex('Landmine Press',['barbell','landmine'],'3 × 8–12 each arm',3,'Chest','Secondary press','chest_press'),ex('Feet-Elevated Push-Up',['bench'],'3 × 8–20',3,'Chest','Secondary press','chest_press')];
+  const fly=[ex('Band Chest Fly',['bands'],'3 × 12–20',3,'Chest','Chest isolation','fly'),ex('Dumbbell Fly',['dumbbells','bench'],'3 × 10–15',3,'Chest','Chest isolation','fly'),ex('Wide Push-Up',[],'3 × 10–20',3,'Chest','Chest isolation','fly')];
+  const tri=[ex('Close-Grip Bench Press',['barbell','rack','bench'],'3 × 6–10',3,'Triceps','Triceps press','triceps'),ex('Band Pressdown',['bands'],'3 × 12–20',3,'Triceps','Triceps press','triceps'),ex('Diamond Push-Up',[],'3 × 8–20',3,'Triceps','Triceps press','triceps')];
+  const core=[ex('Ab Wheel Rollout',['abwheel'],'2 × 6–12',2,'Core','Anterior core','core'),ex('Band Pallof Press',['bands'],'2 × 10–15 each side',2,'Core','Anterior core','core'),ex('Plank',[],'2 × 30–60 sec',2,'Core','Anterior core','core')];
+  return [slot(u,primary),slot(u,secondary),slot(u,fly),slot(u,tri),slot(u,core)];
+ 
+}
