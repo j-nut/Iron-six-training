@@ -38,13 +38,17 @@
     const key=G().classify(exercise),labels=[['Start','Set your position'],['Finish','Follow the arrow']];
     panel.innerHTML=`<div class="eyebrow">Exercise guide</div><h2>${escapeHtml(exercise.name)}</h2><div class="guide-sketches">${labels.map((label,p)=>`<div class="guide-sketch">${svg(key,p,exercise.name)}<span>${label[0]}</span><small>${label[1]}</small></div>`).join('')}</div><div class="guide-target">Targets ${escapeHtml(guide.muscles)} • ${escapeHtml(exercise.prescription||'')}</div><div class="guide-columns"><div class="guide-block"><strong>How to do it</strong><ol>${guide.steps.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ol></div><div class="guide-block"><strong>Best cues</strong><ul>${guide.cues.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></div><div class="guide-block"><strong>Setup</strong><ul>${guide.setup.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></div><div class="guide-block"><strong>Avoid</strong><ul>${guide.mistakes.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></div></div><div class="guide-actions"><a class="btn secondary" href="${guide.videoUrl}" target="_blank" rel="noopener noreferrer">▶ Video demos</a><button type="button" class="btn primary" id="askExerciseFollowup">Ask Coach about this</button></div><div class="guide-note">The diagram shows the main movement path. Use the written cues and a clear demonstration for exact positioning.</div>`;
     panel.querySelector('#askExerciseFollowup').addEventListener('click',()=>{const input=document.getElementById('coachInput');input?.focus();if(input&&!input.value)input.value=`I have a question about ${exercise.name}: `});
+    return panel;
   }
 
   const baseOpen=window.openExerciseCoach;
   window.openExerciseCoach=function(index){
     const workout=typeof finalWorkout==='function'&&typeof activeUser==='function'?finalWorkout(activeUser()):[],exercise=workout[Number(index)];if(!exercise)return;
+    // Exercise links target the visual guide, so keep it pinned while the
+    // automatic teaching response is added beneath it.
+    window.__ironSixGuideFocus=true;
     if(typeof showView==='function')showView('coach');
-    let tries=0;const timer=setInterval(()=>{tries++;if(document.querySelector('#coach .section')){clearInterval(timer);renderPanel(exercise)}else if(tries>30)clearInterval(timer)},50);
+    let tries=0;const timer=setInterval(()=>{tries++;if(document.querySelector('#coach .section')){clearInterval(timer);const panel=renderPanel(exercise);requestAnimationFrame(()=>panel?.scrollIntoView({behavior:'smooth',block:'start'}))}else if(tries>30)clearInterval(timer)},50);
     if(typeof baseOpen==='function')baseOpen(index)
   };
 })();
