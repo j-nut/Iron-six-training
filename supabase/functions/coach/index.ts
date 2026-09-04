@@ -1,4 +1,4 @@
-import { withSupabase } from 'npm:@supabase/server@1.5.3'
+import { withSupabase } from 'npm:@supabase/server@1.4.1'
 
 const NORMAL_MODEL = Deno.env.get('GROQ_MODEL') || 'openai/gpt-oss-20b'
 const SEARCH_MODEL = Deno.env.get('GROQ_SEARCH_MODEL') || 'groq/compound-mini'
