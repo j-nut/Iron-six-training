@@ -3,6 +3,7 @@ const EQUIPMENT=[
 ];
 const DEFAULT_EQUIPMENT={dumbbells:true,barbell:true,landmine:false,rack:true,bench:true,pullup:true,bands:true,abwheel:true,medball:true};
 const STORAGE_KEY='ironSixMultiV5';
+const BACKUP_STORAGE_KEY=STORAGE_KEY+'_recovery';
 const PRIOR_STORAGE_KEYS=['ironSixMultiV4','ironSixMultiV3'];
 const LEGACY_KEY='ironSixState';
 const ROTATION=['lower_strength','shoulders_arms','chest','back','lower_hypertrophy','upper_specialization'];
@@ -16,16 +17,17 @@ const WORKOUT_META={
 };
 function uid(){return 'u_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function emptyProgram(){return {currentWorkoutKey:'lower_strength',exposures:{},unlocked:{},variantCursor:{},lastAdaptation:null}}
-function makeUser(name='Jordan',weight=213,equipment=DEFAULT_EQUIPMENT){return {id:uid(),name,weight,age:null,heightIn:null,trainingLevel:'unknown',benchBest:'155 lb × 11–12 clean reps',equipment:{...equipment},capacities:{dumbbellMax:30,barbellMax:300},workoutMinutes:60,today:{},history:[],readiness:{energy:4,soreness:1},program:emptyProgram()}}
-function normalizeUser(u){return {...u,age:u.age||null,heightIn:u.heightIn||null,trainingLevel:u.trainingLevel||'unknown',workoutMinutes:Number(u.workoutMinutes)||60,equipment:{...DEFAULT_EQUIPMENT,...(u.equipment||{})},capacities:{dumbbellMax:Number(u.capacities?.dumbbellMax)||30,barbellMax:Number(u.capacities?.barbellMax)||300},today:u.today||{},history:u.history||[],readiness:u.readiness||{energy:4,soreness:1},program:{...emptyProgram(),...(u.program||{}),exposures:{...(u.program?.exposures||{})},unlocked:{...(u.program?.unlocked||{})},variantCursor:{...(u.program?.variantCursor||{})}}}}
+function emptyTrainerMemory(){return {status:'Learning from completed workouts',summary:'Complete a workout with weight, reps, and RIR to build your AI training profile.',adjustments:{},recommendations:[],reviewedAt:null,model:null}}
+function makeUser(name='Jordan',weight=213,equipment=DEFAULT_EQUIPMENT){return {id:uid(),name,weight,age:null,heightIn:null,trainingLevel:'unknown',benchBest:'155 lb × 11–12 clean reps',equipment:{...equipment},capacities:{dumbbellMax:30,barbellMax:300},workoutMinutes:60,today:{},history:[],readiness:{energy:4,soreness:1},program:emptyProgram(),trainerMemory:emptyTrainerMemory()}}
+function normalizeUser(u){return {...u,age:u.age||null,heightIn:u.heightIn||null,trainingLevel:u.trainingLevel||'unknown',workoutMinutes:Number(u.workoutMinutes)||60,equipment:{...DEFAULT_EQUIPMENT,...(u.equipment||{})},capacities:{dumbbellMax:Number(u.capacities?.dumbbellMax)||30,barbellMax:Number(u.capacities?.barbellMax)||300},today:u.today||{},history:u.history||[],readiness:u.readiness||{energy:4,soreness:1},program:{...emptyProgram(),...(u.program||{}),exposures:{...(u.program?.exposures||{})},unlocked:{...(u.program?.unlocked||{})},variantCursor:{...(u.program?.variantCursor||{})}},trainerMemory:{...emptyTrainerMemory(),...(u.trainerMemory||{}),adjustments:{...(u.trainerMemory?.adjustments||{})},recommendations:Array.isArray(u.trainerMemory?.recommendations)?u.trainerMemory.recommendations:[]}}}
 function loadData(){
-  for(const key of [STORAGE_KEY,...PRIOR_STORAGE_KEYS]){const raw=localStorage.getItem(key);if(raw){try{const p=JSON.parse(raw);p.users=(p.users||[]).map(normalizeUser);if(p.users.length){if(!p.activeUserId)p.activeUserId=p.users[0].id;const current=p.users.find(u=>u.id===p.activeUserId)||p.users[0];if(current&&current.name.toLowerCase()==='jordan')current.equipment.landmine=true;return p}}catch(e){}}}
+  for(const key of [STORAGE_KEY,BACKUP_STORAGE_KEY,...PRIOR_STORAGE_KEYS]){const raw=localStorage.getItem(key);if(raw){try{const p=JSON.parse(raw);p.users=(p.users||[]).map(normalizeUser);if(p.users.length){if(!p.activeUserId)p.activeUserId=p.users[0].id;const current=p.users.find(u=>u.id===p.activeUserId)||p.users[0];if(current&&current.name.toLowerCase()==='jordan')current.equipment.landmine=true;return p}}catch(e){}}}
   const legacyRaw=localStorage.getItem(LEGACY_KEY);let jordan=makeUser();jordan.equipment.landmine=true;
   if(legacyRaw){try{const l=JSON.parse(legacyRaw);jordan.weight=l.profile?.bodyWeight||213;jordan.benchBest=l.profile?.benchBest||jordan.benchBest;jordan.today=l.today||{};jordan.history=l.history||[]}catch(e){}}
   return {activeUserId:jordan.id,users:[jordan]};
 }
 let data=loadData();
-function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data))}
+function saveData(){const snapshot=JSON.stringify(data);localStorage.setItem(STORAGE_KEY,snapshot);localStorage.setItem(BACKUP_STORAGE_KEY,snapshot)}
 function activeUser(){return data.users.find(u=>u.id===data.activeUserId)||data.users[0]}
 function has(u,key){return !!u.equipment?.[key]}
 function choose(u,options){for(const o of options){if(!o.requires||o.requires.every(k=>has(u,k)))return {...o}}return {...options[options.length-1]}}

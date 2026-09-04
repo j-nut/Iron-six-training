@@ -24,7 +24,7 @@
           if(rows.length){const {error:setError}=await client.from('exercise_sets').upsert(rows,{onConflict:'session_id,exercise_name,set_index'});if(setError)throw setError}
           newest=Math.max(newest,Number(h.ts)||0);
         }
-        if(newest>through){u.cloudNormalizedThrough=newest;localStorage.setItem(STORAGE_KEY,JSON.stringify(data))}
+        if(newest>through){u.cloudNormalizedThrough=newest;const snapshot=JSON.stringify(data);localStorage.setItem(STORAGE_KEY,snapshot);localStorage.setItem(BACKUP_STORAGE_KEY,snapshot)}
       }
     }catch(err){console.warn('Iron Six normalized history sync:',err)}finally{running=false}
   }
