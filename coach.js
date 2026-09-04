@@ -163,9 +163,9 @@
 
   function renderMessage(m){
     const box=document.createElement('div');box.className=`coach-msg ${m.role==='user'?'user':'assistant'}`;
+    (m.videos||[]).forEach(v=>box.appendChild(renderVideo(v)));
     const text=document.createElement('div');text.textContent=m.text||'';box.appendChild(text);
     (m.actions||[]).forEach(a=>{const wrap=document.createElement('div');wrap.className='coach-action';const p=document.createElement('p');p.textContent=a.reason||actionLabel(a);const btn=document.createElement('button');btn.type='button';btn.className='btn secondary';btn.textContent=`Apply: ${actionLabel(a)}`;btn.addEventListener('click',()=>applyAction(a,btn));wrap.append(p,btn);box.appendChild(wrap)});
-    (m.videos||[]).forEach(v=>box.appendChild(renderVideo(v)));
     if(m.model){const meta=document.createElement('span');meta.className='meta';meta.textContent=m.model;box.appendChild(meta)}
     return box;
   }
