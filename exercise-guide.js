@@ -161,10 +161,10 @@
     if(/row/.test(n)||b==='row'||/horizontal pull/.test(b))return 'row';
     if(/pull-up|chin-up|lat pulldown|prone lat pull/.test(n)||/pullup|vertical pull/.test(b))return 'pullup';
     if(/straight-arm pulldown|pullover|lat press/.test(n)||/lat_iso/.test(b))return 'lat_iso';
+    if(/curl \+|arms finisher|supersets/.test(n)||b==='arms')return 'arms';
     if(/hammer curl/.test(n)||/hammer_curl/.test(b))return 'hammer_curl';
     if(/curl/.test(n)||b==='curl'||/elbow flexion/.test(b))return 'curl';
     if(/pressdown|skull crusher|close-grip|diamond push-up/.test(n)||/triceps/.test(b))return 'triceps';
-    if(/curl \+|arms finisher|supersets/.test(n)||b==='arms')return 'arms';
     if(/ab wheel|pallof|plank|rotation/.test(n)||/core/.test(b))return 'core';
     return 'core';
   }

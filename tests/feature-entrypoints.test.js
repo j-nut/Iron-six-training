@@ -2,8 +2,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 
 const required = [
-  'exercise-guide.js?v=7',
-  'exercise-visuals.js?v=7',
+  'exercise-guide.js?v=8',
+  'exercise-visuals.js?v=8',
   'local-ai-fallback.js?v=7',
   'coach.js?v=7',
   'cloud-sync.js?v=11',
@@ -34,6 +34,12 @@ assert(ui.includes('u.today={}'), 'changing workouts must clear incompatible cur
 assert(ui.includes('Finish all sets of the first exercise'), 'Today must explain the intended exercise order');
 
 const visuals = fs.readFileSync('exercise-visuals.js', 'utf8');
+const guide = fs.readFileSync('exercise-guide.js', 'utf8');
 const coach = fs.readFileSync('coach.js', 'utf8');
 assert(visuals.includes('window.__ironSixGuideFocus=true'), 'exercise links must request guide-first focus');
+assert(visuals.includes('function movementVariant'), 'exercise guides must choose exercise-specific movement diagrams');
+assert(visuals.includes('Working muscles'), 'exercise diagrams must identify highlighted working muscles');
+assert(visuals.includes('barbell position'), 'exercise diagrams must explain their equipment overlay');
+assert(!visuals.includes("key==='hinge'||key==='row'||key==='rear_delt'||key==='lat_iso'"), 'unrelated exercises must not share the old generic stick-figure pose');
+assert(guide.indexOf("b==='arms'") < guide.indexOf("b==='curl'"), 'supersets must use the combined arms diagram before generic curl matching');
 assert(coach.includes("guide.scrollIntoView({behavior:'smooth',block:'start'})"), 'coach rendering must preserve guide-first focus');
