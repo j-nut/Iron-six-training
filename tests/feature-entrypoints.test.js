@@ -5,17 +5,17 @@ const required = [
   'exercise-guide.js?v=8',
   'exercise-visuals.js?v=8',
   'local-ai-fallback.js?v=7',
-  'coach.js?v=7',
-  'cloud-sync.js?v=11',
+  'coach.js?v=8',
+  'cloud-sync.js?v=12',
   'cloud-history-sync.js?v=7'
 ];
 
 for (const page of ['index.html', 'live.html']) {
   const html = fs.readFileSync(page, 'utf8');
-  assert(html.includes('core.js?v=11'), `${page} must load persistent trainer memory`);
-  assert(html.includes('engine.js?v=11'), `${page} must load the whole-workout calibration engine`);
-  assert(html.includes('ui1.js?v=11'), `${page} must show the AI trainer review`);
-  assert(html.includes('ui3.js?v=11'), `${page} must run the post-workout trainer review`);
+  assert(html.includes('core.js?v=12'), `${page} must load persistent trainer memory`);
+  assert(html.includes('engine.js?v=12'), `${page} must load the whole-workout calibration engine`);
+  assert(html.includes('ui1.js?v=12'), `${page} must show the AI trainer review`);
+  assert(html.includes('ui3.js?v=12'), `${page} must run the post-workout trainer review`);
   assert(html.includes('ui2.js?v=10'), `${page} must load the real-time workout updater`);
   let previous = html.indexOf('ui3.js');
   assert.notEqual(previous, -1, `${page} must load ui3.js`);

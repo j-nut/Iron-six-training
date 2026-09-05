@@ -115,22 +115,14 @@
     ]
   };
 
-  const originalFinalWorkout = window.finalWorkout;
-  window.finalWorkout = function coachAwareFinalWorkout(u) {
-    const base = originalFinalWorkout(u);
-    const key = u.program?.currentWorkoutKey || 'lower_strength';
-    const exposure = Number(u.program?.exposures?.[key]) || 0;
-    const override = u.coachOverrides;
-    if (!override || override.workoutKey !== key || Number(override.exposure) !== exposure) return base;
-    return base.map(e => override.byBase?.[e.base] ? { ...e, ...override.byBase[e.base] } : e);
-  };
-
   function optionObject(row, base) {
     return { name:row[0], requires:row[1], prescription:row[2], sets:row[3], tag:row[4], base, seedKey:row[5], priority:2 };
   }
 
   function availableOptions(u, exercise) {
-    return (SWAPS[exercise.base] || []).map(x => optionObject(x, exercise.base)).filter(o => !o.requires.length || o.requires.every(k => has(u,k))).filter(o => o.name !== exercise.name);
+    const dynamic=typeof swapOptionsForExercise==='function'?swapOptionsForExercise(u,exercise):[];
+    if(dynamic.length)return dynamic;
+    return (SWAPS[exercise.base] || []).map(x => optionObject(x, exercise.base)).filter(o => exerciseAvailable(u,o)).filter(o => o.name !== exercise.name);
   }
 
   function coachContext() {
@@ -139,7 +131,7 @@
     const allowedSwaps = workout.map((e,i) => ({ targetIndex:i, targetName:e.name, targetBase:e.base, replacements:availableOptions(u,e).map(o=>o.name) })).filter(x=>x.replacements.length);
     const today = Object.entries(u.today || {}).map(([key,s]) => ({ key, weight:s.weight, reps:s.reps, rir:s.rir, done:!!s.done })).filter(x=>x.weight||x.reps||x.done).slice(-30);
     return {
-      profile:{ name:u.name, bodyWeight:u.weight, age:u.age, heightIn:u.heightIn, trainingLevel:u.trainingLevel, equipment:EQUIPMENT.filter(([k])=>has(u,k)).map(([,label])=>label), capacities:u.capacities, workoutMinutes:u.workoutMinutes },
+      profile:{ name:u.name, bodyWeight:u.weight, age:u.age, heightIn:u.heightIn, trainingLevel:u.trainingLevel, equipment:[...EQUIPMENT.filter(([k])=>has(u,k)).map(([,label])=>label),...(u.customEquipment||[])], capacities:u.capacities, workoutMinutes:u.workoutMinutes },
       readiness:u.readiness,
       workout:workout.map((e,i)=>({ index:i, name:e.name, prescription:e.prescription, base:e.base, suggested:suggestedLoadObject(u,e,i) })),
       today,
@@ -182,9 +174,8 @@
     if(a.type==='swap_exercise'){
       const workout=finalWorkout(u),idx=Number(a.targetIndex),target=workout[idx];if(!target){toast('That exercise is no longer in this workout');return;}
       const option=availableOptions(u,target).find(x=>x.name===a.replacementName);if(!option){toast('That swap is not available with this profile');return;}
-      const key=u.program?.currentWorkoutKey||'lower_strength',exposure=Number(u.program?.exposures?.[key])||0;
-      if(!u.coachOverrides||u.coachOverrides.workoutKey!==key||Number(u.coachOverrides.exposure)!==exposure)u.coachOverrides={workoutKey:key,exposure,byBase:{}};
-      u.coachOverrides.byBase[target.base]=option;u.today={};saveData();renderExercises();renderTodayHeader();btn.disabled=true;btn.textContent='Applied';toast(`${target.name} → ${option.name}`);return;
+      if(typeof applyExerciseSwap!=='function'||!applyExerciseSwap(idx,option)){toast('That exercise could not be swapped');return;}
+      btn.disabled=true;btn.textContent='Applied';return;
     }
   }
 
@@ -218,4 +209,137 @@
   const originalRenderAll = window.renderAll;
   window.renderAll = function(){originalRenderAll();renderMessages();const u=activeUser();const h=document.getElementById('coachHeroText');if(h)h.textContent=`Coaching ${u.name} with ${u.workoutMinutes||60} minutes available and ${equipmentLabel(u).toLowerCase()}.`};
   renderMessages();
+})();
+
+(() => {
+  if(window.__ironSixDynamicWorkoutsLoaded)return;
+  window.__ironSixDynamicWorkoutsLoaded=true;
+
+  function hasWorkoutDraft(u){return Object.values(u.today||{}).some(set=>set&&(set.done||String(set.weight||'').trim()||String(set.reps||'').trim()||String(set.rir||'').trim()))}
+  function equipmentId(item){return item.custom?`custom:${item.name.toLowerCase()}`:`builtin:${item.key}`}
+  function builtinItem(key,label){return {id:`builtin:${key}`,key,name:label,custom:false}}
+  function customItem(name){return {id:`custom:${name.toLowerCase()}`,name,custom:true}}
+  function pruneGeneratedExercises(u){u.program.generatedExercises=(u.program.generatedExercises||[]).filter(exercise=>exerciseAvailable(u,exercise));clearCurrentSelectionCache(u)}
+
+  window.renderCustomEquipmentEditor=function renderCustomEquipmentEditor(){
+    const u=activeUser(),grid=document.getElementById('equipmentEditor');
+    if(!grid)return;
+    let panel=document.getElementById('customEquipmentPanel');
+    if(!panel){panel=document.createElement('div');panel.id='customEquipmentPanel';panel.className='custom-equipment-panel';grid.after(panel)}
+    const generation=u.program?.equipmentGeneration||{},items=(u.customEquipment||[]).map(name=>`<span class="custom-equipment-chip"><span>${escapeHtml(name)}</span><button type="button" data-remove-custom="${escapeHtml(name)}" aria-label="Remove ${escapeHtml(name)}">×</button></span>`).join('');
+    const state=generation.state==='loading'?`Groq is building exercise options for ${escapeHtml(generation.equipment||'your equipment')}…`:generation.state==='ready'?escapeHtml(generation.message||'AI exercise options are ready.'):generation.state==='error'?escapeHtml(generation.message||'AI options will retry the next time equipment is added.'):'Add any equipment that is not listed above.';
+    panel.innerHTML=`<div class="custom-equipment-label">Other equipment</div><div class="custom-equipment-add"><input id="customEquipmentInput" type="text" maxlength="48" placeholder="Kettlebell, cable machine, TRX…"><button class="btn secondary" id="addCustomEquipment" type="button">Add</button></div><div class="custom-equipment-chips">${items||'<span class="custom-equipment-empty">No custom equipment added</span>'}</div><div class="custom-equipment-status" data-state="${escapeHtml(generation.state||'idle')}">${state}</div>`;
+    panel.querySelector('#addCustomEquipment').addEventListener('click',addCustomEquipment);
+    panel.querySelector('#customEquipmentInput').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();addCustomEquipment()}});
+    panel.querySelectorAll('[data-remove-custom]').forEach(button=>button.addEventListener('click',()=>removeCustomEquipment(button.dataset.removeCustom)));
+  };
+
+  function addCustomEquipment(){
+    const u=activeUser(),input=document.getElementById('customEquipmentInput'),name=normalizeEquipmentName(input?.value);
+    if(!name){toast('Enter an equipment name');return}
+    if(hasWorkoutDraft(u)){toast('Finish or reset the current workout before changing equipment');return}
+    const known=[...EQUIPMENT.map(([,label])=>label),...(u.customEquipment||[])];
+    if(known.some(value=>value.toLowerCase()===name.toLowerCase())){toast('That equipment is already listed');return}
+    if((u.customEquipment||[]).length>=16){toast('Custom equipment is limited to 16 items');return}
+    u.customEquipment=[...(u.customEquipment||[]),name];
+    u.coachOverrides=null;
+    clearCurrentSelectionCache(u);
+    saveData();renderAll();toast(`${name} added • building exercise options`);
+    refreshEquipmentExercises(u,[customItem(name)]);
+  }
+
+  function removeCustomEquipment(name){
+    const u=activeUser(),clean=normalizeEquipmentName(name);
+    if(hasWorkoutDraft(u)){toast('Finish or reset the current workout before changing equipment');return}
+    u.customEquipment=(u.customEquipment||[]).filter(value=>value.toLowerCase()!==clean.toLowerCase());
+    u.program.generatedExercises=(u.program.generatedExercises||[]).filter(exercise=>exercise.equipmentId!==`custom:${clean.toLowerCase()}`&&!((exercise.requiresCustom||[]).some(value=>value.toLowerCase()===clean.toLowerCase())));
+    u.coachOverrides=null;
+    clearCurrentSelectionCache(u);
+    saveData();renderAll();toast(`${clean} removed`);
+  }
+
+  window.refreshEquipmentExercises=async function refreshEquipmentExercises(user,equipment){
+    const requested=(equipment||[]).map(item=>({...item,id:item.id||equipmentId(item)})).slice(0,8);
+    if(!requested.length)return;
+    const userId=user.id,names=requested.map(item=>item.name).join(', ');
+    user.program.equipmentGeneration={state:'loading',equipment:names,message:'',updatedAt:Date.now()};
+    saveData();renderCustomEquipmentEditor();
+    try{
+      const response=await fetch('/api/equipment-exercises',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({equipment:requested,existingNames:(user.program.generatedExercises||[]).map(x=>x.name).slice(0,80),profile:{trainingLevel:user.trainingLevel,workoutMinutes:user.workoutMinutes}})}),output=await response.json();
+      if(!response.ok)throw new Error(output.error||'Exercise generation failed');
+      const target=data.users.find(candidate=>candidate.id===userId);
+      if(!target)return;
+      const ids=new Set(requested.map(item=>item.id)),incoming=(Array.isArray(output.exercises)?output.exercises:[]).filter(x=>x&&ids.has(String(x.equipmentId))&&x.name&&x.base&&x.seedKey).slice(0,40);
+      target.program.generatedExercises=[...(target.program.generatedExercises||[]).filter(x=>!ids.has(String(x.equipmentId))),...incoming].slice(0,80);
+      pruneGeneratedExercises(target);
+      target.program.equipmentGeneration={state:'ready',equipment:names,message:`${incoming.length} new exercise option${incoming.length===1?'':'s'} added by ${output.model||'Groq'}.`,updatedAt:Date.now(),model:output.model||null};
+      saveData();if(activeUser().id===userId)renderAll();
+    }catch(error){
+      const target=data.users.find(candidate=>candidate.id===userId);
+      if(!target)return;
+      target.program.equipmentGeneration={state:'error',equipment:names,message:'Could not expand the exercise library right now. Your equipment is still saved.',updatedAt:Date.now()};
+      saveData();if(activeUser().id===userId)renderCustomEquipmentEditor();
+    }
+  };
+
+  window.applyExerciseSwap=function applyExerciseSwap(index,option){
+    const u=activeUser(),workout=finalWorkout(u),target=workout[index];
+    if(!target||!option||option.base!==target.base||!exerciseAvailable(u,option))return false;
+    const prefix=`${index}-`,logged=Object.entries(u.today||{}).filter(([key,set])=>key.startsWith(prefix)&&set&&(set.done||String(set.weight||'').trim()||String(set.reps||'').trim()||String(set.rir||'').trim()));
+    if(logged.length&&!confirm(`Swap ${target.name} and clear only its ${logged.length} entered set${logged.length===1?'':'s'}?`))return false;
+    for(const key of Object.keys(u.today||{}))if(key.startsWith(prefix))delete u.today[key];
+    const key=u.program?.currentWorkoutKey||'lower_strength',exposure=Number(u.program?.exposures?.[key])||0;
+    if(!u.coachOverrides||u.coachOverrides.workoutKey!==key||Number(u.coachOverrides.exposure)!==exposure)u.coachOverrides={workoutKey:key,exposure,byIndex:{},byBase:{}};
+    u.coachOverrides.byIndex=u.coachOverrides.byIndex||{};
+    const {_alternatives,...replacement}=option;
+    u.coachOverrides.byIndex[index]=replacement;
+    u.sessionCalibration=null;
+    saveData();renderExercises();renderTodayHeader();toast(`${target.name} → ${option.name}`);return true;
+  };
+
+  window.openExerciseSwap=function openExerciseSwap(index){
+    const u=activeUser(),exercise=finalWorkout(u)[index],modal=document.getElementById('exerciseSwapModal');
+    if(!exercise||!modal)return;
+    const options=swapOptionsForExercise(u,exercise),title=modal.querySelector('#exerciseSwapTitle'),summary=modal.querySelector('#exerciseSwapSummary'),list=modal.querySelector('#exerciseSwapList');
+    title.textContent=`Swap ${exercise.name}`;
+    summary.textContent=`Choose another ${exercise.base.toLowerCase()} movement. The muscle target and programming role stay the same.`;
+    list.innerHTML=options.length?options.map((option,optionIndex)=>`<button type="button" class="exercise-swap-option" data-swap-option="${optionIndex}"><span><strong>${escapeHtml(option.name)}</strong><small>${escapeHtml(option.prescription)}${option.equipmentName?` • ${escapeHtml(option.equipmentName)}`:''}</small></span>${option.source==='groq'?'<b>AI option</b>':'<b>Swap</b>'}</button>`).join(''):'<div class="note">No equivalent movement is available with this profile’s equipment.</div>';
+    list.querySelectorAll('[data-swap-option]').forEach(button=>button.addEventListener('click',()=>{const option=options[Number(button.dataset.swapOption)];if(applyExerciseSwap(index,option))modal.classList.remove('show')}));
+    modal.classList.add('show');
+  };
+
+  function enhanceExerciseSwaps(){
+    const u=activeUser(),workout=finalWorkout(u);
+    document.querySelectorAll('[data-exercise-index]').forEach(card=>{
+      const index=Number(card.dataset.exerciseIndex),exercise=workout[index],help=card.querySelector('.exercise-help-btn');
+      if(!exercise||!help||card.querySelector('.exercise-swap-btn'))return;
+      const options=swapOptionsForExercise(u,exercise),button=document.createElement('button');
+      button.type='button';button.className='exercise-swap-btn';button.textContent='↔ Swap exercise';button.disabled=!options.length;
+      button.title=options.length?`Choose another ${exercise.base.toLowerCase()} exercise`:'No equivalent exercise is available with this equipment';
+      button.addEventListener('click',()=>openExerciseSwap(index));help.after(button);
+    });
+  }
+
+  function saveProfileWithEquipmentAi(){
+    const before=activeUser(),beforeId=before.id,prior={...(before.equipment||{})};
+    saveProfile();
+    const user=data.users.find(candidate=>candidate.id===beforeId);
+    if(!user)return;
+    const added=EQUIPMENT.filter(([key])=>!prior[key]&&user.equipment?.[key]).map(([key,label])=>builtinItem(key,label)),changed=EQUIPMENT.some(([key])=>!!prior[key]!==!!user.equipment?.[key]);
+    if(changed){pruneGeneratedExercises(user);user.coachOverrides=null;saveData();renderAll()}
+    if(added.length)refreshEquipmentExercises(user,added);
+  }
+
+  function installDynamicUi(){
+    if(!document.getElementById('dynamicWorkoutStyles')){const style=document.createElement('style');style.id='dynamicWorkoutStyles';style.textContent='.exercise-help-btn,.exercise-swap-btn{display:inline-flex;align-items:center;border:0;background:none;padding:7px 10px 2px 0;font-size:12px;font-weight:800;cursor:pointer}.exercise-help-btn{color:var(--accent)}.exercise-swap-btn{color:#8fb8ff}.exercise-swap-btn:disabled{color:var(--muted);opacity:.45;cursor:not-allowed}.custom-equipment-panel{margin-top:12px;padding:12px;border:1px solid var(--line);background:var(--surface2);border-radius:14px}.custom-equipment-label{font-size:12px;font-weight:850;margin-bottom:8px}.custom-equipment-add{display:grid;grid-template-columns:1fr auto;gap:8px}.custom-equipment-add input{min-width:0;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:11px;padding:11px;font-size:16px}.custom-equipment-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.custom-equipment-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(143,184,255,.1);border:1px solid rgba(143,184,255,.3);border-radius:999px;padding:6px 7px 6px 10px;font-size:12px}.custom-equipment-chip button{border:0;background:none;color:var(--muted);font-size:16px;line-height:1;cursor:pointer}.custom-equipment-empty,.custom-equipment-status{color:var(--muted);font-size:11px}.custom-equipment-status{margin-top:9px;line-height:1.4}.custom-equipment-status[data-state="loading"]{color:#8fb8ff}.custom-equipment-status[data-state="ready"]{color:var(--accent)}.exercise-swap-list{display:grid;gap:8px;max-height:52vh;overflow:auto}.exercise-swap-option{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:13px;padding:12px;text-align:left;cursor:pointer}.exercise-swap-option span,.exercise-swap-option strong,.exercise-swap-option small{display:block}.exercise-swap-option small{color:var(--muted);margin-top:4px}.exercise-swap-option b{color:#8fb8ff;font-size:11px;white-space:nowrap}';document.head.appendChild(style)}
+    if(!document.getElementById('exerciseSwapModal')){const modal=document.createElement('div');modal.className='modal-backdrop';modal.id='exerciseSwapModal';modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-labelledby','exerciseSwapTitle');modal.innerHTML='<div class="modal"><h3 id="exerciseSwapTitle">Swap exercise</h3><p id="exerciseSwapSummary"></p><div class="exercise-swap-list" id="exerciseSwapList"></div><div class="cta"><button class="btn secondary" id="closeExerciseSwap" type="button">Cancel</button></div></div>';document.body.appendChild(modal);modal.querySelector('#closeExerciseSwap').addEventListener('click',()=>modal.classList.remove('show'));modal.addEventListener('click',event=>{if(event.target===modal)modal.classList.remove('show')})}
+    const button=document.getElementById('saveProfile');
+    if(button&&!button.dataset.dynamicEquipmentSave){const replacement=button.cloneNode(true);replacement.dataset.dynamicEquipmentSave='true';button.replaceWith(replacement);replacement.addEventListener('click',saveProfileWithEquipmentAi)}
+  }
+
+  const baseRenderExercises=window.renderExercises;
+  window.renderExercises=function(){baseRenderExercises();enhanceExerciseSwaps()};
+  const baseRenderAll=window.renderAll;
+  window.renderAll=function(){installDynamicUi();baseRenderAll()};
+  installDynamicUi();renderAll();
 })();
