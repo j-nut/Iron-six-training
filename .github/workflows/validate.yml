@@ -16,6 +16,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install pinned test dependencies
+        run: npm ci --ignore-scripts
+      - name: Verify accounts, durable saves, and workout modes
+        run: npm test
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x

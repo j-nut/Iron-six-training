@@ -1,5 +1,11 @@
 {
   "name": "iron-six-training",
   "private": true,
-  "version": "5.0.0"
+  "version": "5.0.0",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "devDependencies": {
+    "jsdom": "26.1.0"
+  }
 }

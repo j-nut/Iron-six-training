@@ -5,18 +5,18 @@ const required = [
   'exercise-guide.js?v=8',
   'exercise-visuals.js?v=8',
   'local-ai-fallback.js?v=7',
-  'coach.js?v=8',
-  'cloud-sync.js?v=12',
-  'cloud-history-sync.js?v=7'
+  'coach.js?v=9',
+  'cloud-sync.js?v=13',
+  'cloud-history-sync.js?v=8'
 ];
 
 for (const page of ['index.html', 'live.html']) {
   const html = fs.readFileSync(page, 'utf8');
-  assert(html.includes('core.js?v=12'), `${page} must load persistent trainer memory`);
-  assert(html.includes('engine.js?v=12'), `${page} must load the whole-workout calibration engine`);
-  assert(html.includes('ui1.js?v=12'), `${page} must show the AI trainer review`);
-  assert(html.includes('ui3.js?v=12'), `${page} must run the post-workout trainer review`);
-  assert(html.includes('ui2.js?v=10'), `${page} must load the real-time workout updater`);
+  assert(html.includes('core.js?v=13'), `${page} must load persistent trainer memory`);
+  assert(html.includes('engine.js?v=13'), `${page} must load the whole-workout calibration engine`);
+  assert(html.includes('ui1.js?v=13'), `${page} must show the AI trainer review`);
+  assert(html.includes('ui3.js?v=13'), `${page} must run the post-workout trainer review`);
+  assert(html.includes('ui2.js?v=13'), `${page} must load the real-time workout updater`);
   let previous = html.indexOf('ui3.js');
   assert.notEqual(previous, -1, `${page} must load ui3.js`);
   for (const script of required) {
@@ -43,3 +43,5 @@ assert(visuals.includes('barbell position'), 'exercise diagrams must explain the
 assert(!visuals.includes("key==='hinge'||key==='row'||key==='rear_delt'||key==='lat_iso'"), 'unrelated exercises must not share the old generic stick-figure pose');
 assert(guide.indexOf("b==='arms'") < guide.indexOf("b==='curl'"), 'supersets must use the combined arms diagram before generic curl matching');
 assert(coach.includes("guide.scrollIntoView({behavior:'smooth',block:'start'})"), 'coach rendering must preserve guide-first focus');
+
+for (const page of ['index.html','live.html']) { const html=fs.readFileSync(page,'utf8'); assert(html.indexOf('session-planner.js')>html.indexOf('engine.js')); assert(html.indexOf('workout-store.js')<html.indexOf('ui2.js')); assert(html.indexOf('circuit-player.js')>html.indexOf('ui3.js')); }

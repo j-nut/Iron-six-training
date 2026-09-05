@@ -4,6 +4,7 @@ const vm=require('node:vm');
 
 const storage={};
 const context={console,Date,Math,localStorage:{getItem:key=>storage[key]||null,setItem:(key,value)=>{storage[key]=value}}};
+context.window=context;
 vm.createContext(context);
 for(const file of ['core.js','workout-lower.js','workout-shoulders.js','workout-chest.js','workout-back.js','workout-lower-hypertrophy.js','workout-upper.js','workout-dispatch.js','engine.js'])vm.runInContext(fs.readFileSync(file,'utf8'),context);
 

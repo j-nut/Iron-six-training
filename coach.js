@@ -261,12 +261,13 @@
   window.refreshEquipmentExercises=async function refreshEquipmentExercises(user,equipment){
     const requested=(equipment||[]).map(item=>({...item,id:item.id||equipmentId(item)})).slice(0,8);
     if(!requested.length)return;
-    const userId=user.id,names=requested.map(item=>item.name).join(', ');
+    const accountScope=window.ironSixAccountScope,userId=user.id,names=requested.map(item=>item.name).join(', ');
     user.program.equipmentGeneration={state:'loading',equipment:names,message:'',updatedAt:Date.now()};
     saveData();renderCustomEquipmentEditor();
     try{
       const response=await fetch('/api/equipment-exercises',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({equipment:requested,existingNames:(user.program.generatedExercises||[]).map(x=>x.name).slice(0,80),profile:{trainingLevel:user.trainingLevel,workoutMinutes:user.workoutMinutes}})}),output=await response.json();
       if(!response.ok)throw new Error(output.error||'Exercise generation failed');
+      if(accountScope!==window.ironSixAccountScope)return;
       const target=data.users.find(candidate=>candidate.id===userId);
       if(!target)return;
       const ids=new Set(requested.map(item=>item.id)),incoming=(Array.isArray(output.exercises)?output.exercises:[]).filter(x=>x&&ids.has(String(x.equipmentId))&&x.name&&x.base&&x.seedKey).slice(0,40);
@@ -275,6 +276,7 @@
       target.program.equipmentGeneration={state:'ready',equipment:names,message:`${incoming.length} new exercise option${incoming.length===1?'':'s'} added by ${output.model||'Groq'}.`,updatedAt:Date.now(),model:output.model||null};
       saveData();if(activeUser().id===userId)renderAll();
     }catch(error){
+      if(accountScope!==window.ironSixAccountScope)return;
       const target=data.users.find(candidate=>candidate.id===userId);
       if(!target)return;
       target.program.equipmentGeneration={state:'error',equipment:names,message:'Could not expand the exercise library right now. Your equipment is still saved.',updatedAt:Date.now()};
@@ -293,8 +295,10 @@
     u.coachOverrides.byIndex=u.coachOverrides.byIndex||{};
     const {_alternatives,...replacement}=option;
     u.coachOverrides.byIndex[index]=replacement;
+    window.IronSixCircuit?.pause('Exercise swapped');calibrationRequest++;
+    window.IronSixJournal?.changePlan(u,index,{...replacement,sets:target.sets,_alternatives:[target,...swapOptionsForExercise(u,target)].filter(x=>x.name!==replacement.name)});
     u.sessionCalibration=null;
-    saveData();renderExercises();renderTodayHeader();toast(`${target.name} → ${option.name}`);return true;
+    saveData();renderExercises();renderTodayHeader();window.IronSixCircuit?.rebuild();toast(`${target.name} → ${option.name}`);return true;
   };
 
   window.openExerciseSwap=function openExerciseSwap(index){
