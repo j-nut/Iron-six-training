@@ -1,4 +1,6 @@
 {
+  "buildCommand": "node scripts/build-web.mjs",
+  "outputDirectory": "web-dist",
   "cleanUrls": true,
   "trailingSlash": false
 }
