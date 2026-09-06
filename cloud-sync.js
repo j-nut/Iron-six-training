@@ -136,7 +136,7 @@
     $('accountPassword').autocomplete=mode==='login'?'current-password':'new-password';
     $('accountConfirm').required=['signup','password'].includes(mode);
     $('accountSubmit').textContent=({login:'Sign in',signup:'Create account',magic:'Send sign-in link',reset:'Send password reset',password:'Save new password'})[mode];
-    $('accountSubmit').disabled=busy||!client;$('accountStatus').textContent=message;renderConflicts();
+    $('accountSubmit').disabled=busy||!client;$('accountStatus').textContent=message;renderConflicts();window.IronSixSocialAuth?.render(session);
   }
   function openAccount(){renderAccount();$('cloudModal')?.classList.add('show');$('cloudClose')?.focus()}
   function clearPasswords(){$('accountPassword').value='';$('accountConfirm').value=''}
@@ -201,12 +201,14 @@
     return DEFAULT_SUPABASE;
   }
   async function init(){
-    installUI();try{
+    installUI();const callbackIssue=window.IronSixSocialAuth?.callbackError();try{
       const cfg=await getConfig(),mod=await import(SDK);client=mod.createClient(cfg.url,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+      window.IronSixSocialAuth?.install({client,config:cfg,session:()=>session,isBusy:()=>busy,setBusy:value=>{busy=value;renderAccount()},saveLocal:baseSave,notify});
       client.auth.onAuthStateChange((event,next)=>{setTimeout(()=>{if(event==='PASSWORD_RECOVERY')mode='password';activation=activation.then(()=>activate(next)).then(()=>{if(event==='PASSWORD_RECOVERY')openAccount()}).catch(error=>notify(error.message))},0)});
       const result=await client.auth.getSession();if(result.error)throw result.error;
       activation=activation.then(()=>activate(result.data.session));await activation;
-    }catch(error){notify('Sign-in unavailable. Local workout logging still works. '+(error.message||''));renderAccount()}
+      if(callbackIssue){callbackIssue.clear();notify(callbackIssue.message);openAccount()}
+    }catch(error){if(callbackIssue){callbackIssue.clear();notify(callbackIssue.message);openAccount()}else notify('Sign-in unavailable. Local workout logging still works. '+(error.message||''));renderAccount()}
   }
   window.saveData=function(){data.fresh=false;const u=typeof activeUser==='function'?activeUser():null;if(u){u.localUpdatedAt=Date.now();if(own())u.accountOwner=scope()}const saved=baseSave();queueSync();return saved};
   window.IronSixCloud={saveLocal:baseSave,syncNow,client:()=>client,session:()=>session,openAccount};

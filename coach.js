@@ -273,7 +273,7 @@
       const ids=new Set(requested.map(item=>item.id)),incoming=(Array.isArray(output.exercises)?output.exercises:[]).filter(x=>x&&ids.has(String(x.equipmentId))&&x.name&&x.base&&x.seedKey).slice(0,40);
       target.program.generatedExercises=[...(target.program.generatedExercises||[]).filter(x=>!ids.has(String(x.equipmentId))),...incoming].slice(0,80);
       pruneGeneratedExercises(target);
-      target.program.equipmentGeneration={state:'ready',equipment:names,message:`${incoming.length} new exercise option${incoming.length===1?'':'s'} added by ${output.model||'Groq'}.`,updatedAt:Date.now(),model:output.model||null};
+      target.program.equipmentGeneration={state:'ready',equipment:names,message:incoming.length?`${incoming.length} illustrated exercise option${incoming.length===1?'':'s'} added by ${output.model||'Groq'}.`:'Equipment saved. No verified illustrations are available for its exercise options yet.',updatedAt:Date.now(),model:output.model||null};
       saveData();if(activeUser().id===userId)renderAll();
     }catch(error){
       if(accountScope!==window.ironSixAccountScope)return;

@@ -3,10 +3,11 @@ const fs = require('node:fs');
 
 const required = [
   'exercise-guide.js?v=8',
-  'exercise-visuals.js?v=8',
+  'exercise-visuals.js?v=9',
   'local-ai-fallback.js?v=7',
-  'coach.js?v=9',
-  'cloud-sync.js?v=13',
+  'coach.js?v=10',
+  'social-auth.js?v=1',
+  'cloud-sync.js?v=14',
   'cloud-history-sync.js?v=8'
 ];
 
@@ -16,7 +17,9 @@ for (const page of ['index.html', 'live.html']) {
   assert(html.includes('engine.js?v=13'), `${page} must load the whole-workout calibration engine`);
   assert(html.includes('ui1.js?v=13'), `${page} must show the AI trainer review`);
   assert(html.includes('ui3.js?v=13'), `${page} must run the post-workout trainer review`);
-  assert(html.includes('ui2.js?v=13'), `${page} must load the real-time workout updater`);
+  assert(html.includes('ui2.js?v=14'), `${page} must load the real-time workout updater`);
+  assert(html.indexOf('exercise-media-catalog.js?v=1') < html.indexOf('exercise-media.js?v=1'));
+  assert(html.indexOf('exercise-media.js?v=1') < html.indexOf('ui2.js?v=14'));
   let previous = html.indexOf('ui3.js');
   assert.notEqual(previous, -1, `${page} must load ui3.js`);
   for (const script of required) {
@@ -37,9 +40,6 @@ const visuals = fs.readFileSync('exercise-visuals.js', 'utf8');
 const guide = fs.readFileSync('exercise-guide.js', 'utf8');
 const coach = fs.readFileSync('coach.js', 'utf8');
 assert(visuals.includes('window.__ironSixGuideFocus=true'), 'exercise links must request guide-first focus');
-assert(visuals.includes('function movementVariant'), 'exercise guides must choose exercise-specific movement diagrams');
-assert(visuals.includes('Working muscles'), 'exercise diagrams must identify highlighted working muscles');
-assert(visuals.includes('barbell position'), 'exercise diagrams must explain their equipment overlay');
 assert(!visuals.includes("key==='hinge'||key==='row'||key==='rear_delt'||key==='lat_iso'"), 'unrelated exercises must not share the old generic stick-figure pose');
 assert(guide.indexOf("b==='arms'") < guide.indexOf("b==='curl'"), 'supersets must use the combined arms diagram before generic curl matching');
 assert(coach.includes("guide.scrollIntoView({behavior:'smooth',block:'start'})"), 'coach rendering must preserve guide-first focus');
