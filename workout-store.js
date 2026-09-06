@@ -141,6 +141,7 @@
     return {message,pending:items.length,error:cloudError||localError};
   }
   function exportLog(){
+    if(window.IronSixNative){return window.IronSixNative.exportBackup(JSON.stringify({exportedAt:new Date().toISOString(),profiles:data,entries:all()},null,2)).catch(()=>{if(typeof toast==='function')toast('Backup could not be exported. Your saved workout is still on this device.');});}
     const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),profiles:data,entries:all()},null,2)],{type:'application/json'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='iron-six-workout-backup.json';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);
   }
   function renderTable(){

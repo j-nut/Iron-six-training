@@ -39,13 +39,15 @@
     try{
       window.IronSixCircuit?.pause('Paused for sign-in');
       if(!api.saveLocal()||window.IronSixJournal?.pending().some(e=>!e._durable))throw {code:'local_save_failed'};
-      const options={redirectTo:location.origin+location.pathname};
+      const options={redirectTo:window.IronSixNative?.redirectTo||location.origin+location.pathname};
+      if(window.IronSixNative)options.skipBrowserRedirect=true;
       if(provider.scopes)options.scopes=provider.scopes;
       if(id==='google')options.queryParams={prompt:'select_account'};
       api.notify('Opening '+provider.name+'… Your saved workout stays on this device.');
       const result=signed?await api.client.auth.linkIdentity({provider:id,options}):await api.client.auth.signInWithOAuth({provider:id,options});
       if(result.error)throw result.error;
       if(!result.data?.url)throw {code:'missing_redirect'};
+      if(window.IronSixNative){await window.IronSixNative.openOAuth(result.data.url);api.setBusy(false);render();}
       // Supabase owns the provider redirect and callback; never merge accounts in the client.
     }catch(error){
       const messages={

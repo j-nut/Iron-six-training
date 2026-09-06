@@ -144,7 +144,7 @@
     event.preventDefault();if(!client||busy)return;
     const email=$('accountEmail').value.trim(),password=$('accountPassword').value,confirmPassword=$('accountConfirm').value;
     if(['signup','password'].includes(mode)&&(password.length<12||password!==confirmPassword)){notify('Use at least 12 characters and matching passwords.');return}
-    busy=true;renderAccount();const redirectTo=location.origin+location.pathname,action=mode;
+    busy=true;renderAccount();const redirectTo=window.IronSixNative?.redirectTo||location.origin+location.pathname,action=mode;
     try{
       let result;
       if(action==='login')result=await client.auth.signInWithPassword({email,password});
@@ -202,9 +202,10 @@
   }
   async function init(){
     installUI();const callbackIssue=window.IronSixSocialAuth?.callbackError();try{
-      const cfg=await getConfig(),mod=await import(SDK);client=mod.createClient(cfg.url,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+      const cfg=await getConfig(),mod=window.IronSixNative?.supabase||await import(SDK);client=mod.createClient(cfg.url,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,...window.IronSixNative?.authOptions}});
       window.IronSixSocialAuth?.install({client,config:cfg,session:()=>session,isBusy:()=>busy,setBusy:value=>{busy=value;renderAccount()},saveLocal:baseSave,notify});
       client.auth.onAuthStateChange((event,next)=>{setTimeout(()=>{if(event==='PASSWORD_RECOVERY')mode='password';activation=activation.then(()=>activate(next)).then(()=>{if(event==='PASSWORD_RECOVERY')openAccount()}).catch(error=>notify(error.message))},0)});
+      await window.IronSixNative?.connectCloud(client,notify);
       const result=await client.auth.getSession();if(result.error)throw result.error;
       activation=activation.then(()=>activate(result.data.session));await activation;
       if(callbackIssue){callbackIssue.clear();notify(callbackIssue.message);openAccount()}

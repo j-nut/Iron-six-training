@@ -1,0 +1,8 @@
+{
+  "appId": "com.ironsix.training",
+  "appName": "Iron Six",
+  "webDir": "www",
+  "android": { "allowMixedContent": false },
+  "server": { "androidScheme": "https" },
+  "plugins": { "CapacitorHttp": { "enabled": true } }
+}
