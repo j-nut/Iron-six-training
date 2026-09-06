@@ -32,6 +32,7 @@ Google, Apple, Microsoft and GitHub are not activated merely by building an APK.
 ## Native behavior
 
 - Android Back closes dialogs, returns to Today, then minimizes the app.
+- Tapping an exercise image enlarges it inside the app, so it does not navigate away from the saved workout.
 - The screen stays awake while Iron Six is foregrounded. Leaving the app pauses and checkpoints the circuit; resuming does not skip unseen work intervals.
 - Supabase token refresh pauses in the background and resumes when the app is active.
 - Export backup opens Android's document picker and saves to a destination selected by the user. It requires no broad file access permission.
@@ -42,4 +43,4 @@ Google, Apple, Microsoft and GitHub are not activated merely by building an APK.
 
 The JavaScript tests cover native routing, callback validation, duplicate callbacks, background pause, safe export and packaged asset completeness. Also build with Android Studio and test on a physical device: sign-in and return, cold-start callback, set logging followed by force-stop/reopen, offline edits followed by sync, a complete circuit with sound and app switching, Back behavior and backup export. Test upgrades with the intended signing key. A successful JavaScript test run alone does not verify the Android binary.
 
-This initial project has not yet produced a verified APK in the development environment because installation of JDK 21 was blocked by automatic approval review. The environment only has JDK 17. The Vercel release push succeeded, but manual production deployment was also blocked by automatic approval review. These are build/deployment limitations, not completed release steps.
+Local APK compilation was blocked because this environment only has JDK 17 and automatic approval review failed on the JDK 21 download. GitHub Actions uses its preinstalled Android toolchain instead; see the Android test build run for compilation, signature verification and artifacts. Physical-device verification and release signing remain separate steps. Source pushes succeeded, but manual Vercel production deployment was blocked by automatic approval review.

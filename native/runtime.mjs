@@ -49,6 +49,8 @@ export function installNative({win,App,Browser,createClient,WorkoutBackup}){
   });
   App.addListener('backButton',()=>{
     win.IronSixCircuit?.pause('Paused');
+    const imageDialog=win.document.querySelector('dialog[data-exercise-image][open]');
+    if(imageDialog){imageDialog.close();return}
     const modal=win.document.querySelector('.modal-backdrop.show');
     if(modal){modal.querySelector('button[id*="Close"],button[id^="cancel"],button[id^="close"]')?.click();return}
     if(!win.document.getElementById('today')?.classList.contains('active')){win.showView?.('today');return}
@@ -57,6 +59,15 @@ export function installNative({win,App,Browser,createClient,WorkoutBackup}){
   win.document.addEventListener('click',event=>{
     const link=event.target.closest?.('a[href]');if(!link)return;
     const url=new URL(link.href,win.location.href);
+    if(url.origin===win.location.origin&&/^\/assets\/exercises\/[a-z0-9-]+\.png$/.test(url.pathname)){
+      event.preventDefault();
+      const dialog=win.document.createElement('dialog'),image=win.document.createElement('img'),close=win.document.createElement('button');
+      dialog.dataset.exerciseImage='true';dialog.setAttribute('aria-label','Exercise illustration');
+      dialog.style.cssText='max-width:94vw;max-height:90vh;border:0;border-radius:16px;padding:12px;background:#fff;color:#111';
+      image.src=url.href;image.alt=link.querySelector('img')?.alt||'Exercise position';image.style.cssText='display:block;max-width:86vw;max-height:72vh;object-fit:contain';
+      close.type='button';close.textContent='Close image';close.className='btn';close.style.cssText='display:block;margin:10px auto 0;background:#0b0c0f;color:#fff';close.onclick=()=>dialog.close();
+      dialog.append(image,close);dialog.addEventListener('close',()=>dialog.remove());win.document.body.append(dialog);dialog.showModal();return;
+    }
     if(url.protocol==='https:'&&url.origin!==win.location.origin){event.preventDefault();void Browser.open({url:url.href}).catch(()=>notify('Could not open the browser. Try again.'));}
   });
   const api={

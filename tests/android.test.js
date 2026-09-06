@@ -39,6 +39,11 @@ test('native callbacks handle cold launch, duplicates, cancellation and backgrou
   await win.fetch('/api/coach',{method:'POST',body:'test'});assert(calls.at(-1)[1].startsWith('https://iron-six-training-'));assert.equal(calls.at(-1)[2].body,'test');
   await native.exportBackup('{"test":true}');assert.equal(calls.at(-1)[0],'export');
   let closed=false;win.document.getElementById('closeExerciseSwap').onclick=()=>{closed=true};events.backButton();assert(closed);
+  win.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','')};
+  win.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');this.dispatchEvent(new win.Event('close'))};
+  const imageLink=win.document.createElement('a');imageLink.href='/assets/exercises/push-ups-1.png';imageLink.innerHTML='<img alt="Push-up position 1">';win.document.body.append(imageLink);imageLink.click();
+  assert(win.document.querySelector('dialog[open] img').src.endsWith('/assets/exercises/push-ups-1.png'));
+  events.backButton();assert.equal(win.document.querySelector('dialog'),null,'Android Back closes the image instead of leaving the workout');
   await assert.rejects(native.openOAuth('javascript:alert(1)'));
   dom.window.close();
 });
