@@ -15,6 +15,8 @@ npm run android:open
 
 In Android Studio, select a connected Android device or emulator and Run. For an installable test APK run `npm run android:apk`; the output is `android/app/build/outputs/apk/debug/app-debug.apk`. The minimum Android version is 7.0 (API 24). A modern Android System WebView is required.
 
+The **Android test build** GitHub Actions workflow also builds a test APK and unsigned release bundle using GitHub's preinstalled JDK 21 and Android SDK 36. Its downloadable `iron-six-android-test` artifact is retained for 30 days. It does not publish to Google Play or use a release signing key. Each CI debug build may have a different test signing key; use a stable private release key before distributing updates to users.
+
 `npm run android:bundle` creates an **unsigned** release bundle. Configure your private signing key in Android Studio to make a distributable signed release. Keep signing keys outside this repository. Use the same signing key for future updates, so users can update without uninstalling and losing local-only records. Do not treat a debug APK as a Play Store release.
 
 ## Sign-in setup

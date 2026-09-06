@@ -1,0 +1,57 @@
+name: Android test build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/android.yml'
+      - 'android/**'
+      - 'native/**'
+      - 'scripts/build-android-web.mjs'
+      - 'capacitor.config.json'
+      - '*.js'
+      - '*.html'
+      - '*.css'
+      - 'assets/**'
+      - 'package*.json'
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Verify preinstalled Android tools
+        run: |
+          test -x "$JAVA_HOME_21_X64/bin/java"
+          test -f "$ANDROID_HOME/platforms/android-36/android.jar"
+          test -x "$ANDROID_HOME/build-tools/36.0.0/apksigner"
+      - run: npm ci
+      - run: npm test
+      - run: npm run android:sync
+      - name: Build test APK and unsigned release bundle
+        working-directory: android
+        run: |
+          export JAVA_HOME="$JAVA_HOME_21_X64"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          ./gradlew --no-daemon assembleDebug bundleRelease
+      - name: Verify APK signature and package
+        run: |
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify android/app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging android/app/build/outputs/apk/debug/app-debug.apk
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: iron-six-android-test
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/bundle/release/app-release.aab
