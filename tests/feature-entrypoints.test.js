@@ -45,3 +45,10 @@ assert(guide.indexOf("b==='arms'") < guide.indexOf("b==='curl'"), 'supersets mus
 assert(coach.includes("guide.scrollIntoView({behavior:'smooth',block:'start'})"), 'coach rendering must preserve guide-first focus');
 
 for (const page of ['index.html','live.html']) { const html=fs.readFileSync(page,'utf8'); assert(html.indexOf('session-planner.js')>html.indexOf('engine.js')); assert(html.indexOf('workout-store.js')<html.indexOf('ui2.js')); assert(html.indexOf('circuit-player.js')>html.indexOf('ui3.js')); }
+
+const cloudHistory = fs.readFileSync('cloud-history-sync.js','utf8');
+for (const runtime of ['coach-recovery.js','auth-hardening.js']) assert(cloudHistory.includes(runtime),`runtime loader must request ${runtime}`);
+for (const builder of ['scripts/build-web.mjs','scripts/build-android-web.mjs']) {
+  const source=fs.readFileSync(builder,'utf8');
+  for (const runtime of ['coach-recovery.js','auth-hardening.js']) assert(source.includes(runtime),`${builder} must package ${runtime}`);
+}
