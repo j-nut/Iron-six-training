@@ -136,9 +136,11 @@
     $('accountPassword').autocomplete=mode==='login'?'current-password':'new-password';
     $('accountConfirm').required=['signup','password'].includes(mode);
     $('accountSubmit').textContent=({login:'Sign in',signup:'Create account',magic:'Send sign-in link',reset:'Send password reset',password:'Save new password'})[mode];
+    $('accountForm').dataset.authMode=mode;
+    $('accountTabs')?.querySelectorAll('[data-auth]').forEach(b=>b.classList.toggle('is-active',b.dataset.auth===mode));
     $('accountSubmit').disabled=busy||!client;$('accountStatus').textContent=message;renderConflicts();window.IronSixSocialAuth?.render(session);
   }
-  function openAccount(){renderAccount();$('cloudModal')?.classList.add('show');$('cloudClose')?.focus()}
+  function openAccount(){renderAccount();$('cloudModal')?.classList.add('show');$('cloudClose')?.focus({preventScroll:true});const sheet=$('cloudModal')?.querySelector('.modal');if(sheet)sheet.scrollTop=0}
   function clearPasswords(){$('accountPassword').value='';$('accountConfirm').value=''}
   async function submitAccount(event){
     event.preventDefault();if(!client||busy)return;
