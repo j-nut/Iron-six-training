@@ -16,4 +16,6 @@
   loadRuntimeScript('account-polish.js?v=1','account-polish','__ironSixAccountPolish');
   loadRuntimeScript('adaptive-insights.js?v=1','adaptive-insights','__ironSixAdaptiveInsightsLoaded');
   loadRuntimeScript('trainer-intelligence-v2.js?v=1','trainer-intelligence-v2','__ironSixTrainerIntelligenceV2Loaded');
+  loadRuntimeScript('music-originals.js?v=1','music-originals','__ironSixMusicOriginalsLoaded');
+  loadRuntimeScript('music.js?v=1','music','__ironSixMusicLoaded');
 })();
