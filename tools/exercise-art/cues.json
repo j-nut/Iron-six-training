@@ -1,0 +1,12 @@
+{
+  "back-squat": { "cues": ["Brace before you unrack, not after.", "Knees track over the toes.", "Descend until the hip crease passes the knee if you can hold position."], "mistake": "Letting the chest drop faster than the hips out of the bottom." },
+  "goblet-squat": { "cues": ["Hold the bell tight to the chest.", "Elbows travel inside the knees.", "Keep the torso tall the whole way down."], "mistake": "Letting the bell drift away from the body." },
+  "bodyweight-squat": { "cues": ["Sit between the hips, not straight down.", "Keep full-foot pressure.", "Stand tall without locking hard."], "mistake": "Heels lifting at the bottom." },
+  "romanian-deadlift": { "cues": ["Push the hips back before the bar moves.", "Keep the bar in contact with the thighs.", "Stop when the hamstrings stop lengthening."], "mistake": "Turning it into a squat by bending the knees early." },
+  "overhead-press": { "cues": ["Squeeze the glutes so the ribs stay down.", "Move the head back, then through, as the bar clears.", "Finish with the bar over the mid-foot."], "mistake": "Leaning back to make the lockout instead of pressing." },
+  "push-up": { "cues": ["Hands under the shoulders.", "Hold one line from ear to ankle.", "Lower under control to a consistent depth."], "mistake": "Hips sagging before the chest arrives." },
+  "pull-up": { "cues": ["Start from a full hang.", "Pull the elbows down toward the ribs.", "Control the descent instead of dropping."], "mistake": "Kipping the hips to finish the rep." },
+  "bench-press": { "cues": ["Set the shoulder blades down and back.", "Keep the forearms vertical at the bottom.", "Drive the feet into the floor."], "mistake": "Bouncing the bar off the chest." },
+  "bent-over-row": { "cues": ["Hinge until the torso is near parallel.", "Pull to the lower ribs.", "Keep the neck in line with the spine."], "mistake": "Standing up into the pull to move heavier weight." },
+  "band-row": { "cues": ["Set tension before the first rep.", "Lead with the elbows.", "Pause briefly at the squeeze."], "mistake": "Letting the shoulders roll forward on the return." }
+}

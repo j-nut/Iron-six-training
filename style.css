@@ -120,3 +120,20 @@ html{scroll-padding-bottom:120px}
   .done:active{transform:none}
   .field,.done,.account-mode-link{transition:none}
 }
+
+/* Exercise media: visual first, then the two or three cues that change the rep. */
+.exercise-media .media-cues{margin:10px 0 0;padding:0}
+.exercise-media .media-cues ul{margin:0;padding-left:17px;display:grid;gap:3px}
+.exercise-media .media-cues li{font-size:12.5px;line-height:1.45;color:var(--text);opacity:.92}
+.exercise-media .media-mistake{margin:7px 0 0;font-size:12px;line-height:1.4;color:var(--muted)}
+.exercise-media .media-mistake b{color:var(--text);opacity:.85}
+.exercise-media .media-credit{display:block;font-size:11px;color:var(--muted);margin-top:6px}
+.exercise-media[data-media-tier="4"] .media-variant,
+.exercise-media[data-media-tier="5"] .media-variant{font-weight:700}
+/* The motion-demo layer emits this notice outside the figure, so it is styled on its own
+   rather than only as a descendant of .exercise-media. */
+.media-variant{font-size:11.5px;line-height:1.4;color:var(--muted);margin:5px 0 0;font-weight:600}
+/* The card is a flex column with an explicit order; a notice emitted as a sibling of the
+   media must share the media's order or it detaches from the image it describes. */
+.exercise>.media-variant{order:2;padding:0 12px 10px}
+.exercise-media-frames a span{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}

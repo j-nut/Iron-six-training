@@ -13,17 +13,20 @@
   }
   style();
   const prior=window.IronSixMediaView?.gallery;
-  if(prior&&window.IronSixExerciseMedia?.resolve){
+  if(prior&&(window.IronSixMediaResolver?.legacyShape||window.IronSixExerciseMedia?.resolve)){
     window.IronSixMediaView.gallery=function(exercise,{compact=false}={}){
       return String(exercise?.name||'').split(' + ').map(name=>{
-        const media=window.IronSixExerciseMedia.resolve(name);
+        // Resolver first so first-party art outranks legacy art and any substitution keeps
+        // its label; the catalogue stays as a fallback if the resolver is unavailable.
+        const media=window.IronSixMediaResolver?.legacyShape?.(name)||window.IronSixExerciseMedia?.resolve?.(name);
         if(!media)return prior({name},{compact});
+        const notice=media.label?'<p class="media-variant">'+String(media.label).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))+'</p>':'';
         const variant=/paused|tempo/i.test(name)?'<p class="media-variant">Standard movement shown. Follow the prescribed pause or tempo.</p>':'';
-        return demo(name,media,compact)+variant;
+        return demo(name,media,compact)+notice+variant;
       }).join('');
     };
   }
   document.addEventListener('click',e=>{const b=e.target.closest?.('[data-motion-toggle]');if(!b)return;const root=b.closest('[data-motion-demo]');const on=root.classList.toggle('playing');b.classList.toggle('active',on);b.textContent=on?'Pause demo':'Auto demo'});
-  function coverage(exercises){const names=[...new Set((exercises||[]).flatMap(x=>String(x.name||'').split(' + ')))];const covered=names.filter(n=>window.IronSixExerciseMedia?.resolve?.(n));return {total:names.length,covered:covered.length,missing:names.filter(n=>!window.IronSixExerciseMedia?.resolve?.(n)),pct:names.length?Math.round(covered.length/names.length*100):100}}
+  function coverage(exercises){const names=[...new Set((exercises||[]).flatMap(x=>String(x.name||'').split(' + ')))];const covered=names.filter(n=>window.IronSixMediaResolver?.legacyShape?.(n)||window.IronSixExerciseMedia?.resolve?.(n));return {total:names.length,covered:covered.length,missing:names.filter(n=>!window.IronSixExerciseMedia?.resolve?.(n)),pct:names.length?Math.round(covered.length/names.length*100):100}}
   window.IronSixMediaV2={coverage,cues};
 })();

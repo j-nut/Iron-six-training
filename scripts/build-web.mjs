@@ -28,12 +28,22 @@ await Promise.all(Array.from({length: 6}, async () => {
   }
 }));
 
+// First-party exercise art is generated from committed source in this repo, so it ships
+// directly rather than through the third-party image checksum manifest above.
+const { readdir } = await import('node:fs/promises');
+let artCount = 0;
+try {
+  const artFiles = (await readdir(resolve(root, 'assets/exercise-art'))).filter(f => /^[a-z0-9-]+\.svg$/.test(f));
+  await mkdir(resolve(out, 'assets/exercise-art'), { recursive: true });
+  for (const file of artFiles) { await cp(resolve(root, 'assets/exercise-art', file), resolve(out, 'assets/exercise-art', file)); artCount++; }
+} catch (error) { if (error.code !== 'ENOENT') throw error; }
+
 const html = await readFile(resolve(root, 'index.html'), 'utf8');
 const scripts = [...html.matchAll(/<script src="([^"?]+)(?:\?[^" ]*)?"/g)].map(match => match[1]);
-const runtimeScripts = ['coach-recovery.js','auth-hardening.js','account-polish.js','adaptive-insights.js','trainer-intelligence-v2.js','progress-analytics-v2.js','session-adaptation-v3.js','media-experience-v2.js','music-originals.js','music.js'];
+const runtimeScripts = ['coach-recovery.js','auth-hardening.js','account-polish.js','adaptive-insights.js','trainer-intelligence-v2.js','progress-analytics-v2.js','session-adaptation-v3.js','media-experience-v2.js','music-originals.js','music.js','session-resume.js'];
 const files = [...new Set(['index.html','live.html','style.css','EXERCISE_MEDIA.md','MUSIC.md',...scripts,...runtimeScripts])];
 for (const file of files) { if (!/^[a-zA-Z0-9_.-]+$/.test(file) || file.includes('..')) throw Error('Unexpected public file'); await cp(resolve(root,file),resolve(out,file)); }
 const checksums = {};
 for (const file of files) checksums[file] = createHash('sha256').update(await readFile(resolve(out,file))).digest('hex');
 await writeFile(resolve(out,'release.json'), JSON.stringify({files:checksums,images:manifest.files},null,2)+'\n');
-console.log(`Web release ready: ${files.length} public files (${runtimeScripts.length} runtime-loaded), ${Object.keys(manifest.files).length} verified exercise images.`);
+console.log(`Web release ready: ${files.length} public files (${runtimeScripts.length} runtime-loaded), ${Object.keys(manifest.files).length} verified exercise images, ${artCount} Iron Six art frames.`);

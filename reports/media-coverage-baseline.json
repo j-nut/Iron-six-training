@@ -1,0 +1,35 @@
+{
+ "note": "Ratchet baseline for tests/exercise-media-coverage.test.js. comingSoon lists the grandfathered backlog; it may only shrink. Regenerate with tools/build-coverage-baseline.mjs after genuine improvements.",
+ "generatedAt": "2026-09-07",
+ "total": 85,
+ "exact": 34,
+ "tiers": {
+  "1": 15,
+  "2": 17,
+  "3": 2,
+  "4": 3,
+  "5": 29,
+  "6": 19
+ },
+ "comingSoon": [
+  "Ab Wheel Rollout",
+  "Band Face Pull",
+  "Band Hamstring Curl",
+  "Band Pallof Press",
+  "Banded Hip Thrust",
+  "Barbell Hip Thrust",
+  "Bodyweight Curl Isometric",
+  "Bodyweight Split Squat",
+  "Dumbbell Bulgarian Split Squat",
+  "Dumbbell Hip Thrust",
+  "Dumbbell Rear-Delt Fly",
+  "Dumbbell Rear-Delt Row",
+  "Hamstring Walkout",
+  "Hard-Style Plank",
+  "Landmine Reverse Lunge",
+  "Landmine Rotation",
+  "Plank",
+  "Prone Y-T Raise",
+  "Single-Leg Glute Bridge"
+ ]
+}
