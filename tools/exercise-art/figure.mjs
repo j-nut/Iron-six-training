@@ -26,7 +26,7 @@ const WIDTH = {
 export const PALETTE = {
   panel: '#F4F6F8',
   near: '#2E3A46',      // limbs closest to camera
-  far: '#8A99A8',       // far-side limbs, lighter so depth reads instantly
+  far: '#5A6875',       // far-side limbs: a shadow tone, not a highlight
   torso: '#26313B',
   head: '#26313B',
   equipment: '#141A20',

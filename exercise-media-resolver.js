@@ -87,7 +87,22 @@
     return Object.assign({ superset: false, name: parts[0] || '' }, resolveOne(parts[0] || ''));
   }
 
-  const api = { resolve, resolveOne, TIERS };
+  // The motion-demo layer (media-experience-v2.js) was written against the legacy catalogue's
+  // record shape. This exposes the resolved media in that shape so it can honour the tier
+  // order and the substitution label without being rewritten.
+  function legacyShape(name) {
+    const r = resolveOne(name);
+    if (!r.media) return null;
+    const frames = [r.media.start, r.media.finish].filter(Boolean);
+    if (!frames.length) return null;
+    return {
+      frames, title: r.media.title, source: r.media.source, author: r.media.author,
+      license: r.media.license, licenseUrl: r.media.licenseUrl,
+      tier: r.tier, label: r.label, provisional: r.provisional, cues: r.media.cues || [], mistake: r.media.mistake || ''
+    };
+  }
+
+  const api = { resolve, resolveOne, legacyShape, TIERS };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.IronSixMediaResolver = api;
 })(typeof window !== 'undefined' ? window : globalThis);

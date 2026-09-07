@@ -89,9 +89,7 @@ export function muscleOverlay(sk, muscles = []) {
 export function frame(pose, { equipment = () => ({}), title = '', label = '' } = {}) {
   const { svg: body, skeleton: sk } = figure(pose);
   const eq = equipment(sk) || {};
-  const labelSvg = label
-    ? `<text x="0" y="51" text-anchor="middle" font-family="ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="7.5" font-weight="700" letter-spacing="0.7" fill="${PALETTE.equipmentSoft}">${esc(label.toUpperCase())}</text>`
-    : '';
+  const labelSvg = '';
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${VIEWBOX}" width="480" height="480" role="img" aria-label="${esc(title)}">`
     + `<title>${esc(title)}</title>`
     + `<rect x="-50" y="-58" width="100" height="112" fill="${PALETTE.panel}"/>`
