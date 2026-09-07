@@ -14,6 +14,7 @@ import java.io.FileOutputStream;
 import java.io.FileInputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import org.json.JSONObject;
 
 @CapacitorPlugin(name = "WorkoutBackup")
 public class WorkoutBackupPlugin extends Plugin {
@@ -21,8 +22,18 @@ public class WorkoutBackupPlugin extends Plugin {
 
     @PluginMethod public void save(PluginCall call) {
         String json = call.getString("json");
-        if (json == null || json.length() > 10000000) {
-            call.reject("Backup is missing or too large to export.");
+        if (json == null || json.length() < 20 || json.length() > 10000000) {
+            call.reject("Backup is missing, empty, or too large to export.");
+            return;
+        }
+        try {
+            JSONObject payload = new JSONObject(json);
+            if (!payload.has("exportedAt") || !payload.has("profiles") || !payload.has("entries")) {
+                call.reject("Backup payload is incomplete. Your local workout remains saved.");
+                return;
+            }
+        } catch (Exception error) {
+            call.reject("Backup payload is invalid. Your local workout remains saved.");
             return;
         }
         try (FileOutputStream pending = getContext().openFileOutput(PENDING_BACKUP, Activity.MODE_PRIVATE)) {
