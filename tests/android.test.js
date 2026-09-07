@@ -15,7 +15,7 @@ test('native API routing stays on the approved backend and preserves non-API req
   assert.deepEqual(authCode('com.ironsix.training://auth/callback?code=hello'),{code:'hello',flowId:undefined});
 });
 
-test('native callbacks handle cold launch, duplicates, cancellation and background saves',async()=>{
+test('native callbacks handle cold launch, duplicates, cancellation, safe areas and background saves',async()=>{
   const {installNative,AUTH_REDIRECT}=await import('../native/runtime.mjs');
   const dom=new JSDOM('<div id="today" class="active"></div><div class="modal-backdrop show"><button id="closeExerciseSwap">Cancel</button></div>',{url:'https://localhost'});
   const win=dom.window,events={},calls=[],messages=[];
@@ -27,6 +27,8 @@ test('native callbacks handle cold launch, duplicates, cancellation and backgrou
   const client={auth:{exchangeCodeForSession:async code=>{calls.push(['exchange',code]);return {data:{session:{}}}},stopAutoRefresh:()=>calls.push(['stop']),startAutoRefresh:()=>calls.push(['start'])}};
   const native=installNative({win,App,Browser,createClient:()=>client,WorkoutBackup:{save:async({json})=>{calls.push(['export',json]);return {saved:true}}}});
   assert.equal(native.authOptions.flowType,'pkce');assert.equal(native.authOptions.detectSessionInUrl,false);
+  assert(win.document.documentElement.classList.contains('iron-six-native'));
+  assert.match(win.document.getElementById('ironSixNativeInsets').textContent,/safe-area-inset-top/);
   await native.connectCloud(client,message=>messages.push(message));
   events.appUrlOpen({url:AUTH_REDIRECT+'?code=valid-code'});
   await new Promise(resolve=>setImmediate(resolve));
@@ -37,7 +39,9 @@ test('native callbacks handle cold launch, duplicates, cancellation and backgrou
   events.appStateChange({isActive:false});events.appStateChange({isActive:true});
   for(const action of ['pause','save','stop','start','sync'])assert(calls.some(c=>c[0]===action));
   await win.fetch('/api/coach',{method:'POST',body:'test'});assert(calls.at(-1)[1].startsWith('https://iron-six-training-'));assert.equal(calls.at(-1)[2].body,'test');
-  await native.exportBackup('{"test":true}');assert.equal(calls.at(-1)[0],'export');
+  const backup=JSON.stringify({exportedAt:new Date().toISOString(),profiles:{users:[]},entries:[]});
+  await native.exportBackup(backup);assert.equal(calls.at(-1)[0],'export');assert.equal(calls.at(-1)[1],backup);
+  await assert.rejects(native.exportBackup('{}'),/empty or invalid/);
   let closed=false;win.document.getElementById('closeExerciseSwap').onclick=()=>{closed=true};events.backButton();assert(closed);
   win.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','')};
   win.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');this.dispatchEvent(new win.Event('close'))};
@@ -48,7 +52,7 @@ test('native callbacks handle cold launch, duplicates, cancellation and backgrou
   dom.window.close();
 });
 
-test('Android configuration uses local assets, exact callbacks and limited permissions',()=>{
+test('Android configuration packages direct and dynamic runtime assets with limited permissions',()=>{
   require('node:child_process').execFileSync(process.execPath,['scripts/build-android-web.mjs'],{stdio:'pipe'});
   const config=JSON.parse(fs.readFileSync('capacitor.config.json','utf8'));
   assert.equal(config.appId,'com.ironsix.training');assert.equal(config.webDir,'www');assert(!config.server.url);
@@ -59,6 +63,10 @@ test('Android configuration uses local assets, exact callbacks and limited permi
   const index=fs.readFileSync('www/index.html','utf8');assert(index.indexOf('native.js')<index.indexOf('core.js'));
   assert(fs.statSync('www/native.js').size>1000);
   for(const match of index.matchAll(/<script src="([^"?]+)(?:\?[^" ]*)?"/g))assert(fs.existsSync('www/'+match[1]),match[1]);
+  for(const runtime of ['coach-recovery.js','auth-hardening.js'])assert(fs.existsSync('www/'+runtime),`missing dynamic runtime asset ${runtime}`);
   assert(!fs.existsSync('www/api'));assert(!fs.existsSync('www/.env'));
+  const nativeSource=fs.readFileSync('native/runtime.mjs','utf8');assert(nativeSource.includes('safe-area-inset-top'));
+  const backupPlugin=fs.readFileSync('android/app/src/main/java/com/ironsix/training/WorkoutBackupPlugin.java','utf8');
+  assert(backupPlugin.includes('payload.has("entries")'));assert(!backupPlugin.includes('call.getString("json", "{}")'));
   for(const record of require('../exercise-media-catalog.js').records)for(const path of record.frames)assert(fs.existsSync('www/'+path),path);
 });
