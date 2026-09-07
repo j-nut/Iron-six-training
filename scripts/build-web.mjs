@@ -38,7 +38,7 @@ await Promise.all(Array.from({length: 6}, async () => {
 const html = await readFile(resolve(root, 'index.html'), 'utf8');
 const scripts = [...html.matchAll(/<script src="([^"?]+)(?:\?[^" ]*)?"/g)].map(match => match[1]);
 // Runtime-loaded scripts must be explicitly included because they do not appear in index.html.
-const runtimeScripts = ['coach-recovery.js', 'auth-hardening.js', 'account-polish.js'];
+const runtimeScripts = ['coach-recovery.js', 'auth-hardening.js', 'account-polish.js', 'adaptive-insights.js'];
 const files = [...new Set(['index.html', 'live.html', 'style.css', 'EXERCISE_MEDIA.md', ...scripts, ...runtimeScripts])];
 for (const file of files) {
   if (!/^[a-zA-Z0-9_.-]+$/.test(file) || file.includes('..')) throw Error('Unexpected public file');
