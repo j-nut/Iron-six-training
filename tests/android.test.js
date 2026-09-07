@@ -3,25 +3,30 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const {JSDOM}=require('jsdom');
 
-test('native API routing stays on the approved backend and preserves non-API requests',async()=>{
-  const {apiUrl,API_ORIGIN,authCode}=await import('../native/runtime.mjs');
+test('native API routing and auth callbacks stay on approved endpoints',async()=>{
+  const {apiUrl,API_ORIGIN,authCode,bridgeCallback}=await import('../native/runtime.mjs');
   assert.equal(apiUrl('/api/coach','https://localhost'),API_ORIGIN+'/api/coach');
   assert.equal(apiUrl('/api/config?test=1','https://localhost'),API_ORIGIN+'/api/config?test=1');
+  assert.equal(apiUrl('/api/auth-status','https://localhost'),API_ORIGIN+'/api/auth-status');
   assert.equal(apiUrl('/assets/exercises/push-ups-1.png','https://localhost'),'/assets/exercises/push-ups-1.png');
   assert.equal(apiUrl('https://other.test/api/coach','https://localhost'),'https://other.test/api/coach');
   assert.equal(authCode('https://evil.test/?code=hello'),null);
   assert.equal(authCode('com.ironsix.training://wrong/callback?code=hello'),null);
   assert.equal(authCode('com.ironsix.training://auth/callback#access_token=secret'),null);
   assert.deepEqual(authCode('com.ironsix.training://auth/callback?code=hello'),{code:'hello',flowId:undefined});
+  const token='x'.repeat(120);
+  assert.deepEqual(bridgeCallback('com.ironsix.training://auth/callback#nomad_access_token='+token),{token});
+  assert.equal(bridgeCallback('com.ironsix.training://wrong/callback#nomad_access_token='+token),null);
 });
 
-test('native callbacks handle cold launch, duplicates, cancellation, safe areas and background saves',async()=>{
+test('native callbacks handle PKCE, bridged Google, cancellation, safe areas and background saves',async()=>{
   const {installNative,AUTH_REDIRECT}=await import('../native/runtime.mjs');
   const dom=new JSDOM('<div id="today" class="active"></div><div class="modal-backdrop show"><button id="closeExerciseSwap">Cancel</button></div>',{url:'https://localhost'});
-  const win=dom.window,events={},calls=[],messages=[];
+  const win=dom.window,events={},calls=[],messages=[],bridges=[];
   win.fetch=async(input,options)=>{calls.push(['fetch',input,options]);return {ok:true}};
   win.IronSixCircuit={pause:()=>calls.push(['pause'])};win.saveData=()=>calls.push(['save']);
   win.IronSixCloud={syncNow:()=>calls.push(['sync'])};
+  win.addEventListener('ironsix:google-bridge',event=>bridges.push(event.detail));
   const App={addListener:async(name,fn)=>{events[name]=fn},getLaunchUrl:async()=>({url:AUTH_REDIRECT+'?code=valid-code'}),minimizeApp:async()=>calls.push(['minimize'])};
   const Browser={open:async({url})=>calls.push(['open',url]),close:async()=>calls.push(['close'])};
   const client={auth:{exchangeCodeForSession:async code=>{calls.push(['exchange',code]);return {data:{session:{}}}},stopAutoRefresh:()=>calls.push(['stop']),startAutoRefresh:()=>calls.push(['start'])}};
@@ -33,6 +38,13 @@ test('native callbacks handle cold launch, duplicates, cancellation, safe areas 
   events.appUrlOpen({url:AUTH_REDIRECT+'?code=valid-code'});
   await new Promise(resolve=>setImmediate(resolve));
   assert.equal(calls.filter(c=>c[0]==='exchange').length,1);
+  const bridgeToken='g'.repeat(160);
+  events.appUrlOpen({url:AUTH_REDIRECT+'#nomad_access_token='+bridgeToken});
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(bridges.length,1);assert.equal(bridges[0].token,bridgeToken);
+  events.appUrlOpen({url:AUTH_REDIRECT+'?bridge_error=access_denied'});
+  await new Promise(resolve=>setImmediate(resolve));
+  assert(messages.at(-1).includes('cancelled'));
   events.appUrlOpen({url:AUTH_REDIRECT+'?error=access_denied&error_description=%3Cscript%3E'});
   await new Promise(resolve=>setImmediate(resolve));
   assert(messages.at(-1).includes('cancelled'));assert(!messages.at(-1).includes('script'));
@@ -63,9 +75,9 @@ test('Android configuration packages direct and dynamic runtime assets with limi
   const index=fs.readFileSync('www/index.html','utf8');assert(index.indexOf('native.js')<index.indexOf('core.js'));
   assert(fs.statSync('www/native.js').size>1000);
   for(const match of index.matchAll(/<script src="([^"?]+)(?:\?[^" ]*)?"/g))assert(fs.existsSync('www/'+match[1]),match[1]);
-  for(const runtime of ['coach-recovery.js','auth-hardening.js'])assert(fs.existsSync('www/'+runtime),`missing dynamic runtime asset ${runtime}`);
+  for(const runtime of ['coach-recovery.js','auth-hardening.js','account-polish.js'])assert(fs.existsSync('www/'+runtime),`missing dynamic runtime asset ${runtime}`);
   assert(!fs.existsSync('www/api'));assert(!fs.existsSync('www/.env'));
-  const nativeSource=fs.readFileSync('native/runtime.mjs','utf8');assert(nativeSource.includes('safe-area-inset-top'));
+  const nativeSource=fs.readFileSync('native/runtime.mjs','utf8');assert(nativeSource.includes('safe-area-inset-top'));assert(nativeSource.includes('nomad_access_token'));
   const backupPlugin=fs.readFileSync('android/app/src/main/java/com/ironsix/training/WorkoutBackupPlugin.java','utf8');
   assert(backupPlugin.includes('payload.has("entries")'));assert(!backupPlugin.includes('call.getString("json", "{}")'));
   for(const record of require('../exercise-media-catalog.js').records)for(const path of record.frames)assert(fs.existsSync('www/'+path),path);
