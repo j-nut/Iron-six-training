@@ -1,6 +1,6 @@
 export const API_ORIGIN='https://iron-six-training-jordman55-3386s-projects.vercel.app';
 export const AUTH_REDIRECT='com.ironsix.training://auth/callback';
-const API_PATHS=new Set(['/api/config','/api/coach','/api/equipment-exercises','/api/recalculate','/api/review-workout','/api/auth-status']);
+const API_PATHS=new Set(['/api/config','/api/coach','/api/equipment-exercises','/api/recalculate','/api/review-workout','/api/auth-status','/api/music']);
 
 export function apiUrl(value,localOrigin){
   const url=new URL(value,localOrigin);
