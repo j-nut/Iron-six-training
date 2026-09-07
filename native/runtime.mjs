@@ -1,16 +1,29 @@
 export const API_ORIGIN='https://iron-six-training-jordman55-3386s-projects.vercel.app';
 export const AUTH_REDIRECT='com.ironsix.training://auth/callback';
-const API_PATHS=new Set(['/api/config','/api/coach','/api/equipment-exercises','/api/recalculate','/api/review-workout']);
+const API_PATHS=new Set(['/api/config','/api/coach','/api/equipment-exercises','/api/recalculate','/api/review-workout','/api/auth-status']);
 
 export function apiUrl(value,localOrigin){
   const url=new URL(value,localOrigin);
   return url.origin===localOrigin&&API_PATHS.has(url.pathname)?API_ORIGIN+url.pathname+url.search:value;
 }
 
+function exactCallback(url){return url.protocol==='com.ironsix.training:'&&url.hostname==='auth'&&url.pathname==='/callback'}
+
+export function bridgeCallback(value){
+  try{
+    const url=new URL(value);if(!exactCallback(url))return null;
+    const hash=new URLSearchParams(url.hash.slice(1));
+    const token=hash.get('nomad_access_token');
+    if(token&&token.length>=80&&token.length<=10000)return {token};
+    const error=url.searchParams.get('bridge_error');if(error)return {error:true};
+    return null;
+  }catch(_){return null}
+}
+
 export function authCode(value){
   try{
     const url=new URL(value);
-    if(url.protocol!=='com.ironsix.training:'||url.hostname!=='auth'||url.pathname!=='/callback'||url.hash)return null;
+    if(!exactCallback(url)||url.hash)return null;
     if(url.searchParams.has('error'))return {error:true};
     const code=url.searchParams.get('code');
     return code&&code.length<=2048?{code,flowId:url.searchParams.get('sb_flow_id')||undefined}:null;
@@ -41,9 +54,16 @@ export function installNative({win,App,Browser,createClient,WorkoutBackup}){
     return originalFetch(mapped===input.url?input:new Request(mapped,input),options);
   };
   function onUrl(url){
-    const parsed=authCode(url);if(!parsed)return Promise.resolve();
+    const bridge=bridgeCallback(url),parsed=authCode(url);
+    if(!bridge&&!parsed)return Promise.resolve();
     if(!client){pendingUrl=url;return Promise.resolve()}
     callbacks=callbacks.then(async()=>{
+      if(bridge){
+        if(bridge.error)notify('Google sign-in was cancelled. Your saved workout is unchanged.');
+        else win.dispatchEvent(new win.CustomEvent('ironsix:google-bridge',{detail:{token:bridge.token}}));
+        try{await Browser.close()}catch(_){}
+        win.dispatchEvent(new win.Event('pageshow'));return;
+      }
       if(parsed.code&&(lastCode===parsed.code||inFlightCode===parsed.code))return;
       if(parsed.error){notify('Sign-in was cancelled or declined. Your saved workout is unchanged.');return}
       inFlightCode=parsed.code;
