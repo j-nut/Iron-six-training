@@ -20,6 +20,7 @@ function setup(client){
 }
 
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
+const PROD_REDIRECT='https://iron-six-training.vercel.app/?auth=email';
 
 test('email/password sign in submits to Supabase and reports success',async()=>{
   const calls=[];
@@ -36,7 +37,7 @@ test('email/password sign in submits to Supabase and reports success',async()=>{
   dom.window.close();
 });
 
-test('account creation uses the Android callback and detects an existing account response',async()=>{
+test('account creation uses production HTTPS rather than a localhost or native email callback',async()=>{
   const calls=[];
   const client={auth:{signUp:async value=>{calls.push(value);return {data:{user:{identities:[]},session:null},error:null}}}};
   const dom=setup(client),w=dom.window;
@@ -47,8 +48,38 @@ test('account creation uses the Android callback and detects an existing account
   w.document.getElementById('accountForm').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
   await flush();
   assert.equal(calls.length,1);
-  assert.equal(calls[0].options.emailRedirectTo,'com.ironsix.training://auth/callback');
+  assert.equal(calls[0].options.emailRedirectTo,PROD_REDIRECT);
+  assert(!calls[0].options.emailRedirectTo.includes('localhost'));
+  assert(!calls[0].options.emailRedirectTo.startsWith('com.ironsix.training:'));
   assert.match(w.document.getElementById('accountStatus').textContent,/already exists/i);
+  dom.window.close();
+});
+
+test('password recovery always requests the production Iron Six redirect',async()=>{
+  const calls=[];
+  const client={auth:{resetPasswordForEmail:async(email,options)=>{calls.push({email,options});return {data:{},error:null}}}};
+  const dom=setup(client),w=dom.window;
+  w.document.getElementById('accountSubmit').textContent='Send password reset';
+  w.document.getElementById('accountEmail').value='person@example.com';
+  w.document.getElementById('accountForm').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
+  await flush();
+  assert.equal(calls.length,1);
+  assert.equal(calls[0].options.redirectTo,PROD_REDIRECT);
+  assert(!calls[0].options.redirectTo.includes('localhost'));
+  assert.match(w.document.getElementById('accountStatus').textContent,/Password-reset email sent/);
+  dom.window.close();
+});
+
+test('magic-link sign-in uses the same production email callback and cannot create users',async()=>{
+  const calls=[];
+  const client={auth:{signInWithOtp:async value=>{calls.push(value);return {data:{},error:null}}}};
+  const dom=setup(client),w=dom.window;
+  w.document.getElementById('accountSubmit').textContent='Send sign-in link';
+  w.document.getElementById('accountEmail').value='person@example.com';
+  w.document.getElementById('accountForm').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
+  await flush();
+  assert.equal(calls[0].options.emailRedirectTo,PROD_REDIRECT);
+  assert.equal(calls[0].options.shouldCreateUser,false);
   dom.window.close();
 });
 
