@@ -3,10 +3,11 @@
   if(window.__ironSixAuthHardened)return;window.__ironSixAuthHardened=true;
   const $=id=>document.getElementById(id);
   const ACTIONS={'Sign in':'login','Create account':'signup','Send sign-in link':'magic','Send password reset':'reset','Save new password':'password'};
+  const EMAIL_AUTH_REDIRECT='https://iron-six-training.vercel.app/?auth=email';
   let submitting=false;
   const message=text=>{const el=$('accountStatus');if(el)el.textContent=text};
   const clean=value=>String(value||'').replace(/\s+/g,' ').trim().slice(0,300);
-  const redirectTo=()=>window.IronSixNative?.redirectTo||location.origin+location.pathname;
+  const emailRedirectTo=()=>EMAIL_AUTH_REDIRECT;
   function timed(promise,ms=20000){
     let timer;
     return Promise.race([
@@ -38,9 +39,9 @@
     try{
       let result;
       if(action==='login')result=await timed(client.auth.signInWithPassword({email,password}));
-      if(action==='signup')result=await timed(client.auth.signUp({email,password,options:{emailRedirectTo:redirectTo()}}));
-      if(action==='magic')result=await timed(client.auth.signInWithOtp({email,options:{emailRedirectTo:redirectTo(),shouldCreateUser:false}}));
-      if(action==='reset')result=await timed(client.auth.resetPasswordForEmail(email,{redirectTo:redirectTo()}));
+      if(action==='signup')result=await timed(client.auth.signUp({email,password,options:{emailRedirectTo:emailRedirectTo()}}));
+      if(action==='magic')result=await timed(client.auth.signInWithOtp({email,options:{emailRedirectTo:emailRedirectTo(),shouldCreateUser:false}}));
+      if(action==='reset')result=await timed(client.auth.resetPasswordForEmail(email,{redirectTo:emailRedirectTo()}));
       if(action==='password')result=await timed(client.auth.updateUser({password}));
       if(result?.error)throw result.error;
       if(action==='login'&&!result?.data?.session)throw Object.assign(new Error('No authenticated session was returned.'),{code:'missing_session'});
@@ -51,8 +52,8 @@
       else if(action==='password')message('Password updated successfully.');
       else if(action==='signup'&&result?.data?.session)message('Account created and signed in. Syncing your workouts…');
       else if(action==='signup')message('Account created. Check your email to confirm it, then return to Iron Six.');
-      else if(action==='magic')message('Sign-in link sent. Open the email on this device to return to Iron Six.');
-      else if(action==='reset')message('Password-reset email sent. Open it on this device to return to Iron Six.');
+      else if(action==='magic')message('Sign-in link sent. Open the email link to finish on Iron Six.');
+      else if(action==='reset')message('Password-reset email sent. Open the email link to set a new password on Iron Six.');
       if(['login','signup','password'].includes(action)){if($('accountPassword'))$('accountPassword').value='';if($('accountConfirm'))$('accountConfirm').value=''}
     }catch(error){message(friendly(error,action))}
     finally{submitting=false;if(button)button.disabled=!window.IronSixCloud?.client?.();form?.removeAttribute('aria-busy')}
