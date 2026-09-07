@@ -18,7 +18,7 @@ export function authCode(value){
 }
 
 export function installNative({win,App,Browser,createClient,WorkoutBackup}){
-  let client=null,pendingUrl=null,notify=()=>{},lastCode=null;
+  let client=null,pendingUrl=null,notify=()=>{},lastCode=null,inFlightCode=null;
   let callbacks=Promise.resolve();
   const originalFetch=win.fetch.bind(win);
   win.fetch=(input,options)=>{
@@ -30,15 +30,22 @@ export function installNative({win,App,Browser,createClient,WorkoutBackup}){
     const parsed=authCode(url);if(!parsed)return Promise.resolve();
     if(!client){pendingUrl=url;return Promise.resolve()}
     callbacks=callbacks.then(async()=>{
-      if(parsed.code&&lastCode===parsed.code)return;
+      if(parsed.code&&(lastCode===parsed.code||inFlightCode===parsed.code))return;
       if(parsed.error){notify('Sign-in was cancelled or declined. Your saved workout is unchanged.');return}
-      lastCode=parsed.code;
+      inFlightCode=parsed.code;
       try{
         const result=await client.auth.exchangeCodeForSession(parsed.code,parsed.flowId?{flowId:parsed.flowId}:undefined);
         if(result.error)throw result.error;
+        lastCode=parsed.code;
         notify('Sign-in complete. Syncing your account…');
-      }catch(_){notify('This sign-in link could not be completed. Start sign-in again on this device. Your workout is still saved.');}
-      finally{try{await Browser.close()}catch(_){}win.dispatchEvent(new win.Event('pageshow'))}
+      }catch(_){
+        lastCode=null;
+        notify('This sign-in callback did not complete. You can retry sign-in without losing your workout.');
+      } finally {
+        inFlightCode=null;
+        try{await Browser.close()}catch(_){}
+        win.dispatchEvent(new win.Event('pageshow'));
+      }
     });
     return callbacks;
   }
