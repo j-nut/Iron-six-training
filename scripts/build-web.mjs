@@ -37,7 +37,9 @@ await Promise.all(Array.from({length: 6}, async () => {
 
 const html = await readFile(resolve(root, 'index.html'), 'utf8');
 const scripts = [...html.matchAll(/<script src="([^"?]+)(?:\?[^" ]*)?"/g)].map(match => match[1]);
-const files = [...new Set(['index.html', 'live.html', 'style.css', 'EXERCISE_MEDIA.md', ...scripts])];
+// Runtime-loaded scripts must be explicitly included because they do not appear in index.html.
+const runtimeScripts = ['coach-recovery.js', 'auth-hardening.js'];
+const files = [...new Set(['index.html', 'live.html', 'style.css', 'EXERCISE_MEDIA.md', ...scripts, ...runtimeScripts])];
 for (const file of files) {
   if (!/^[a-zA-Z0-9_.-]+$/.test(file) || file.includes('..')) throw Error('Unexpected public file');
   await cp(resolve(root, file), resolve(out, file));
@@ -45,4 +47,4 @@ for (const file of files) {
 const checksums = {};
 for (const file of files) checksums[file] = createHash('sha256').update(await readFile(resolve(out, file))).digest('hex');
 await writeFile(resolve(out, 'release.json'), JSON.stringify({files: checksums, images: manifest.files}, null, 2) + '\n');
-console.log(`Web release ready: ${files.length} public files, ${Object.keys(manifest.files).length} verified exercise images.`);
+console.log(`Web release ready: ${files.length} public files (${runtimeScripts.length} runtime-loaded), ${Object.keys(manifest.files).length} verified exercise images.`);
