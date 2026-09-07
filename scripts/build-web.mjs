@@ -30,8 +30,8 @@ await Promise.all(Array.from({length: 6}, async () => {
 
 const html = await readFile(resolve(root, 'index.html'), 'utf8');
 const scripts = [...html.matchAll(/<script src="([^"?]+)(?:\?[^" ]*)?"/g)].map(match => match[1]);
-const runtimeScripts = ['coach-recovery.js', 'auth-hardening.js', 'account-polish.js', 'adaptive-insights.js', 'trainer-intelligence-v2.js', 'music-originals.js', 'music.js'];
-const files = [...new Set(['index.html', 'live.html', 'style.css', 'EXERCISE_MEDIA.md', ...scripts, ...runtimeScripts])];
+const runtimeScripts = ['coach-recovery.js', 'auth-hardening.js', 'account-polish.js', 'adaptive-insights.js', 'trainer-intelligence-v2.js', 'progress-analytics-v2.js', 'music-originals.js', 'music.js'];
+const files = [...new Set(['index.html', 'live.html', 'style.css', 'EXERCISE_MEDIA.md', 'MUSIC.md', ...scripts, ...runtimeScripts])];
 for (const file of files) {
   if (!/^[a-zA-Z0-9_.-]+$/.test(file) || file.includes('..')) throw Error('Unexpected public file');
   await cp(resolve(root, file), resolve(out, file));

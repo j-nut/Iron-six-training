@@ -1,0 +1,18 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const now=Date.now(),DAY=864e5;
+const context={window:{},Date,Math,Number,Array,Object,String,JSON,setTimeout(){},document:{getElementById(){return null},addEventListener(){},head:{appendChild(){}}}};context.window=context;
+context.IronSixInsights={flattenHistory(user){const out=[];for(const h of user.history||[])for(const e of h.details||[])for(const s of e.sets||[])out.push({ts:h.ts,exercise:e.name,base:e.base||'',weight:+s.weight||0,reps:+s.reps||0,rir:+s.rir||0,volume:(+s.weight||0)*(+s.reps||0),e1rm:(+s.weight||0)*(1+((+s.reps||0)+(+s.rir||0))/30)});return out.sort((a,b)=>b.ts-a.ts)}};
+vm.createContext(context);vm.runInContext(fs.readFileSync('progress-analytics-v2.js','utf8'),context);
+const api=context.IronSixProgressV2;
+const session=(days,name,weight,reps,rir,muscles=['chest'])=>({ts:now-days*DAY,muscles,details:[{name,base:'Horizontal press',sets:[{weight,reps,rir,done:true},{weight,reps:Math.max(1,reps-1),rir,done:true}]}]});
+const user={history:[session(1,'Bench',185,10,2),session(8,'Bench',175,9,2),session(15,'Bench',165,9,2)],trainingFeedback:[]};
+const rec=api.records(user);assert.equal(rec[0].exercise,'Bench');assert(rec[0].types.includes('weight'));assert(rec[0].types.includes('strength'));
+const hist=api.exerciseHistory(user,'Bench');assert.equal(hist.length,3);assert(hist[2].e1rm>hist[0].e1rm);
+const weekly=api.weekly(user,now,8);assert.equal(weekly.length,8);assert(weekly.some(w=>w.volume>0));
+const consistency=api.consistency(user,now);assert.equal(consistency.sessions28,3);assert(consistency.activeWeeks8>=3);
+const balance=api.muscleBalance(user,now,14);assert(balance.find(x=>x.muscle==='chest').sets>0);
+const freshUser={history:[session(4,'Bench',185,8,3)],trainingFeedback:[]};
+const tiredUser={history:[session(.1,'Bench',185,8,0),session(1,'Bench',180,8,0)],trainingFeedback:[{ts:now-.05*DAY,feedback:'hard',exercise:'chest press',base:'chest'},{ts:now-.02*DAY,feedback:'pain',exercise:'chest press',base:'chest'}]};
+const fresh=api.recovery(freshUser,now).chest,tired=api.recovery(tiredUser,now).chest;assert(fresh.score>tired.score);assert(tired.hard>=2);assert.equal(tired.pain,1);assert.match(tired.label,/Recovering|High recent load/);
