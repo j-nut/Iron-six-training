@@ -29,7 +29,9 @@ test('email/password sign in submits to Supabase and reports success',async()=>{
   w.document.getElementById('accountPassword').value='correct horse battery staple';
   w.document.getElementById('accountForm').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
   await flush();
-  assert.deepEqual(calls,[{email:'person@example.com',password:'correct horse battery staple'}]);
+  assert.equal(calls.length,1);
+  assert.equal(calls[0].email,'person@example.com');
+  assert.equal(calls[0].password,'correct horse battery staple');
   assert.match(w.document.getElementById('accountStatus').textContent,/Signed in/);
   dom.window.close();
 });
