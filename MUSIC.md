@@ -35,7 +35,30 @@ The server returns a ranked pool of up to forty tracks and the client shuffles i
 
 `api/music.js` normalises every source into one track model, so a new provider only has to supply a normaliser and pass both rights gates.
 
-- **ccMixter** — implemented as a normaliser (`cleanCcMixter`) and gated behind the `MUSIC_CCMIXTER` environment variable, which is **off by default**. Its response shape has not yet been verified against the live ccMixter API from a networked environment. Verify a real response, confirm attribution rendering, then enable the flag on a preview deployment before production.
+- **ccMixter** — implemented as a normaliser (`cleanCcMixter`) and gated behind the `MUSIC_CCMIXTER`
+  environment variable, which is **off by default and must stay off** until the two transport
+  defects below are fixed.
+
+  Verified against the live API on September 7, 2026. The **field mapping is correct**: rows expose
+  `upload_id`, `upload_name`, `upload_extra.bpm`, `user_real_name`, `file_page_url`, `license_name`,
+  `license_url` and `files[].download_url`, which is exactly what `cleanCcMixter` reads. The licence
+  gate also behaves correctly — of 10 live rows, the 2 carrying `Attribution (4.0)` were kept and the
+  `Attribution Noncommercial (4.0)` rows were rejected.
+
+  Two transport defects nevertheless make the integration return **zero tracks** today:
+
+  1. `collectCcMixter` requests `limit=30`. ccMixter returns `200 OK` with an **empty body** for any
+     `limit` at or above 20 (`limit=5` → 19 KB, `limit=10` → 45 KB, `limit=20` → 0, `limit=30` → 0).
+  2. At the limits that do return a body, ccMixter mirrors the entire JSON payload into an `X-JSON`
+     **response header** (~45 KB at `limit=10`). That exceeds Node's 16 KB header cap, so `fetch`
+     throws `UND_ERR_HEADERS_OVERFLOW` before the body is ever read.
+
+  `Promise.allSettled` swallows both failures, so enabling the flag would not break the endpoint — it
+  would simply add an upstream that never contributes anything. Before enabling: lower the limit to
+  10 or below **and** read the response through a client that tolerates large headers (an undici
+  `Agent` with a raised `maxHeaderSize`, or `--max-http-header-size`). Note also that
+  `upload_extra.duration` does not exist, so `duration` is always `0` and the duration ranking term
+  is inert for ccMixter tracks.
 - **Free Music Archive** — not integrated. Only per-track CC0, public-domain or CC BY records would qualify; the catalogue as a whole is not commercially free.
 - **Pixabay Music** — not integrated. Its license permits use inside a larger work but restricts standalone redistribution. Confirm the in-app playback model fits their current terms before integrating, and never expose raw downloads.
 
