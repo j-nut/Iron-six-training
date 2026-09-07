@@ -153,14 +153,19 @@
     if(/hamstring curl|hamstring walkout/.test(n)||/ham_curl/.test(b))return 'ham_curl';
     if(/calf/.test(n)||/calves/.test(b))return 'calves';
     if(/squat/.test(n)||/squat/.test(b))return 'squat';
-    if(/bench press|dumbbell bench|incline.*press|flat press|push-up/.test(n)||b==='bench')return 'bench';
-    if(/chest fly|dumbbell fly|wide push-up/.test(n)||/fly/.test(b))return 'fly';
-    if(/landmine press|shoulder press|overhead press|pike push-up/.test(n)||/overhead_press|vertical press/.test(b))return 'overhead_press';
+    // Specific push-up variants must be tested BEFORE the generic rule below. The bare
+    // "push-up" alternative used to match first, which made the pike, diamond and wide rules
+    // unreachable and taught a vertical press and a triceps movement with bench-press cues.
+    if(/pike push-up|handstand push-up/.test(n))return 'overhead_press';
+    if(/diamond push-up/.test(n))return 'triceps';
+    if(/chest fly|dumbbell fly|floor fly|wide push-up|chest squeeze/.test(n)||/fly/.test(b))return 'fly';
+    if(/bench press|dumbbell bench|incline.*press|flat press|floor press|floor dumbbell press|squeeze press|chest press|push-up/.test(n)||b==='bench')return 'bench';
+    if(/landmine press|shoulder press|overhead press/.test(n)||/overhead_press|vertical press/.test(b))return 'overhead_press';
     if(/lateral raise/.test(n)||/lateral_raise/.test(b))return 'lateral_raise';
-    if(/face pull|rear-delt|y-t raise/.test(n)||/rear_delt|scapular pull/.test(b))return 'rear_delt';
+    if(/face pull|rear-delt|y-t raise|snow angel/.test(n)||/rear_delt|rear delt|scapular pull/.test(b))return 'rear_delt';
     if(/row/.test(n)||b==='row'||/horizontal pull/.test(b))return 'row';
     if(/pull-up|chin-up|lat pulldown|prone lat pull/.test(n)||/pullup|vertical pull/.test(b))return 'pullup';
-    if(/straight-arm pulldown|pullover|lat press/.test(n)||/lat_iso/.test(b))return 'lat_iso';
+    if(/straight-arm pulldown|pullover|lat press|swimmer/.test(n)||/lat_iso|lat isolation/.test(b))return 'lat_iso';
     if(/curl \+|arms finisher|supersets/.test(n)||b==='arms')return 'arms';
     if(/hammer curl/.test(n)||/hammer_curl/.test(b))return 'hammer_curl';
     if(/curl/.test(n)||b==='curl'||/elbow flexion/.test(b))return 'curl';
