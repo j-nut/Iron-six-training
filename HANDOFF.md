@@ -389,10 +389,16 @@ If replacing/adapting existing Everkinetic images, respect CC BY-SA attribution/
 
 ## 13. Music — current state, limitation and recommended v2
 
-### Current state
-`api/music.js` + `music.js` implement Audius-powered workout radio with conservative rights filtering. Current UX has too little usable music in several genres/stations — sometimes only one or two tracks.
+### Current state (updated: Music v2 discovery shipped on branch `claude/music-discovery-v2`)
+`api/music.js` + `music.js` implement rights-filtered workout radio.
 
-### Why
+The original sparsity problem was a single upstream trending call per genre: roughly fifty candidates went in, the strict licence filter removed nearly all of them, and one or two tracks came out. That is fixed by pooling. Each station now issues genre trending (week and month), underground discovery and keyword search fallbacks, bounded to ten concurrent upstream calls, deduplicates by track id, applies the same unchanged licence gate, then ranks survivors by BPM window, station genre, mood and duration. Four station families exist server-side: Circuit / Hype, Heavy / Strength, Focus and Cooldown. See `MUSIC.md` for the table and the rights gates.
+
+The licence filter itself was not relaxed. `commercialLicense()` is unchanged; non-Audius sources must additionally pass `explicitCommercialDeed()`, which requires a named commercially usable deed URL and fails closed.
+
+Still open: ccMixter is implemented (`cleanCcMixter`) but gated off behind `MUSIC_CCMIXTER` because its live response shape has not been verified from a networked environment. Free Music Archive and Pixabay are evaluated in `MUSIC.md` but not integrated. Iron Six Originals remains an empty first-party catalogue.
+
+### Why the old behaviour was sparse
 The combination of narrow genre searches and strict licensing filters drastically shrinks the returned pool. Do not solve this by simply allowing All Rights Reserved, unclear, or NonCommercial tracks.
 
 ### Recommended Iron Six Music v2
@@ -658,14 +664,15 @@ If continuing directly from this handoff, the recommended next package is:
 - add target-muscle/form-cue/common-mistake metadata
 - keep current exact-media fallback and attribution system
 
-**Music v2**
-- expand Audius discovery with broad fallback queries and station candidate pooling
-- add mood/intensity/BPM-aware station logic
-- add ccMixter CC BY source support with correct attribution
-- keep a single normalized rights-aware track model regardless of source
-- add strong regression tests for license filtering and graceful provider failure
-- leave Spotify optional/external
-- keep `music-originals.js` as the first-party catalog
+**Music v2** — largely delivered on `claude/music-discovery-v2`; remaining items marked TODO
+- [done] expand Audius discovery with broad fallback queries and station candidate pooling
+- [done] add mood/intensity/BPM-aware station logic
+- [partial] ccMixter CC BY support is implemented and normalised but flag-gated off (`MUSIC_CCMIXTER`) until its live response shape is verified — TODO: verify against the real API on a preview deployment, then enable
+- [done] keep a single normalized rights-aware track model regardless of source
+- [done] add strong regression tests for license filtering and graceful provider failure (`tests/music-discovery.test.js`)
+- [done] leave Spotify optional/external
+- [done] keep `music-originals.js` as the first-party catalog
+- TODO: populate Iron Six Originals with documented first-party tracks
 
 Do not merge either track until the full persistence/auth/workout test suite remains green.
 
