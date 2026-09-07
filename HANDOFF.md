@@ -414,7 +414,7 @@ The original sparsity problem was a single upstream trending call per genre: rou
 
 The licence filter itself was not relaxed. `commercialLicense()` is unchanged; non-Audius sources must additionally pass `explicitCommercialDeed()`, which requires a named commercially usable deed URL and fails closed.
 
-Still open: ccMixter is implemented (`cleanCcMixter`) but gated off behind `MUSIC_CCMIXTER` because its live response shape has not been verified from a networked environment. Free Music Archive and Pixabay are evaluated in `MUSIC.md` but not integrated. Iron Six Originals remains an empty first-party catalogue.
+Still open: ccMixter is implemented (`cleanCcMixter`) but gated off behind `MUSIC_CCMIXTER`. Its response shape has now been verified against the live API and the normaliser is correct, but two ccMixter-side transport defects make it return nothing; the flag must stay off until they are fixed (see `MUSIC.md`). Free Music Archive and Pixabay are evaluated in `MUSIC.md` but not integrated. Iron Six Originals remains an empty first-party catalogue.
 
 ### Why the old behaviour was sparse
 The combination of narrow genre searches and strict licensing filters drastically shrinks the returned pool. Do not solve this by simply allowing All Rights Reserved, unclear, or NonCommercial tracks.
@@ -685,7 +685,7 @@ If continuing directly from this handoff, the recommended next package is:
 **Music v2** — largely delivered on `claude/music-discovery-v2`; remaining items marked TODO
 - [done] expand Audius discovery with broad fallback queries and station candidate pooling
 - [done] add mood/intensity/BPM-aware station logic
-- [partial] ccMixter CC BY support is implemented and normalised but flag-gated off (`MUSIC_CCMIXTER`) until its live response shape is verified — TODO: verify against the real API on a preview deployment, then enable
+- [blocked] ccMixter CC BY support is implemented and normalised but flag-gated off (`MUSIC_CCMIXTER`) and **must stay off**. Verified against the live API on September 7, 2026: the field mapping and licence gate are correct, but ccMixter returns an empty body for `limit>=20` (the code requests 30) and mirrors the whole payload into a ~45 KB `X-JSON` response header that overflows Node's 16 KB header cap. Both must be fixed before the flag is enabled. See `MUSIC.md`.
 - [done] keep a single normalized rights-aware track model regardless of source
 - [done] add strong regression tests for license filtering and graceful provider failure (`tests/music-discovery.test.js`)
 - [done] leave Spotify optional/external
