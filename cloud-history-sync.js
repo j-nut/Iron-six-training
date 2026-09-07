@@ -12,5 +12,6 @@
     document.body.appendChild(script);
   }
   loadRuntimeScript('coach-recovery.js?v=2','coach-recovery','__ironSixCoachRecoveryLoaded');
-  loadRuntimeScript('auth-hardening.js?v=1','auth-hardening','__ironSixAuthHardened');
+  loadRuntimeScript('auth-hardening.js?v=2','auth-hardening','__ironSixAuthHardened');
+  loadRuntimeScript('account-polish.js?v=1','account-polish','__ironSixAccountPolish');
 })();
