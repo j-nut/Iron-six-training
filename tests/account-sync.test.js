@@ -40,13 +40,18 @@ async function accountApp(options={}){
     async signInWithOtp(args){calls.push(['magic',args]);return {data:{}}},
     async resetPasswordForEmail(...args){calls.push(['reset',...args]);return {data:{}}},
     async updateUser(args){calls.push(['password',args]);return {data:{}}},
+    async verifyOtp(args){calls.push(['verify',args]);return {data:{session:current},error:null}},
     async signInWithOAuth(args){calls.push(['oauth',args]);return {data:{url:'https://mock.test/auth/v1/authorize'},error:options.oauthError||null}},
     async linkIdentity(args){calls.push(['link',args]);return {data:{url:'https://mock.test/auth/v1/authorize'},error:options.linkError||null}},
     async signOut(){current=null;callback('SIGNED_OUT',null);return {error:null}}
   };
   w.IRON_SIX_SUPABASE={url:'https://mock.test',publishableKey:'public-test-key'};
   w.mockSdk={createClient:()=>({auth,from:table=>new Query(table)})};
-  w.fetch=async url=>String(url).endsWith('/auth/v1/settings')?{ok:!options.settingsFail,json:async()=>({external:options.external||{}})}:{ok:false,json:async()=>({})};w.scrollTo=()=>{};w.confirm=()=>true;
+  w.fetch=async url=>{
+    const value=String(url);
+    if(value.endsWith('/api/auth-status'))return {ok:!options.settingsFail,json:async()=>({iron:options.iron||{},nomad:options.nomad||{}})};
+    return {ok:false,json:async()=>({})};
+  };w.scrollTo=()=>{};w.confirm=()=>true;
   w.HTMLElement.prototype.scrollIntoView=()=>{};
   w.setInterval=()=>0;w.setTimeout=(fn,ms)=>{if(ms===0)queueMicrotask(fn);return 0};
   for(const file of [...w.document.scripts].map(s=>s.getAttribute('src').split('?')[0])){
@@ -97,7 +102,7 @@ test('password forms validate, email-link sign-in cannot create accounts, and re
   await a.signIn('owner-a');await a.recovery();
   assert.equal(d.getElementById('accountForm').hidden,false);assert.equal(d.getElementById('accountSubmit').textContent,'Save new password');a.close();
 });
-test('disabled providers cannot start OAuth and unavailable settings preserve email login',async()=>{
+test('unavailable providers stay hidden and provider-status failures preserve email login',async()=>{
   for(const settingsFail of [false,true]){
     const a=await accountApp({settingsFail}),d=a.w.document;
     for(const id of ['google','apple','azure','github']){assert.equal(d.getElementById('social-'+id).disabled,true);d.getElementById('social-'+id).click()}
@@ -105,29 +110,30 @@ test('disabled providers cannot start OAuth and unavailable settings preserve em
     assert.match(d.getElementById('socialAvailability').textContent,/email/i);a.close();
   }
 });
-test('all supported providers use same-origin callbacks and minimum required scopes',async()=>{
+test('direct Iron providers use fixed production callbacks and minimum required scopes',async()=>{
+  const ironKey={google:'google',apple:'apple',azure:'microsoft',github:'github'};
   for(const provider of ['google','apple','azure','github']){
-    const a=await accountApp({external:{[provider]:true},url:'https://iron-six.test/live?next=https://untrusted.test'});
+    const a=await accountApp({iron:{[ironKey[provider]]:true},url:'https://iron-six.test/live?next=https://untrusted.test'});
     a.w.document.getElementById('social-'+provider).click();await turn();
     const [method,args]=a.calls.at(-1);assert.equal(method,'oauth');assert.equal(args.provider,provider);
-    assert.equal(args.options.redirectTo,'https://iron-six.test/live');
+    assert.equal(args.options.redirectTo,'https://iron-six-training.vercel.app/?auth=oauth');
     if(provider==='azure')assert.equal(args.options.scopes,'email');
     else assert.equal(args.options.scopes,undefined);
     assert.equal(a.w.document.getElementById('accountSubmit').disabled,true);
     assert.equal(a.w.localStorage.getItem('ironSixAccountScope'),null);a.close();
   }
 });
-test('signed-in users connect identities without changing account or moving workouts',async()=>{
-  const a=await accountApp({external:{google:true},linkError:{code:'manual_linking_disabled'}});
+test('signed-in users only connect direct identities without changing account or moving workouts',async()=>{
+  const a=await accountApp({iron:{google:true},linkError:{code:'manual_linking_disabled'}});
   await a.signIn('owner-a');a.run("activeUser().name='Keep my profile';saveData()");
   a.w.document.getElementById('social-google').click();await turn();
   assert.equal(a.calls.at(-1)[0],'link');assert.equal(a.w.ironSixAccountScope,'owner-a');
   assert.equal(a.run('activeUser().name'),'Keep my profile');
-  assert.match(a.w.document.getElementById('accountStatus').textContent,/Connecting additional accounts is not available/);
+  assert.match(a.w.document.getElementById('accountStatus').textContent,/Connecting another provider is not available/);
   assert.equal(a.w.document.getElementById('social-google').disabled,false);a.close();
 });
-test('failed redirects are recoverable and failed device saves prevent leaving the workout',async()=>{
-  const a=await accountApp({external:{google:true},oauthError:{code:'unexpected_failure',message:'private server detail'}});
+test('failed direct redirects are recoverable and failed device saves prevent leaving the workout',async()=>{
+  const a=await accountApp({iron:{google:true},oauthError:{code:'unexpected_failure',message:'private server detail'}});
   a.w.document.getElementById('social-google').click();await turn();
   assert.equal(a.w.document.getElementById('social-google').disabled,false);
   assert.doesNotMatch(a.w.document.getElementById('accountStatus').textContent,/private server detail/);
@@ -138,7 +144,7 @@ test('failed redirects are recoverable and failed device saves prevent leaving t
 test('cancelled OAuth callbacks show a safe retry message and remove error parameters',async()=>{
   const a=await accountApp({url:'https://iron-six.test/?error=access_denied&error_description=%3Cscript%3Ebad%3C/script%3E&keep=1'});
   assert.equal(a.w.location.search,'?keep=1');
-  assert.match(a.w.document.getElementById('accountStatus').textContent,/cancelled or declined/);
+  assert.match(a.w.document.getElementById('accountStatus').textContent,/cancelled/i);
   assert.doesNotMatch(a.w.document.getElementById('accountStatus').textContent,/<script>/);
   assert.equal(a.w.document.getElementById('cloudModal').classList.contains('show'),true);a.close();
 });
