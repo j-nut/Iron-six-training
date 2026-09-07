@@ -1,2 +1,7 @@
 [functions.coach]
 verify_jwt = true
+
+# Public entrypoint by design: the function accepts only a short-lived Google OAuth token,
+# re-verifies it through the fixed server verifier, and returns a one-time Iron Six token.
+[functions.auth-bridge]
+verify_jwt = false
