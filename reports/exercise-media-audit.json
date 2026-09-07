@@ -1,0 +1,3303 @@
+{
+  "generatedAt": "2026-09-07T19:25:29.461Z",
+  "totals": {
+    "canonicalExercises": 34,
+    "uniqueNames": 125,
+    "professionalExact": 0,
+    "legacyExact": 34,
+    "aliasCovered": 7,
+    "fallbackOnly": 2,
+    "missing": 84,
+    "broken": 0,
+    "orphanAssets": 0
+  },
+  "exercises": [
+    {
+      "name": "1½-Rep Bodyweight Squat",
+      "normalized": "11⁄2-rep bodyweight squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower.js:alternative:v2",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [],
+      "base": "Primary squat",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Ab Wheel Rollout",
+      "normalized": "ab wheel rollout",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-chest.js:chosen:v0",
+        "workout-chest.js:chosen:v1",
+        "workout-chest.js:chosen:v2",
+        "workout-chest.js:slot_option:v0",
+        "workout-chest.js:slot_option:v1",
+        "workout-chest.js:slot_option:v2",
+        "workout-lower.js:alternative:v1",
+        "workout-lower.js:chosen:v0",
+        "workout-lower.js:chosen:v2",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [
+        "abwheel"
+      ],
+      "base": "Anterior core",
+      "seedKey": "core",
+      "priority": 2,
+      "workoutKeys": [
+        "chest",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Assisted Parallel-Bar Dip",
+      "normalized": "assisted parallel-bar dip",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:dip"
+      ],
+      "equipment": [],
+      "base": "Secondary press",
+      "seedKey": "chest_press",
+      "priority": 2,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Band Chest Fly",
+      "normalized": "band chest fly",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-chest.js:chosen:v0",
+        "workout-chest.js:chosen:v1",
+        "workout-chest.js:chosen:v2",
+        "workout-chest.js:slot_option:v0",
+        "workout-chest.js:slot_option:v1",
+        "workout-chest.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bands"
+      ],
+      "base": "Chest isolation",
+      "seedKey": "fly",
+      "priority": 2,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Band Curl",
+      "normalized": "band curl",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-back.js:alternative:v0",
+        "workout-back.js:alternative:v1",
+        "workout-back.js:alternative:v2",
+        "workout-back.js:slot_option:v0",
+        "workout-back.js:slot_option:v1",
+        "workout-back.js:slot_option:v2",
+        "workout-shoulders.js:alternative:v0",
+        "workout-shoulders.js:alternative:v1",
+        "workout-shoulders.js:alternative:v2",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v1",
+        "workout-shoulders.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bands"
+      ],
+      "base": "Elbow flexion",
+      "seedKey": "curl",
+      "priority": 2,
+      "workoutKeys": [
+        "back",
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Band Face Pull",
+      "normalized": "band face pull",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-back.js:chosen:v0",
+        "workout-back.js:chosen:v1",
+        "workout-back.js:chosen:v2",
+        "workout-back.js:slot_option:v0",
+        "workout-back.js:slot_option:v1",
+        "workout-back.js:slot_option:v2",
+        "workout-shoulders.js:chosen:v0",
+        "workout-shoulders.js:chosen:v1",
+        "workout-shoulders.js:chosen:v2",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v1",
+        "workout-shoulders.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bands"
+      ],
+      "base": "Rear delts",
+      "seedKey": "rear_delt",
+      "priority": 2,
+      "workoutKeys": [
+        "back",
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Band Hammer Curl",
+      "normalized": "band hammer curl",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-shoulders.js:alternative:v0",
+        "workout-shoulders.js:alternative:v1",
+        "workout-shoulders.js:alternative:v2",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v1",
+        "workout-shoulders.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bands"
+      ],
+      "base": "Brachialis",
+      "seedKey": "hammer_curl",
+      "priority": 2,
+      "workoutKeys": [
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Band Hamstring Curl",
+      "normalized": "band hamstring curl",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower-hypertrophy.js:chosen:v0",
+        "workout-lower-hypertrophy.js:chosen:v1",
+        "workout-lower-hypertrophy.js:chosen:v2",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v1",
+        "workout-lower-hypertrophy.js:slot_option:v2",
+        "workout-lower.js:chosen:v0",
+        "workout-lower.js:chosen:v1",
+        "workout-lower.js:chosen:v2",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bands"
+      ],
+      "base": "Knee flexion",
+      "seedKey": "ham_curl",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Band Lat Pulldown",
+      "normalized": "band lat pulldown",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-back.js:alternative:v0",
+        "workout-back.js:alternative:v1",
+        "workout-back.js:alternative:v2",
+        "workout-back.js:slot_option:v0",
+        "workout-back.js:slot_option:v1",
+        "workout-back.js:slot_option:v2",
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:alternative:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bands"
+      ],
+      "base": "Vertical pull",
+      "seedKey": "pullup",
+      "priority": 1,
+      "workoutKeys": [
+        "back",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Band Lateral Raise",
+      "normalized": "band lateral raise",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-shoulders.js:alternative:v0",
+        "workout-shoulders.js:alternative:v1",
+        "workout-shoulders.js:chosen:v2",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v1",
+        "workout-shoulders.js:slot_option:v2",
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:alternative:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bands"
+      ],
+      "base": "Lateral delts",
+      "seedKey": "lateral_raise",
+      "priority": 2,
+      "workoutKeys": [
+        "shoulders_arms",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Band Pallof Press",
+      "normalized": "band pallof press",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-chest.js:alternative:v0",
+        "workout-chest.js:alternative:v1",
+        "workout-chest.js:alternative:v2",
+        "workout-chest.js:slot_option:v0",
+        "workout-chest.js:slot_option:v1",
+        "workout-chest.js:slot_option:v2",
+        "workout-lower.js:alternative:v0",
+        "workout-lower.js:alternative:v1",
+        "workout-lower.js:alternative:v2",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bands"
+      ],
+      "base": "Anterior core",
+      "seedKey": "core",
+      "priority": 2,
+      "workoutKeys": [
+        "chest",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Band Pressdown",
+      "normalized": "band pressdown",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "superset_component:Dumbbell Curl + Band Pressdown",
+        "workout-chest.js:alternative:v0",
+        "workout-chest.js:alternative:v1",
+        "workout-chest.js:alternative:v2",
+        "workout-chest.js:slot_option:v0",
+        "workout-chest.js:slot_option:v1",
+        "workout-chest.js:slot_option:v2",
+        "workout-shoulders.js:alternative:v2",
+        "workout-shoulders.js:chosen:v0",
+        "workout-shoulders.js:chosen:v1",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v1",
+        "workout-shoulders.js:slot_option:v2",
+        "workout-upper.js:chosen:v0",
+        "workout-upper.js:chosen:v1",
+        "workout-upper.js:chosen:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bands",
+        "dumbbells"
+      ],
+      "base": "Triceps press",
+      "seedKey": "triceps",
+      "priority": 2,
+      "workoutKeys": [
+        "chest",
+        "shoulders_arms",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": true,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Band Row",
+      "normalized": "band row",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-back.js:alternative:v0",
+        "workout-back.js:alternative:v1",
+        "workout-back.js:alternative:v2",
+        "workout-back.js:slot_option:v0",
+        "workout-back.js:slot_option:v1",
+        "workout-back.js:slot_option:v2",
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:alternative:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bands"
+      ],
+      "base": "Horizontal pull",
+      "seedKey": "row",
+      "priority": 1,
+      "workoutKeys": [
+        "back",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Band Straight-Arm Pulldown",
+      "normalized": "band straight-arm pulldown",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-back.js:chosen:v0",
+        "workout-back.js:chosen:v1",
+        "workout-back.js:chosen:v2",
+        "workout-back.js:slot_option:v0",
+        "workout-back.js:slot_option:v1",
+        "workout-back.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bands"
+      ],
+      "base": "Lat isolation",
+      "seedKey": "lat_iso",
+      "priority": 2,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Banded Hip Thrust",
+      "normalized": "banded hip thrust",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower-hypertrophy.js:alternative:v0",
+        "workout-lower-hypertrophy.js:alternative:v1",
+        "workout-lower-hypertrophy.js:alternative:v2",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v1",
+        "workout-lower-hypertrophy.js:slot_option:v2",
+        "workout-lower.js:alternative:v0",
+        "workout-lower.js:alternative:v1",
+        "workout-lower.js:alternative:v2",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bands"
+      ],
+      "base": "Hip extension",
+      "seedKey": "hip_thrust",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Barbell Back Squat",
+      "normalized": "barbell back squat",
+      "coverage": "exact",
+      "mediaId": "barbell-squat",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-lower.js:chosen:v0",
+        "workout-lower.js:slot_option:v0"
+      ],
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "base": "Primary squat",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Barbell Bench Press",
+      "normalized": "barbell bench press",
+      "coverage": "exact",
+      "mediaId": "bench-press",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-chest.js:chosen:v0",
+        "workout-chest.js:slot_option:v0",
+        "workout-upper.js:chosen:v0",
+        "workout-upper.js:chosen:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [
+        "barbell",
+        "bench",
+        "rack"
+      ],
+      "base": "Horizontal press",
+      "seedKey": "bench",
+      "priority": 1,
+      "workoutKeys": [
+        "chest",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Barbell Box Squat",
+      "normalized": "barbell box squat",
+      "coverage": "exact",
+      "mediaId": "squat-to-bench-with-barbell",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-lower.js:chosen:v2",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [
+        "barbell",
+        "bench",
+        "rack"
+      ],
+      "base": "Primary squat",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Barbell Curl",
+      "normalized": "barbell curl",
+      "coverage": "exact",
+      "mediaId": "biceps-curls-with-barbell",
+      "mediaTier": "legacy",
+      "sources": [
+        "superset_component:Barbell Curl + Close-Grip Push-Up",
+        "workout-back.js:chosen:v0",
+        "workout-back.js:chosen:v1",
+        "workout-back.js:chosen:v2",
+        "workout-back.js:slot_option:v0",
+        "workout-back.js:slot_option:v1",
+        "workout-back.js:slot_option:v2",
+        "workout-shoulders.js:alternative:v1",
+        "workout-shoulders.js:chosen:v0",
+        "workout-shoulders.js:chosen:v2",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v1",
+        "workout-shoulders.js:slot_option:v2",
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:alternative:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [
+        "barbell"
+      ],
+      "base": "Elbow flexion",
+      "seedKey": "curl",
+      "priority": 2,
+      "workoutKeys": [
+        "back",
+        "shoulders_arms",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": true,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Barbell Good Morning",
+      "normalized": "barbell good morning",
+      "coverage": "exact",
+      "mediaId": "barbell-good-mornings",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-lower.js:chosen:v2",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "base": "Hip hinge",
+      "seedKey": "hinge",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Barbell Hip Thrust",
+      "normalized": "barbell hip thrust",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower-hypertrophy.js:chosen:v0",
+        "workout-lower-hypertrophy.js:chosen:v1",
+        "workout-lower-hypertrophy.js:chosen:v2",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v1",
+        "workout-lower-hypertrophy.js:slot_option:v2",
+        "workout-lower.js:chosen:v0",
+        "workout-lower.js:chosen:v1",
+        "workout-lower.js:chosen:v2",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [
+        "barbell",
+        "bench"
+      ],
+      "base": "Hip extension",
+      "seedKey": "hip_thrust",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Barbell Overhead Press",
+      "normalized": "barbell overhead press",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-shoulders.js:alternative:v1",
+        "workout-shoulders.js:chosen:v0",
+        "workout-shoulders.js:chosen:v2",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v1",
+        "workout-shoulders.js:slot_option:v2"
+      ],
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "base": "Vertical press",
+      "seedKey": "overhead_press",
+      "priority": 1,
+      "workoutKeys": [
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Barbell Romanian Deadlift",
+      "normalized": "barbell romanian deadlift",
+      "coverage": "exact",
+      "mediaId": "romanian-dead-lift",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-lower-hypertrophy.js:alternative:v2",
+        "workout-lower-hypertrophy.js:chosen:v0",
+        "workout-lower-hypertrophy.js:chosen:v1",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v1",
+        "workout-lower-hypertrophy.js:slot_option:v2",
+        "workout-lower.js:chosen:v0",
+        "workout-lower.js:chosen:v1",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1"
+      ],
+      "equipment": [
+        "barbell"
+      ],
+      "base": "Hip hinge",
+      "seedKey": "hinge",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Barbell Row",
+      "normalized": "barbell row",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-back.js:alternative:v1",
+        "workout-back.js:chosen:v0",
+        "workout-back.js:slot_option:v0",
+        "workout-back.js:slot_option:v1",
+        "workout-upper.js:chosen:v0",
+        "workout-upper.js:chosen:v1",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1"
+      ],
+      "equipment": [
+        "barbell"
+      ],
+      "base": "Horizontal pull",
+      "seedKey": "row",
+      "priority": 1,
+      "workoutKeys": [
+        "back",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Barbell Standing Calf Raise",
+      "normalized": "barbell standing calf raise",
+      "coverage": "exact",
+      "mediaId": "standing-barbell-calf-raise",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-lower-hypertrophy.js:alternative:v0",
+        "workout-lower-hypertrophy.js:alternative:v1",
+        "workout-lower-hypertrophy.js:alternative:v2",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v1",
+        "workout-lower-hypertrophy.js:slot_option:v2",
+        "workout-lower.js:alternative:v0",
+        "workout-lower.js:alternative:v1",
+        "workout-lower.js:alternative:v2",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "base": "Calves",
+      "seedKey": "calves",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Bent-Over Sandbag Row",
+      "normalized": "bent-over sandbag row",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:sandbag"
+      ],
+      "equipment": [],
+      "base": "Horizontal pull",
+      "seedKey": "row",
+      "priority": 1,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Bodyweight Curl Isometric",
+      "normalized": "bodyweight curl isometric",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "superset_component:Bodyweight Curl Isometric + Diamond Push-Up",
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:alternative:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [],
+      "base": "Arms finisher",
+      "seedKey": "arms",
+      "priority": 2,
+      "workoutKeys": [
+        "upper_specialization"
+      ],
+      "isSupersetComponent": true,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Bodyweight Split Squat",
+      "normalized": "bodyweight split squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower-hypertrophy.js:alternative:v0",
+        "workout-lower-hypertrophy.js:alternative:v1",
+        "workout-lower-hypertrophy.js:alternative:v2",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v1",
+        "workout-lower-hypertrophy.js:slot_option:v2",
+        "workout-lower.js:alternative:v0",
+        "workout-lower.js:alternative:v1",
+        "workout-lower.js:alternative:v2",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [],
+      "base": "Single-leg work",
+      "seedKey": "split_squat",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Cable Chest Fly",
+      "normalized": "cable chest fly",
+      "coverage": "exact",
+      "mediaId": "cable-crossover",
+      "mediaTier": "legacy",
+      "sources": [
+        "api/equipment-exercises.js:CURATED:cable"
+      ],
+      "equipment": [],
+      "base": "Chest isolation",
+      "seedKey": "fly",
+      "priority": 2,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Cable Chest Press",
+      "normalized": "cable chest press",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:cable"
+      ],
+      "equipment": [],
+      "base": "Secondary press",
+      "seedKey": "chest_press",
+      "priority": 2,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Cable Curl",
+      "normalized": "cable curl",
+      "coverage": "exact",
+      "mediaId": "standing-biceps-curl-with-cable",
+      "mediaTier": "legacy",
+      "sources": [
+        "api/equipment-exercises.js:CURATED:cable"
+      ],
+      "equipment": [],
+      "base": "Elbow flexion",
+      "seedKey": "curl",
+      "priority": 2,
+      "workoutKeys": [
+        "back",
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Cable Face Pull",
+      "normalized": "cable face pull",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:cable"
+      ],
+      "equipment": [],
+      "base": "Scapular pull",
+      "seedKey": "rear_delt",
+      "priority": 2,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Cable Lat Pulldown",
+      "normalized": "cable lat pulldown",
+      "coverage": "exact",
+      "mediaId": "wide-grip-lat-pull-down",
+      "mediaTier": "legacy",
+      "sources": [
+        "api/equipment-exercises.js:CURATED:cable"
+      ],
+      "equipment": [],
+      "base": "Vertical pull",
+      "seedKey": "pullup",
+      "priority": 1,
+      "workoutKeys": [
+        "back",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Cable Lateral Raise",
+      "normalized": "cable lateral raise",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:cable"
+      ],
+      "equipment": [],
+      "base": "Lateral delts",
+      "seedKey": "lateral_raise",
+      "priority": 2,
+      "workoutKeys": [
+        "shoulders_arms",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Cable Triceps Pressdown",
+      "normalized": "cable triceps pressdown",
+      "coverage": "exact",
+      "mediaId": "triceps-pushdown-with-cable",
+      "mediaTier": "legacy",
+      "sources": [
+        "api/equipment-exercises.js:CURATED:cable"
+      ],
+      "equipment": [],
+      "base": "Triceps press",
+      "seedKey": "triceps",
+      "priority": 2,
+      "workoutKeys": [
+        "chest",
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Chest-Supported Dumbbell Row",
+      "normalized": "chest-supported dumbbell row",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-back.js:alternative:v2",
+        "workout-back.js:slot_option:v2",
+        "workout-upper.js:alternative:v2",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bench",
+        "dumbbells"
+      ],
+      "base": "Horizontal pull",
+      "seedKey": "row",
+      "priority": 1,
+      "workoutKeys": [
+        "back",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Chin-Up",
+      "normalized": "chin-up",
+      "coverage": "exact",
+      "mediaId": "chin-ups",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-back.js:chosen:v1",
+        "workout-back.js:slot_option:v1"
+      ],
+      "equipment": [
+        "pullup"
+      ],
+      "base": "Vertical pull",
+      "seedKey": "pullup",
+      "priority": 1,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Close-Grip Bench Press",
+      "normalized": "close-grip bench press",
+      "coverage": "exact",
+      "mediaId": "close-grip-barbell-bench-press",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-chest.js:chosen:v0",
+        "workout-chest.js:chosen:v1",
+        "workout-chest.js:chosen:v2",
+        "workout-chest.js:slot_option:v0",
+        "workout-chest.js:slot_option:v1",
+        "workout-chest.js:slot_option:v2",
+        "workout-shoulders.js:chosen:v2",
+        "workout-shoulders.js:slot_option:v2"
+      ],
+      "equipment": [
+        "barbell",
+        "bench",
+        "rack"
+      ],
+      "base": "Triceps press",
+      "seedKey": "triceps",
+      "priority": 2,
+      "workoutKeys": [
+        "chest",
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Close-Grip Push-Up",
+      "normalized": "close-grip push-up",
+      "coverage": "alias",
+      "mediaId": "close-triceps-pushup",
+      "mediaTier": "legacy",
+      "sources": [
+        "superset_component:Barbell Curl + Close-Grip Push-Up",
+        "workout-shoulders.js:alternative:v0",
+        "workout-shoulders.js:alternative:v1",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v1",
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:alternative:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [
+        "barbell"
+      ],
+      "base": "Triceps press",
+      "seedKey": "triceps",
+      "priority": 2,
+      "workoutKeys": [
+        "shoulders_arms",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": true,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Cyclist Squat",
+      "normalized": "cyclist squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower-hypertrophy.js:alternative:v1",
+        "workout-lower-hypertrophy.js:slot_option:v1"
+      ],
+      "equipment": [],
+      "base": "Squat volume",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_hypertrophy"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Diamond Push-Up",
+      "normalized": "diamond push-up",
+      "coverage": "exact",
+      "mediaId": "close-triceps-pushup",
+      "mediaTier": "legacy",
+      "sources": [
+        "superset_component:Bodyweight Curl Isometric + Diamond Push-Up",
+        "workout-chest.js:alternative:v0",
+        "workout-chest.js:alternative:v1",
+        "workout-chest.js:alternative:v2",
+        "workout-chest.js:slot_option:v0",
+        "workout-chest.js:slot_option:v1",
+        "workout-chest.js:slot_option:v2",
+        "workout-shoulders.js:alternative:v2",
+        "workout-shoulders.js:slot_option:v2",
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:alternative:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [],
+      "base": "Triceps press",
+      "seedKey": "triceps",
+      "priority": 2,
+      "workoutKeys": [
+        "chest",
+        "shoulders_arms",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": true,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Dumbbell Bench Press",
+      "normalized": "dumbbell bench press",
+      "coverage": "exact",
+      "mediaId": "bench-press-dumbbell",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-chest.js:alternative:v0",
+        "workout-chest.js:alternative:v2",
+        "workout-chest.js:slot_option:v0",
+        "workout-chest.js:slot_option:v2",
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bench",
+        "dumbbells"
+      ],
+      "base": "Horizontal press",
+      "seedKey": "bench",
+      "priority": 1,
+      "workoutKeys": [
+        "chest",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Dumbbell Bulgarian Split Squat",
+      "normalized": "dumbbell bulgarian split squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower-hypertrophy.js:chosen:v0",
+        "workout-lower-hypertrophy.js:chosen:v1",
+        "workout-lower-hypertrophy.js:chosen:v2",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v1",
+        "workout-lower-hypertrophy.js:slot_option:v2",
+        "workout-lower.js:alternative:v0",
+        "workout-lower.js:alternative:v2",
+        "workout-lower.js:chosen:v1",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bench",
+        "dumbbells"
+      ],
+      "base": "Single-leg work",
+      "seedKey": "split_squat",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Dumbbell Curl",
+      "normalized": "dumbbell curl",
+      "coverage": "exact",
+      "mediaId": "biceps-curl-with-dumbbell",
+      "mediaTier": "legacy",
+      "sources": [
+        "superset_component:Dumbbell Curl + Band Pressdown",
+        "workout-back.js:alternative:v0",
+        "workout-back.js:alternative:v1",
+        "workout-back.js:alternative:v2",
+        "workout-back.js:slot_option:v0",
+        "workout-back.js:slot_option:v1",
+        "workout-back.js:slot_option:v2",
+        "workout-shoulders.js:alternative:v0",
+        "workout-shoulders.js:alternative:v2",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v2",
+        "workout-upper.js:chosen:v0",
+        "workout-upper.js:chosen:v1",
+        "workout-upper.js:chosen:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bands",
+        "dumbbells"
+      ],
+      "base": "Elbow flexion",
+      "seedKey": "curl",
+      "priority": 2,
+      "workoutKeys": [
+        "back",
+        "shoulders_arms",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": true,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Dumbbell Flat Press",
+      "normalized": "dumbbell flat press",
+      "coverage": "alias",
+      "mediaId": "bench-press-dumbbell",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-chest.js:chosen:v1",
+        "workout-chest.js:slot_option:v1"
+      ],
+      "equipment": [
+        "bench",
+        "dumbbells"
+      ],
+      "base": "Secondary press",
+      "seedKey": "chest_press",
+      "priority": 2,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Dumbbell Fly",
+      "normalized": "dumbbell fly",
+      "coverage": "exact",
+      "mediaId": "dumbbell-flys",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-chest.js:alternative:v0",
+        "workout-chest.js:alternative:v1",
+        "workout-chest.js:alternative:v2",
+        "workout-chest.js:slot_option:v0",
+        "workout-chest.js:slot_option:v1",
+        "workout-chest.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bench",
+        "dumbbells"
+      ],
+      "base": "Chest isolation",
+      "seedKey": "fly",
+      "priority": 2,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Dumbbell Front Squat",
+      "normalized": "dumbbell front squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower.js:alternative:v2",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [
+        "dumbbells"
+      ],
+      "base": "Primary squat",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Dumbbell Hammer Curl",
+      "normalized": "dumbbell hammer curl",
+      "coverage": "exact",
+      "mediaId": "biceps-hammer-curl-with-dumbbell",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-shoulders.js:chosen:v0",
+        "workout-shoulders.js:chosen:v1",
+        "workout-shoulders.js:chosen:v2",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v1",
+        "workout-shoulders.js:slot_option:v2"
+      ],
+      "equipment": [
+        "dumbbells"
+      ],
+      "base": "Brachialis",
+      "seedKey": "hammer_curl",
+      "priority": 2,
+      "workoutKeys": [
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Dumbbell Hip Thrust",
+      "normalized": "dumbbell hip thrust",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower.js:alternative:v0",
+        "workout-lower.js:alternative:v1",
+        "workout-lower.js:alternative:v2",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bench",
+        "dumbbells"
+      ],
+      "base": "Hip extension",
+      "seedKey": "hip_thrust",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Dumbbell Lateral Raise",
+      "normalized": "dumbbell lateral raise",
+      "coverage": "exact",
+      "mediaId": "lateral-dumbbell-raises",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-shoulders.js:alternative:v2",
+        "workout-shoulders.js:chosen:v0",
+        "workout-shoulders.js:chosen:v1",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v1",
+        "workout-shoulders.js:slot_option:v2",
+        "workout-upper.js:chosen:v0",
+        "workout-upper.js:chosen:v1",
+        "workout-upper.js:chosen:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [
+        "dumbbells"
+      ],
+      "base": "Lateral delts",
+      "seedKey": "lateral_raise",
+      "priority": 2,
+      "workoutKeys": [
+        "shoulders_arms",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Dumbbell Pullover",
+      "normalized": "dumbbell pullover",
+      "coverage": "exact",
+      "mediaId": "dumbbell-bent-arm-pullover",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-back.js:alternative:v0",
+        "workout-back.js:alternative:v1",
+        "workout-back.js:alternative:v2",
+        "workout-back.js:slot_option:v0",
+        "workout-back.js:slot_option:v1",
+        "workout-back.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bench",
+        "dumbbells"
+      ],
+      "base": "Lat isolation",
+      "seedKey": "lat_iso",
+      "priority": 2,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Dumbbell Rear-Delt Fly",
+      "normalized": "dumbbell rear-delt fly",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-shoulders.js:alternative:v0",
+        "workout-shoulders.js:alternative:v1",
+        "workout-shoulders.js:alternative:v2",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v1",
+        "workout-shoulders.js:slot_option:v2"
+      ],
+      "equipment": [
+        "dumbbells"
+      ],
+      "base": "Rear delts",
+      "seedKey": "rear_delt",
+      "priority": 2,
+      "workoutKeys": [
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Dumbbell Rear-Delt Row",
+      "normalized": "dumbbell rear-delt row",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-back.js:alternative:v0",
+        "workout-back.js:alternative:v1",
+        "workout-back.js:alternative:v2",
+        "workout-back.js:slot_option:v0",
+        "workout-back.js:slot_option:v1",
+        "workout-back.js:slot_option:v2"
+      ],
+      "equipment": [
+        "dumbbells"
+      ],
+      "base": "Scapular pull",
+      "seedKey": "rear_delt",
+      "priority": 2,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Dumbbell Romanian Deadlift",
+      "normalized": "dumbbell romanian deadlift",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower-hypertrophy.js:alternative:v0",
+        "workout-lower-hypertrophy.js:alternative:v1",
+        "workout-lower-hypertrophy.js:alternative:v2",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v1",
+        "workout-lower-hypertrophy.js:slot_option:v2",
+        "workout-lower.js:alternative:v0",
+        "workout-lower.js:alternative:v1",
+        "workout-lower.js:alternative:v2",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [
+        "dumbbells"
+      ],
+      "base": "Hip hinge",
+      "seedKey": "hinge",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Dumbbell Shoulder Press",
+      "normalized": "dumbbell shoulder press",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-shoulders.js:alternative:v0",
+        "workout-shoulders.js:alternative:v1",
+        "workout-shoulders.js:alternative:v2",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v1",
+        "workout-shoulders.js:slot_option:v2",
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:alternative:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [
+        "dumbbells"
+      ],
+      "base": "Vertical press",
+      "seedKey": "overhead_press",
+      "priority": 1,
+      "workoutKeys": [
+        "shoulders_arms",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Dumbbell Skull Crusher",
+      "normalized": "dumbbell skull crusher",
+      "coverage": "exact",
+      "mediaId": "lying-two-arm-triceps-extension-with-dumbbell",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-shoulders.js:alternative:v0",
+        "workout-shoulders.js:alternative:v1",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v1"
+      ],
+      "equipment": [
+        "bench",
+        "dumbbells"
+      ],
+      "base": "Triceps press",
+      "seedKey": "triceps",
+      "priority": 2,
+      "workoutKeys": [
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "EZ-Bar Curl",
+      "normalized": "ez-bar curl",
+      "coverage": "exact",
+      "mediaId": "ez-bar-curl-with-barbell",
+      "mediaTier": "legacy",
+      "sources": [
+        "api/equipment-exercises.js:CURATED:ez curl"
+      ],
+      "equipment": [],
+      "base": "Elbow flexion",
+      "seedKey": "curl",
+      "priority": 2,
+      "workoutKeys": [
+        "back",
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "EZ-Bar Skull Crusher",
+      "normalized": "ez-bar skull crusher",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:ez curl"
+      ],
+      "equipment": [],
+      "base": "Triceps press",
+      "seedKey": "triceps",
+      "priority": 2,
+      "workoutKeys": [
+        "chest",
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Feet-Elevated Push-Up",
+      "normalized": "feet-elevated push-up",
+      "coverage": "exact",
+      "mediaId": "push-up-feet-elevated",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-chest.js:alternative:v0",
+        "workout-chest.js:alternative:v1",
+        "workout-chest.js:alternative:v2",
+        "workout-chest.js:slot_option:v0",
+        "workout-chest.js:slot_option:v1",
+        "workout-chest.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bench"
+      ],
+      "base": "Secondary press",
+      "seedKey": "chest_press",
+      "priority": 2,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Goblet Squat",
+      "normalized": "goblet squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower-hypertrophy.js:alternative:v0",
+        "workout-lower-hypertrophy.js:alternative:v1",
+        "workout-lower-hypertrophy.js:alternative:v2",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v1",
+        "workout-lower-hypertrophy.js:slot_option:v2",
+        "workout-lower.js:alternative:v0",
+        "workout-lower.js:alternative:v1",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1"
+      ],
+      "equipment": [
+        "dumbbells"
+      ],
+      "base": "Primary squat",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Half-Kneeling Landmine Press",
+      "normalized": "half-kneeling landmine press",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-shoulders.js:chosen:v1",
+        "workout-shoulders.js:slot_option:v1"
+      ],
+      "equipment": [
+        "barbell",
+        "landmine"
+      ],
+      "base": "Vertical press",
+      "seedKey": "overhead_press",
+      "priority": 1,
+      "workoutKeys": [
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Hamstring Walkout",
+      "normalized": "hamstring walkout",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower-hypertrophy.js:alternative:v0",
+        "workout-lower-hypertrophy.js:alternative:v1",
+        "workout-lower-hypertrophy.js:alternative:v2",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v1",
+        "workout-lower-hypertrophy.js:slot_option:v2",
+        "workout-lower.js:alternative:v0",
+        "workout-lower.js:alternative:v1",
+        "workout-lower.js:alternative:v2",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [],
+      "base": "Knee flexion",
+      "seedKey": "ham_curl",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Hard-Style Plank",
+      "normalized": "hard-style plank",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower.js:alternative:v0",
+        "workout-lower.js:alternative:v1",
+        "workout-lower.js:alternative:v2",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [],
+      "base": "Anterior core",
+      "seedKey": "core",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "High-Bar Back Squat",
+      "normalized": "high-bar back squat",
+      "coverage": "alias",
+      "mediaId": "barbell-squat",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-lower-hypertrophy.js:alternative:v1",
+        "workout-lower-hypertrophy.js:chosen:v0",
+        "workout-lower-hypertrophy.js:chosen:v2",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v1",
+        "workout-lower-hypertrophy.js:slot_option:v2"
+      ],
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "base": "Squat volume",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_hypertrophy"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Incline Barbell Bench Press",
+      "normalized": "incline barbell bench press",
+      "coverage": "exact",
+      "mediaId": "incline-bench-press",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-chest.js:chosen:v1",
+        "workout-chest.js:slot_option:v1",
+        "workout-upper.js:chosen:v1",
+        "workout-upper.js:slot_option:v1"
+      ],
+      "equipment": [
+        "barbell",
+        "bench",
+        "rack"
+      ],
+      "base": "Horizontal press",
+      "seedKey": "bench",
+      "priority": 1,
+      "workoutKeys": [
+        "chest",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Incline Dumbbell Curl",
+      "normalized": "incline dumbbell curl",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-shoulders.js:chosen:v1",
+        "workout-shoulders.js:slot_option:v1"
+      ],
+      "equipment": [
+        "bench",
+        "dumbbells"
+      ],
+      "base": "Elbow flexion",
+      "seedKey": "curl",
+      "priority": 2,
+      "workoutKeys": [
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Incline Dumbbell Press",
+      "normalized": "incline dumbbell press",
+      "coverage": "exact",
+      "mediaId": "dumbbell-incline-bench-press",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-chest.js:alternative:v1",
+        "workout-chest.js:chosen:v0",
+        "workout-chest.js:chosen:v2",
+        "workout-chest.js:slot_option:v0",
+        "workout-chest.js:slot_option:v1",
+        "workout-chest.js:slot_option:v2",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:slot_option:v1"
+      ],
+      "equipment": [
+        "bench",
+        "dumbbells"
+      ],
+      "base": "Secondary press",
+      "seedKey": "chest_press",
+      "priority": 2,
+      "workoutKeys": [
+        "chest",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Isometric Lat Press",
+      "normalized": "isometric lat press",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-back.js:alternative:v0",
+        "workout-back.js:alternative:v1",
+        "workout-back.js:alternative:v2",
+        "workout-back.js:slot_option:v0",
+        "workout-back.js:slot_option:v1",
+        "workout-back.js:slot_option:v2"
+      ],
+      "equipment": [],
+      "base": "Lat isolation",
+      "seedKey": "lat_iso",
+      "priority": 2,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Kettlebell Floor Press",
+      "normalized": "kettlebell floor press",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:kettlebell"
+      ],
+      "equipment": [],
+      "base": "Secondary press",
+      "seedKey": "chest_press",
+      "priority": 2,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Kettlebell Goblet Squat",
+      "normalized": "kettlebell goblet squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:kettlebell"
+      ],
+      "equipment": [],
+      "base": "Primary squat",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Kettlebell Reverse Lunge",
+      "normalized": "kettlebell reverse lunge",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:kettlebell"
+      ],
+      "equipment": [],
+      "base": "Single-leg work",
+      "seedKey": "split_squat",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Kettlebell Romanian Deadlift",
+      "normalized": "kettlebell romanian deadlift",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:kettlebell"
+      ],
+      "equipment": [],
+      "base": "Hip hinge",
+      "seedKey": "hinge",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Landmine Hack Squat",
+      "normalized": "landmine hack squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower-hypertrophy.js:chosen:v1",
+        "workout-lower-hypertrophy.js:slot_option:v1",
+        "workout-lower.js:alternative:v2",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [
+        "barbell",
+        "landmine"
+      ],
+      "base": "Primary squat",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Landmine Press",
+      "normalized": "landmine press",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-chest.js:alternative:v0",
+        "workout-chest.js:alternative:v1",
+        "workout-chest.js:alternative:v2",
+        "workout-chest.js:slot_option:v0",
+        "workout-chest.js:slot_option:v1",
+        "workout-chest.js:slot_option:v2",
+        "workout-shoulders.js:alternative:v0",
+        "workout-shoulders.js:alternative:v2",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v2",
+        "workout-upper.js:chosen:v0",
+        "workout-upper.js:chosen:v1",
+        "workout-upper.js:chosen:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [
+        "barbell",
+        "landmine"
+      ],
+      "base": "Vertical press",
+      "seedKey": "overhead_press",
+      "priority": 1,
+      "workoutKeys": [
+        "chest",
+        "shoulders_arms",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Landmine Reverse Lunge",
+      "normalized": "landmine reverse lunge",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower-hypertrophy.js:alternative:v0",
+        "workout-lower-hypertrophy.js:alternative:v1",
+        "workout-lower-hypertrophy.js:alternative:v2",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v1",
+        "workout-lower-hypertrophy.js:slot_option:v2",
+        "workout-lower.js:alternative:v1",
+        "workout-lower.js:chosen:v0",
+        "workout-lower.js:chosen:v2",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [
+        "barbell",
+        "landmine"
+      ],
+      "base": "Single-leg work",
+      "seedKey": "split_squat",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Landmine Romanian Deadlift",
+      "normalized": "landmine romanian deadlift",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower-hypertrophy.js:alternative:v0",
+        "workout-lower-hypertrophy.js:alternative:v1",
+        "workout-lower-hypertrophy.js:chosen:v2",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v1",
+        "workout-lower-hypertrophy.js:slot_option:v2",
+        "workout-lower.js:alternative:v0",
+        "workout-lower.js:alternative:v1",
+        "workout-lower.js:alternative:v2",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [
+        "barbell",
+        "landmine"
+      ],
+      "base": "Hip hinge",
+      "seedKey": "hinge",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Landmine Rotation",
+      "normalized": "landmine rotation",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower.js:alternative:v0",
+        "workout-lower.js:alternative:v2",
+        "workout-lower.js:chosen:v1",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [
+        "barbell",
+        "landmine"
+      ],
+      "base": "Rotational core",
+      "seedKey": "core",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Landmine Row",
+      "normalized": "landmine row",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-back.js:alternative:v0",
+        "workout-back.js:slot_option:v0",
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1"
+      ],
+      "equipment": [
+        "barbell",
+        "landmine"
+      ],
+      "base": "Horizontal pull",
+      "seedKey": "row",
+      "priority": 1,
+      "workoutKeys": [
+        "back",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Landmine Squat",
+      "normalized": "landmine squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower-hypertrophy.js:alternative:v0",
+        "workout-lower-hypertrophy.js:alternative:v2",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v2",
+        "workout-lower.js:alternative:v0",
+        "workout-lower.js:alternative:v1",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1"
+      ],
+      "equipment": [
+        "barbell",
+        "landmine"
+      ],
+      "base": "Primary squat",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Landmine T-Bar Row",
+      "normalized": "landmine t-bar row",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-back.js:chosen:v2",
+        "workout-back.js:slot_option:v2",
+        "workout-upper.js:chosen:v2",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [
+        "barbell",
+        "landmine"
+      ],
+      "base": "Horizontal pull",
+      "seedKey": "row",
+      "priority": 1,
+      "workoutKeys": [
+        "back",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Lean-Away Lateral Raise",
+      "normalized": "lean-away lateral raise",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-shoulders.js:alternative:v0",
+        "workout-shoulders.js:alternative:v1",
+        "workout-shoulders.js:alternative:v2",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v1",
+        "workout-shoulders.js:slot_option:v2",
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:alternative:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [],
+      "base": "Lateral delts",
+      "seedKey": "lateral_raise",
+      "priority": 2,
+      "workoutKeys": [
+        "shoulders_arms",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Machine Calf Raise",
+      "normalized": "machine calf raise",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:machine"
+      ],
+      "equipment": [],
+      "base": "Calves",
+      "seedKey": "calves",
+      "priority": 3,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Machine Chest Press",
+      "normalized": "machine chest press",
+      "coverage": "exact",
+      "mediaId": "machine-bench-press",
+      "mediaTier": "legacy",
+      "sources": [
+        "api/equipment-exercises.js:CURATED:machine"
+      ],
+      "equipment": [],
+      "base": "Horizontal press",
+      "seedKey": "bench",
+      "priority": 1,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Machine Lat Pulldown",
+      "normalized": "machine lat pulldown",
+      "coverage": "alias",
+      "mediaId": "wide-grip-lat-pull-down",
+      "mediaTier": "legacy",
+      "sources": [
+        "api/equipment-exercises.js:CURATED:machine"
+      ],
+      "equipment": [],
+      "base": "Vertical pull",
+      "seedKey": "pullup",
+      "priority": 1,
+      "workoutKeys": [
+        "back",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Machine Leg Curl",
+      "normalized": "machine leg curl",
+      "coverage": "exact",
+      "mediaId": "lying-leg-curl-machine",
+      "mediaTier": "legacy",
+      "sources": [
+        "api/equipment-exercises.js:CURATED:machine"
+      ],
+      "equipment": [],
+      "base": "Knee flexion",
+      "seedKey": "ham_curl",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Machine Seated Row",
+      "normalized": "machine seated row",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:machine"
+      ],
+      "equipment": [],
+      "base": "Horizontal pull",
+      "seedKey": "row",
+      "priority": 1,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Machine Shoulder Press",
+      "normalized": "machine shoulder press",
+      "coverage": "exact",
+      "mediaId": "seated-shoulder-press-machine",
+      "mediaTier": "legacy",
+      "sources": [
+        "api/equipment-exercises.js:CURATED:machine"
+      ],
+      "equipment": [],
+      "base": "Vertical press",
+      "seedKey": "overhead_press",
+      "priority": 1,
+      "workoutKeys": [
+        "shoulders_arms",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Meadows Row",
+      "normalized": "meadows row",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-back.js:chosen:v1",
+        "workout-back.js:slot_option:v1"
+      ],
+      "equipment": [
+        "barbell",
+        "landmine"
+      ],
+      "base": "Horizontal pull",
+      "seedKey": "row",
+      "priority": 1,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "One-Arm Dumbbell Row",
+      "normalized": "one-arm dumbbell row",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-back.js:alternative:v0",
+        "workout-back.js:alternative:v1",
+        "workout-back.js:slot_option:v0",
+        "workout-back.js:slot_option:v1",
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1"
+      ],
+      "equipment": [
+        "bench",
+        "dumbbells"
+      ],
+      "base": "Horizontal pull",
+      "seedKey": "row",
+      "priority": 1,
+      "workoutKeys": [
+        "back",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Parallel-Bar Dip",
+      "normalized": "parallel-bar dip",
+      "coverage": "exact",
+      "mediaId": "tricep-dips-using-body-weight",
+      "mediaTier": "legacy",
+      "sources": [
+        "api/equipment-exercises.js:CURATED:dip"
+      ],
+      "equipment": [],
+      "base": "Triceps press",
+      "seedKey": "triceps",
+      "priority": 2,
+      "workoutKeys": [
+        "chest",
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Paused Barbell Back Squat",
+      "normalized": "paused barbell back squat",
+      "coverage": "alias",
+      "mediaId": "barbell-squat",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-lower.js:chosen:v1",
+        "workout-lower.js:slot_option:v1"
+      ],
+      "equipment": [
+        "barbell",
+        "rack"
+      ],
+      "base": "Primary squat",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Paused Barbell Bench Press",
+      "normalized": "paused barbell bench press",
+      "coverage": "alias",
+      "mediaId": "bench-press",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-chest.js:chosen:v2",
+        "workout-chest.js:slot_option:v2"
+      ],
+      "equipment": [
+        "barbell",
+        "bench",
+        "rack"
+      ],
+      "base": "Horizontal press",
+      "seedKey": "bench",
+      "priority": 1,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Pendlay Row",
+      "normalized": "pendlay row",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-back.js:alternative:v2",
+        "workout-back.js:slot_option:v2"
+      ],
+      "equipment": [
+        "barbell"
+      ],
+      "base": "Horizontal pull",
+      "seedKey": "row",
+      "priority": 1,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Pike Push-Up",
+      "normalized": "pike push-up",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-shoulders.js:alternative:v0",
+        "workout-shoulders.js:alternative:v1",
+        "workout-shoulders.js:alternative:v2",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v1",
+        "workout-shoulders.js:slot_option:v2",
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:alternative:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [],
+      "base": "Vertical press",
+      "seedKey": "overhead_press",
+      "priority": 1,
+      "workoutKeys": [
+        "shoulders_arms",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Plank",
+      "normalized": "plank",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-chest.js:alternative:v0",
+        "workout-chest.js:alternative:v1",
+        "workout-chest.js:alternative:v2",
+        "workout-chest.js:slot_option:v0",
+        "workout-chest.js:slot_option:v1",
+        "workout-chest.js:slot_option:v2"
+      ],
+      "equipment": [],
+      "base": "Anterior core",
+      "seedKey": "core",
+      "priority": 2,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Prone Lat Pull",
+      "normalized": "prone lat pull",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-back.js:alternative:v0",
+        "workout-back.js:alternative:v1",
+        "workout-back.js:alternative:v2",
+        "workout-back.js:slot_option:v0",
+        "workout-back.js:slot_option:v1",
+        "workout-back.js:slot_option:v2",
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:alternative:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [],
+      "base": "Vertical pull",
+      "seedKey": "pullup",
+      "priority": 1,
+      "workoutKeys": [
+        "back",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Prone Y-T Raise",
+      "normalized": "prone y-t raise",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-back.js:alternative:v0",
+        "workout-back.js:alternative:v1",
+        "workout-back.js:alternative:v2",
+        "workout-back.js:slot_option:v0",
+        "workout-back.js:slot_option:v1",
+        "workout-back.js:slot_option:v2",
+        "workout-shoulders.js:alternative:v0",
+        "workout-shoulders.js:alternative:v1",
+        "workout-shoulders.js:alternative:v2",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v1",
+        "workout-shoulders.js:slot_option:v2"
+      ],
+      "equipment": [
+        "bench"
+      ],
+      "base": "Rear delts",
+      "seedKey": "rear_delt",
+      "priority": 2,
+      "workoutKeys": [
+        "back",
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Pull-Up",
+      "normalized": "pull-up",
+      "coverage": "exact",
+      "mediaId": "pull-ups",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-back.js:chosen:v0",
+        "workout-back.js:chosen:v2",
+        "workout-back.js:slot_option:v0",
+        "workout-back.js:slot_option:v2",
+        "workout-upper.js:chosen:v0",
+        "workout-upper.js:chosen:v1",
+        "workout-upper.js:chosen:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [
+        "pullup"
+      ],
+      "base": "Vertical pull",
+      "seedKey": "pullup",
+      "priority": 1,
+      "workoutKeys": [
+        "back",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Push-Up",
+      "normalized": "push-up",
+      "coverage": "exact",
+      "mediaId": "push-ups",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-chest.js:alternative:v0",
+        "workout-chest.js:alternative:v1",
+        "workout-chest.js:slot_option:v0",
+        "workout-chest.js:slot_option:v1",
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:alternative:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "equipment": [],
+      "base": "Horizontal press",
+      "seedKey": "bench",
+      "priority": 1,
+      "workoutKeys": [
+        "chest",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Sandbag Front Squat",
+      "normalized": "sandbag front squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:sandbag"
+      ],
+      "equipment": [],
+      "base": "Primary squat",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Sandbag Reverse Lunge",
+      "normalized": "sandbag reverse lunge",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:sandbag"
+      ],
+      "equipment": [],
+      "base": "Single-leg work",
+      "seedKey": "split_squat",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Sandbag Romanian Deadlift",
+      "normalized": "sandbag romanian deadlift",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:sandbag"
+      ],
+      "equipment": [],
+      "base": "Hip hinge",
+      "seedKey": "hinge",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Seated Cable Row",
+      "normalized": "seated cable row",
+      "coverage": "exact",
+      "mediaId": "seated-cable-rows",
+      "mediaTier": "legacy",
+      "sources": [
+        "api/equipment-exercises.js:CURATED:cable"
+      ],
+      "equipment": [],
+      "base": "Horizontal pull",
+      "seedKey": "row",
+      "priority": 1,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Single-Arm Kettlebell Press",
+      "normalized": "single-arm kettlebell press",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:kettlebell"
+      ],
+      "equipment": [],
+      "base": "Vertical press",
+      "seedKey": "overhead_press",
+      "priority": 1,
+      "workoutKeys": [
+        "shoulders_arms",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Single-Arm Kettlebell Row",
+      "normalized": "single-arm kettlebell row",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:kettlebell"
+      ],
+      "equipment": [],
+      "base": "Horizontal pull",
+      "seedKey": "row",
+      "priority": 1,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Single-Leg Calf Raise",
+      "normalized": "single-leg calf raise",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower-hypertrophy.js:alternative:v0",
+        "workout-lower-hypertrophy.js:alternative:v1",
+        "workout-lower-hypertrophy.js:alternative:v2",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v1",
+        "workout-lower-hypertrophy.js:slot_option:v2",
+        "workout-lower.js:alternative:v0",
+        "workout-lower.js:alternative:v1",
+        "workout-lower.js:alternative:v2",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [],
+      "base": "Calves",
+      "seedKey": "calves",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Single-Leg Glute Bridge",
+      "normalized": "single-leg glute bridge",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower-hypertrophy.js:alternative:v0",
+        "workout-lower-hypertrophy.js:alternative:v1",
+        "workout-lower-hypertrophy.js:alternative:v2",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v1",
+        "workout-lower-hypertrophy.js:slot_option:v2",
+        "workout-lower.js:alternative:v0",
+        "workout-lower.js:alternative:v1",
+        "workout-lower.js:alternative:v2",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [],
+      "base": "Hip extension",
+      "seedKey": "hip_thrust",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Single-Leg Hip Hinge",
+      "normalized": "single-leg hip hinge",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower-hypertrophy.js:alternative:v0",
+        "workout-lower-hypertrophy.js:alternative:v1",
+        "workout-lower-hypertrophy.js:alternative:v2",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v1",
+        "workout-lower-hypertrophy.js:slot_option:v2",
+        "workout-lower.js:alternative:v0",
+        "workout-lower.js:alternative:v1",
+        "workout-lower.js:alternative:v2",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [],
+      "base": "Hip hinge",
+      "seedKey": "hinge",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Smith Machine Bench Press",
+      "normalized": "smith machine bench press",
+      "coverage": "exact",
+      "mediaId": "smith-machine-bench-press",
+      "mediaTier": "legacy",
+      "sources": [
+        "api/equipment-exercises.js:CURATED:smith"
+      ],
+      "equipment": [],
+      "base": "Horizontal press",
+      "seedKey": "bench",
+      "priority": 1,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Smith Machine Calf Raise",
+      "normalized": "smith machine calf raise",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:smith"
+      ],
+      "equipment": [],
+      "base": "Calves",
+      "seedKey": "calves",
+      "priority": 3,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Smith Machine Hip Thrust",
+      "normalized": "smith machine hip thrust",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:smith"
+      ],
+      "equipment": [],
+      "base": "Hip extension",
+      "seedKey": "hip_thrust",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Smith Machine Romanian Deadlift",
+      "normalized": "smith machine romanian deadlift",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:smith"
+      ],
+      "equipment": [],
+      "base": "Hip hinge",
+      "seedKey": "hinge",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Smith Machine Squat",
+      "normalized": "smith machine squat",
+      "coverage": "exact",
+      "mediaId": "smith-machine-squats",
+      "mediaTier": "legacy",
+      "sources": [
+        "api/equipment-exercises.js:CURATED:smith"
+      ],
+      "equipment": [],
+      "base": "Primary squat",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Suspension Trainer Body Saw",
+      "normalized": "suspension trainer body saw",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:suspension"
+      ],
+      "equipment": [],
+      "base": "Anterior core",
+      "seedKey": "core",
+      "priority": 3,
+      "workoutKeys": [
+        "chest",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Suspension Trainer Hamstring Curl",
+      "normalized": "suspension trainer hamstring curl",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:suspension"
+      ],
+      "equipment": [],
+      "base": "Knee flexion",
+      "seedKey": "ham_curl",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Suspension Trainer Push-Up",
+      "normalized": "suspension trainer push-up",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:suspension"
+      ],
+      "equipment": [],
+      "base": "Secondary press",
+      "seedKey": "chest_press",
+      "priority": 2,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Suspension Trainer Row",
+      "normalized": "suspension trainer row",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:suspension"
+      ],
+      "equipment": [],
+      "base": "Horizontal pull",
+      "seedKey": "row",
+      "priority": 1,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Suspension Trainer Split Squat",
+      "normalized": "suspension trainer split squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:suspension"
+      ],
+      "equipment": [],
+      "base": "Single-leg work",
+      "seedKey": "split_squat",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Tempo Bodyweight Squat",
+      "normalized": "tempo bodyweight squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower-hypertrophy.js:alternative:v0",
+        "workout-lower-hypertrophy.js:alternative:v2",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v2",
+        "workout-lower.js:alternative:v0",
+        "workout-lower.js:alternative:v1",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1"
+      ],
+      "equipment": [],
+      "base": "Primary squat",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Tempo Push-Up",
+      "normalized": "tempo push-up",
+      "coverage": "alias",
+      "mediaId": "push-ups",
+      "mediaTier": "legacy",
+      "sources": [
+        "workout-chest.js:alternative:v2",
+        "workout-chest.js:slot_option:v2"
+      ],
+      "equipment": [],
+      "base": "Horizontal press",
+      "seedKey": "bench",
+      "priority": 1,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Towel Isometric Curl",
+      "normalized": "towel isometric curl",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-shoulders.js:alternative:v0",
+        "workout-shoulders.js:alternative:v1",
+        "workout-shoulders.js:alternative:v2",
+        "workout-shoulders.js:slot_option:v0",
+        "workout-shoulders.js:slot_option:v1",
+        "workout-shoulders.js:slot_option:v2"
+      ],
+      "equipment": [],
+      "base": "Brachialis",
+      "seedKey": "hammer_curl",
+      "priority": 2,
+      "workoutKeys": [
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Trap Bar Deadlift",
+      "normalized": "trap bar deadlift",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:trap bar"
+      ],
+      "equipment": [],
+      "base": "Hip hinge",
+      "seedKey": "hinge",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Trap Bar Romanian Deadlift",
+      "normalized": "trap bar romanian deadlift",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:trap bar"
+      ],
+      "equipment": [],
+      "base": "Hip hinge",
+      "seedKey": "hinge",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Weighted Standing Calf Raise",
+      "normalized": "weighted standing calf raise",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-lower-hypertrophy.js:chosen:v0",
+        "workout-lower-hypertrophy.js:chosen:v1",
+        "workout-lower-hypertrophy.js:chosen:v2",
+        "workout-lower-hypertrophy.js:slot_option:v0",
+        "workout-lower-hypertrophy.js:slot_option:v1",
+        "workout-lower-hypertrophy.js:slot_option:v2",
+        "workout-lower.js:chosen:v0",
+        "workout-lower.js:chosen:v1",
+        "workout-lower.js:chosen:v2",
+        "workout-lower.js:slot_option:v0",
+        "workout-lower.js:slot_option:v1",
+        "workout-lower.js:slot_option:v2"
+      ],
+      "equipment": [
+        "dumbbells"
+      ],
+      "base": "Calves",
+      "seedKey": "calves",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    },
+    {
+      "name": "Wide Push-Up",
+      "normalized": "wide push-up",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "workout-chest.js:alternative:v0",
+        "workout-chest.js:alternative:v1",
+        "workout-chest.js:alternative:v2",
+        "workout-chest.js:slot_option:v0",
+        "workout-chest.js:slot_option:v1",
+        "workout-chest.js:slot_option:v2"
+      ],
+      "equipment": [],
+      "base": "Chest isolation",
+      "seedKey": "fly",
+      "priority": 2,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false
+    }
+  ],
+  "duplicates": [],
+  "brokenReferences": [],
+  "orphanAssets": [],
+  "supersets": [
+    {
+      "name": "Barbell Curl + Close-Grip Push-Up",
+      "components": [
+        "Barbell Curl",
+        "Close-Grip Push-Up"
+      ],
+      "workoutKeys": [
+        "upper_specialization"
+      ],
+      "sources": [
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:alternative:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "status": "full"
+    },
+    {
+      "name": "Bodyweight Curl Isometric + Diamond Push-Up",
+      "components": [
+        "Bodyweight Curl Isometric",
+        "Diamond Push-Up"
+      ],
+      "workoutKeys": [
+        "upper_specialization"
+      ],
+      "sources": [
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:alternative:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "status": "fallbackOnly"
+    },
+    {
+      "name": "Dumbbell Curl + Band Pressdown",
+      "components": [
+        "Dumbbell Curl",
+        "Band Pressdown"
+      ],
+      "workoutKeys": [
+        "upper_specialization"
+      ],
+      "sources": [
+        "workout-upper.js:chosen:v0",
+        "workout-upper.js:chosen:v1",
+        "workout-upper.js:chosen:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
+      ],
+      "status": "fallbackOnly"
+    }
+  ]
+}

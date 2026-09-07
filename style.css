@@ -120,3 +120,14 @@ html{scroll-padding-bottom:120px}
   .done:active{transform:none}
   .field,.done,.account-mode-link{transition:none}
 }
+
+/* Exercise media: visual first, then the two or three cues that change the rep. */
+.exercise-media .media-cues{margin:10px 0 0;padding:0}
+.exercise-media .media-cues ul{margin:0;padding-left:17px;display:grid;gap:3px}
+.exercise-media .media-cues li{font-size:12.5px;line-height:1.45;color:var(--text);opacity:.92}
+.exercise-media .media-mistake{margin:7px 0 0;font-size:12px;line-height:1.4;color:var(--muted)}
+.exercise-media .media-mistake b{color:var(--text);opacity:.85}
+.exercise-media .media-credit{display:block;font-size:11px;color:var(--muted);margin-top:6px}
+.exercise-media[data-media-tier="4"] .media-variant,
+.exercise-media[data-media-tier="5"] .media-variant{color:var(--muted);font-weight:700}
+.exercise-media-frames a span{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}

@@ -6,7 +6,7 @@ const out=resolve(root,'www');
 await rm(out,{recursive:true,force:true});await mkdir(out,{recursive:true});
 let html=await readFile(resolve(root,'index.html'),'utf8');
 const scripts=[...html.matchAll(/<script src="([^"?]+)(?:\?[^" ]*)?"/g)].map(m=>m[1]);
-const runtimeScripts=['coach-recovery.js','auth-hardening.js','account-polish.js','adaptive-insights.js','trainer-intelligence-v2.js','progress-analytics-v2.js','session-adaptation-v3.js','media-experience-v2.js','music-originals.js','music.js'];
+const runtimeScripts=['coach-recovery.js','auth-hardening.js','account-polish.js','adaptive-insights.js','trainer-intelligence-v2.js','progress-analytics-v2.js','session-adaptation-v3.js','media-experience-v2.js','music-originals.js','music.js','session-resume.js'];
 for(const file of [...new Set([...scripts,...runtimeScripts,'style.css','EXERCISE_MEDIA.md','MUSIC.md'])]){
   if(file.includes('/')||file.includes('..'))throw Error('Unexpected entrypoint asset: '+file);
   await cp(resolve(root,file),resolve(out,file));

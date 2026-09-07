@@ -21,4 +21,5 @@
   loadRuntimeScript('media-experience-v2.js?v=1','media-experience-v2','__ironSixMediaExperienceV2Loaded');
   loadRuntimeScript('music-originals.js?v=1','music-originals','__ironSixMusicOriginalsLoaded');
   loadRuntimeScript('music.js?v=1','music','__ironSixMusicLoaded');
+  loadRuntimeScript('session-resume.js?v=1','session-resume','__ironSixSessionResumeLoaded');
 })();
