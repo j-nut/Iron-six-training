@@ -17,9 +17,23 @@ export function authCode(value){
   }catch(_){return null}
 }
 
+function installSafeArea(win){
+  win.document.documentElement.classList.add('iron-six-native');
+  if(win.document.getElementById('ironSixNativeInsets'))return;
+  const style=win.document.createElement('style');style.id='ironSixNativeInsets';
+  style.textContent='.iron-six-native body{min-height:100dvh}.iron-six-native .app{padding-top:max(16px,calc(env(safe-area-inset-top,0px) + 10px));padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}.iron-six-native .modal-backdrop{padding-top:max(14px,calc(env(safe-area-inset-top,0px) + 8px));padding-bottom:max(14px,calc(env(safe-area-inset-bottom,0px) + 8px))}.iron-six-native .toast{bottom:calc(88px + env(safe-area-inset-bottom,0px))}';
+  win.document.head.append(style);
+}
+
+function validBackup(json){
+  if(typeof json!=='string'||json.length<20||json.length>10000000)return false;
+  try{const value=JSON.parse(json);return !!value&&typeof value==='object'&&Array.isArray(value.entries)&&value.profiles&&typeof value.profiles==='object'&&typeof value.exportedAt==='string'}catch(_){return false}
+}
+
 export function installNative({win,App,Browser,createClient,WorkoutBackup}){
   let client=null,pendingUrl=null,notify=()=>{},lastCode=null,inFlightCode=null;
   let callbacks=Promise.resolve();
+  installSafeArea(win);
   const originalFetch=win.fetch.bind(win);
   win.fetch=(input,options)=>{
     if(typeof input==='string'||input instanceof URL)return originalFetch(apiUrl(String(input),win.location.origin),options);
@@ -79,7 +93,7 @@ export function installNative({win,App,Browser,createClient,WorkoutBackup}){
   });
   const api={
     redirectTo:AUTH_REDIRECT,supabase:{createClient},
-    exportBackup:json=>WorkoutBackup.save({json}),
+    exportBackup:json=>validBackup(json)?WorkoutBackup.save({json}):Promise.reject(new Error('Backup payload is empty or invalid. Your workout remains saved on this device.')),
     authOptions:{flowType:'pkce',detectSessionInUrl:false},
     async openOAuth(url){if(new URL(url).protocol!=='https:')throw Error('Invalid sign-in URL');await Browser.open({url})},
     async connectCloud(value,message){
