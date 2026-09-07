@@ -30,13 +30,10 @@ await Promise.all(Array.from({length: 6}, async () => {
 
 const html = await readFile(resolve(root, 'index.html'), 'utf8');
 const scripts = [...html.matchAll(/<script src="([^"?]+)(?:\?[^" ]*)?"/g)].map(match => match[1]);
-const runtimeScripts = ['coach-recovery.js', 'auth-hardening.js', 'account-polish.js', 'adaptive-insights.js', 'trainer-intelligence-v2.js', 'progress-analytics-v2.js', 'music-originals.js', 'music.js'];
-const files = [...new Set(['index.html', 'live.html', 'style.css', 'EXERCISE_MEDIA.md', 'MUSIC.md', ...scripts, ...runtimeScripts])];
-for (const file of files) {
-  if (!/^[a-zA-Z0-9_.-]+$/.test(file) || file.includes('..')) throw Error('Unexpected public file');
-  await cp(resolve(root, file), resolve(out, file));
-}
+const runtimeScripts = ['coach-recovery.js','auth-hardening.js','account-polish.js','adaptive-insights.js','trainer-intelligence-v2.js','progress-analytics-v2.js','session-adaptation-v3.js','media-experience-v2.js','music-originals.js','music.js'];
+const files = [...new Set(['index.html','live.html','style.css','EXERCISE_MEDIA.md','MUSIC.md',...scripts,...runtimeScripts])];
+for (const file of files) { if (!/^[a-zA-Z0-9_.-]+$/.test(file) || file.includes('..')) throw Error('Unexpected public file'); await cp(resolve(root,file),resolve(out,file)); }
 const checksums = {};
-for (const file of files) checksums[file] = createHash('sha256').update(await readFile(resolve(out, file))).digest('hex');
-await writeFile(resolve(out, 'release.json'), JSON.stringify({files: checksums, images: manifest.files}, null, 2) + '\n');
+for (const file of files) checksums[file] = createHash('sha256').update(await readFile(resolve(out,file))).digest('hex');
+await writeFile(resolve(out,'release.json'), JSON.stringify({files:checksums,images:manifest.files},null,2)+'\n');
 console.log(`Web release ready: ${files.length} public files (${runtimeScripts.length} runtime-loaded), ${Object.keys(manifest.files).length} verified exercise images.`);
