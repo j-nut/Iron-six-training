@@ -10,12 +10,13 @@ permissions:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
         with:
           node-version: '22'
+          cache: npm
       - name: Install pinned test dependencies
         run: npm ci --ignore-scripts
       - name: Verify accounts, durable saves, and workout modes
@@ -39,11 +40,15 @@ jobs:
           required = [
             'core.js','workout-lower.js','workout-shoulders.js','workout-chest.js',
             'workout-back.js','workout-lower-hypertrophy.js','workout-upper.js',
-            'workout-dispatch.js','engine.js','ui1.js','ui2.js','ui3.js',
-            'exercise-guide.js','exercise-visuals.js','local-ai-fallback.js','coach.js',
-            'cloud-sync.js','cloud-history-sync.js','api/config.js',
-            'supabase/schema.sql','supabase/config.toml','supabase/functions/coach/index.ts',
-            'supabase/functions/coach/deno.json'
+            'workout-dispatch.js','engine.js','session-planner.js','workout-store.js',
+            'ui1.js','ui2.js','ui3.js','exercise-guide.js','exercise-visuals.js',
+            'exercise-media-catalog.js','exercise-media.js','local-ai-fallback.js',
+            'coach.js','coach-recovery.js','circuit-player.js','social-auth.js',
+            'cloud-sync.js','cloud-history-sync.js','auth-hardening.js',
+            'native/entry.mjs','native/runtime.mjs','scripts/build-android-web.mjs',
+            'android/app/src/main/java/com/ironsix/training/WorkoutBackupPlugin.java',
+            'api/config.js','api/coach.js','supabase/schema.sql','supabase/config.toml',
+            'supabase/functions/coach/index.ts','supabase/functions/coach/deno.json'
           ]
           missing=[p for p in required if not Path(p).exists()]
           if missing: raise SystemExit('Missing files: '+', '.join(missing))
