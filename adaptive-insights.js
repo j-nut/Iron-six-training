@@ -1,4 +1,5 @@
 (() => {
+  window.__ironSixAdaptiveInsightsLoaded=true;
   const MUSCLES=['chest','back','shoulders','biceps','triceps','quads','hamstrings','glutes','calves','core'];
   const FEEDBACK={
     easy:{label:'Too easy',delta:1.015},
@@ -47,10 +48,11 @@
     }
     const trends=[];
     for(const [exercise,items] of Object.entries(byExercise)){
-      const dated=[...items].sort((a,b)=>a.ts-b.ts).filter(x=>x.e1rm>0);
+      const sessionBest=new Map();
+      for(const item of items){if(!item.e1rm||!item.ts)continue;sessionBest.set(item.ts,Math.max(sessionBest.get(item.ts)||0,item.e1rm))}
+      const dated=[...sessionBest.entries()].map(([ts,e1rm])=>({ts,e1rm})).sort((a,b)=>a.ts-b.ts);
       if(dated.length<2)continue;
-      const first=dated.slice(0,Math.min(3,dated.length)),last=dated.slice(-Math.min(3,dated.length));
-      const a=Math.max(...first.map(x=>x.e1rm)),b=Math.max(...last.map(x=>x.e1rm));
+      const a=dated[0].e1rm,b=dated[dated.length-1].e1rm;
       if(!a||!b)continue;
       trends.push({exercise,change:Math.round(((b-a)/a)*1000)/10,current:b,previous:a});
     }
@@ -100,11 +102,15 @@
     const summary=document.getElementById('freshnessSummary');if(summary){const key=user.program?.currentWorkoutKey||'lower_strength',muscles=(typeof WORKOUT_META!=='undefined'&&WORKOUT_META[key]?.muscles)||[],scores=muscles.flatMap(m=>{const k=String(m).toLowerCase().replace('front delts','shoulders').replace('rear delts','shoulders').replace('arms','biceps');return a.freshness[k]?[a.freshness[k].score]:[]});const avg=scores.length?Math.round(scores.reduce((x,y)=>x+y,0)/scores.length):100;summary.textContent=`Training freshness for today’s main muscles: ${avg}% · combined with your energy and soreness check-in.`}
   }
   function feedbackPrompt(row,key,current){
-    let box=row.nextElementSibling;if(box?.classList?.contains('set-feedback'))box.remove();
-    box=document.createElement('div');box.className='set-feedback';box.dataset.setKey=key;box.innerHTML=`<div class="set-feedback-label">How did that set feel?</div><div class="set-feedback-actions">${Object.entries(FEEDBACK).map(([value,meta])=>`<button type="button" class="set-feedback-btn ${current===value?'active':''}" data-set-feedback="${value}">${meta.label}</button>`).join('')}</div>`;row.insertAdjacentElement('afterend',box);
+    let box=row.nextElementSibling;
+    if(box?.classList?.contains('set-feedback')&&box.dataset.setKey===key){box.querySelectorAll('.set-feedback-btn').forEach(b=>b.classList.toggle('active',b.dataset.setFeedback===current));return box}
+    if(box?.classList?.contains('set-feedback'))box.remove();
+    box=document.createElement('div');box.className='set-feedback';box.dataset.setKey=key;box.innerHTML=`<div class="set-feedback-label">How did that set feel?</div><div class="set-feedback-actions">${Object.entries(FEEDBACK).map(([value,meta])=>`<button type="button" class="set-feedback-btn ${current===value?'active':''}" data-set-feedback="${value}">${meta.label}</button>`).join('')}</div>`;row.insertAdjacentElement('afterend',box);return box;
   }
   function showFeedbackForDone(done){
-    if(!done?.classList?.contains('active'))return;const row=done.closest('.set-row'),card=done.closest('[data-exercise-index]');if(!row||!card)return;const ei=Number(card.dataset.exerciseIndex),rows=[...row.parentElement.querySelectorAll('.set-row')],si=rows.indexOf(row),key=`${ei}-${si}`,user=activeUser();feedbackPrompt(row,key,user.today?.[key]?.feedback||'');
+    const row=done?.closest?.('.set-row');if(!row)return;
+    if(!done.classList.contains('active')){if(row.nextElementSibling?.classList?.contains('set-feedback'))row.nextElementSibling.remove();return}
+    const card=done.closest('[data-exercise-index]');if(!card)return;const ei=Number(card.dataset.exerciseIndex),rows=[...row.parentElement.querySelectorAll('.set-row')],si=rows.indexOf(row),key=`${ei}-${si}`,user=activeUser();feedbackPrompt(row,key,user.today?.[key]?.feedback||'');
   }
   function recordFeedback(button){
     const value=button.dataset.setFeedback,meta=FEEDBACK[value],box=button.closest('.set-feedback');if(!meta||!box)return;const user=activeUser(),key=box.dataset.setKey,state=user.today?.[key];if(!state||!state.done)return;
@@ -121,7 +127,7 @@
     document.addEventListener('click',e=>{const feedback=e.target.closest?.('[data-set-feedback]');if(feedback){recordFeedback(feedback);return}const done=e.target.closest?.('.done');if(done)setTimeout(()=>showFeedbackForDone(done),0);const nav=e.target.closest?.('[data-view="history"]');if(nav)setTimeout(render,0)});
     document.getElementById('userSelect')?.addEventListener('change',()=>setTimeout(render,0));document.getElementById('energy')?.addEventListener('change',()=>setTimeout(render,0));document.getElementById('soreness')?.addEventListener('change',()=>setTimeout(render,0));document.getElementById('finishBtn')?.addEventListener('click',()=>setTimeout(render,0));
     const history=document.getElementById('historyList');if(history)new MutationObserver(()=>render()).observe(history,{childList:true});
-    const list=document.getElementById('exerciseList');if(list)new MutationObserver(()=>{list.querySelectorAll('.done.active').forEach(showFeedbackForDone)}).observe(list,{childList:true,subtree:true});
+    const list=document.getElementById('exerciseList');if(list)new MutationObserver(()=>{list.querySelectorAll('.done').forEach(showFeedbackForDone)}).observe(list,{childList:true,subtree:true});
   }
   window.IronSixInsights={estimatedMax,flattenHistory,muscleFreshness,analyze,render,FEEDBACK};
   if(typeof document!=='undefined')install();
