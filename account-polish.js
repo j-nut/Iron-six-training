@@ -12,7 +12,7 @@
     const title=$('accountTitle');if(title)title.textContent='Your training account';
     const tabs=$('accountTabs');if(tabs){tabs.classList.remove('cta');tabs.classList.add('account-mode-links');
       const labels={login:'Sign in',signup:'Create account',magic:'Email me a sign-in link',reset:'Forgot password?'};
-      tabs.querySelectorAll('[data-auth]').forEach(btn=>{btn.className='account-mode-link';btn.textContent=labels[btn.dataset.auth]||btn.textContent});
+      tabs.querySelectorAll('[data-auth]').forEach(btn=>{btn.classList.remove('btn','secondary');btn.classList.add('account-mode-link');btn.textContent=labels[btn.dataset.auth]||btn.textContent});
     }
     const form=$('accountForm');if(form)form.classList.add('account-form');
     const status=$('accountStatus');if(status)status.classList.add('account-status');

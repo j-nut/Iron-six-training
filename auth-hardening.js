@@ -3,6 +3,9 @@
   if(window.__ironSixAuthHardened)return;window.__ironSixAuthHardened=true;
   const $=id=>document.getElementById(id);
   const ACTIONS={'Sign in':'login','Create account':'signup','Send sign-in link':'magic','Send password reset':'reset','Save new password':'password'};
+  // The submit label is a presentation string. Prefer the mode the account UI declares
+  // so a relabelled button can never silently turn a reset into a sign-in attempt.
+  const MODES=new Set(['login','signup','magic','reset','password']);
   const EMAIL_AUTH_REDIRECT='https://iron-six-training.vercel.app/?auth=email';
   let submitting=false;
   const message=text=>{const el=$('accountStatus');if(el)el.textContent=text};
@@ -28,7 +31,8 @@
   async function submit(event){
     event.preventDefault();event.stopImmediatePropagation();if(submitting)return;
     const button=$('accountSubmit'),form=$('accountForm'),email=$('accountEmail')?.value.trim()||'',password=$('accountPassword')?.value||'',confirmPassword=$('accountConfirm')?.value||'';
-    const action=ACTIONS[button?.textContent?.trim()]||'login',client=window.IronSixCloud?.client?.();
+    const declared=form?.dataset?.authMode;
+    const action=MODES.has(declared)?declared:(ACTIONS[button?.textContent?.trim()]||'login'),client=window.IronSixCloud?.client?.();
     if(!client){message('Sign-in is still initializing. Your workout remains saved locally. Try again in a moment.');return}
     if(navigator.onLine===false){message('You are offline. Your workout is saved locally; sign in when the connection returns.');return}
     if(action!=='password'&&!/^\S+@\S+\.\S+$/.test(email)){message('Enter a valid email address.');$('accountEmail')?.focus();return}

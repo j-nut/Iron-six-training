@@ -256,6 +256,24 @@ Current code includes an auth bridge and hardening runtimes. Before changing aut
 5. Do not claim Google/social login works merely because a button renders; test the actual provider callback/deep-link path.
 6. A real production SMTP configuration is required for dependable auth email delivery.
 
+### Settled decisions — do not "fix" these
+
+- **Email callbacks always use the production HTTPS URL.** `auth-hardening.js` sends
+  `https://iron-six-training.vercel.app/?auth=email` for signup, magic link and password
+  reset even on Android and on previews. This is deliberate and enforced by
+  `tests/auth-hardening.test.js`: email clients cannot open the
+  `com.ironsix.training://` scheme, and Supabase only honours allowlisted redirect
+  URLs. Routing OAuth `redirectTo` to production is intentional for the same reason.
+- **Provider discovery asks this origin first.** `social-auth.js` fetches
+  `/api/auth-status` relative, then falls back to the production host. The relative
+  call is what lets Vercel previews work and what the native bridge rewrites to the
+  app's API origin; the absolute fallback exists only for static hosts (GitHub Pages)
+  that serve no `/api` routes. It previously used the absolute URL alone, which failed
+  cross-origin everywhere except production and hid every social button.
+- **The submitted auth action comes from `accountForm.dataset.authMode`.** The submit
+  button's visible label is only a fallback. Deriving the action from a label meant a
+  relabelled button could silently turn a password reset into a sign-in attempt.
+
 Do not place passwords or secret API keys in this repository or this handoff.
 
 ## 8. Environment/secrets

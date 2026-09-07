@@ -34,12 +34,21 @@
     const divider=$('socialDivider');if(divider)divider.hidden=signed||(!loading&&!available.length);
   }
 
+  async function fetchStatus(url){
+    const response=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(8000)});
+    if(!response.ok)throw Error('Unavailable');
+    const result=await response.json();
+    if(!result.iron||!result.nomad)throw Error('Invalid settings');
+    return result;
+  }
   async function refresh(){
     if(!api||loading)return;loading=true;settingsError=false;render();
+    // Same-origin first: that is what works on Vercel previews and what the native
+    // bridge rewrites to the app's API origin. Fall back to the production host only
+    // for static deployments (GitHub Pages) that serve no /api routes at all.
     try{
-      const response=await fetch(IRON_SITE+'/api/auth-status',{cache:'no-store',signal:AbortSignal.timeout(8000)});
-      if(!response.ok)throw Error('Unavailable');const result=await response.json();
-      if(!result.iron||!result.nomad)throw Error('Invalid settings');status=result;
+      try{status=await fetchStatus('/api/auth-status')}
+      catch(_){status=await fetchStatus(IRON_SITE+'/api/auth-status')}
     }catch(_){status=null;settingsError=true}
     finally{loading=false;render()}
   }

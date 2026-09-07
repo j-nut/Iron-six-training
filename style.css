@@ -5,11 +5,118 @@
 .exercise-media{margin:12px 0;border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .exercise-media-frames{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:#ddd}
 .exercise-media-frames a{display:flex;flex-direction:column;align-items:center;background:#fff;color:#242424;padding:10px;text-decoration:none;min-width:0}
-.exercise-media img{display:block;object-fit:contain;width:100%;height:280px}
+.exercise-media .exercise-media-frames img{display:block;object-fit:contain;width:100%;height:280px}
 .exercise-media-frames span{font-size:12px;padding:5px;text-align:center}
 .exercise-media figcaption{padding:9px 12px;font-size:11px;color:var(--muted);line-height:1.5}
 .exercise-media a{color:inherit}.exercise-media.compact .exercise-media-frames{grid-template-columns:1fr}
-.exercise-media.compact img{height:150px}.exercise-media.compact .exercise-media-frames span{display:none}
+.exercise-media.compact .exercise-media-frames img{height:150px}.exercise-media.compact .exercise-media-frames span{display:none}
 .exercise-media-missing{display:flex;flex-direction:column;gap:5px;padding:12px;margin:10px 0;border:1px solid var(--line);border-radius:12px;font-size:12px;color:var(--muted)}
 .exercise-media-missing a{color:var(--accent)}.media-variant{margin:5px 0 0}
-@media(max-width:520px){.exercise-media img{height:200px}.exercise-media-frames a{padding:5px}}
+@media(max-width:520px){.exercise-media .exercise-media-frames img{height:200px}.exercise-media-frames a{padding:5px}}
+
+/* ============================================================================
+   Iron Six UI v2 — tuned for someone mid-workout holding a phone.
+   Priorities: the set you are logging is reachable without scrolling past a
+   demo, targets are thumb-sized, and finished work visibly recedes.
+   Appended last so it wins the cascade over the base rules above.
+   ========================================================================== */
+
+/* --- Layout: the set table comes before the demonstration ------------------ */
+/* The card DOM order is head, media, sets. For a lifter the sets matter most,
+   so reorder visually without touching the markup any script depends on. */
+.exercise{display:flex;flex-direction:column}
+.exercise-head{order:0}
+.sets{order:1}
+.exercise-media,.exercise-media-missing{order:2}
+
+/* --- Exercise header ------------------------------------------------------ */
+.exercise-head{padding:15px 15px 12px;align-items:flex-start}
+.exercise-name-link{font-size:17px!important;letter-spacing:-.02em;text-decoration:none!important}
+.exercise-name-link:hover{text-decoration:underline!important}
+.exercise-title>span{margin-top:4px;font-size:12.5px}
+/* Keep the two inline actions from colliding. */
+.exercise-title .exercise-help-btn,.exercise-title .exercise-swap-btn{padding:8px 0 4px!important;margin-right:18px!important;font-size:12.5px!important}
+.tag{padding:7px 10px;letter-spacing:.02em}
+
+/* Suggestion panel: keep the headline loud, the caveat quiet. */
+.suggestion{margin-top:10px;padding:11px 12px;border-radius:13px}
+.suggestion strong{font-size:15px;letter-spacing:-.015em}
+.suggestion>div{font-size:11.5px;line-height:1.4;opacity:.82;margin-top:6px}
+.confidence{margin-left:0;margin-top:6px}
+
+/* --- Set rows: the part that gets touched with sweaty hands ---------------- */
+.sets{padding:12px 12px 16px}
+.field-labels{opacity:.7;margin-bottom:2px}
+.set-row{margin-top:9px;align-items:center}
+.set-num{font-size:15px}
+.field{min-height:50px;padding:12px 10px;font-size:17px;font-weight:750;text-align:center;border:1px solid var(--line);transition:border-color .12s,background .12s}
+.field:focus{border-color:var(--accent);background:rgba(157,223,104,.07)}
+select.field.rir{font-size:14px;font-weight:700;text-align:left}
+.done{width:48px;height:48px;font-size:19px;border-width:2px;transition:transform .1s,background .15s,border-color .15s}
+.done:active{transform:scale(.92)}
+.done.active{box-shadow:0 0 0 3px rgba(157,223,104,.16)}
+/* Completed sets step back so the next one to do is the obvious target. */
+.set-row:has(.done.active){opacity:.5}
+.set-row:has(.done.active):focus-within{opacity:1}
+
+/* --- Demonstration: size it to the drawing, not to a fixed square ---------- */
+.exercise-media{margin:0 12px 14px;border-radius:14px;background:var(--surface2)}
+.exercise-media.motion-demo{padding:12px}
+.motion-demo .motion-stage{max-width:180px;aspect-ratio:4/5;margin:0 auto;border-radius:12px;background:#f2f4f2;border-color:rgba(0,0,0,.12)}
+/* Beat the legacy .exercise-media.compact selector so frames fill the stage. */
+.exercise-media.compact .motion-stage img,.motion-demo .motion-stage img{height:100%;width:100%;object-fit:contain}
+.motion-labels{max-width:180px;margin:6px auto 0;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase}
+.motion-actions{justify-content:center;margin-top:10px;flex-wrap:wrap}
+.motion-toggle{min-height:38px;padding:8px 14px!important;font-size:11.5px!important}
+.media-form-cues{margin-top:10px;text-align:center;font-size:11.5px;line-height:1.5}
+.exercise-media figcaption{padding:9px 2px 0;font-size:10px;opacity:.62;text-align:center}
+.exercise-media-missing{margin:0 12px 14px;background:var(--surface2)}
+
+/* --- Hero: say what today is, then get out of the way --------------------- */
+.hero{padding:17px}
+.hero h1{font-size:25px;margin:7px 0 7px;line-height:1.08}
+.hero p{font-size:13.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.eyebrow{font-size:11px;letter-spacing:.1em}
+.metrics{margin-top:15px;gap:8px}
+.metric{padding:11px 10px}
+.metric strong{font-size:19px;letter-spacing:-.02em}
+.section{margin-top:22px}
+.section h2{font-size:17px}
+
+/* --- Bottom navigation: never let it sit on top of a set row -------------- */
+.app{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+html{scroll-padding-bottom:120px}
+.navbtn{letter-spacing:.01em}
+.navbtn.active{font-weight:850}
+
+/* --- Account sheet: make the four modes read as a real control ------------ */
+.account-mode-links{gap:6px!important;justify-content:stretch!important;flex-wrap:wrap!important;margin:14px 0 6px!important}
+/* account-polish.js injects an equally specific !important rule set at runtime, so every
+   declaration here is scoped one level deeper to win the tie deterministically. */
+.account-mode-links .account-mode-link{flex:1 1 auto;min-width:calc(50% - 3px);border:1px solid var(--line)!important;border-radius:10px!important;padding:10px 8px!important;font-size:12px!important;font-weight:800!important;line-height:1.25!important;text-align:center;background:rgba(255,255,255,.03)!important;transition:border-color .15s,color .15s,background .15s}
+.account-mode-links .account-mode-link:hover{color:var(--text)!important;text-decoration:none!important;border-color:rgba(255,255,255,.22)!important}
+/* The active mode is the one the form will actually submit. account-polish.js injects
+   its own !important [data-auth] colours at runtime, so these carry extra specificity
+   to win the tie rather than relying on stylesheet order. */
+.account-mode-links .account-mode-link[data-auth]{color:var(--muted)!important}
+.account-mode-links .account-mode-link[data-auth].is-active{color:#0b0c0f!important;background:var(--accent)!important;border-color:var(--accent)!important}
+.account-form input{font-size:16px}
+#accountSubmit{font-size:15px}
+
+@media(max-width:520px){
+  .set-row,.field-labels{grid-template-columns:30px 1fr 1fr 66px 48px;gap:7px}
+  .field{padding:12px 6px;font-size:16px}
+  .hero h1{font-size:23px}
+  .exercise-head{padding:14px 13px 11px}
+  .sets{padding:11px 10px 15px}
+  .exercise-media,.exercise-media-missing{margin:0 10px 12px}
+}
+@media(max-width:370px){
+  .set-row,.field-labels{grid-template-columns:26px 1fr 1fr 60px 44px;gap:6px}
+  .done{width:44px;height:44px}
+  .account-mode-link{min-width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+  .done:active{transform:none}
+  .field,.done,.account-mode-link{transition:none}
+}
