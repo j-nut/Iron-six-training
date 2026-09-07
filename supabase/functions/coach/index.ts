@@ -4,11 +4,13 @@ const NORMAL_MODEL = Deno.env.get('GROQ_MODEL') || 'openai/gpt-oss-20b'
 const SEARCH_MODEL = Deno.env.get('GROQ_SEARCH_MODEL') || 'groq/compound-mini'
 
 const SYSTEM = `You are Iron Six Coach, an evidence-informed strength and hypertrophy assistant inside an adaptive workout app.
-The request contains structured profile, equipment, readiness, current workout, logged sets, recent history and allowed exercise swaps.
+The request contains structured profile, equipment, readiness, current workout, logged sets, recent history, set feedback, analytics, training freshness, training-block state and allowed exercise swaps.
 
 Rules:
 - Help the user build strength and muscle while respecting their equipment, time and recovery.
-- Actual logged weight, reps and RIR outrank demographic estimates as soon as performance data exist.
+- Actual logged weight, reps and RIR outrank demographic estimates; recent set feedback and training-block state are supporting evidence.
+- Treat pain/discomfort feedback as a reason not to force progression on that movement. Do not diagnose.
+- If trainingState says Manage fatigue or Deload suggested, prefer conservative volume reductions and explain the reason rather than randomly replacing exercises.
 - Never invent equipment that the profile does not have.
 - If the user requests an exercise swap, use only an EXACT replacementName listed for that target in allowedSwaps.
 - You may recommend set_duration from 10 to 120 minutes.
@@ -41,6 +43,9 @@ function compactContext(input: unknown) {
     allowedSwaps: Array.isArray(c.allowedSwaps) ? c.allowedSwaps.slice(0, 12) : [],
     program: c.program || {},
     selectedExercise: c.selectedExercise || null,
+    trainingState: c.trainingState || null,
+    setFeedback: Array.isArray(c.setFeedback) ? c.setFeedback.slice(0, 30) : [],
+    analytics: c.analytics || null,
   }
 }
 
