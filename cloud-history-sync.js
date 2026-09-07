@@ -5,11 +5,12 @@
     for(const u of data.users){IronSixJournal.migrateUser(u);IronSixJournal.restore(u)}
     window.IronSixCloud?.saveLocal();renderAll();
   });
-  if(!window.__ironSixCoachRecoveryLoaded&&!document.querySelector('script[data-coach-recovery]')){
+  function loadRuntimeScript(src,datasetKey,loadedFlag){
+    if(window[loadedFlag]||document.querySelector(`script[data-${datasetKey}]`))return;
     const script=document.createElement('script');
-    script.src='coach-recovery.js?v=1';
-    script.dataset.coachRecovery='true';
-    script.async=false;
+    script.src=src;script.setAttribute(`data-${datasetKey}`,'true');script.async=false;
     document.body.appendChild(script);
   }
+  loadRuntimeScript('coach-recovery.js?v=2','coach-recovery','__ironSixCoachRecoveryLoaded');
+  loadRuntimeScript('auth-hardening.js?v=1','auth-hardening','__ironSixAuthHardened');
 })();
