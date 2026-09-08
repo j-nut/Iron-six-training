@@ -19,13 +19,13 @@ Rules for this replacement set:
 - [x] Band Face Pull
 - [x] Band Hammer Curl
 - [x] Band Hamstring Curl
-- [ ] Band Lat Pulldown
-- [ ] Band Lateral Raise
-- [ ] Band Pallof Press
-- [ ] Band Pressdown
-- [ ] Band Row
-- [ ] Band Straight-Arm Pulldown
-- [ ] Banded Hip Thrust
+- [x] Band Lat Pulldown
+- [x] Band Lateral Raise
+- [x] Band Pallof Press
+- [x] Band Pressdown
+- [x] Band Row
+- [x] Band Straight-Arm Pulldown
+- [x] Banded Hip Thrust
 - [x] Barbell Back Squat
 - [ ] Barbell Bench Press
 - [ ] Barbell Box Squat
