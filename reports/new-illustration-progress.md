@@ -27,67 +27,67 @@ Rules for this replacement set:
 - [x] Band Straight-Arm Pulldown
 - [x] Banded Hip Thrust
 - [x] Barbell Back Squat
-- [ ] Barbell Bench Press
-- [ ] Barbell Box Squat
-- [ ] Barbell Curl
-- [ ] Barbell Good Morning
-- [ ] Barbell Hip Thrust
-- [ ] Barbell Overhead Press
-- [ ] Barbell Romanian Deadlift
-- [ ] Barbell Row
-- [ ] Barbell Standing Calf Raise
-- [ ] Bodyweight Curl Isometric
-- [ ] Bodyweight Split Squat
-- [ ] Chest-Supported Dumbbell Row
-- [ ] Chin-Up
-- [ ] Close-Grip Bench Press
-- [ ] Close-Grip Push-Up
-- [ ] Cyclist Squat
-- [ ] Diamond Push-Up
+- [x] Barbell Bench Press
+- [x] Barbell Box Squat
+- [x] Barbell Curl
+- [x] Barbell Good Morning
+- [x] Barbell Hip Thrust
+- [x] Barbell Overhead Press
+- [x] Barbell Romanian Deadlift
+- [x] Barbell Row
+- [x] Barbell Standing Calf Raise
+- [x] Bodyweight Curl Isometric
+- [x] Bodyweight Split Squat
+- [x] Chest-Supported Dumbbell Row
+- [x] Chin-Up
+- [x] Close-Grip Bench Press
+- [x] Close-Grip Push-Up
+- [x] Cyclist Squat
+- [x] Diamond Push-Up
 - [x] Dumbbell Bench Press
 - [x] Dumbbell Bulgarian Split Squat
 - [x] Dumbbell Curl
-- [ ] Dumbbell Flat Press
+- [x] Dumbbell Flat Press
 - [x] Dumbbell Fly
-- [ ] Dumbbell Front Squat
-- [ ] Dumbbell Hammer Curl
+- [x] Dumbbell Front Squat
+- [x] Dumbbell Hammer Curl
 - [x] Dumbbell Hip Thrust
 - [x] Dumbbell Lateral Raise
 - [x] Dumbbell Pullover
-- [ ] Dumbbell Rear-Delt Fly
-- [ ] Dumbbell Rear-Delt Row
+- [x] Dumbbell Rear-Delt Fly
+- [x] Dumbbell Rear-Delt Row
 - [x] Dumbbell Romanian Deadlift
 - [x] Dumbbell Shoulder Press
 - [x] Dumbbell Skull Crusher
-- [ ] Feet-Elevated Push-Up
+- [x] Feet-Elevated Push-Up
 - [x] Goblet Squat
-- [ ] Half-Kneeling Landmine Press
-- [ ] Hamstring Walkout
-- [ ] Hard-Style Plank
-- [ ] High-Bar Back Squat
-- [ ] Incline Barbell Bench Press
+- [x] Half-Kneeling Landmine Press
+- [x] Hamstring Walkout
+- [x] Hard-Style Plank
+- [x] High-Bar Back Squat
+- [x] Incline Barbell Bench Press
 - [x] Incline Dumbbell Curl
 - [x] Incline Dumbbell Press
 - [ ] Isometric Lat Press
-- [ ] Landmine Hack Squat
-- [ ] Landmine Press
-- [ ] Landmine Reverse Lunge
-- [ ] Landmine Romanian Deadlift
-- [ ] Landmine Rotation
-- [ ] Landmine Row
-- [ ] Landmine Squat
-- [ ] Landmine T-Bar Row
-- [ ] Lean-Away Lateral Raise
-- [ ] Meadows Row
+- [x] Landmine Hack Squat
+- [x] Landmine Press
+- [x] Landmine Reverse Lunge
+- [x] Landmine Romanian Deadlift
+- [x] Landmine Rotation
+- [x] Landmine Row
+- [x] Landmine Squat
+- [x] Landmine T-Bar Row
+- [x] Lean-Away Lateral Raise
+- [x] Meadows Row
 - [x] One-Arm Dumbbell Row
-- [ ] Paused Barbell Back Squat
-- [ ] Paused Barbell Bench Press
+- [x] Paused Barbell Back Squat
+- [x] Paused Barbell Bench Press
 - [ ] Pendlay Row
 - [ ] Pike Push-Up
 - [ ] Plank
 - [ ] Prone Lat Pull
 - [ ] Prone Y-T Raise
-- [ ] Pull-Up
+- [x] Pull-Up
 - [x] Push-Up
 - [ ] Single-Leg Calf Raise
 - [ ] Single-Leg Glute Bridge
