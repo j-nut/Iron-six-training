@@ -12,13 +12,13 @@ Rules for this replacement set:
 
 ## Checklist
 
-- [ ] 1½-Rep Bodyweight Squat
-- [ ] Ab Wheel Rollout
-- [ ] Band Chest Fly
-- [ ] Band Curl
-- [ ] Band Face Pull
-- [ ] Band Hammer Curl
-- [ ] Band Hamstring Curl
+- [x] 1½-Rep Bodyweight Squat
+- [x] Ab Wheel Rollout
+- [x] Band Chest Fly
+- [x] Band Curl
+- [x] Band Face Pull
+- [x] Band Hammer Curl
+- [x] Band Hamstring Curl
 - [ ] Band Lat Pulldown
 - [ ] Band Lateral Raise
 - [ ] Band Pallof Press
