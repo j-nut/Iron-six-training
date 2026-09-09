@@ -97,6 +97,7 @@
     if (!frames.length) return null;
     return {
       frames, title: r.media.title, source: r.media.source, author: r.media.author,
+      layout: r.media.layout || null, width: r.media.width || null, height: r.media.height || null,
       license: r.media.license, licenseUrl: r.media.licenseUrl,
       tier: r.tier, label: r.label, provisional: r.provisional, cues: r.media.cues || [], mistake: r.media.mistake || ''
     };

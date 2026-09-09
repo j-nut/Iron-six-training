@@ -12,11 +12,12 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const media=require('../exercise-media-catalog.js');
+const resolver=require('../exercise-media-resolver.js');
 const catalog=require('../equipment-catalog.js');
 const library=require('../equipment-exercise-library.js');
 
 function api(groq){
-  const ctx={media,catalog,library,process:{env:groq?{GROQ_API_KEY:'test'}:{}},fetch:async()=>({ok:true,json:async()=>({choices:[{message:{content:JSON.stringify({exercises:groq})}}]})})};
+  const ctx={media,catalog,library,resolver,process:{env:groq?{GROQ_API_KEY:'test'}:{}},fetch:async()=>({ok:true,json:async()=>({choices:[{message:{content:JSON.stringify({exercises:groq})}}]})})};
   vm.createContext(ctx);
   const source=fs.readFileSync('api/equipment-exercises.js','utf8')
     .replace(/^import .*$/gm,'')
@@ -67,7 +68,9 @@ test('illustrated movements are flagged and ranked ahead of unillustrated ones',
   assert(flags.some(Boolean),'expected at least one illustrated cable movement');
   assert.equal(flags.indexOf(false)===-1||flags.lastIndexOf(true)<flags.indexOf(false),true,
     'illustrated exercises must sort before unillustrated ones');
-  for(const exercise of result.exercises)assert.equal(exercise.illustrated,media.has(exercise.name));
+  // "illustrated" means the app can show exact art for this movement, which is the resolver's
+  // answer, not the legacy catalogue's — approved first-party art counts too.
+  for(const exercise of result.exercises)assert.equal(exercise.illustrated,resolver.resolveOne(exercise.name).tier<=3);
 });
 
 test('free-typed equipment resolves through the same aliases as a tapped catalogue chip',async()=>{

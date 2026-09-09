@@ -7,8 +7,8 @@ const required = [
 for (const page of ['index.html','live.html']) {
   const html=fs.readFileSync(page,'utf8');
   assert(html.includes('core.js?v=14'));assert(html.includes('engine.js?v=13'));assert(html.includes('ui1.js?v=14'));assert(html.includes('ui3.js?v=13'));assert(html.includes('ui2.js?v=14'));
-  assert(html.indexOf('exercise-media-catalog.js?v=1')<html.indexOf('exercise-media.js?v=1'));
-  assert(html.indexOf('exercise-media.js?v=1')<html.indexOf('ui2.js?v=14'));
+  assert(html.indexOf('exercise-media-catalog.js?v=1')<html.indexOf('exercise-media.js?v=2'));
+  assert(html.indexOf('exercise-media.js?v=2')<html.indexOf('ui2.js?v=14'));
   let previous=html.indexOf('ui3.js');assert.notEqual(previous,-1);
   for(const script of required){const position=html.indexOf(script);assert(position>previous,`${page} must load ${script} in order`);previous=position}
 }

@@ -25,6 +25,23 @@
   function one(name, resolved, compact) {
     if (!resolved.media) return missing(name);
     const media = resolved.media;
+    const notice0 = resolved.label ? `<p class="media-variant">${esc(resolved.label)}</p>` : '';
+    // A tempo or paused variant reuses the standard movement's illustration, so the card has to
+    // keep saying the prescription differs from what is pictured.
+    const variant0 = /paused|tempo/i.test(name) ? `<p class="media-variant">Standard movement shown. Follow the prescribed pause or tempo.</p>` : '';
+    // A composite illustration already contains every phase of the lift with its own labels
+    // burned in. Splitting it across the two-up "Start / Finish" grid would show the same
+    // picture twice at half width, so it gets one full-width frame and no phase caption.
+    if (media.layout === 'composite') {
+      const src = media.start;
+      const size = media.width && media.height ? ` width="${esc(media.width)}" height="${esc(media.height)}"` : '';
+      return `<figure class="exercise-media composite ${compact ? 'compact' : ''}" data-media-tier="${esc(resolved.tier)}" data-media-id="${esc(media.id)}">`
+        + `<div class="exercise-media-frames composite">`
+        + `<a href="${esc(src)}" target="_blank" rel="noopener" aria-label="Enlarge the ${esc(name)} form guide">`
+        + `<img src="${esc(src)}" alt="${esc(name)} — start, midpoint and finish positions"${size} loading="lazy" decoding="async"></a></div>`
+        + (compact ? '' : cueList(media))
+        + `<figcaption>${notice0}${variant0}${attribution(media)}</figcaption></figure>`;
+    }
     const frames = [media.start, media.finish].filter(Boolean);
     const shown = compact ? frames.slice(0, 1) : frames;
     const phase = ['Start', 'Finish'];

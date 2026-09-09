@@ -1,0 +1,682 @@
+[
+ {
+  "canonicalName": "1½-Rep Bodyweight Squat",
+  "filename": "11-5-rep-bodyweight-squat.webp",
+  "width": 960,
+  "height": 640,
+  "bytes": 22674,
+  "sha256": "7cacdbd3e48ecdfe4ebc4473309b7a92709d4d9571247901f31bc43007ff9f08"
+ },
+ {
+  "canonicalName": "Ab Wheel Rollout",
+  "filename": "ab-wheel-rollout.webp",
+  "width": 960,
+  "height": 480,
+  "bytes": 20388,
+  "sha256": "807cbe210fbb3fa3848cfd92811353ebec2487ca9e15bba6e91f4f7fce576dc1"
+ },
+ {
+  "canonicalName": "Band Chest Fly",
+  "filename": "band-chest-fly.webp",
+  "width": 960,
+  "height": 640,
+  "bytes": 28552,
+  "sha256": "25acebcec0b55e6ed3971c7c5c339406ffcf87eb18fb89961dee681b62e6a2c6"
+ },
+ {
+  "canonicalName": "Band Curl",
+  "filename": "band-curl.webp",
+  "width": 960,
+  "height": 640,
+  "bytes": 27524,
+  "sha256": "52a65b2b14b6efd01cc29b71c00753de5a03e617e5d0276f0600704c08d0e002"
+ },
+ {
+  "canonicalName": "Band Face Pull",
+  "filename": "band-face-pull.webp",
+  "width": 960,
+  "height": 640,
+  "bytes": 26948,
+  "sha256": "fb3935767c2372f62ab37c24d97bf78623649ddbca79039b1505b8757ac6b43d"
+ },
+ {
+  "canonicalName": "Band Hammer Curl",
+  "filename": "band-hammer-curl.webp",
+  "width": 960,
+  "height": 640,
+  "bytes": 27434,
+  "sha256": "bf4e61345425292021398981588ab34cc1c1ac7e2b89f05c405c76b9d204e70a"
+ },
+ {
+  "canonicalName": "Band Hamstring Curl",
+  "filename": "band-hamstring-curl.webp",
+  "width": 960,
+  "height": 480,
+  "bytes": 16510,
+  "sha256": "87ff618a48640c007a883bc1a311db7b1f8bf0bfe4b097d225d2184dd103b190"
+ },
+ {
+  "canonicalName": "Band Lat Pulldown",
+  "filename": "band-lat-pulldown.webp",
+  "width": 960,
+  "height": 640,
+  "bytes": 28324,
+  "sha256": "08fb65bb749ee02e0bc3d6c9742e3d2a86988344a6caf75385995b9afd3163de"
+ },
+ {
+  "canonicalName": "Band Lateral Raise",
+  "filename": "band-lateral-raise.webp",
+  "width": 960,
+  "height": 640,
+  "bytes": 29400,
+  "sha256": "a0f93be687b34f5213837b6c5a4ee46f8d3580ec1a552ef3374342c37d14bee6"
+ },
+ {
+  "canonicalName": "Band Pallof Press",
+  "filename": "band-pallof-press.webp",
+  "width": 960,
+  "height": 640,
+  "bytes": 24758,
+  "sha256": "bafcafc61ddee10b25dedec44ec3e27181cd0209c044aab01723214b60fced0d"
+ },
+ {
+  "canonicalName": "Band Pressdown",
+  "filename": "band-pressdown.webp",
+  "width": 960,
+  "height": 640,
+  "bytes": 24658,
+  "sha256": "644915d117a2520aa14b7f1d8bf105b72ca8fec2509dfffd790200a04857bdec"
+ },
+ {
+  "canonicalName": "Band Row",
+  "filename": "band-row.webp",
+  "width": 960,
+  "height": 640,
+  "bytes": 32090,
+  "sha256": "17c0772359f9d6f2b14ed9d3273babd6fc555a201b27a68b431b33fdbb1f9b3a"
+ },
+ {
+  "canonicalName": "Band Straight-Arm Pulldown",
+  "filename": "band-straight-arm-pulldown.webp",
+  "width": 960,
+  "height": 640,
+  "bytes": 29080,
+  "sha256": "5a8f0daa4c8c5f70bfa330b95b34e93b101acfa103c4813e9b084ed97841a325"
+ },
+ {
+  "canonicalName": "Banded Hip Thrust",
+  "filename": "banded-hip-thrust.webp",
+  "width": 960,
+  "height": 400,
+  "bytes": 19962,
+  "sha256": "5a804dbcdde1073c03af6ec989954e3a07ec82537bb3c477d2e8c08dc6c7bb7d"
+ },
+ {
+  "canonicalName": "Barbell Back Squat",
+  "filename": "barbell-back-squat.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 26688,
+  "sha256": "ebd96006a529429f014040a8924ce67e53fa96115e5f22bfba811f044d82857b"
+ },
+ {
+  "canonicalName": "Barbell Bench Press",
+  "filename": "barbell-bench-press.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 25356,
+  "sha256": "22caf0a1170b47e6a2228c0325561817dcafa92aa1efa6dc3008a356150455b0"
+ },
+ {
+  "canonicalName": "Barbell Box Squat",
+  "filename": "barbell-box-squat.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 28508,
+  "sha256": "9e83b45228c668d4b228a5a007c1ee9596fc63dc3c5b7004962e67105dd2d633"
+ },
+ {
+  "canonicalName": "Barbell Curl",
+  "filename": "barbell-curl.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 24824,
+  "sha256": "8e483710be65a6daffd93af0e4b07a2eb058a976995b54caf98cbe4811394b30"
+ },
+ {
+  "canonicalName": "Barbell Good Morning",
+  "filename": "barbell-good-morning.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 27812,
+  "sha256": "4f850309d7a83d26c7377655d08f69e5825975005d65956a302f09acb50e3df9"
+ },
+ {
+  "canonicalName": "Barbell Hip Thrust",
+  "filename": "barbell-hip-thrust.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 22194,
+  "sha256": "14fdb52b63e7594a2b7d11cb987c5f80c01ca6bd40e61374da776b859ae30968"
+ },
+ {
+  "canonicalName": "Barbell Overhead Press",
+  "filename": "barbell-overhead-press.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 27358,
+  "sha256": "d3776c6ae9304838576f352c6e3cb204cbd1397f174c79eed68a43b70cf65745"
+ },
+ {
+  "canonicalName": "Barbell Romanian Deadlift",
+  "filename": "barbell-romanian-deadlift.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 26358,
+  "sha256": "8b711135ac3e382a5ae1ef32798a3277d9385ed545b1db995f86b995d58983c7"
+ },
+ {
+  "canonicalName": "Barbell Row",
+  "filename": "barbell-row.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 24188,
+  "sha256": "d4284a7ed114d3b365d090ec0ffa89db375effa00f047838aa1f8a6cc561232d"
+ },
+ {
+  "canonicalName": "Barbell Standing Calf Raise",
+  "filename": "barbell-standing-calf-raise.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 26670,
+  "sha256": "07c784560e092360c042ec3757eaed4b19e1210711fa835e3b2c42b20773a01d"
+ },
+ {
+  "canonicalName": "Bodyweight Curl Isometric",
+  "filename": "bodyweight-curl-isometric.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 18386,
+  "sha256": "b7053da2f56c8a3929b4b91b6f4fdf6d30f106f5fb931de0c5e8cb3016f6dd66"
+ },
+ {
+  "canonicalName": "Bodyweight Split Squat",
+  "filename": "bodyweight-split-squat.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 21818,
+  "sha256": "8976efb2c1311672a07db7e3c1781e95828a7180c6e64f856f60722eb71ffce5"
+ },
+ {
+  "canonicalName": "Chest-Supported Dumbbell Row",
+  "filename": "chest-supported-dumbbell-row.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 27278,
+  "sha256": "488ad9b0224a272ffdf150fbb0958007b09464f114100f482da582c4d848ef90"
+ },
+ {
+  "canonicalName": "Chin-Up",
+  "filename": "chin-up.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 17150,
+  "sha256": "cde8fbfc78228956c2e51c242433ac1d768d2a2bd3be21e9b4a6bd0d0496cc0d"
+ },
+ {
+  "canonicalName": "Close-Grip Bench Press",
+  "filename": "close-grip-bench-press.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 25464,
+  "sha256": "d1d97da33e28699873a6f36f17f622dacb3bbfce9648cd07e356d2b51c4e85dc"
+ },
+ {
+  "canonicalName": "Close-Grip Push-Up",
+  "filename": "close-grip-push-up.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 16034,
+  "sha256": "3b8cbe0891813b265e0df5922d2c273d4768cf4071db217e65eb6b21ee829012"
+ },
+ {
+  "canonicalName": "Cyclist Squat",
+  "filename": "cyclist-squat.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 17248,
+  "sha256": "922179c030ddf83e0ee4bc4ff6ca6abf1dc65d6c5f482ef6d970cc9b8db040fd"
+ },
+ {
+  "canonicalName": "Diamond Push-Up",
+  "filename": "diamond-push-up.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 16064,
+  "sha256": "c656b68c816a1b255b4161bcf6e405bf78c9cfd29c921ccf05e1a07315145486"
+ },
+ {
+  "canonicalName": "Dumbbell Bench Press",
+  "filename": "dumbbell-bench-press.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 25722,
+  "sha256": "9a37ffa95d2e06134df204507960a88f90a6cb71665ef9220f89b2d924b7b8ef"
+ },
+ {
+  "canonicalName": "Dumbbell Bulgarian Split Squat",
+  "filename": "dumbbell-bulgarian-split-squat.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 22844,
+  "sha256": "c14bb63074bf72bc97701e264bf27e1b7639cdc199c7754c5bb794d328558909"
+ },
+ {
+  "canonicalName": "Dumbbell Curl",
+  "filename": "dumbbell-curl.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 23922,
+  "sha256": "80099974e9a7976c28c4665002e04c9fd746ce5f06005b41689e6c3e4ac6f752"
+ },
+ {
+  "canonicalName": "Dumbbell Flat Press",
+  "filename": "dumbbell-flat-press.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 20632,
+  "sha256": "6cd8b7e55da0bad927f3259ba620d93215efca68667fca163bd20eaff65ab13d"
+ },
+ {
+  "canonicalName": "Dumbbell Fly",
+  "filename": "dumbbell-fly.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 22012,
+  "sha256": "3408c5f92a5f86c23871c998504cc5f86317f1b04d130f516d72dc0442285158"
+ },
+ {
+  "canonicalName": "Dumbbell Front Squat",
+  "filename": "dumbbell-front-squat.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 17182,
+  "sha256": "6843fab796f418b488d2fdc79e5e73fbc8dc888fbbe4ea8fa65e3a5255e300b9"
+ },
+ {
+  "canonicalName": "Dumbbell Hammer Curl",
+  "filename": "dumbbell-hammer-curl.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 18532,
+  "sha256": "2ef96d69a6b041fbb3f834a360a4d32cf873cb25be1eafa8f4d1da080c9263d8"
+ },
+ {
+  "canonicalName": "Dumbbell Hip Thrust",
+  "filename": "dumbbell-hip-thrust.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 21316,
+  "sha256": "1b452d1282164ac119483ad9171d35c362c2653df147be73d69dacdf59b9ed50"
+ },
+ {
+  "canonicalName": "Dumbbell Lateral Raise",
+  "filename": "dumbbell-lateral-raise.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 23912,
+  "sha256": "3b1b4155fdbd589ab45cd9f4722905fd0e5b5a207cfecad849c7f05ffe4d3a3b"
+ },
+ {
+  "canonicalName": "Dumbbell Pullover",
+  "filename": "dumbbell-pullover.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 19594,
+  "sha256": "810c80cde51af66eb7c2edac9f024efac01c55f011ad1f82baf48932773e5d7f"
+ },
+ {
+  "canonicalName": "Dumbbell Rear-Delt Fly",
+  "filename": "dumbbell-rear-delt-fly.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 18354,
+  "sha256": "839f89e464639750e41025c33ac84cb52ace39791aee195f7536a0145afa8d4e"
+ },
+ {
+  "canonicalName": "Dumbbell Rear-Delt Row",
+  "filename": "dumbbell-rear-delt-row.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 19962,
+  "sha256": "0266a92adb79139e6d838dbc8ac084ed0d4dcd30f0e0255a06994a16b8bfcd9f"
+ },
+ {
+  "canonicalName": "Dumbbell Romanian Deadlift",
+  "filename": "dumbbell-romanian-deadlift.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 22922,
+  "sha256": "def96e19f610a0a6f5a648f4a07b7fe31839c67097c4b6b936e85f1a37b9910a"
+ },
+ {
+  "canonicalName": "Dumbbell Shoulder Press",
+  "filename": "dumbbell-shoulder-press.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 25046,
+  "sha256": "493d64c0c69eb6423118e9109833486da3291ee705183f7d004b55d32d03315d"
+ },
+ {
+  "canonicalName": "Dumbbell Skull Crusher",
+  "filename": "dumbbell-skull-crusher.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 23750,
+  "sha256": "8ddd7f81f9b5d24547e0ce529df89ca66ddf210b8cd329719b5fc734e33b3c9f"
+ },
+ {
+  "canonicalName": "Feet-Elevated Push-Up",
+  "filename": "feet-elevated-push-up.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 17050,
+  "sha256": "0073ae2b98f3c944f17c61acc5ec7e552dd4839a42493355d03f7cd2f433ac08"
+ },
+ {
+  "canonicalName": "Goblet Squat",
+  "filename": "goblet-squat.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 20654,
+  "sha256": "fe79fd52151e377e3993db64c1f6e2d8a5309d860963e58e40ae5d3e8a84ea25"
+ },
+ {
+  "canonicalName": "Half-Kneeling Landmine Press",
+  "filename": "half-kneeling-landmine-press.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 20910,
+  "sha256": "20fac3267558c94ea0a9a8dac8c008de00f0cda6f8993da4a27487c2257a9a4a"
+ },
+ {
+  "canonicalName": "Hamstring Walkout",
+  "filename": "hamstring-walkout.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 15344,
+  "sha256": "e1c149245f50102a5707fbd222e8b9a6cc8bb1b2cd1fc38e7a2cfcfb3d2a841b"
+ },
+ {
+  "canonicalName": "Hard-Style Plank",
+  "filename": "hard-style-plank.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 15010,
+  "sha256": "9b4c6d765fe1c67d18b3510825d3eb11a6d8bf500e617c64640eafd760c47325"
+ },
+ {
+  "canonicalName": "High-Bar Back Squat",
+  "filename": "high-bar-back-squat.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 21664,
+  "sha256": "1fb4a1aaf2941b57ef3178dad50f8e10540f6ea2f019f5d79abb9ef9d6c3b6ed"
+ },
+ {
+  "canonicalName": "Incline Barbell Bench Press",
+  "filename": "incline-barbell-bench-press.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 26456,
+  "sha256": "2af43a25f5a9784677e64890a191a8bc72e0fdd2012cd0693c84511af61e3cf4"
+ },
+ {
+  "canonicalName": "Incline Dumbbell Curl",
+  "filename": "incline-dumbbell-curl.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 25216,
+  "sha256": "9d0b670890db2efdd0947498d9cd6c31a4aa7f1ad69a00f7354b68154a6ebbb3"
+ },
+ {
+  "canonicalName": "Incline Dumbbell Press",
+  "filename": "incline-dumbbell-press.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 27958,
+  "sha256": "0623e29612a3e63d9e655c347f7f1b6b84f6913a9e23c7af66c177859f136904"
+ },
+ {
+  "canonicalName": "Isometric Lat Press",
+  "filename": "isometric-lat-press.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 26680,
+  "sha256": "65567ba3a678c2f0f6fc09ebb0627492f4ee1f4c7507a711865fd89534ea5d6a"
+ },
+ {
+  "canonicalName": "Landmine Hack Squat",
+  "filename": "landmine-hack-squat.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 18786,
+  "sha256": "741609999c3973fa3506aac101b88d89f5ec0b26333cd6b64f4f40fa4dce9302"
+ },
+ {
+  "canonicalName": "Landmine Press",
+  "filename": "landmine-press.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 19822,
+  "sha256": "a076a3cc5dbe4c1cd524b3401ef8d8d59a78c31538a49beb265ad9b39705d69d"
+ },
+ {
+  "canonicalName": "Landmine Reverse Lunge",
+  "filename": "landmine-reverse-lunge.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 19268,
+  "sha256": "44dcc196a209769f7522d66f590da9c10819216b51372483c5100a0685dc2930"
+ },
+ {
+  "canonicalName": "Landmine Romanian Deadlift",
+  "filename": "landmine-romanian-deadlift.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 20098,
+  "sha256": "32e8786de6bab9a302a8031f601306771b6963d9425bd1b7e2ad8a33c98a4d6d"
+ },
+ {
+  "canonicalName": "Landmine Rotation",
+  "filename": "landmine-rotation.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 19888,
+  "sha256": "b4c4eb572db8c75ee7762b11b3039af1d6758e2be6861bde2b37c3d1007f724c"
+ },
+ {
+  "canonicalName": "Landmine Row",
+  "filename": "landmine-row.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 19920,
+  "sha256": "5982df33c28b6f6daa6f7030ac26ccf842e2b3762cc33bf28d9ebbe9f53ee9a7"
+ },
+ {
+  "canonicalName": "Landmine Squat",
+  "filename": "landmine-squat.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 19858,
+  "sha256": "731de992878b5acc661dd52be476de0ba0ed18218e8a1408719bf47ebbdfa5c8"
+ },
+ {
+  "canonicalName": "Landmine T-Bar Row",
+  "filename": "landmine-t-bar-row.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 19830,
+  "sha256": "1c391a9f29fd08db92734560e5ecbd56732083947cdaf941bbea1ddfbdddd6c4"
+ },
+ {
+  "canonicalName": "Lean-Away Lateral Raise",
+  "filename": "lean-away-lateral-raise.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 20686,
+  "sha256": "0ed26bd5a175a310df2e3bce3c25b8014e578bfbe66c3c5e7452c41a0d42d5cd"
+ },
+ {
+  "canonicalName": "Meadows Row",
+  "filename": "meadows-row.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 19778,
+  "sha256": "bad28e9db21acb36933591c4899cff27284085e75b06e8c6cc67f7cfad940f3e"
+ },
+ {
+  "canonicalName": "One-Arm Dumbbell Row",
+  "filename": "one-arm-dumbbell-row.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 23108,
+  "sha256": "3f82eb148c6c1594d8468f4446f40048708aed7043afec98ae7223c070a86c0a"
+ },
+ {
+  "canonicalName": "Paused Barbell Back Squat",
+  "filename": "paused-barbell-back-squat.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 22074,
+  "sha256": "7edf97a4d1b3e99c01d860f3d339e3042647b50e9a8680a2f4c0b2c4ca9d4a8e"
+ },
+ {
+  "canonicalName": "Paused Barbell Bench Press",
+  "filename": "paused-barbell-bench-press.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 25444,
+  "sha256": "bca47c49cc7912fe46732b525205b60f71de17871695d0651b22ae1d6a04c9bb"
+ },
+ {
+  "canonicalName": "Pendlay Row",
+  "filename": "pendlay-row.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 22700,
+  "sha256": "3591d690fed00253f20a0d6fd02c9dbd31a1524138e7ec45df28eec7d7df07c8"
+ },
+ {
+  "canonicalName": "Pike Push-Up",
+  "filename": "pike-push-up.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 22062,
+  "sha256": "107a12aa857d025131be939e824b1bc3cd61f6e521999e636a7dc5abee1fb07d"
+ },
+ {
+  "canonicalName": "Plank",
+  "filename": "plank.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 17666,
+  "sha256": "42247669b0ab1783a4553c947ca430e1a5a9812cadf3712fcda83983d36a0233"
+ },
+ {
+  "canonicalName": "Prone Lat Pull",
+  "filename": "prone-lat-pull.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 20854,
+  "sha256": "68d5c23579ff52b5f1d794eac3cdee7adabb8d9700cec162c70020ee72d2e72f"
+ },
+ {
+  "canonicalName": "Prone Y-T Raise",
+  "filename": "prone-y-t-raise.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 22766,
+  "sha256": "345a92cb229f40f18c772f7aa3cf25e05a4f79a686cf7ddd4a63baeee7bf04da"
+ },
+ {
+  "canonicalName": "Pull-Up",
+  "filename": "pull-up.webp",
+  "width": 960,
+  "height": 540,
+  "bytes": 18760,
+  "sha256": "0d5af1f1a927c7c369d37b5876e9f3087d03e2745cc166c85d14f51b914f098d"
+ },
+ {
+  "canonicalName": "Push-Up",
+  "filename": "push-up.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 15482,
+  "sha256": "baef835b5081aa91030530aa38df6821c751cd6586dd63d16742e6ae54b3ccff"
+ },
+ {
+  "canonicalName": "Single-Leg Calf Raise",
+  "filename": "single-leg-calf-raise.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 26952,
+  "sha256": "c8e9ed3221b361340da917c680adb0b710f1996aea290008b59517ffee15e9ec"
+ },
+ {
+  "canonicalName": "Single-Leg Glute Bridge",
+  "filename": "single-leg-glute-bridge.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 17560,
+  "sha256": "e9890cca463b62d3de2a6510245f2b2dc64fa37314fc9602872d52ac3016d11f"
+ },
+ {
+  "canonicalName": "Single-Leg Hip Hinge",
+  "filename": "single-leg-hip-hinge.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 22770,
+  "sha256": "742b144b9108e0988442f4d7ace1346b3c4c5a0b62c0b9f93e725ba78c5b7a4e"
+ },
+ {
+  "canonicalName": "Tempo Bodyweight Squat",
+  "filename": "tempo-bodyweight-squat.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 23084,
+  "sha256": "cf2300ad5b4f77b82103fe8264081ba0ed8ebf0e9009d69d31f596a1cfc52382"
+ },
+ {
+  "canonicalName": "Tempo Push-Up",
+  "filename": "tempo-push-up.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 21366,
+  "sha256": "55ce927a30d2071660c4ffacc64eab0ee74f86203537ef408224940217440efe"
+ },
+ {
+  "canonicalName": "Towel Isometric Curl",
+  "filename": "towel-isometric-curl.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 29422,
+  "sha256": "923b6edf58f4e75a26583a97f97a19a686122c13ffabb3b0facabfcc23e51140"
+ },
+ {
+  "canonicalName": "Weighted Standing Calf Raise",
+  "filename": "weighted-standing-calf-raise.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 22574,
+  "sha256": "91d48fb5d31a734502548e233498f26fa00cef0ef8b592f52d7eb2a70a1a1f5e"
+ },
+ {
+  "canonicalName": "Wide Push-Up",
+  "filename": "wide-push-up.webp",
+  "width": 960,
+  "height": 720,
+  "bytes": 19466,
+  "sha256": "b872d0e86365e25fc9c34fe045d19db70409f75e27c7ca49dea624f3e1302dd3"
+ }
+]

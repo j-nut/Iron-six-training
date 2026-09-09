@@ -1,4 +1,4 @@
-import media from '../exercise-media-catalog.js';
+import resolver from '../exercise-media-resolver.js';
 import catalog from '../equipment-catalog.js';
 import library from '../equipment-exercise-library.js';
 const MODEL=process.env.GROQ_MODEL||'openai/gpt-oss-20b';
@@ -56,7 +56,7 @@ function validatedExercises(rows,equipment,source){
     // Art is a display concern, not an admission gate. The app resolves an unillustrated
     // movement to its own labelled "demo coming soon" tier, so withholding a real training
     // option to hide a missing picture costs the user more than it saves.
-    return {name,base,seedKey:slot.seedKey,tag:slot.tag,prescription:slot.prescription,sets:slot.sets,priority:slot.priority,workoutKeys:slot.workoutKeys,requires:item.custom?[]:[item.key],requiresCustom:item.custom?[item.name]:[],equipmentName:item.name,equipmentId:item.id,illustrated:media.has(name),source};
+    return {name,base,seedKey:slot.seedKey,tag:slot.tag,prescription:slot.prescription,sets:slot.sets,priority:slot.priority,workoutKeys:slot.workoutKeys,requires:item.custom?[]:[item.key],requiresCustom:item.custom?[item.name]:[],equipmentName:item.name,equipmentId:item.id,illustrated:resolver.resolveOne(name).tier<=3,source};
   }).filter(Boolean)
    .sort((a,b)=>(b.illustrated?1:0)-(a.illustrated?1:0)||a.priority-b.priority)
    .slice(0,60);
