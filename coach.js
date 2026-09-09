@@ -39,6 +39,7 @@
         <button type="button" class="coach-chip">Are my suggested weights right?</button>
         <button type="button" class="coach-chip">Give me warm-up sets</button>
         <button type="button" class="coach-chip">Do I need a deload?</button>
+        <button type="button" class="coach-chip">Analyze my equipment and what to add next</button>
         <button type="button" class="coach-chip">Show me a demo of my first exercise</button>
       </div>
       <div class="coach-chat" id="coachChat"></div>
@@ -125,6 +126,21 @@
     return (SWAPS[exercise.base] || []).map(x => optionObject(x, exercise.base)).filter(o => exerciseAvailable(u,o)).filter(o => o.name !== exercise.name);
   }
 
+  // Deterministic coverage, computed locally from the real workout builders. The model gets
+  // measured gaps to reason about instead of guessing what a named piece of gear can do.
+  function equipmentCoverage(u){
+    const analysis=window.IronSixEquipmentCoverage?.analyze(u);
+    if(!analysis)return null;
+    return {
+      score:analysis.score,slotsCovered:analysis.healthy,slotsTotal:analysis.total,
+      emptySlots:analysis.rows.filter(r=>r.min===0).map(r=>({workout:r.workoutName,movement:r.base})).slice(0,12),
+      thinSlots:analysis.rows.filter(r=>r.min===1).map(r=>({workout:r.workoutName,movement:r.base,only:r.options[0]})).slice(0,12),
+      wouldHelp:analysis.gaps.flatMap(g=>g.suggestions.map(s=>s.name)).filter((n,i,a)=>a.indexOf(n)===i).slice(0,8),
+      unrecognized:analysis.equipment.filter(e=>e.custom&&!e.recognised).map(e=>e.name),
+      conditioningOnly:analysis.equipment.filter(e=>e.conditioning).map(e=>e.name)
+    };
+  }
+
   function coachContext() {
     const u = activeUser();
     const workout = finalWorkout(u);
@@ -132,6 +148,7 @@
     const today = Object.entries(u.today || {}).map(([key,s]) => ({ key, weight:s.weight, reps:s.reps, rir:s.rir, done:!!s.done })).filter(x=>x.weight||x.reps||x.done).slice(-30);
     return {
       profile:{ name:u.name, bodyWeight:u.weight, age:u.age, heightIn:u.heightIn, trainingLevel:u.trainingLevel, equipment:[...EQUIPMENT.filter(([k])=>has(u,k)).map(([,label])=>label),...(u.customEquipment||[])], capacities:u.capacities, workoutMinutes:u.workoutMinutes },
+      equipmentCoverage:equipmentCoverage(u),
       readiness:u.readiness,
       workout:workout.map((e,i)=>({ index:i, name:e.name, prescription:e.prescription, base:e.base, suggested:suggestedLoadObject(u,e,i) })),
       today,

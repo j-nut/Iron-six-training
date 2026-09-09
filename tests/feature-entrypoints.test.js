@@ -2,11 +2,11 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 
 const required = [
-  'exercise-guide.js?v=8','exercise-visuals.js?v=9','local-ai-fallback.js?v=7','coach.js?v=10','social-auth.js?v=1','cloud-sync.js?v=14','cloud-history-sync.js?v=8'
+  'exercise-guide.js?v=8','exercise-visuals.js?v=9','equipment-catalog.js?v=1','equipment-exercise-library.js?v=1','equipment-coverage.js?v=1','local-ai-fallback.js?v=7','coach.js?v=11','equipment-manager.js?v=1','social-auth.js?v=1','cloud-sync.js?v=14','cloud-history-sync.js?v=8'
 ];
 for (const page of ['index.html','live.html']) {
   const html=fs.readFileSync(page,'utf8');
-  assert(html.includes('core.js?v=13'));assert(html.includes('engine.js?v=13'));assert(html.includes('ui1.js?v=13'));assert(html.includes('ui3.js?v=13'));assert(html.includes('ui2.js?v=14'));
+  assert(html.includes('core.js?v=14'));assert(html.includes('engine.js?v=13'));assert(html.includes('ui1.js?v=14'));assert(html.includes('ui3.js?v=13'));assert(html.includes('ui2.js?v=14'));
   assert(html.indexOf('exercise-media-catalog.js?v=1')<html.indexOf('exercise-media.js?v=1'));
   assert(html.indexOf('exercise-media.js?v=1')<html.indexOf('ui2.js?v=14'));
   let previous=html.indexOf('ui3.js');assert.notEqual(previous,-1);
@@ -22,3 +22,13 @@ assert(cloudHistory.indexOf('adaptive-insights.js')<cloudHistory.indexOf('progre
 for(const builder of ['scripts/build-web.mjs','scripts/build-android-web.mjs']){const source=fs.readFileSync(builder,'utf8');for(const runtime of runtimes)assert(source.includes(runtime),`${builder} must package ${runtime}`)}
 for(const backend of ['api/coach.js','supabase/functions/coach/index.ts']){const source=fs.readFileSync(backend,'utf8');assert(source.includes('trainingState'));assert(source.includes('setFeedback'));assert(source.includes('analytics'))}
 for(const file of ['api/music.js','progress-analytics-v2.js','session-adaptation-v3.js','media-experience-v2.js'])assert(fs.existsSync(file),`${file} must ship`);
+for(const file of ['equipment-catalog.js','equipment-exercise-library.js','equipment-coverage.js','equipment-manager.js','api/equipment-exercises.js'])assert(fs.existsSync(file),`${file} must ship`);
+// The picker's promise and the generator's output come from the same two files; if the API stops
+// importing them it can silently drift from what the UI told the user it would add.
+const generator=fs.readFileSync('api/equipment-exercises.js','utf8');
+assert(generator.includes("from '../equipment-catalog.js'"),'the generator must resolve equipment names through the shared catalogue');
+assert(generator.includes("from '../equipment-exercise-library.js'"),'the generator must bound itself with the shared exercise library');
+const manager=fs.readFileSync('equipment-manager.js','utf8');
+assert(manager.includes('refreshEquipmentExercises'),'the picker must trigger exercise generation when equipment is added');
+assert(manager.includes('Finish or reset the current workout before changing equipment'),'the picker must keep the mid-workout guard');
+assert(fs.readFileSync('coach.js','utf8').includes('equipmentCoverage'),'the coach must receive measured equipment coverage');

@@ -12,6 +12,7 @@ Primary goals:
 - If trainingState indicates Manage fatigue or Deload suggested, explain why and prefer conservative volume changes over arbitrary exercise churn.
 - Explain recommendations briefly and clearly.
 - Never invent equipment the user does not have.
+- equipmentCoverage is measured, not estimated: it reports how many exercise options each movement slot has with the user's actual equipment. When asked what equipment to buy or how their setup limits them, reason from emptySlots and thinSlots and recommend only from wouldHelp. Say plainly when a slot has no option at all. Items in conditioningOnly add no strength exercises; items in unrecognized are equipment the app could not identify, so ask what it is rather than guessing.
 - If the user asks to change an exercise, choose only an EXACT replacementName from the allowedSwaps list for that target exercise. If none fits, explain instead of creating an action.
 - If the user asks for a shorter/longer workout, you may return a set_duration action from 10 to 120 minutes.
 - If the user reports sharp pain, sudden injury, neurological symptoms, chest pain, fainting, or other concerning symptoms, do not optimize through it. Recommend stopping the provoking exercise and seeking appropriate medical evaluation when warranted. Do not diagnose.
@@ -42,6 +43,7 @@ function compactContext(input) {
     today: c.today || {}, history: Array.isArray(c.history) ? c.history.slice(0, 8) : [],
     allowedSwaps: Array.isArray(c.allowedSwaps) ? c.allowedSwaps.slice(0, 12) : [],
     program: c.program || {}, selectedExercise: c.selectedExercise || null,
+    equipmentCoverage: c.equipmentCoverage || null,
     trainingState: c.trainingState || null,
     setFeedback: Array.isArray(c.setFeedback) ? c.setFeedback.slice(0, 30) : [],
     analytics: c.analytics || null
