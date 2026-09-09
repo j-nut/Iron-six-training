@@ -68,7 +68,7 @@ Rules for this replacement set:
 - [x] Incline Barbell Bench Press
 - [x] Incline Dumbbell Curl
 - [x] Incline Dumbbell Press
-- [ ] Isometric Lat Press
+- [x] Isometric Lat Press
 - [x] Landmine Hack Squat
 - [x] Landmine Press
 - [x] Landmine Reverse Lunge
@@ -82,21 +82,27 @@ Rules for this replacement set:
 - [x] One-Arm Dumbbell Row
 - [x] Paused Barbell Back Squat
 - [x] Paused Barbell Bench Press
-- [ ] Pendlay Row
-- [ ] Pike Push-Up
-- [ ] Plank
-- [ ] Prone Lat Pull
-- [ ] Prone Y-T Raise
+- [x] Pendlay Row
+- [x] Pike Push-Up
+- [x] Plank
+- [x] Prone Lat Pull
+- [x] Prone Y-T Raise
 - [x] Pull-Up
 - [x] Push-Up
-- [ ] Single-Leg Calf Raise
-- [ ] Single-Leg Glute Bridge
-- [ ] Single-Leg Hip Hinge
-- [ ] Tempo Bodyweight Squat
-- [ ] Tempo Push-Up
-- [ ] Towel Isometric Curl
+- [x] Single-Leg Calf Raise
+- [x] Single-Leg Glute Bridge
+- [x] Single-Leg Hip Hinge
+- [x] Tempo Bodyweight Squat
+- [x] Tempo Push-Up
+- [x] Towel Isometric Curl
 - [x] Weighted Standing Calf Raise
-- [ ] Wide Push-Up
+- [x] Wide Push-Up
+
+## Status
+
+- Professional illustration generation: **85 / 85 complete**.
+- Isometric Lat Press uses the approved self-resisted cue treatment (`SET → PRESS DOWN → HOLD / SQUEEZE`).
+- App integration is the remaining step: copy the approved PNGs into the app's media asset set, map them to the existing canonical `mediaId` values, mark those manifest records `approved`, run the media coverage tests/audit, then deploy.
 
 ## Notes
 
