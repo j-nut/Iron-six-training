@@ -1,6 +1,6 @@
 # Exercise + Media Audit
 
-Generated: 2026-09-09T21:29:53.896Z
+Generated: 2026-09-09T22:15:41.342Z
 
 ## Summary
 
@@ -8,13 +8,13 @@ Generated: 2026-09-09T21:29:53.896Z
 | --- | ---: |
 | Canonical exercises (registry) | 85 |
 | Media records (manifest) | 119 |
-| Unique exercise names found in app | 125 |
+| Unique exercise names found in app | 207 |
 | Professional exact | 85 |
 | Legacy exact | 12 |
 | Alias covered | 1 |
 | Substituted (different movement shown) | 0 |
 | Fallback only (superset, partial) | 0 |
-| Missing | 27 |
+| Missing | 109 |
 | Broken frame references | 0 |
 | Orphan asset files | 0 |
 
@@ -118,7 +118,7 @@ Generated: 2026-09-09T21:29:53.896Z
 | Cable Curl | legacy-standing-biceps-curl-with-cable | Elbow flexion | api/equipment-exercises.js:CURATED:cable |
 | Cable Lat Pulldown | legacy-wide-grip-lat-pull-down | Vertical pull | api/equipment-exercises.js:CURATED:cable |
 | Cable Triceps Pressdown | legacy-triceps-pushdown-with-cable | Triceps press | api/equipment-exercises.js:CURATED:cable |
-| EZ-Bar Curl | legacy-ez-bar-curl-with-barbell | Elbow flexion | api/equipment-exercises.js:CURATED:ez curl |
+| EZ-Bar Curl | legacy-ez-bar-curl-with-barbell | Elbow flexion | api/equipment-exercises.js:CURATED:ez_bar |
 | Machine Chest Press | legacy-machine-bench-press | Horizontal press | api/equipment-exercises.js:CURATED:machine |
 | Machine Leg Curl | legacy-lying-leg-curl-machine | Knee flexion | api/equipment-exercises.js:CURATED:machine |
 | Machine Shoulder Press | legacy-seated-shoulder-press-machine | Vertical press | api/equipment-exercises.js:CURATED:machine |
@@ -131,83 +131,189 @@ Generated: 2026-09-09T21:29:53.896Z
 
 | Name | Media ID | Base | Sources |
 | --- | --- | --- | --- |
-| Machine Lat Pulldown | legacy-wide-grip-lat-pull-down | Vertical pull | api/equipment-exercises.js:CURATED:machine |
+| Machine Lat Pulldown | legacy-wide-grip-lat-pull-down | Vertical pull | api/equipment-exercises.js:CURATED:lat_machine; api/equipment-exercises.js:CURATED:machine |
 
 ### Substituted (a different movement is shown, always labelled) (0)
 
 _none_
 
-### Missing (resolves to "demo coming soon") (27)
+### Missing (resolves to "demo coming soon") (109)
 
 _(see full list grouped by movement pattern below)_
 
 ## Missing media, grouped by movement pattern (`base`)
 
-### Anterior core (1)
+### Anterior core (14)
 
+- **Cable Crunch** — sources: api/equipment-exercises.js:CURATED:cable
+- **Cable Woodchop** — sources: api/equipment-exercises.js:CURATED:cable
+- **GHD Sit-Up** — sources: api/equipment-exercises.js:CURATED:ghd
+- **Kettlebell Suitcase Carry** — sources: api/equipment-exercises.js:CURATED:kettlebell
+- **Machine Abdominal Crunch** — sources: api/equipment-exercises.js:CURATED:machine
+- **Medicine Ball Slam** — sources: api/equipment-exercises.js:CURATED:slam_ball
+- **Parallel-Bar Leg Raise** — sources: api/equipment-exercises.js:CURATED:dip
+- **Parallette L-Sit** — sources: api/equipment-exercises.js:CURATED:parallettes
+- **Plate Russian Twist** — sources: api/equipment-exercises.js:CURATED:plates
+- **Sandbag Bear Hug Carry** — sources: api/equipment-exercises.js:CURATED:sandbag
+- **Slam Ball Russian Twist** — sources: api/equipment-exercises.js:CURATED:slam_ball
 - **Suspension Trainer Body Saw** — sources: api/equipment-exercises.js:CURATED:suspension
+- **Trap Bar Farmer's Carry** — sources: api/equipment-exercises.js:CURATED:trap_bar
+- **Weighted Vest Plank** — sources: api/equipment-exercises.js:CURATED:weight_vest
 
-### Calves (2)
+### Brachialis (3)
 
-- **Machine Calf Raise** — sources: api/equipment-exercises.js:CURATED:machine
+- **Cable Hammer Curl** — sources: api/equipment-exercises.js:CURATED:cable
+- **EZ-Bar Reverse Curl** — sources: api/equipment-exercises.js:CURATED:ez_bar
+- **Kettlebell Hammer Curl** — sources: api/equipment-exercises.js:CURATED:kettlebell
+
+### Calves (5)
+
+- **Kettlebell Calf Raise** — sources: api/equipment-exercises.js:CURATED:kettlebell
+- **Leg Press Calf Raise** — sources: api/equipment-exercises.js:CURATED:leg_press
+- **Machine Calf Raise** — sources: api/equipment-exercises.js:CURATED:calf_machine; api/equipment-exercises.js:CURATED:machine
+- **Seated Machine Calf Raise** — sources: api/equipment-exercises.js:CURATED:calf_machine
 - **Smith Machine Calf Raise** — sources: api/equipment-exercises.js:CURATED:smith
 
-### Hip extension (1)
+### Chest isolation (2)
 
+- **Machine Pec Deck** — sources: api/equipment-exercises.js:CURATED:machine
+- **Suspension Trainer Chest Fly** — sources: api/equipment-exercises.js:CURATED:suspension
+
+### Elbow flexion (3)
+
+- **EZ-Bar Preacher Curl** — sources: api/equipment-exercises.js:CURATED:ez_bar
+- **Machine Preacher Curl** — sources: api/equipment-exercises.js:CURATED:machine
+- **Suspension Trainer Biceps Curl** — sources: api/equipment-exercises.js:CURATED:suspension
+
+### Hip extension (7)
+
+- **Banded Clamshell** — sources: api/equipment-exercises.js:CURATED:mini_band
+- **Banded Glute Bridge** — sources: api/equipment-exercises.js:CURATED:mini_band
+- **Cable Glute Kickback** — sources: api/equipment-exercises.js:CURATED:cable
+- **Kettlebell Hip Thrust** — sources: api/equipment-exercises.js:CURATED:kettlebell
+- **Lateral Band Walk** — sources: api/equipment-exercises.js:CURATED:mini_band
+- **Machine Hip Thrust** — sources: api/equipment-exercises.js:CURATED:hip_thrust_machine; api/equipment-exercises.js:CURATED:machine
 - **Smith Machine Hip Thrust** — sources: api/equipment-exercises.js:CURATED:smith
 
-### Hip hinge (5)
+### Hip hinge (10)
 
+- **Back Extension** — sources: api/equipment-exercises.js:CURATED:ghd
+- **Cable Pull-Through** — sources: api/equipment-exercises.js:CURATED:cable
 - **Kettlebell Romanian Deadlift** — sources: api/equipment-exercises.js:CURATED:kettlebell
+- **Kettlebell Single-Leg Deadlift** — sources: api/equipment-exercises.js:CURATED:kettlebell
+- **Kettlebell Swing** — sources: api/equipment-exercises.js:CURATED:kettlebell
 - **Sandbag Romanian Deadlift** — sources: api/equipment-exercises.js:CURATED:sandbag
+- **Sandbag Shouldering** — sources: api/equipment-exercises.js:CURATED:sandbag
 - **Smith Machine Romanian Deadlift** — sources: api/equipment-exercises.js:CURATED:smith
-- **Trap Bar Deadlift** — sources: api/equipment-exercises.js:CURATED:trap bar
-- **Trap Bar Romanian Deadlift** — sources: api/equipment-exercises.js:CURATED:trap bar
+- **Trap Bar Deadlift** — sources: api/equipment-exercises.js:CURATED:trap_bar
+- **Trap Bar Romanian Deadlift** — sources: api/equipment-exercises.js:CURATED:trap_bar
 
-### Horizontal pull (4)
+### Horizontal pull (7)
 
 - **Bent-Over Sandbag Row** — sources: api/equipment-exercises.js:CURATED:sandbag
+- **EZ-Bar Bent-Over Row** — sources: api/equipment-exercises.js:CURATED:ez_bar
+- **Kettlebell Bent-Over Row** — sources: api/equipment-exercises.js:CURATED:kettlebell
 - **Machine Seated Row** — sources: api/equipment-exercises.js:CURATED:machine
 - **Single-Arm Kettlebell Row** — sources: api/equipment-exercises.js:CURATED:kettlebell
+- **Smith Machine Inverted Row** — sources: api/equipment-exercises.js:CURATED:smith
 - **Suspension Trainer Row** — sources: api/equipment-exercises.js:CURATED:suspension
 
-### Knee flexion (1)
+### Knee flexion (4)
 
+- **Glute-Ham Raise** — sources: api/equipment-exercises.js:CURATED:ghd
+- **Lying Machine Leg Curl** — sources: api/equipment-exercises.js:CURATED:leg_machine
+- **Seated Machine Leg Curl** — sources: api/equipment-exercises.js:CURATED:leg_machine
 - **Suspension Trainer Hamstring Curl** — sources: api/equipment-exercises.js:CURATED:suspension
 
-### Lateral delts (1)
+### Lat isolation (2)
+
+- **Cable Straight-Arm Pulldown** — sources: api/equipment-exercises.js:CURATED:cable
+- **Straight-Arm Lat Pulldown** — sources: api/equipment-exercises.js:CURATED:lat_machine
+
+### Lateral delts (4)
 
 - **Cable Lateral Raise** — sources: api/equipment-exercises.js:CURATED:cable
+- **EZ-Bar Upright Row** — sources: api/equipment-exercises.js:CURATED:ez_bar
+- **Kettlebell Lateral Raise** — sources: api/equipment-exercises.js:CURATED:kettlebell
+- **Machine Lateral Raise** — sources: api/equipment-exercises.js:CURATED:machine
 
-### Primary squat (2)
+### Primary squat (6)
 
+- **Box Squat** — sources: api/equipment-exercises.js:CURATED:box
 - **Kettlebell Goblet Squat** — sources: api/equipment-exercises.js:CURATED:kettlebell
+- **Machine Leg Press** — sources: api/equipment-exercises.js:CURATED:leg_press
+- **Plate Goblet Squat** — sources: api/equipment-exercises.js:CURATED:plates
 - **Sandbag Front Squat** — sources: api/equipment-exercises.js:CURATED:sandbag
+- **Trap Bar Squat** — sources: api/equipment-exercises.js:CURATED:trap_bar
 
-### Scapular pull (1)
+### Rear delts (3)
+
+- **Cable Rear Delt Fly** — sources: api/equipment-exercises.js:CURATED:cable
+- **Machine Rear Delt Fly** — sources: api/equipment-exercises.js:CURATED:machine
+- **Suspension Trainer Y-Raise** — sources: api/equipment-exercises.js:CURATED:suspension
+
+### Scapular pull (3)
 
 - **Cable Face Pull** — sources: api/equipment-exercises.js:CURATED:cable
+- **Suspension Trainer Face Pull** — sources: api/equipment-exercises.js:CURATED:suspension
+- **Trap Bar Shrug** — sources: api/equipment-exercises.js:CURATED:trap_bar
 
-### Secondary press (4)
+### Secondary press (9)
 
-- **Assisted Parallel-Bar Dip** — sources: api/equipment-exercises.js:CURATED:dip
+- **Assisted Parallel-Bar Dip** — sources: api/equipment-exercises.js:CURATED:assist_machine; api/equipment-exercises.js:CURATED:dip
 - **Cable Chest Press** — sources: api/equipment-exercises.js:CURATED:cable
 - **Kettlebell Floor Press** — sources: api/equipment-exercises.js:CURATED:kettlebell
+- **Parallette Push-Up** — sources: api/equipment-exercises.js:CURATED:parallettes
+- **Sandbag Floor Press** — sources: api/equipment-exercises.js:CURATED:sandbag
+- **Smith Machine Incline Press** — sources: api/equipment-exercises.js:CURATED:smith
 - **Suspension Trainer Push-Up** — sources: api/equipment-exercises.js:CURATED:suspension
+- **Weighted Parallel-Bar Dip** — sources: api/equipment-exercises.js:CURATED:dip; api/equipment-exercises.js:CURATED:dip_belt
+- **Weighted Vest Push-Up** — sources: api/equipment-exercises.js:CURATED:weight_vest
 
-### Single-leg work (3)
+### Single-leg volume (2)
 
+- **Single-Leg Machine Leg Press** — sources: api/equipment-exercises.js:CURATED:leg_press
+- **Suspension Trainer Pistol Squat** — sources: api/equipment-exercises.js:CURATED:suspension
+
+### Single-leg work (6)
+
+- **Box Step-Up** — sources: api/equipment-exercises.js:CURATED:box
+- **Bulgarian Split Squat** — sources: api/equipment-exercises.js:CURATED:box
 - **Kettlebell Reverse Lunge** — sources: api/equipment-exercises.js:CURATED:kettlebell
 - **Sandbag Reverse Lunge** — sources: api/equipment-exercises.js:CURATED:sandbag
+- **Smith Machine Split Squat** — sources: api/equipment-exercises.js:CURATED:smith
 - **Suspension Trainer Split Squat** — sources: api/equipment-exercises.js:CURATED:suspension
 
-### Triceps press (1)
+### Squat volume (2)
 
-- **EZ-Bar Skull Crusher** — sources: api/equipment-exercises.js:CURATED:ez curl
+- **Kettlebell Front Squat** — sources: api/equipment-exercises.js:CURATED:kettlebell
+- **Weighted Vest Squat** — sources: api/equipment-exercises.js:CURATED:weight_vest
 
-### Vertical press (1)
+### Triceps press (6)
 
+- **Cable Overhead Triceps Extension** — sources: api/equipment-exercises.js:CURATED:cable
+- **EZ-Bar Overhead Triceps Extension** — sources: api/equipment-exercises.js:CURATED:ez_bar
+- **EZ-Bar Skull Crusher** — sources: api/equipment-exercises.js:CURATED:ez_bar
+- **Kettlebell Overhead Triceps Extension** — sources: api/equipment-exercises.js:CURATED:kettlebell
+- **Machine Triceps Extension** — sources: api/equipment-exercises.js:CURATED:machine
+- **Suspension Trainer Triceps Extension** — sources: api/equipment-exercises.js:CURATED:suspension
+
+### Vertical press (6)
+
+- **Half-Kneeling Cable Press** — sources: api/equipment-exercises.js:CURATED:cable
+- **Parallette Pike Push-Up** — sources: api/equipment-exercises.js:CURATED:parallettes
+- **Plate Overhead Press** — sources: api/equipment-exercises.js:CURATED:plates
+- **Sandbag Overhead Press** — sources: api/equipment-exercises.js:CURATED:sandbag
 - **Single-Arm Kettlebell Press** — sources: api/equipment-exercises.js:CURATED:kettlebell
+- **Smith Machine Overhead Press** — sources: api/equipment-exercises.js:CURATED:smith
+
+### Vertical pull (5)
+
+- **Assisted Pull-Up** — sources: api/equipment-exercises.js:CURATED:assist_machine
+- **Close-Grip Lat Pulldown** — sources: api/equipment-exercises.js:CURATED:lat_machine
+- **Weighted Pull-Up** — sources: api/equipment-exercises.js:CURATED:dip_belt
+- **Weighted Vest Pull-Up** — sources: api/equipment-exercises.js:CURATED:weight_vest
+- **Wide-Grip Lat Pulldown** — sources: api/equipment-exercises.js:CURATED:lat_machine
 
 ## Duplicate candidates (same token set, different name)
 

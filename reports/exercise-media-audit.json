@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-09-09T21:29:53.896Z",
+  "generatedAt": "2026-09-09T22:15:41.342Z",
   "totals": {
     "canonicalExercises": 85,
     "mediaRecords": 119,
-    "uniqueNames": 125,
+    "uniqueNames": 207,
     "professionalExact": 85,
     "legacyExact": 12,
     "aliasCovered": 1,
     "substituted": 0,
     "fallbackOnly": 0,
-    "missing": 27,
+    "missing": 109,
     "broken": 0,
     "orphanAssets": 0
   },
@@ -76,6 +76,7 @@
       "mediaId": null,
       "mediaTier": null,
       "sources": [
+        "api/equipment-exercises.js:CURATED:assist_machine",
         "api/equipment-exercises.js:CURATED:dip"
       ],
       "equipment": [],
@@ -84,6 +85,47 @@
       "priority": 2,
       "workoutKeys": [
         "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Assisted Pull-Up",
+      "normalized": "assisted pull-up",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:assist_machine"
+      ],
+      "equipment": [],
+      "base": "Vertical pull",
+      "seedKey": "pullup",
+      "priority": 1,
+      "workoutKeys": [
+        "back",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Back Extension",
+      "normalized": "back extension",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:ghd"
+      ],
+      "equipment": [],
+      "base": "Hip hinge",
+      "seedKey": "hinge",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_strength"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -446,6 +488,48 @@
       "priority": 2,
       "workoutKeys": [
         "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Banded Clamshell",
+      "normalized": "banded clamshell",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:mini_band"
+      ],
+      "equipment": [],
+      "base": "Hip extension",
+      "seedKey": "hip_thrust",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Banded Glute Bridge",
+      "normalized": "banded glute bridge",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:mini_band"
+      ],
+      "equipment": [],
+      "base": "Hip extension",
+      "seedKey": "hip_thrust",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -869,6 +953,67 @@
       "substitutedBy": null
     },
     {
+      "name": "Box Squat",
+      "normalized": "box squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:box"
+      ],
+      "equipment": [],
+      "base": "Primary squat",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Box Step-Up",
+      "normalized": "box step-up",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:box"
+      ],
+      "equipment": [],
+      "base": "Single-leg work",
+      "seedKey": "split_squat",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Bulgarian Split Squat",
+      "normalized": "bulgarian split squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:box"
+      ],
+      "equipment": [],
+      "base": "Single-leg work",
+      "seedKey": "split_squat",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
       "name": "Cable Chest Fly",
       "normalized": "cable chest fly",
       "coverage": "exact",
@@ -903,6 +1048,27 @@
       "priority": 2,
       "workoutKeys": [
         "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Cable Crunch",
+      "normalized": "cable crunch",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:cable"
+      ],
+      "equipment": [],
+      "base": "Anterior core",
+      "seedKey": "core",
+      "priority": 3,
+      "workoutKeys": [
+        "chest",
+        "lower_strength"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -944,6 +1110,47 @@
       "priority": 2,
       "workoutKeys": [
         "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Cable Glute Kickback",
+      "normalized": "cable glute kickback",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:cable"
+      ],
+      "equipment": [],
+      "base": "Hip extension",
+      "seedKey": "hip_thrust",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Cable Hammer Curl",
+      "normalized": "cable hammer curl",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:cable"
+      ],
+      "equipment": [],
+      "base": "Brachialis",
+      "seedKey": "hammer_curl",
+      "priority": 3,
+      "workoutKeys": [
+        "shoulders_arms"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -992,6 +1199,87 @@
       "substitutedBy": null
     },
     {
+      "name": "Cable Overhead Triceps Extension",
+      "normalized": "cable overhead triceps extension",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:cable"
+      ],
+      "equipment": [],
+      "base": "Triceps press",
+      "seedKey": "triceps",
+      "priority": 2,
+      "workoutKeys": [
+        "chest",
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Cable Pull-Through",
+      "normalized": "cable pull-through",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:cable"
+      ],
+      "equipment": [],
+      "base": "Hip hinge",
+      "seedKey": "hinge",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Cable Rear Delt Fly",
+      "normalized": "cable rear delt fly",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:cable"
+      ],
+      "equipment": [],
+      "base": "Rear delts",
+      "seedKey": "rear_delt",
+      "priority": 2,
+      "workoutKeys": [
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Cable Straight-Arm Pulldown",
+      "normalized": "cable straight-arm pulldown",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:cable"
+      ],
+      "equipment": [],
+      "base": "Lat isolation",
+      "seedKey": "lat_iso",
+      "priority": 2,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
       "name": "Cable Triceps Pressdown",
       "normalized": "cable triceps pressdown",
       "coverage": "exact",
@@ -1007,6 +1295,27 @@
       "workoutKeys": [
         "chest",
         "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Cable Woodchop",
+      "normalized": "cable woodchop",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:cable"
+      ],
+      "equipment": [],
+      "base": "Anterior core",
+      "seedKey": "core",
+      "priority": 3,
+      "workoutKeys": [
+        "chest",
+        "lower_strength"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -1089,6 +1398,27 @@
       "workoutKeys": [
         "chest",
         "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Close-Grip Lat Pulldown",
+      "normalized": "close-grip lat pulldown",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:lat_machine"
+      ],
+      "equipment": [],
+      "base": "Vertical pull",
+      "seedKey": "pullup",
+      "priority": 1,
+      "workoutKeys": [
+        "back",
+        "upper_specialization"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -1632,13 +1962,33 @@
       "substitutedBy": null
     },
     {
+      "name": "EZ-Bar Bent-Over Row",
+      "normalized": "ez-bar bent-over row",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:ez_bar"
+      ],
+      "equipment": [],
+      "base": "Horizontal pull",
+      "seedKey": "row",
+      "priority": 1,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
       "name": "EZ-Bar Curl",
       "normalized": "ez-bar curl",
       "coverage": "exact",
       "mediaId": "legacy-ez-bar-curl-with-barbell",
       "mediaTier": "legacy",
       "sources": [
-        "api/equipment-exercises.js:CURATED:ez curl"
+        "api/equipment-exercises.js:CURATED:ez_bar"
       ],
       "equipment": [],
       "base": "Elbow flexion",
@@ -1653,13 +2003,13 @@
       "substitutedBy": null
     },
     {
-      "name": "EZ-Bar Skull Crusher",
-      "normalized": "ez-bar skull crusher",
+      "name": "EZ-Bar Overhead Triceps Extension",
+      "normalized": "ez-bar overhead triceps extension",
       "coverage": "missing",
       "mediaId": null,
       "mediaTier": null,
       "sources": [
-        "api/equipment-exercises.js:CURATED:ez curl"
+        "api/equipment-exercises.js:CURATED:ez_bar"
       ],
       "equipment": [],
       "base": "Triceps press",
@@ -1668,6 +2018,89 @@
       "workoutKeys": [
         "chest",
         "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "EZ-Bar Preacher Curl",
+      "normalized": "ez-bar preacher curl",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:ez_bar"
+      ],
+      "equipment": [],
+      "base": "Elbow flexion",
+      "seedKey": "curl",
+      "priority": 2,
+      "workoutKeys": [
+        "back",
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "EZ-Bar Reverse Curl",
+      "normalized": "ez-bar reverse curl",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:ez_bar"
+      ],
+      "equipment": [],
+      "base": "Brachialis",
+      "seedKey": "hammer_curl",
+      "priority": 3,
+      "workoutKeys": [
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "EZ-Bar Skull Crusher",
+      "normalized": "ez-bar skull crusher",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:ez_bar"
+      ],
+      "equipment": [],
+      "base": "Triceps press",
+      "seedKey": "triceps",
+      "priority": 2,
+      "workoutKeys": [
+        "chest",
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "EZ-Bar Upright Row",
+      "normalized": "ez-bar upright row",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:ez_bar"
+      ],
+      "equipment": [],
+      "base": "Lateral delts",
+      "seedKey": "lateral_raise",
+      "priority": 2,
+      "workoutKeys": [
+        "shoulders_arms",
+        "upper_specialization"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -1701,6 +2134,48 @@
       "substitutedBy": null
     },
     {
+      "name": "GHD Sit-Up",
+      "normalized": "ghd sit-up",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:ghd"
+      ],
+      "equipment": [],
+      "base": "Anterior core",
+      "seedKey": "core",
+      "priority": 3,
+      "workoutKeys": [
+        "chest",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Glute-Ham Raise",
+      "normalized": "glute-ham raise",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:ghd"
+      ],
+      "equipment": [],
+      "base": "Knee flexion",
+      "seedKey": "ham_curl",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
       "name": "Goblet Squat",
       "normalized": "goblet squat",
       "coverage": "exact",
@@ -1727,6 +2202,27 @@
       "workoutKeys": [
         "lower_hypertrophy",
         "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Half-Kneeling Cable Press",
+      "normalized": "half-kneeling cable press",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:cable"
+      ],
+      "equipment": [],
+      "base": "Vertical press",
+      "seedKey": "overhead_press",
+      "priority": 1,
+      "workoutKeys": [
+        "shoulders_arms",
+        "upper_specialization"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -1950,6 +2446,47 @@
       "substitutedBy": null
     },
     {
+      "name": "Kettlebell Bent-Over Row",
+      "normalized": "kettlebell bent-over row",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:kettlebell"
+      ],
+      "equipment": [],
+      "base": "Horizontal pull",
+      "seedKey": "row",
+      "priority": 1,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Kettlebell Calf Raise",
+      "normalized": "kettlebell calf raise",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:kettlebell"
+      ],
+      "equipment": [],
+      "base": "Calves",
+      "seedKey": "calves",
+      "priority": 3,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
       "name": "Kettlebell Floor Press",
       "normalized": "kettlebell floor press",
       "coverage": "missing",
@@ -1970,6 +2507,26 @@
       "substitutedBy": null
     },
     {
+      "name": "Kettlebell Front Squat",
+      "normalized": "kettlebell front squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:kettlebell"
+      ],
+      "equipment": [],
+      "base": "Squat volume",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_hypertrophy"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
       "name": "Kettlebell Goblet Squat",
       "normalized": "kettlebell goblet squat",
       "coverage": "missing",
@@ -1983,7 +2540,91 @@
       "seedKey": "squat",
       "priority": 1,
       "workoutKeys": [
+        "lower_hypertrophy",
         "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Kettlebell Hammer Curl",
+      "normalized": "kettlebell hammer curl",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:kettlebell"
+      ],
+      "equipment": [],
+      "base": "Brachialis",
+      "seedKey": "hammer_curl",
+      "priority": 3,
+      "workoutKeys": [
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Kettlebell Hip Thrust",
+      "normalized": "kettlebell hip thrust",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:kettlebell"
+      ],
+      "equipment": [],
+      "base": "Hip extension",
+      "seedKey": "hip_thrust",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Kettlebell Lateral Raise",
+      "normalized": "kettlebell lateral raise",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:kettlebell"
+      ],
+      "equipment": [],
+      "base": "Lateral delts",
+      "seedKey": "lateral_raise",
+      "priority": 2,
+      "workoutKeys": [
+        "shoulders_arms",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Kettlebell Overhead Triceps Extension",
+      "normalized": "kettlebell overhead triceps extension",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:kettlebell"
+      ],
+      "equipment": [],
+      "base": "Triceps press",
+      "seedKey": "triceps",
+      "priority": 2,
+      "workoutKeys": [
+        "chest",
+        "shoulders_arms"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -2003,6 +2644,7 @@
       "seedKey": "split_squat",
       "priority": 2,
       "workoutKeys": [
+        "lower_hypertrophy",
         "lower_strength"
       ],
       "isSupersetComponent": false,
@@ -2012,6 +2654,67 @@
     {
       "name": "Kettlebell Romanian Deadlift",
       "normalized": "kettlebell romanian deadlift",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:kettlebell"
+      ],
+      "equipment": [],
+      "base": "Hip hinge",
+      "seedKey": "hinge",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Kettlebell Single-Leg Deadlift",
+      "normalized": "kettlebell single-leg deadlift",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:kettlebell"
+      ],
+      "equipment": [],
+      "base": "Hip hinge",
+      "seedKey": "hinge",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Kettlebell Suitcase Carry",
+      "normalized": "kettlebell suitcase carry",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:kettlebell"
+      ],
+      "equipment": [],
+      "base": "Anterior core",
+      "seedKey": "core",
+      "priority": 3,
+      "workoutKeys": [
+        "chest",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Kettlebell Swing",
+      "normalized": "kettlebell swing",
       "coverage": "missing",
       "mediaId": null,
       "mediaTier": null,
@@ -2282,6 +2985,27 @@
       "substitutedBy": null
     },
     {
+      "name": "Lateral Band Walk",
+      "normalized": "lateral band walk",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:mini_band"
+      ],
+      "equipment": [],
+      "base": "Hip extension",
+      "seedKey": "hip_thrust",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
       "name": "Lean-Away Lateral Raise",
       "normalized": "lean-away lateral raise",
       "coverage": "exact",
@@ -2314,12 +3038,76 @@
       "substitutedBy": null
     },
     {
+      "name": "Leg Press Calf Raise",
+      "normalized": "leg press calf raise",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:leg_press"
+      ],
+      "equipment": [],
+      "base": "Calves",
+      "seedKey": "calves",
+      "priority": 3,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Lying Machine Leg Curl",
+      "normalized": "lying machine leg curl",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:leg_machine"
+      ],
+      "equipment": [],
+      "base": "Knee flexion",
+      "seedKey": "ham_curl",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Machine Abdominal Crunch",
+      "normalized": "machine abdominal crunch",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:machine"
+      ],
+      "equipment": [],
+      "base": "Anterior core",
+      "seedKey": "core",
+      "priority": 3,
+      "workoutKeys": [
+        "chest",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
       "name": "Machine Calf Raise",
       "normalized": "machine calf raise",
       "coverage": "missing",
       "mediaId": null,
       "mediaTier": null,
       "sources": [
+        "api/equipment-exercises.js:CURATED:calf_machine",
         "api/equipment-exercises.js:CURATED:machine"
       ],
       "equipment": [],
@@ -2348,7 +3136,30 @@
       "seedKey": "bench",
       "priority": 1,
       "workoutKeys": [
-        "chest"
+        "chest",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Machine Hip Thrust",
+      "normalized": "machine hip thrust",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:hip_thrust_machine",
+        "api/equipment-exercises.js:CURATED:machine"
+      ],
+      "equipment": [],
+      "base": "Hip extension",
+      "seedKey": "hip_thrust",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -2361,6 +3172,7 @@
       "mediaId": "legacy-wide-grip-lat-pull-down",
       "mediaTier": "legacy",
       "sources": [
+        "api/equipment-exercises.js:CURATED:lat_machine",
         "api/equipment-exercises.js:CURATED:machine"
       ],
       "equipment": [],
@@ -2369,6 +3181,27 @@
       "priority": 1,
       "workoutKeys": [
         "back",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Machine Lateral Raise",
+      "normalized": "machine lateral raise",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:machine"
+      ],
+      "equipment": [],
+      "base": "Lateral delts",
+      "seedKey": "lateral_raise",
+      "priority": 2,
+      "workoutKeys": [
+        "shoulders_arms",
         "upper_specialization"
       ],
       "isSupersetComponent": false,
@@ -2397,6 +3230,88 @@
       "substitutedBy": null
     },
     {
+      "name": "Machine Leg Press",
+      "normalized": "machine leg press",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:leg_press"
+      ],
+      "equipment": [],
+      "base": "Primary squat",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Machine Pec Deck",
+      "normalized": "machine pec deck",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:machine"
+      ],
+      "equipment": [],
+      "base": "Chest isolation",
+      "seedKey": "fly",
+      "priority": 2,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Machine Preacher Curl",
+      "normalized": "machine preacher curl",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:machine"
+      ],
+      "equipment": [],
+      "base": "Elbow flexion",
+      "seedKey": "curl",
+      "priority": 2,
+      "workoutKeys": [
+        "back",
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Machine Rear Delt Fly",
+      "normalized": "machine rear delt fly",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:machine"
+      ],
+      "equipment": [],
+      "base": "Rear delts",
+      "seedKey": "rear_delt",
+      "priority": 2,
+      "workoutKeys": [
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
       "name": "Machine Seated Row",
       "normalized": "machine seated row",
       "coverage": "missing",
@@ -2410,7 +3325,8 @@
       "seedKey": "row",
       "priority": 1,
       "workoutKeys": [
-        "back"
+        "back",
+        "upper_specialization"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -2438,6 +3354,27 @@
       "substitutedBy": null
     },
     {
+      "name": "Machine Triceps Extension",
+      "normalized": "machine triceps extension",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:machine"
+      ],
+      "equipment": [],
+      "base": "Triceps press",
+      "seedKey": "triceps",
+      "priority": 2,
+      "workoutKeys": [
+        "chest",
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
       "name": "Meadows Row",
       "normalized": "meadows row",
       "coverage": "exact",
@@ -2456,6 +3393,27 @@
       "priority": 1,
       "workoutKeys": [
         "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Medicine Ball Slam",
+      "normalized": "medicine ball slam",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:slam_ball"
+      ],
+      "equipment": [],
+      "base": "Anterior core",
+      "seedKey": "core",
+      "priority": 3,
+      "workoutKeys": [
+        "chest",
+        "lower_strength"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -2508,6 +3466,89 @@
       "workoutKeys": [
         "chest",
         "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Parallel-Bar Leg Raise",
+      "normalized": "parallel-bar leg raise",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:dip"
+      ],
+      "equipment": [],
+      "base": "Anterior core",
+      "seedKey": "core",
+      "priority": 3,
+      "workoutKeys": [
+        "chest",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Parallette L-Sit",
+      "normalized": "parallette l-sit",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:parallettes"
+      ],
+      "equipment": [],
+      "base": "Anterior core",
+      "seedKey": "core",
+      "priority": 3,
+      "workoutKeys": [
+        "chest",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Parallette Pike Push-Up",
+      "normalized": "parallette pike push-up",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:parallettes"
+      ],
+      "equipment": [],
+      "base": "Vertical press",
+      "seedKey": "overhead_press",
+      "priority": 1,
+      "workoutKeys": [
+        "shoulders_arms",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Parallette Push-Up",
+      "normalized": "parallette push-up",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:parallettes"
+      ],
+      "equipment": [],
+      "base": "Secondary press",
+      "seedKey": "chest_press",
+      "priority": 2,
+      "workoutKeys": [
+        "chest"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -2643,6 +3684,68 @@
       "substitutedBy": null
     },
     {
+      "name": "Plate Goblet Squat",
+      "normalized": "plate goblet squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:plates"
+      ],
+      "equipment": [],
+      "base": "Primary squat",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Plate Overhead Press",
+      "normalized": "plate overhead press",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:plates"
+      ],
+      "equipment": [],
+      "base": "Vertical press",
+      "seedKey": "overhead_press",
+      "priority": 1,
+      "workoutKeys": [
+        "shoulders_arms",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Plate Russian Twist",
+      "normalized": "plate russian twist",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:plates"
+      ],
+      "equipment": [],
+      "base": "Anterior core",
+      "seedKey": "core",
+      "priority": 3,
+      "workoutKeys": [
+        "chest",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
       "name": "Prone Lat Pull",
       "normalized": "prone lat pull",
       "coverage": "exact",
@@ -2771,6 +3874,47 @@
       "substitutedBy": null
     },
     {
+      "name": "Sandbag Bear Hug Carry",
+      "normalized": "sandbag bear hug carry",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:sandbag"
+      ],
+      "equipment": [],
+      "base": "Anterior core",
+      "seedKey": "core",
+      "priority": 3,
+      "workoutKeys": [
+        "chest",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Sandbag Floor Press",
+      "normalized": "sandbag floor press",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:sandbag"
+      ],
+      "equipment": [],
+      "base": "Secondary press",
+      "seedKey": "chest_press",
+      "priority": 2,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
       "name": "Sandbag Front Squat",
       "normalized": "sandbag front squat",
       "coverage": "missing",
@@ -2784,7 +3928,29 @@
       "seedKey": "squat",
       "priority": 1,
       "workoutKeys": [
+        "lower_hypertrophy",
         "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Sandbag Overhead Press",
+      "normalized": "sandbag overhead press",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:sandbag"
+      ],
+      "equipment": [],
+      "base": "Vertical press",
+      "seedKey": "overhead_press",
+      "priority": 1,
+      "workoutKeys": [
+        "shoulders_arms",
+        "upper_specialization"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -2831,6 +3997,26 @@
       "substitutedBy": null
     },
     {
+      "name": "Sandbag Shouldering",
+      "normalized": "sandbag shouldering",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:sandbag"
+      ],
+      "equipment": [],
+      "base": "Hip hinge",
+      "seedKey": "hinge",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
       "name": "Seated Cable Row",
       "normalized": "seated cable row",
       "coverage": "exact",
@@ -2845,6 +4031,48 @@
       "priority": 1,
       "workoutKeys": [
         "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Seated Machine Calf Raise",
+      "normalized": "seated machine calf raise",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:calf_machine"
+      ],
+      "equipment": [],
+      "base": "Calves",
+      "seedKey": "calves",
+      "priority": 3,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Seated Machine Leg Curl",
+      "normalized": "seated machine leg curl",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:leg_machine"
+      ],
+      "equipment": [],
+      "base": "Knee flexion",
+      "seedKey": "ham_curl",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy",
+        "lower_strength"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -2988,6 +4216,47 @@
       "substitutedBy": null
     },
     {
+      "name": "Single-Leg Machine Leg Press",
+      "normalized": "single-leg machine leg press",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:leg_press"
+      ],
+      "equipment": [],
+      "base": "Single-leg volume",
+      "seedKey": "split_squat",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Slam Ball Russian Twist",
+      "normalized": "slam ball russian twist",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:slam_ball"
+      ],
+      "equipment": [],
+      "base": "Anterior core",
+      "seedKey": "core",
+      "priority": 3,
+      "workoutKeys": [
+        "chest",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
       "name": "Smith Machine Bench Press",
       "normalized": "smith machine bench press",
       "coverage": "exact",
@@ -3001,7 +4270,8 @@
       "seedKey": "bench",
       "priority": 1,
       "workoutKeys": [
-        "chest"
+        "chest",
+        "upper_specialization"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -3050,6 +4320,67 @@
       "substitutedBy": null
     },
     {
+      "name": "Smith Machine Incline Press",
+      "normalized": "smith machine incline press",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:smith"
+      ],
+      "equipment": [],
+      "base": "Secondary press",
+      "seedKey": "chest_press",
+      "priority": 2,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Smith Machine Inverted Row",
+      "normalized": "smith machine inverted row",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:smith"
+      ],
+      "equipment": [],
+      "base": "Horizontal pull",
+      "seedKey": "row",
+      "priority": 1,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Smith Machine Overhead Press",
+      "normalized": "smith machine overhead press",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:smith"
+      ],
+      "equipment": [],
+      "base": "Vertical press",
+      "seedKey": "overhead_press",
+      "priority": 1,
+      "workoutKeys": [
+        "shoulders_arms",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
       "name": "Smith Machine Romanian Deadlift",
       "normalized": "smith machine romanian deadlift",
       "coverage": "missing",
@@ -3061,6 +4392,26 @@
       "equipment": [],
       "base": "Hip hinge",
       "seedKey": "hinge",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Smith Machine Split Squat",
+      "normalized": "smith machine split squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:smith"
+      ],
+      "equipment": [],
+      "base": "Single-leg work",
+      "seedKey": "split_squat",
       "priority": 2,
       "workoutKeys": [
         "lower_strength"
@@ -3083,7 +4434,49 @@
       "seedKey": "squat",
       "priority": 1,
       "workoutKeys": [
+        "lower_hypertrophy",
         "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Straight-Arm Lat Pulldown",
+      "normalized": "straight-arm lat pulldown",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:lat_machine"
+      ],
+      "equipment": [],
+      "base": "Lat isolation",
+      "seedKey": "lat_iso",
+      "priority": 2,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Suspension Trainer Biceps Curl",
+      "normalized": "suspension trainer biceps curl",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:suspension"
+      ],
+      "equipment": [],
+      "base": "Elbow flexion",
+      "seedKey": "curl",
+      "priority": 2,
+      "workoutKeys": [
+        "back",
+        "shoulders_arms"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -3111,6 +4504,46 @@
       "substitutedBy": null
     },
     {
+      "name": "Suspension Trainer Chest Fly",
+      "normalized": "suspension trainer chest fly",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:suspension"
+      ],
+      "equipment": [],
+      "base": "Chest isolation",
+      "seedKey": "fly",
+      "priority": 2,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Suspension Trainer Face Pull",
+      "normalized": "suspension trainer face pull",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:suspension"
+      ],
+      "equipment": [],
+      "base": "Scapular pull",
+      "seedKey": "rear_delt",
+      "priority": 2,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
       "name": "Suspension Trainer Hamstring Curl",
       "normalized": "suspension trainer hamstring curl",
       "coverage": "missing",
@@ -3126,6 +4559,26 @@
       "workoutKeys": [
         "lower_hypertrophy",
         "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Suspension Trainer Pistol Squat",
+      "normalized": "suspension trainer pistol squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:suspension"
+      ],
+      "equipment": [],
+      "base": "Single-leg volume",
+      "seedKey": "split_squat",
+      "priority": 2,
+      "workoutKeys": [
+        "lower_hypertrophy"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -3165,7 +4618,8 @@
       "seedKey": "row",
       "priority": 1,
       "workoutKeys": [
-        "back"
+        "back",
+        "upper_specialization"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -3186,6 +4640,47 @@
       "priority": 2,
       "workoutKeys": [
         "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Suspension Trainer Triceps Extension",
+      "normalized": "suspension trainer triceps extension",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:suspension"
+      ],
+      "equipment": [],
+      "base": "Triceps press",
+      "seedKey": "triceps",
+      "priority": 2,
+      "workoutKeys": [
+        "chest",
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Suspension Trainer Y-Raise",
+      "normalized": "suspension trainer y-raise",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:suspension"
+      ],
+      "equipment": [],
+      "base": "Rear delts",
+      "seedKey": "rear_delt",
+      "priority": 2,
+      "workoutKeys": [
+        "shoulders_arms"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -3272,7 +4767,7 @@
       "mediaId": null,
       "mediaTier": null,
       "sources": [
-        "api/equipment-exercises.js:CURATED:trap bar"
+        "api/equipment-exercises.js:CURATED:trap_bar"
       ],
       "equipment": [],
       "base": "Hip hinge",
@@ -3286,13 +4781,34 @@
       "substitutedBy": null
     },
     {
+      "name": "Trap Bar Farmer's Carry",
+      "normalized": "trap bar farmer's carry",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:trap_bar"
+      ],
+      "equipment": [],
+      "base": "Anterior core",
+      "seedKey": "core",
+      "priority": 3,
+      "workoutKeys": [
+        "chest",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
       "name": "Trap Bar Romanian Deadlift",
       "normalized": "trap bar romanian deadlift",
       "coverage": "missing",
       "mediaId": null,
       "mediaTier": null,
       "sources": [
-        "api/equipment-exercises.js:CURATED:trap bar"
+        "api/equipment-exercises.js:CURATED:trap_bar"
       ],
       "equipment": [],
       "base": "Hip hinge",
@@ -3300,6 +4816,89 @@
       "priority": 2,
       "workoutKeys": [
         "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Trap Bar Shrug",
+      "normalized": "trap bar shrug",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:trap_bar"
+      ],
+      "equipment": [],
+      "base": "Scapular pull",
+      "seedKey": "rear_delt",
+      "priority": 2,
+      "workoutKeys": [
+        "back"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Trap Bar Squat",
+      "normalized": "trap bar squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:trap_bar"
+      ],
+      "equipment": [],
+      "base": "Primary squat",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Weighted Parallel-Bar Dip",
+      "normalized": "weighted parallel-bar dip",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:dip",
+        "api/equipment-exercises.js:CURATED:dip_belt"
+      ],
+      "equipment": [],
+      "base": "Secondary press",
+      "seedKey": "chest_press",
+      "priority": 2,
+      "workoutKeys": [
+        "chest",
+        "shoulders_arms"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Weighted Pull-Up",
+      "normalized": "weighted pull-up",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:dip_belt"
+      ],
+      "equipment": [],
+      "base": "Vertical pull",
+      "seedKey": "pullup",
+      "priority": 1,
+      "workoutKeys": [
+        "back",
+        "upper_specialization"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -3340,6 +4939,88 @@
       "substitutedBy": null
     },
     {
+      "name": "Weighted Vest Plank",
+      "normalized": "weighted vest plank",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:weight_vest"
+      ],
+      "equipment": [],
+      "base": "Anterior core",
+      "seedKey": "core",
+      "priority": 3,
+      "workoutKeys": [
+        "chest",
+        "lower_strength"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Weighted Vest Pull-Up",
+      "normalized": "weighted vest pull-up",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:weight_vest"
+      ],
+      "equipment": [],
+      "base": "Vertical pull",
+      "seedKey": "pullup",
+      "priority": 1,
+      "workoutKeys": [
+        "back",
+        "upper_specialization"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Weighted Vest Push-Up",
+      "normalized": "weighted vest push-up",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:weight_vest"
+      ],
+      "equipment": [],
+      "base": "Secondary press",
+      "seedKey": "chest_press",
+      "priority": 2,
+      "workoutKeys": [
+        "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Weighted Vest Squat",
+      "normalized": "weighted vest squat",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:weight_vest"
+      ],
+      "equipment": [],
+      "base": "Squat volume",
+      "seedKey": "squat",
+      "priority": 1,
+      "workoutKeys": [
+        "lower_hypertrophy"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
       "name": "Wide Push-Up",
       "normalized": "wide push-up",
       "coverage": "exact",
@@ -3359,6 +5040,27 @@
       "priority": 2,
       "workoutKeys": [
         "chest"
+      ],
+      "isSupersetComponent": false,
+      "alternativeOnly": false,
+      "substitutedBy": null
+    },
+    {
+      "name": "Wide-Grip Lat Pulldown",
+      "normalized": "wide-grip lat pulldown",
+      "coverage": "missing",
+      "mediaId": null,
+      "mediaTier": null,
+      "sources": [
+        "api/equipment-exercises.js:CURATED:lat_machine"
+      ],
+      "equipment": [],
+      "base": "Vertical pull",
+      "seedKey": "pullup",
+      "priority": 1,
+      "workoutKeys": [
+        "back",
+        "upper_specialization"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,

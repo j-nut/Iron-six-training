@@ -135,7 +135,12 @@ function main() {
   // ---------------------------------------------------------------------
   const apiSource = fs.readFileSync(rel('api', 'equipment-exercises.js'), 'utf8');
   const SLOTS = extractObjectLiteral(apiSource, 'SLOTS') || {};
-  const CURATED = extractObjectLiteral(apiSource, 'CURATED') || {};
+  // The curated equipment library moved out of the API into a file the picker shares with it,
+  // so read it from there. Falling back to the API source keeps this working if it moves back.
+  const CURATED = fs.existsSync(rel('equipment-exercise-library.js'))
+    ? require(rel('equipment-exercise-library.js')).curated
+    : (extractObjectLiteral(apiSource, 'CURATED') || {});
+  if (!Object.keys(CURATED).length) throw Error('curated equipment library is empty - the audit would silently under-report coverage');
 
   // ---------------------------------------------------------------------
   // 3. Build the canonical exercise map. Every name we see -- from raw

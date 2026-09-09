@@ -39,6 +39,7 @@
         <button type="button" class="coach-chip">Are my suggested weights right?</button>
         <button type="button" class="coach-chip">Give me warm-up sets</button>
         <button type="button" class="coach-chip">Do I need a deload?</button>
+        <button type="button" class="coach-chip">Analyze my equipment and what to add next</button>
         <button type="button" class="coach-chip">Show me a demo of my first exercise</button>
       </div>
       <div class="coach-chat" id="coachChat"></div>
@@ -125,6 +126,21 @@
     return (SWAPS[exercise.base] || []).map(x => optionObject(x, exercise.base)).filter(o => exerciseAvailable(u,o)).filter(o => o.name !== exercise.name);
   }
 
+  // Deterministic coverage, computed locally from the real workout builders. The model gets
+  // measured gaps to reason about instead of guessing what a named piece of gear can do.
+  function equipmentCoverage(u){
+    const analysis=window.IronSixEquipmentCoverage?.analyze(u);
+    if(!analysis)return null;
+    return {
+      score:analysis.score,slotsCovered:analysis.healthy,slotsTotal:analysis.total,
+      emptySlots:analysis.rows.filter(r=>r.min===0).map(r=>({workout:r.workoutName,movement:r.base})).slice(0,12),
+      thinSlots:analysis.rows.filter(r=>r.min===1).map(r=>({workout:r.workoutName,movement:r.base,only:r.options[0]})).slice(0,12),
+      wouldHelp:analysis.gaps.flatMap(g=>g.suggestions.map(s=>s.name)).filter((n,i,a)=>a.indexOf(n)===i).slice(0,8),
+      unrecognized:analysis.equipment.filter(e=>e.custom&&!e.recognised).map(e=>e.name),
+      conditioningOnly:analysis.equipment.filter(e=>e.conditioning).map(e=>e.name)
+    };
+  }
+
   function coachContext() {
     const u = activeUser();
     const workout = finalWorkout(u);
@@ -132,6 +148,7 @@
     const today = Object.entries(u.today || {}).map(([key,s]) => ({ key, weight:s.weight, reps:s.reps, rir:s.rir, done:!!s.done })).filter(x=>x.weight||x.reps||x.done).slice(-30);
     return {
       profile:{ name:u.name, bodyWeight:u.weight, age:u.age, heightIn:u.heightIn, trainingLevel:u.trainingLevel, equipment:[...EQUIPMENT.filter(([k])=>has(u,k)).map(([,label])=>label),...(u.customEquipment||[])], capacities:u.capacities, workoutMinutes:u.workoutMinutes },
+      equipmentCoverage:equipmentCoverage(u),
       readiness:u.readiness,
       workout:workout.map((e,i)=>({ index:i, name:e.name, prescription:e.prescription, base:e.base, suggested:suggestedLoadObject(u,e,i) })),
       today,
@@ -258,6 +275,20 @@
     saveData();renderAll();toast(`${clean} removed`);
   }
 
+  // Says what actually happened. Art is no longer required for an exercise to be added, so this
+  // must not claim everything is illustrated -- the ones without art show the app's own labelled
+  // "demo coming soon" card, and the count says so.
+  function generationMessage(incoming,output){
+    if(!incoming.length){
+      const unmatched=Array.isArray(output?.unmatched)?output.unmatched:[];
+      if(unmatched.length&&unmatched.every(item=>item.conditioning))return 'Saved. Conditioning equipment does not add strength exercises.';
+      return 'Saved. No exercises are catalogued for this equipment yet.';
+    }
+    const source=output?.model&&output.model!=='curated equipment library'?`chosen by ${output.model}`:'from the curated library';
+    const pending=incoming.filter(exercise=>exercise.illustrated===false).length;
+    return `${incoming.length} exercise option${incoming.length===1?'':'s'} added ${source}.`+(pending?` ${pending} show a demo-coming-soon card until art lands.`:'');
+  }
+
   window.refreshEquipmentExercises=async function refreshEquipmentExercises(user,equipment){
     const requested=(equipment||[]).map(item=>({...item,id:item.id||equipmentId(item)})).slice(0,8);
     if(!requested.length)return;
@@ -273,7 +304,7 @@
       const ids=new Set(requested.map(item=>item.id)),incoming=(Array.isArray(output.exercises)?output.exercises:[]).filter(x=>x&&ids.has(String(x.equipmentId))&&x.name&&x.base&&x.seedKey).slice(0,40);
       target.program.generatedExercises=[...(target.program.generatedExercises||[]).filter(x=>!ids.has(String(x.equipmentId))),...incoming].slice(0,80);
       pruneGeneratedExercises(target);
-      target.program.equipmentGeneration={state:'ready',equipment:names,message:incoming.length?`${incoming.length} illustrated exercise option${incoming.length===1?'':'s'} added by ${output.model||'Groq'}.`:'Equipment saved. No verified illustrations are available for its exercise options yet.',updatedAt:Date.now(),model:output.model||null};
+      target.program.equipmentGeneration={state:'ready',equipment:names,message:generationMessage(incoming,output),updatedAt:Date.now(),model:output.model||null};
       saveData();if(activeUser().id===userId)renderAll();
     }catch(error){
       if(accountScope!==window.ironSixAccountScope)return;
