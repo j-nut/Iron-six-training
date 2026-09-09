@@ -275,6 +275,20 @@
     saveData();renderAll();toast(`${clean} removed`);
   }
 
+  // Says what actually happened. Art is no longer required for an exercise to be added, so this
+  // must not claim everything is illustrated -- the ones without art show the app's own labelled
+  // "demo coming soon" card, and the count says so.
+  function generationMessage(incoming,output){
+    if(!incoming.length){
+      const unmatched=Array.isArray(output?.unmatched)?output.unmatched:[];
+      if(unmatched.length&&unmatched.every(item=>item.conditioning))return 'Saved. Conditioning equipment does not add strength exercises.';
+      return 'Saved. No exercises are catalogued for this equipment yet.';
+    }
+    const source=output?.model&&output.model!=='curated equipment library'?`chosen by ${output.model}`:'from the curated library';
+    const pending=incoming.filter(exercise=>exercise.illustrated===false).length;
+    return `${incoming.length} exercise option${incoming.length===1?'':'s'} added ${source}.`+(pending?` ${pending} show a demo-coming-soon card until art lands.`:'');
+  }
+
   window.refreshEquipmentExercises=async function refreshEquipmentExercises(user,equipment){
     const requested=(equipment||[]).map(item=>({...item,id:item.id||equipmentId(item)})).slice(0,8);
     if(!requested.length)return;
@@ -290,7 +304,7 @@
       const ids=new Set(requested.map(item=>item.id)),incoming=(Array.isArray(output.exercises)?output.exercises:[]).filter(x=>x&&ids.has(String(x.equipmentId))&&x.name&&x.base&&x.seedKey).slice(0,40);
       target.program.generatedExercises=[...(target.program.generatedExercises||[]).filter(x=>!ids.has(String(x.equipmentId))),...incoming].slice(0,80);
       pruneGeneratedExercises(target);
-      target.program.equipmentGeneration={state:'ready',equipment:names,message:incoming.length?`${incoming.length} illustrated exercise option${incoming.length===1?'':'s'} added by ${output.model||'Groq'}.`:'Equipment saved. No verified illustrations are available for its exercise options yet.',updatedAt:Date.now(),model:output.model||null};
+      target.program.equipmentGeneration={state:'ready',equipment:names,message:generationMessage(incoming,output),updatedAt:Date.now(),model:output.model||null};
       saveData();if(activeUser().id===userId)renderAll();
     }catch(error){
       if(accountScope!==window.ironSixAccountScope)return;

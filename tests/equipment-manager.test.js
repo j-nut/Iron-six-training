@@ -186,6 +186,39 @@ test('gap suggestions add the equipment they recommend',()=>{
   }finally{a.close()}
 });
 
+// Media is no longer required for an exercise to be added, so the confirmation must not go on
+// claiming everything is illustrated. It said "18 illustrated exercise options added" for
+// eighteen exercises that had no art at all.
+test('the confirmation reports what was actually added, including missing art',async()=>{
+  const a=app();
+  try{
+    a.w.fetch=async()=>({ok:true,json:async()=>({model:'curated equipment library',unmatched:[],exercises:[
+      {name:'Kettlebell Swing',base:'Hip hinge',seedKey:'hinge',prescription:'3 × 6–10',sets:3,tag:'Hamstrings',priority:2,workoutKeys:['lower_strength'],requires:[],requiresCustom:['Kettlebells'],equipmentName:'Kettlebells',equipmentId:'custom:kettlebells',illustrated:false,source:'curated'},
+      {name:'Kettlebell Goblet Squat',base:'Primary squat',seedKey:'squat',prescription:'4 × 6–10',sets:4,tag:'Priority',priority:1,workoutKeys:['lower_strength'],requires:[],requiresCustom:['Kettlebells'],equipmentName:'Kettlebells',equipmentId:'custom:kettlebells',illustrated:true,source:'curated'}]})});
+    a.run(bodyweight);
+    a.open();
+    a.item('kettlebells').click();
+    await new Promise(resolve=>setTimeout(resolve,900));
+    const status=a.json('activeUser().program.equipmentGeneration.message');
+    assert(!/illustrated/.test(status),`the confirmation must not claim art it does not have: "${status}"`);
+    assert(/2 exercise options added/.test(status),status);
+    assert(/1 show/.test(status),`the count of unillustrated movements must be reported: "${status}"`);
+  }finally{a.close()}
+});
+
+test('conditioning equipment is confirmed honestly rather than reported as a failure',async()=>{
+  const a=app();
+  try{
+    a.w.fetch=async()=>({ok:true,json:async()=>({model:'curated equipment library',exercises:[],unmatched:[{id:'custom:rowing machine',name:'Rowing machine',conditioning:true}]})});
+    a.run(bodyweight);
+    a.open();
+    a.item('rower').click();
+    await new Promise(resolve=>setTimeout(resolve,900));
+    assert.match(a.json('activeUser().program.equipmentGeneration.message'),/Conditioning equipment does not add strength exercises/);
+    assert.deepEqual(a.json('activeUser().customEquipment'),['Rowing machine'],'conditioning gear is still recorded');
+  }finally{a.close()}
+});
+
 test('equipment names are escaped, not injected, when rendered',()=>{
   const a=app();
   try{
