@@ -28,15 +28,21 @@ await Promise.all(Array.from({length: 6}, async () => {
   }
 }));
 
-// First-party exercise art is generated from committed source in this repo, so it ships
-// directly rather than through the third-party image checksum manifest above.
-const { readdir } = await import('node:fs/promises');
+// First-party approved illustrations. These are ours rather than a third-party download, but
+// they still ship through a committed checksum manifest so a corrupted or swapped asset fails
+// the build instead of reaching a user's phone.
 let artCount = 0;
-try {
-  const artFiles = (await readdir(resolve(root, 'assets/exercise-art'))).filter(f => /^[a-z0-9-]+\.svg$/.test(f));
-  await mkdir(resolve(out, 'assets/exercise-art'), { recursive: true });
-  for (const file of artFiles) { await cp(resolve(root, 'assets/exercise-art', file), resolve(out, 'assets/exercise-art', file)); artCount++; }
-} catch (error) { if (error.code !== 'ENOENT') throw error; }
+const illustrationDir = 'assets/exercise-illustrations';
+const illustrations = JSON.parse(await readFile(resolve(root, illustrationDir, 'manifest.json'), 'utf8'));
+await mkdir(resolve(out, illustrationDir), { recursive: true });
+for (const row of illustrations) {
+  if (!/^[a-z0-9-]+\.webp$/.test(row.filename) || !/^[a-f0-9]{64}$/.test(row.sha256)) throw Error('Invalid illustration manifest entry');
+  const bytes = await readFile(resolve(root, illustrationDir, row.filename));
+  if (createHash('sha256').update(bytes).digest('hex') !== row.sha256) throw Error(`Illustration checksum mismatch: ${row.filename}`);
+  await writeFile(resolve(out, illustrationDir, row.filename), bytes);
+  artCount++;
+}
+await cp(resolve(root, illustrationDir, 'manifest.json'), resolve(out, illustrationDir, 'manifest.json'));
 
 const html = await readFile(resolve(root, 'index.html'), 'utf8');
 const scripts = [...html.matchAll(/<script src="([^"?]+)(?:\?[^" ]*)?"/g)].map(match => match[1]);
@@ -46,4 +52,4 @@ for (const file of files) { if (!/^[a-zA-Z0-9_.-]+$/.test(file) || file.includes
 const checksums = {};
 for (const file of files) checksums[file] = createHash('sha256').update(await readFile(resolve(out,file))).digest('hex');
 await writeFile(resolve(out,'release.json'), JSON.stringify({files:checksums,images:manifest.files},null,2)+'\n');
-console.log(`Web release ready: ${files.length} public files (${runtimeScripts.length} runtime-loaded), ${Object.keys(manifest.files).length} verified exercise images, ${artCount} Iron Six art frames.`);
+console.log(`Web release ready: ${files.length} public files (${runtimeScripts.length} runtime-loaded), ${Object.keys(manifest.files).length} verified exercise images, ${artCount} verified Iron Six illustrations.`);

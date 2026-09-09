@@ -2,286 +2,6 @@
 (function(root){
 const media=[
  {
-  "id": "ironsix-back-squat",
-  "tier": "schematic",
-  "style": "ironsix-schematic-v1",
-  "status": "schematic",
-  "title": "Barbell Back Squat",
-  "thumbnail": "assets/exercise-art/back-squat-start.svg",
-  "start": "assets/exercise-art/back-squat-start.svg",
-  "finish": "assets/exercise-art/back-squat-finish.svg",
-  "motion": [
-   "assets/exercise-art/back-squat-start.svg",
-   "assets/exercise-art/back-squat-finish.svg"
-  ],
-  "muscles": [
-   "quads",
-   "glutes"
-  ],
-  "cues": [
-   "Brace before you unrack, not after.",
-   "Knees track over the toes.",
-   "Descend until the hip crease passes the knee if you can hold position."
-  ],
-  "mistake": "Letting the chest drop faster than the hips out of the bottom.",
-  "author": "Iron Six",
-  "license": "First-party",
-  "licenseUrl": "",
-  "source": "tools/exercise-art/poses.mjs"
- },
- {
-  "id": "ironsix-band-row",
-  "tier": "schematic",
-  "style": "ironsix-schematic-v1",
-  "status": "schematic",
-  "title": "Band Row",
-  "thumbnail": "assets/exercise-art/band-row-start.svg",
-  "start": "assets/exercise-art/band-row-start.svg",
-  "finish": "assets/exercise-art/band-row-finish.svg",
-  "motion": [
-   "assets/exercise-art/band-row-start.svg",
-   "assets/exercise-art/band-row-finish.svg"
-  ],
-  "muscles": [
-   "back",
-   "biceps"
-  ],
-  "cues": [
-   "Set tension before the first rep.",
-   "Lead with the elbows.",
-   "Pause briefly at the squeeze."
-  ],
-  "mistake": "Letting the shoulders roll forward on the return.",
-  "author": "Iron Six",
-  "license": "First-party",
-  "licenseUrl": "",
-  "source": "tools/exercise-art/poses.mjs"
- },
- {
-  "id": "ironsix-bench-press",
-  "tier": "schematic",
-  "style": "ironsix-schematic-v1",
-  "status": "schematic",
-  "title": "Barbell Bench Press",
-  "thumbnail": "assets/exercise-art/bench-press-start.svg",
-  "start": "assets/exercise-art/bench-press-start.svg",
-  "finish": "assets/exercise-art/bench-press-finish.svg",
-  "motion": [
-   "assets/exercise-art/bench-press-start.svg",
-   "assets/exercise-art/bench-press-finish.svg"
-  ],
-  "muscles": [
-   "chest",
-   "triceps"
-  ],
-  "cues": [
-   "Set the shoulder blades down and back.",
-   "Keep the forearms vertical at the bottom.",
-   "Drive the feet into the floor."
-  ],
-  "mistake": "Bouncing the bar off the chest.",
-  "author": "Iron Six",
-  "license": "First-party",
-  "licenseUrl": "",
-  "source": "tools/exercise-art/poses.mjs"
- },
- {
-  "id": "ironsix-bent-over-row",
-  "tier": "schematic",
-  "style": "ironsix-schematic-v1",
-  "status": "schematic",
-  "title": "Barbell Row",
-  "thumbnail": "assets/exercise-art/bent-over-row-start.svg",
-  "start": "assets/exercise-art/bent-over-row-start.svg",
-  "finish": "assets/exercise-art/bent-over-row-finish.svg",
-  "motion": [
-   "assets/exercise-art/bent-over-row-start.svg",
-   "assets/exercise-art/bent-over-row-finish.svg"
-  ],
-  "muscles": [
-   "back",
-   "biceps"
-  ],
-  "cues": [
-   "Hinge until the torso is near parallel.",
-   "Pull to the lower ribs.",
-   "Keep the neck in line with the spine."
-  ],
-  "mistake": "Standing up into the pull to move heavier weight.",
-  "author": "Iron Six",
-  "license": "First-party",
-  "licenseUrl": "",
-  "source": "tools/exercise-art/poses.mjs"
- },
- {
-  "id": "ironsix-bodyweight-squat",
-  "tier": "schematic",
-  "style": "ironsix-schematic-v1",
-  "status": "schematic",
-  "title": "Bodyweight Squat",
-  "thumbnail": "assets/exercise-art/bodyweight-squat-start.svg",
-  "start": "assets/exercise-art/bodyweight-squat-start.svg",
-  "finish": "assets/exercise-art/bodyweight-squat-finish.svg",
-  "motion": [
-   "assets/exercise-art/bodyweight-squat-start.svg",
-   "assets/exercise-art/bodyweight-squat-finish.svg"
-  ],
-  "muscles": [
-   "quads",
-   "glutes"
-  ],
-  "cues": [
-   "Sit between the hips, not straight down.",
-   "Keep full-foot pressure.",
-   "Stand tall without locking hard."
-  ],
-  "mistake": "Heels lifting at the bottom.",
-  "author": "Iron Six",
-  "license": "First-party",
-  "licenseUrl": "",
-  "source": "tools/exercise-art/poses.mjs"
- },
- {
-  "id": "ironsix-goblet-squat",
-  "tier": "schematic",
-  "style": "ironsix-schematic-v1",
-  "status": "schematic",
-  "title": "Goblet Squat",
-  "thumbnail": "assets/exercise-art/goblet-squat-start.svg",
-  "start": "assets/exercise-art/goblet-squat-start.svg",
-  "finish": "assets/exercise-art/goblet-squat-finish.svg",
-  "motion": [
-   "assets/exercise-art/goblet-squat-start.svg",
-   "assets/exercise-art/goblet-squat-finish.svg"
-  ],
-  "muscles": [
-   "quads",
-   "glutes"
-  ],
-  "cues": [
-   "Hold the bell tight to the chest.",
-   "Elbows travel inside the knees.",
-   "Keep the torso tall the whole way down."
-  ],
-  "mistake": "Letting the bell drift away from the body.",
-  "author": "Iron Six",
-  "license": "First-party",
-  "licenseUrl": "",
-  "source": "tools/exercise-art/poses.mjs"
- },
- {
-  "id": "ironsix-overhead-press",
-  "tier": "schematic",
-  "style": "ironsix-schematic-v1",
-  "status": "schematic",
-  "title": "Barbell Overhead Press",
-  "thumbnail": "assets/exercise-art/overhead-press-start.svg",
-  "start": "assets/exercise-art/overhead-press-start.svg",
-  "finish": "assets/exercise-art/overhead-press-finish.svg",
-  "motion": [
-   "assets/exercise-art/overhead-press-start.svg",
-   "assets/exercise-art/overhead-press-finish.svg"
-  ],
-  "muscles": [
-   "shoulders",
-   "triceps"
-  ],
-  "cues": [
-   "Squeeze the glutes so the ribs stay down.",
-   "Move the head back, then through, as the bar clears.",
-   "Finish with the bar over the mid-foot."
-  ],
-  "mistake": "Leaning back to make the lockout instead of pressing.",
-  "author": "Iron Six",
-  "license": "First-party",
-  "licenseUrl": "",
-  "source": "tools/exercise-art/poses.mjs"
- },
- {
-  "id": "ironsix-pull-up",
-  "tier": "schematic",
-  "style": "ironsix-schematic-v1",
-  "status": "schematic",
-  "title": "Pull-Up",
-  "thumbnail": "assets/exercise-art/pull-up-start.svg",
-  "start": "assets/exercise-art/pull-up-start.svg",
-  "finish": "assets/exercise-art/pull-up-finish.svg",
-  "motion": [
-   "assets/exercise-art/pull-up-start.svg",
-   "assets/exercise-art/pull-up-finish.svg"
-  ],
-  "muscles": [
-   "back",
-   "biceps"
-  ],
-  "cues": [
-   "Start from a full hang.",
-   "Pull the elbows down toward the ribs.",
-   "Control the descent instead of dropping."
-  ],
-  "mistake": "Kipping the hips to finish the rep.",
-  "author": "Iron Six",
-  "license": "First-party",
-  "licenseUrl": "",
-  "source": "tools/exercise-art/poses.mjs"
- },
- {
-  "id": "ironsix-push-up",
-  "tier": "schematic",
-  "style": "ironsix-schematic-v1",
-  "status": "schematic",
-  "title": "Push-Up",
-  "thumbnail": "assets/exercise-art/push-up-start.svg",
-  "start": "assets/exercise-art/push-up-start.svg",
-  "finish": "assets/exercise-art/push-up-finish.svg",
-  "motion": [
-   "assets/exercise-art/push-up-start.svg",
-   "assets/exercise-art/push-up-finish.svg"
-  ],
-  "muscles": [
-   "chest",
-   "triceps"
-  ],
-  "cues": [
-   "Hands under the shoulders.",
-   "Hold one line from ear to ankle.",
-   "Lower under control to a consistent depth."
-  ],
-  "mistake": "Hips sagging before the chest arrives.",
-  "author": "Iron Six",
-  "license": "First-party",
-  "licenseUrl": "",
-  "source": "tools/exercise-art/poses.mjs"
- },
- {
-  "id": "ironsix-romanian-deadlift",
-  "tier": "schematic",
-  "style": "ironsix-schematic-v1",
-  "status": "schematic",
-  "title": "Barbell Romanian Deadlift",
-  "thumbnail": "assets/exercise-art/romanian-deadlift-start.svg",
-  "start": "assets/exercise-art/romanian-deadlift-start.svg",
-  "finish": "assets/exercise-art/romanian-deadlift-finish.svg",
-  "motion": [
-   "assets/exercise-art/romanian-deadlift-start.svg",
-   "assets/exercise-art/romanian-deadlift-finish.svg"
-  ],
-  "muscles": [
-   "hamstrings",
-   "glutes"
-  ],
-  "cues": [
-   "Push the hips back before the bar moves.",
-   "Keep the bar in contact with the thighs.",
-   "Stop when the hamstrings stop lengthening."
-  ],
-  "mistake": "Turning it into a squat by bending the knees early.",
-  "author": "Iron Six",
-  "license": "First-party",
-  "licenseUrl": "",
-  "source": "tools/exercise-art/poses.mjs"
- },
- {
   "id": "legacy-bench-press",
   "tier": "legacy",
   "style": "everkinetic",
@@ -994,6 +714,2253 @@ const media=[
   "license": "CC BY-SA 4.0",
   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
   "source": "https://github.com/everkinetic/data/blob/446bb9a3d0c3beb6b84f7c9d77dfc8af707a2ab6/src/images-web/tricep-dips-using-body-weight-1.png"
+ },
+ {
+  "id": "ironsix-11-2-rep-bodyweight-squat",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "1½-Rep Bodyweight Squat",
+  "thumbnail": "assets/exercise-illustrations/11-5-rep-bodyweight-squat.webp",
+  "start": "assets/exercise-illustrations/11-5-rep-bodyweight-squat.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/11-5-rep-bodyweight-squat.webp"
+  ],
+  "width": 960,
+  "height": 640,
+  "muscles": [
+   "quads",
+   "glutes"
+  ],
+  "cues": [
+   "Sit between the hips, not straight down.",
+   "Keep full-foot pressure.",
+   "Stand tall without locking hard."
+  ],
+  "mistake": "Heels lifting at the bottom.",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-ab-wheel-rollout",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Ab Wheel Rollout",
+  "thumbnail": "assets/exercise-illustrations/ab-wheel-rollout.webp",
+  "start": "assets/exercise-illustrations/ab-wheel-rollout.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/ab-wheel-rollout.webp"
+  ],
+  "width": 960,
+  "height": 480,
+  "muscles": [
+   "core"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-band-chest-fly",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Band Chest Fly",
+  "thumbnail": "assets/exercise-illustrations/band-chest-fly.webp",
+  "start": "assets/exercise-illustrations/band-chest-fly.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/band-chest-fly.webp"
+  ],
+  "width": 960,
+  "height": 640,
+  "muscles": [
+   "chest"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-band-curl",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Band Curl",
+  "thumbnail": "assets/exercise-illustrations/band-curl.webp",
+  "start": "assets/exercise-illustrations/band-curl.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/band-curl.webp"
+  ],
+  "width": 960,
+  "height": 640,
+  "muscles": [
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-band-face-pull",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Band Face Pull",
+  "thumbnail": "assets/exercise-illustrations/band-face-pull.webp",
+  "start": "assets/exercise-illustrations/band-face-pull.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/band-face-pull.webp"
+  ],
+  "width": 960,
+  "height": 640,
+  "muscles": [
+   "shoulders"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-band-hammer-curl",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Band Hammer Curl",
+  "thumbnail": "assets/exercise-illustrations/band-hammer-curl.webp",
+  "start": "assets/exercise-illustrations/band-hammer-curl.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/band-hammer-curl.webp"
+  ],
+  "width": 960,
+  "height": 640,
+  "muscles": [
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-band-hamstring-curl",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Band Hamstring Curl",
+  "thumbnail": "assets/exercise-illustrations/band-hamstring-curl.webp",
+  "start": "assets/exercise-illustrations/band-hamstring-curl.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/band-hamstring-curl.webp"
+  ],
+  "width": 960,
+  "height": 480,
+  "muscles": [
+   "hamstrings"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-band-lat-pulldown",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Band Lat Pulldown",
+  "thumbnail": "assets/exercise-illustrations/band-lat-pulldown.webp",
+  "start": "assets/exercise-illustrations/band-lat-pulldown.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/band-lat-pulldown.webp"
+  ],
+  "width": 960,
+  "height": 640,
+  "muscles": [
+   "back",
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-band-lateral-raise",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Band Lateral Raise",
+  "thumbnail": "assets/exercise-illustrations/band-lateral-raise.webp",
+  "start": "assets/exercise-illustrations/band-lateral-raise.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/band-lateral-raise.webp"
+  ],
+  "width": 960,
+  "height": 640,
+  "muscles": [
+   "shoulders"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-band-pallof-press",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Band Pallof Press",
+  "thumbnail": "assets/exercise-illustrations/band-pallof-press.webp",
+  "start": "assets/exercise-illustrations/band-pallof-press.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/band-pallof-press.webp"
+  ],
+  "width": 960,
+  "height": 640,
+  "muscles": [
+   "core"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-band-pressdown",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Band Pressdown",
+  "thumbnail": "assets/exercise-illustrations/band-pressdown.webp",
+  "start": "assets/exercise-illustrations/band-pressdown.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/band-pressdown.webp"
+  ],
+  "width": 960,
+  "height": 640,
+  "muscles": [
+   "triceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-band-row",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Band Row",
+  "thumbnail": "assets/exercise-illustrations/band-row.webp",
+  "start": "assets/exercise-illustrations/band-row.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/band-row.webp"
+  ],
+  "width": 960,
+  "height": 640,
+  "muscles": [
+   "back",
+   "biceps"
+  ],
+  "cues": [
+   "Set tension before the first rep.",
+   "Lead with the elbows.",
+   "Pause briefly at the squeeze."
+  ],
+  "mistake": "Letting the shoulders roll forward on the return.",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-band-straight-arm-pulldown",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Band Straight-Arm Pulldown",
+  "thumbnail": "assets/exercise-illustrations/band-straight-arm-pulldown.webp",
+  "start": "assets/exercise-illustrations/band-straight-arm-pulldown.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/band-straight-arm-pulldown.webp"
+  ],
+  "width": 960,
+  "height": 640,
+  "muscles": [
+   "back",
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-banded-hip-thrust",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Banded Hip Thrust",
+  "thumbnail": "assets/exercise-illustrations/banded-hip-thrust.webp",
+  "start": "assets/exercise-illustrations/banded-hip-thrust.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/banded-hip-thrust.webp"
+  ],
+  "width": 960,
+  "height": 400,
+  "muscles": [
+   "hamstrings",
+   "glutes"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-barbell-back-squat",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Barbell Back Squat",
+  "thumbnail": "assets/exercise-illustrations/barbell-back-squat.webp",
+  "start": "assets/exercise-illustrations/barbell-back-squat.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/barbell-back-squat.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "quads",
+   "glutes"
+  ],
+  "cues": [
+   "Brace before you unrack, not after.",
+   "Knees track over the toes.",
+   "Descend until the hip crease passes the knee if you can hold position."
+  ],
+  "mistake": "Letting the chest drop faster than the hips out of the bottom.",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-barbell-bench-press",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Barbell Bench Press",
+  "thumbnail": "assets/exercise-illustrations/barbell-bench-press.webp",
+  "start": "assets/exercise-illustrations/barbell-bench-press.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/barbell-bench-press.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "chest",
+   "triceps",
+   "shoulders"
+  ],
+  "cues": [
+   "Set the shoulder blades down and back.",
+   "Keep the forearms vertical at the bottom.",
+   "Drive the feet into the floor."
+  ],
+  "mistake": "Bouncing the bar off the chest.",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-barbell-box-squat",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Barbell Box Squat",
+  "thumbnail": "assets/exercise-illustrations/barbell-box-squat.webp",
+  "start": "assets/exercise-illustrations/barbell-box-squat.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/barbell-box-squat.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "quads",
+   "glutes"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-barbell-curl",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Barbell Curl",
+  "thumbnail": "assets/exercise-illustrations/barbell-curl.webp",
+  "start": "assets/exercise-illustrations/barbell-curl.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/barbell-curl.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-barbell-good-morning",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Barbell Good Morning",
+  "thumbnail": "assets/exercise-illustrations/barbell-good-morning.webp",
+  "start": "assets/exercise-illustrations/barbell-good-morning.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/barbell-good-morning.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "hamstrings",
+   "glutes"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-barbell-hip-thrust",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Barbell Hip Thrust",
+  "thumbnail": "assets/exercise-illustrations/barbell-hip-thrust.webp",
+  "start": "assets/exercise-illustrations/barbell-hip-thrust.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/barbell-hip-thrust.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "hamstrings",
+   "glutes"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-barbell-overhead-press",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Barbell Overhead Press",
+  "thumbnail": "assets/exercise-illustrations/barbell-overhead-press.webp",
+  "start": "assets/exercise-illustrations/barbell-overhead-press.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/barbell-overhead-press.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "shoulders",
+   "triceps"
+  ],
+  "cues": [
+   "Squeeze the glutes so the ribs stay down.",
+   "Move the head back, then through, as the bar clears.",
+   "Finish with the bar over the mid-foot."
+  ],
+  "mistake": "Leaning back to make the lockout instead of pressing.",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-barbell-romanian-deadlift",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Barbell Romanian Deadlift",
+  "thumbnail": "assets/exercise-illustrations/barbell-romanian-deadlift.webp",
+  "start": "assets/exercise-illustrations/barbell-romanian-deadlift.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/barbell-romanian-deadlift.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "hamstrings",
+   "glutes"
+  ],
+  "cues": [
+   "Push the hips back before the bar moves.",
+   "Keep the bar in contact with the thighs.",
+   "Stop when the hamstrings stop lengthening."
+  ],
+  "mistake": "Turning it into a squat by bending the knees early.",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-barbell-row",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Barbell Row",
+  "thumbnail": "assets/exercise-illustrations/barbell-row.webp",
+  "start": "assets/exercise-illustrations/barbell-row.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/barbell-row.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "back",
+   "biceps"
+  ],
+  "cues": [
+   "Hinge until the torso is near parallel.",
+   "Pull to the lower ribs.",
+   "Keep the neck in line with the spine."
+  ],
+  "mistake": "Standing up into the pull to move heavier weight.",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-barbell-standing-calf-raise",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Barbell Standing Calf Raise",
+  "thumbnail": "assets/exercise-illustrations/barbell-standing-calf-raise.webp",
+  "start": "assets/exercise-illustrations/barbell-standing-calf-raise.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/barbell-standing-calf-raise.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "calves"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-bodyweight-curl-isometric",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Bodyweight Curl Isometric",
+  "thumbnail": "assets/exercise-illustrations/bodyweight-curl-isometric.webp",
+  "start": "assets/exercise-illustrations/bodyweight-curl-isometric.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/bodyweight-curl-isometric.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "biceps",
+   "triceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-bodyweight-split-squat",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Bodyweight Split Squat",
+  "thumbnail": "assets/exercise-illustrations/bodyweight-split-squat.webp",
+  "start": "assets/exercise-illustrations/bodyweight-split-squat.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/bodyweight-split-squat.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "quads",
+   "glutes"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-chest-supported-dumbbell-row",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Chest-Supported Dumbbell Row",
+  "thumbnail": "assets/exercise-illustrations/chest-supported-dumbbell-row.webp",
+  "start": "assets/exercise-illustrations/chest-supported-dumbbell-row.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/chest-supported-dumbbell-row.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "back",
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-chin-up",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Chin-Up",
+  "thumbnail": "assets/exercise-illustrations/chin-up.webp",
+  "start": "assets/exercise-illustrations/chin-up.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/chin-up.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "back",
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-close-grip-bench-press",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Close-Grip Bench Press",
+  "thumbnail": "assets/exercise-illustrations/close-grip-bench-press.webp",
+  "start": "assets/exercise-illustrations/close-grip-bench-press.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/close-grip-bench-press.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "triceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-close-grip-push-up",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Close-Grip Push-Up",
+  "thumbnail": "assets/exercise-illustrations/close-grip-push-up.webp",
+  "start": "assets/exercise-illustrations/close-grip-push-up.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/close-grip-push-up.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "triceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-cyclist-squat",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Cyclist Squat",
+  "thumbnail": "assets/exercise-illustrations/cyclist-squat.webp",
+  "start": "assets/exercise-illustrations/cyclist-squat.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/cyclist-squat.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "quads",
+   "glutes"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-diamond-push-up",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Diamond Push-Up",
+  "thumbnail": "assets/exercise-illustrations/diamond-push-up.webp",
+  "start": "assets/exercise-illustrations/diamond-push-up.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/diamond-push-up.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "triceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-dumbbell-bench-press",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Dumbbell Bench Press",
+  "thumbnail": "assets/exercise-illustrations/dumbbell-bench-press.webp",
+  "start": "assets/exercise-illustrations/dumbbell-bench-press.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/dumbbell-bench-press.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "chest",
+   "triceps",
+   "shoulders"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-dumbbell-bulgarian-split-squat",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Dumbbell Bulgarian Split Squat",
+  "thumbnail": "assets/exercise-illustrations/dumbbell-bulgarian-split-squat.webp",
+  "start": "assets/exercise-illustrations/dumbbell-bulgarian-split-squat.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/dumbbell-bulgarian-split-squat.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "quads",
+   "glutes"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-dumbbell-curl",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Dumbbell Curl",
+  "thumbnail": "assets/exercise-illustrations/dumbbell-curl.webp",
+  "start": "assets/exercise-illustrations/dumbbell-curl.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/dumbbell-curl.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-dumbbell-flat-press",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Dumbbell Flat Press",
+  "thumbnail": "assets/exercise-illustrations/dumbbell-flat-press.webp",
+  "start": "assets/exercise-illustrations/dumbbell-flat-press.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/dumbbell-flat-press.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "chest",
+   "triceps",
+   "shoulders"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-dumbbell-fly",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Dumbbell Fly",
+  "thumbnail": "assets/exercise-illustrations/dumbbell-fly.webp",
+  "start": "assets/exercise-illustrations/dumbbell-fly.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/dumbbell-fly.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "chest"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-dumbbell-front-squat",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Dumbbell Front Squat",
+  "thumbnail": "assets/exercise-illustrations/dumbbell-front-squat.webp",
+  "start": "assets/exercise-illustrations/dumbbell-front-squat.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/dumbbell-front-squat.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "quads",
+   "glutes"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-dumbbell-hammer-curl",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Dumbbell Hammer Curl",
+  "thumbnail": "assets/exercise-illustrations/dumbbell-hammer-curl.webp",
+  "start": "assets/exercise-illustrations/dumbbell-hammer-curl.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/dumbbell-hammer-curl.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-dumbbell-hip-thrust",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Dumbbell Hip Thrust",
+  "thumbnail": "assets/exercise-illustrations/dumbbell-hip-thrust.webp",
+  "start": "assets/exercise-illustrations/dumbbell-hip-thrust.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/dumbbell-hip-thrust.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "hamstrings",
+   "glutes"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-dumbbell-lateral-raise",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Dumbbell Lateral Raise",
+  "thumbnail": "assets/exercise-illustrations/dumbbell-lateral-raise.webp",
+  "start": "assets/exercise-illustrations/dumbbell-lateral-raise.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/dumbbell-lateral-raise.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "shoulders"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-dumbbell-pullover",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Dumbbell Pullover",
+  "thumbnail": "assets/exercise-illustrations/dumbbell-pullover.webp",
+  "start": "assets/exercise-illustrations/dumbbell-pullover.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/dumbbell-pullover.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "back",
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-dumbbell-rear-delt-fly",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Dumbbell Rear-Delt Fly",
+  "thumbnail": "assets/exercise-illustrations/dumbbell-rear-delt-fly.webp",
+  "start": "assets/exercise-illustrations/dumbbell-rear-delt-fly.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/dumbbell-rear-delt-fly.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "shoulders"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-dumbbell-rear-delt-row",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Dumbbell Rear-Delt Row",
+  "thumbnail": "assets/exercise-illustrations/dumbbell-rear-delt-row.webp",
+  "start": "assets/exercise-illustrations/dumbbell-rear-delt-row.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/dumbbell-rear-delt-row.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "shoulders"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-dumbbell-romanian-deadlift",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Dumbbell Romanian Deadlift",
+  "thumbnail": "assets/exercise-illustrations/dumbbell-romanian-deadlift.webp",
+  "start": "assets/exercise-illustrations/dumbbell-romanian-deadlift.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/dumbbell-romanian-deadlift.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "hamstrings",
+   "glutes"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-dumbbell-shoulder-press",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Dumbbell Shoulder Press",
+  "thumbnail": "assets/exercise-illustrations/dumbbell-shoulder-press.webp",
+  "start": "assets/exercise-illustrations/dumbbell-shoulder-press.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/dumbbell-shoulder-press.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "shoulders",
+   "triceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-dumbbell-skull-crusher",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Dumbbell Skull Crusher",
+  "thumbnail": "assets/exercise-illustrations/dumbbell-skull-crusher.webp",
+  "start": "assets/exercise-illustrations/dumbbell-skull-crusher.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/dumbbell-skull-crusher.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "triceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-feet-elevated-push-up",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Feet-Elevated Push-Up",
+  "thumbnail": "assets/exercise-illustrations/feet-elevated-push-up.webp",
+  "start": "assets/exercise-illustrations/feet-elevated-push-up.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/feet-elevated-push-up.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "chest",
+   "triceps",
+   "shoulders"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-goblet-squat",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Goblet Squat",
+  "thumbnail": "assets/exercise-illustrations/goblet-squat.webp",
+  "start": "assets/exercise-illustrations/goblet-squat.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/goblet-squat.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "quads",
+   "glutes"
+  ],
+  "cues": [
+   "Hold the bell tight to the chest.",
+   "Elbows travel inside the knees.",
+   "Keep the torso tall the whole way down."
+  ],
+  "mistake": "Letting the bell drift away from the body.",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-half-kneeling-landmine-press",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Half-Kneeling Landmine Press",
+  "thumbnail": "assets/exercise-illustrations/half-kneeling-landmine-press.webp",
+  "start": "assets/exercise-illustrations/half-kneeling-landmine-press.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/half-kneeling-landmine-press.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "shoulders",
+   "triceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-hamstring-walkout",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Hamstring Walkout",
+  "thumbnail": "assets/exercise-illustrations/hamstring-walkout.webp",
+  "start": "assets/exercise-illustrations/hamstring-walkout.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/hamstring-walkout.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "hamstrings"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-hard-style-plank",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Hard-Style Plank",
+  "thumbnail": "assets/exercise-illustrations/hard-style-plank.webp",
+  "start": "assets/exercise-illustrations/hard-style-plank.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/hard-style-plank.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "core"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-high-bar-back-squat",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "High-Bar Back Squat",
+  "thumbnail": "assets/exercise-illustrations/high-bar-back-squat.webp",
+  "start": "assets/exercise-illustrations/high-bar-back-squat.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/high-bar-back-squat.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "quads",
+   "glutes"
+  ],
+  "cues": [
+   "Brace before you unrack, not after.",
+   "Knees track over the toes.",
+   "Descend until the hip crease passes the knee if you can hold position."
+  ],
+  "mistake": "Letting the chest drop faster than the hips out of the bottom.",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-incline-barbell-bench-press",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Incline Barbell Bench Press",
+  "thumbnail": "assets/exercise-illustrations/incline-barbell-bench-press.webp",
+  "start": "assets/exercise-illustrations/incline-barbell-bench-press.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/incline-barbell-bench-press.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "chest",
+   "triceps",
+   "shoulders"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-incline-dumbbell-curl",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Incline Dumbbell Curl",
+  "thumbnail": "assets/exercise-illustrations/incline-dumbbell-curl.webp",
+  "start": "assets/exercise-illustrations/incline-dumbbell-curl.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/incline-dumbbell-curl.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-incline-dumbbell-press",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Incline Dumbbell Press",
+  "thumbnail": "assets/exercise-illustrations/incline-dumbbell-press.webp",
+  "start": "assets/exercise-illustrations/incline-dumbbell-press.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/incline-dumbbell-press.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "chest",
+   "triceps",
+   "shoulders"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-isometric-lat-press",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Isometric Lat Press",
+  "thumbnail": "assets/exercise-illustrations/isometric-lat-press.webp",
+  "start": "assets/exercise-illustrations/isometric-lat-press.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/isometric-lat-press.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "back",
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-landmine-hack-squat",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Landmine Hack Squat",
+  "thumbnail": "assets/exercise-illustrations/landmine-hack-squat.webp",
+  "start": "assets/exercise-illustrations/landmine-hack-squat.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/landmine-hack-squat.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "quads",
+   "glutes"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-landmine-press",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Landmine Press",
+  "thumbnail": "assets/exercise-illustrations/landmine-press.webp",
+  "start": "assets/exercise-illustrations/landmine-press.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/landmine-press.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "shoulders",
+   "triceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-landmine-reverse-lunge",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Landmine Reverse Lunge",
+  "thumbnail": "assets/exercise-illustrations/landmine-reverse-lunge.webp",
+  "start": "assets/exercise-illustrations/landmine-reverse-lunge.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/landmine-reverse-lunge.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "quads",
+   "glutes"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-landmine-romanian-deadlift",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Landmine Romanian Deadlift",
+  "thumbnail": "assets/exercise-illustrations/landmine-romanian-deadlift.webp",
+  "start": "assets/exercise-illustrations/landmine-romanian-deadlift.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/landmine-romanian-deadlift.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "hamstrings",
+   "glutes"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-landmine-rotation",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Landmine Rotation",
+  "thumbnail": "assets/exercise-illustrations/landmine-rotation.webp",
+  "start": "assets/exercise-illustrations/landmine-rotation.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/landmine-rotation.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "core"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-landmine-row",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Landmine Row",
+  "thumbnail": "assets/exercise-illustrations/landmine-row.webp",
+  "start": "assets/exercise-illustrations/landmine-row.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/landmine-row.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "back",
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-landmine-squat",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Landmine Squat",
+  "thumbnail": "assets/exercise-illustrations/landmine-squat.webp",
+  "start": "assets/exercise-illustrations/landmine-squat.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/landmine-squat.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "quads",
+   "glutes"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-landmine-t-bar-row",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Landmine T-Bar Row",
+  "thumbnail": "assets/exercise-illustrations/landmine-t-bar-row.webp",
+  "start": "assets/exercise-illustrations/landmine-t-bar-row.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/landmine-t-bar-row.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "back",
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-lean-away-lateral-raise",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Lean-Away Lateral Raise",
+  "thumbnail": "assets/exercise-illustrations/lean-away-lateral-raise.webp",
+  "start": "assets/exercise-illustrations/lean-away-lateral-raise.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/lean-away-lateral-raise.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "shoulders"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-meadows-row",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Meadows Row",
+  "thumbnail": "assets/exercise-illustrations/meadows-row.webp",
+  "start": "assets/exercise-illustrations/meadows-row.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/meadows-row.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "back",
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-one-arm-dumbbell-row",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "One-Arm Dumbbell Row",
+  "thumbnail": "assets/exercise-illustrations/one-arm-dumbbell-row.webp",
+  "start": "assets/exercise-illustrations/one-arm-dumbbell-row.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/one-arm-dumbbell-row.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "back",
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-paused-barbell-back-squat",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Paused Barbell Back Squat",
+  "thumbnail": "assets/exercise-illustrations/paused-barbell-back-squat.webp",
+  "start": "assets/exercise-illustrations/paused-barbell-back-squat.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/paused-barbell-back-squat.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "quads",
+   "glutes"
+  ],
+  "cues": [
+   "Brace before you unrack, not after.",
+   "Knees track over the toes.",
+   "Descend until the hip crease passes the knee if you can hold position."
+  ],
+  "mistake": "Letting the chest drop faster than the hips out of the bottom.",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-paused-barbell-bench-press",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Paused Barbell Bench Press",
+  "thumbnail": "assets/exercise-illustrations/paused-barbell-bench-press.webp",
+  "start": "assets/exercise-illustrations/paused-barbell-bench-press.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/paused-barbell-bench-press.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "chest",
+   "triceps",
+   "shoulders"
+  ],
+  "cues": [
+   "Set the shoulder blades down and back.",
+   "Keep the forearms vertical at the bottom.",
+   "Drive the feet into the floor."
+  ],
+  "mistake": "Bouncing the bar off the chest.",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-pendlay-row",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Pendlay Row",
+  "thumbnail": "assets/exercise-illustrations/pendlay-row.webp",
+  "start": "assets/exercise-illustrations/pendlay-row.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/pendlay-row.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "back",
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-pike-push-up",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Pike Push-Up",
+  "thumbnail": "assets/exercise-illustrations/pike-push-up.webp",
+  "start": "assets/exercise-illustrations/pike-push-up.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/pike-push-up.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "shoulders",
+   "triceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-plank",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Plank",
+  "thumbnail": "assets/exercise-illustrations/plank.webp",
+  "start": "assets/exercise-illustrations/plank.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/plank.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "core"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-prone-lat-pull",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Prone Lat Pull",
+  "thumbnail": "assets/exercise-illustrations/prone-lat-pull.webp",
+  "start": "assets/exercise-illustrations/prone-lat-pull.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/prone-lat-pull.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "back",
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-prone-y-t-raise",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Prone Y-T Raise",
+  "thumbnail": "assets/exercise-illustrations/prone-y-t-raise.webp",
+  "start": "assets/exercise-illustrations/prone-y-t-raise.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/prone-y-t-raise.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "shoulders"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-pull-up",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Pull-Up",
+  "thumbnail": "assets/exercise-illustrations/pull-up.webp",
+  "start": "assets/exercise-illustrations/pull-up.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/pull-up.webp"
+  ],
+  "width": 960,
+  "height": 540,
+  "muscles": [
+   "back",
+   "biceps"
+  ],
+  "cues": [
+   "Start from a full hang.",
+   "Pull the elbows down toward the ribs.",
+   "Control the descent instead of dropping."
+  ],
+  "mistake": "Kipping the hips to finish the rep.",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-push-up",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Push-Up",
+  "thumbnail": "assets/exercise-illustrations/push-up.webp",
+  "start": "assets/exercise-illustrations/push-up.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/push-up.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "chest",
+   "triceps",
+   "shoulders"
+  ],
+  "cues": [
+   "Hands under the shoulders.",
+   "Hold one line from ear to ankle.",
+   "Lower under control to a consistent depth."
+  ],
+  "mistake": "Hips sagging before the chest arrives.",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-single-leg-calf-raise",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Single-Leg Calf Raise",
+  "thumbnail": "assets/exercise-illustrations/single-leg-calf-raise.webp",
+  "start": "assets/exercise-illustrations/single-leg-calf-raise.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/single-leg-calf-raise.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "calves"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-single-leg-glute-bridge",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Single-Leg Glute Bridge",
+  "thumbnail": "assets/exercise-illustrations/single-leg-glute-bridge.webp",
+  "start": "assets/exercise-illustrations/single-leg-glute-bridge.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/single-leg-glute-bridge.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "hamstrings",
+   "glutes"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-single-leg-hip-hinge",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Single-Leg Hip Hinge",
+  "thumbnail": "assets/exercise-illustrations/single-leg-hip-hinge.webp",
+  "start": "assets/exercise-illustrations/single-leg-hip-hinge.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/single-leg-hip-hinge.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "hamstrings",
+   "glutes"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-tempo-bodyweight-squat",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Tempo Bodyweight Squat",
+  "thumbnail": "assets/exercise-illustrations/tempo-bodyweight-squat.webp",
+  "start": "assets/exercise-illustrations/tempo-bodyweight-squat.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/tempo-bodyweight-squat.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "quads",
+   "glutes"
+  ],
+  "cues": [
+   "Sit between the hips, not straight down.",
+   "Keep full-foot pressure.",
+   "Stand tall without locking hard."
+  ],
+  "mistake": "Heels lifting at the bottom.",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-tempo-push-up",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Tempo Push-Up",
+  "thumbnail": "assets/exercise-illustrations/tempo-push-up.webp",
+  "start": "assets/exercise-illustrations/tempo-push-up.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/tempo-push-up.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "chest",
+   "triceps",
+   "shoulders"
+  ],
+  "cues": [
+   "Hands under the shoulders.",
+   "Hold one line from ear to ankle.",
+   "Lower under control to a consistent depth."
+  ],
+  "mistake": "Hips sagging before the chest arrives.",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-towel-isometric-curl",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Towel Isometric Curl",
+  "thumbnail": "assets/exercise-illustrations/towel-isometric-curl.webp",
+  "start": "assets/exercise-illustrations/towel-isometric-curl.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/towel-isometric-curl.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "biceps"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-weighted-standing-calf-raise",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Weighted Standing Calf Raise",
+  "thumbnail": "assets/exercise-illustrations/weighted-standing-calf-raise.webp",
+  "start": "assets/exercise-illustrations/weighted-standing-calf-raise.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/weighted-standing-calf-raise.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "calves"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
+ },
+ {
+  "id": "ironsix-wide-push-up",
+  "tier": "professional",
+  "style": "ironsix-form-guide-v1",
+  "status": "approved",
+  "layout": "composite",
+  "title": "Wide Push-Up",
+  "thumbnail": "assets/exercise-illustrations/wide-push-up.webp",
+  "start": "assets/exercise-illustrations/wide-push-up.webp",
+  "finish": null,
+  "motion": [
+   "assets/exercise-illustrations/wide-push-up.webp"
+  ],
+  "width": 960,
+  "height": 720,
+  "muscles": [
+   "chest"
+  ],
+  "cues": [],
+  "mistake": "",
+  "author": "Iron Six",
+  "license": "First-party",
+  "licenseUrl": "",
+  "source": "assets/exercise-illustrations/manifest.json"
  }
 ];
 const byId=new Map(media.map(m=>[m.id,m]));

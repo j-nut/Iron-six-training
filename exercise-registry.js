@@ -16,7 +16,7 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": "ironsix-bodyweight-squat",
+  "mediaId": "ironsix-11-2-rep-bodyweight-squat",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -37,8 +37,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-ab-wheel-rollout",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -57,8 +57,8 @@ const exercises=[
    "chest"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-band-chest-fly",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -78,8 +78,8 @@ const exercises=[
    "shoulders_arms"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-band-curl",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -99,8 +99,8 @@ const exercises=[
    "shoulders_arms"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-band-face-pull",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -119,8 +119,8 @@ const exercises=[
    "shoulders_arms"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-band-hammer-curl",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -140,8 +140,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-band-hamstring-curl",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -162,8 +162,8 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-band-lat-pulldown",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -183,8 +183,8 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-band-lateral-raise",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -204,8 +204,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-band-pallof-press",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -226,8 +226,8 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-band-pressdown",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -269,8 +269,8 @@ const exercises=[
    "back"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-band-straight-arm-pulldown",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -291,8 +291,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-banded-hip-thrust",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -313,7 +313,7 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": "ironsix-back-squat",
+  "mediaId": "ironsix-barbell-back-squat",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -338,7 +338,7 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": "ironsix-bench-press",
+  "mediaId": "ironsix-barbell-bench-press",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -361,7 +361,7 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-squat-to-bench-with-barbell",
+  "mediaId": "ironsix-barbell-box-squat",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -383,7 +383,7 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-biceps-curls-with-barbell",
+  "mediaId": "ironsix-barbell-curl",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -405,7 +405,7 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-barbell-good-mornings",
+  "mediaId": "ironsix-barbell-good-morning",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -428,8 +428,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-barbell-hip-thrust",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -450,7 +450,7 @@ const exercises=[
    "shoulders_arms"
   ],
   "isSupersetComponent": false,
-  "mediaId": "ironsix-overhead-press",
+  "mediaId": "ironsix-barbell-overhead-press",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -472,7 +472,7 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": "ironsix-romanian-deadlift",
+  "mediaId": "ironsix-barbell-romanian-deadlift",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -494,7 +494,7 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": "ironsix-bent-over-row",
+  "mediaId": "ironsix-barbell-row",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -516,7 +516,7 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-standing-barbell-calf-raise",
+  "mediaId": "ironsix-barbell-standing-calf-raise",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -535,8 +535,8 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": true,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-bodyweight-curl-isometric",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -555,8 +555,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-bodyweight-split-squat",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -578,8 +578,8 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-chest-supported-dumbbell-row",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -599,7 +599,7 @@ const exercises=[
    "back"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-chin-ups",
+  "mediaId": "ironsix-chin-up",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -622,7 +622,7 @@ const exercises=[
    "shoulders_arms"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-close-grip-barbell-bench-press",
+  "mediaId": "ironsix-close-grip-bench-press",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -641,8 +641,8 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-close-triceps-pushup",
-  "mediaMatch": "alias",
+  "mediaId": "ironsix-close-grip-push-up",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -660,8 +660,8 @@ const exercises=[
    "lower_hypertrophy"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-cyclist-squat",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -680,7 +680,7 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-close-triceps-pushup",
+  "mediaId": "ironsix-diamond-push-up",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -704,7 +704,7 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-bench-press-dumbbell",
+  "mediaId": "ironsix-dumbbell-bench-press",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -727,8 +727,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-dumbbell-bulgarian-split-squat",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -749,7 +749,7 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-biceps-curl-with-dumbbell",
+  "mediaId": "ironsix-dumbbell-curl",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -772,8 +772,8 @@ const exercises=[
    "chest"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-bench-press-dumbbell",
-  "mediaMatch": "alias",
+  "mediaId": "ironsix-dumbbell-flat-press",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -793,7 +793,7 @@ const exercises=[
    "chest"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-dumbbell-flys",
+  "mediaId": "ironsix-dumbbell-fly",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -814,8 +814,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-dumbbell-front-squat",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -834,7 +834,7 @@ const exercises=[
    "shoulders_arms"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-biceps-hammer-curl-with-dumbbell",
+  "mediaId": "ironsix-dumbbell-hammer-curl",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -856,8 +856,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-dumbbell-hip-thrust",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -877,7 +877,7 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-lateral-dumbbell-raises",
+  "mediaId": "ironsix-dumbbell-lateral-raise",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -899,7 +899,7 @@ const exercises=[
    "back"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-dumbbell-bent-arm-pullover",
+  "mediaId": "ironsix-dumbbell-pullover",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -919,8 +919,8 @@ const exercises=[
    "shoulders_arms"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-dumbbell-rear-delt-fly",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -939,8 +939,8 @@ const exercises=[
    "back"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-dumbbell-rear-delt-row",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -961,8 +961,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-dumbbell-romanian-deadlift",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -983,8 +983,8 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-dumbbell-shoulder-press",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1004,7 +1004,7 @@ const exercises=[
    "shoulders_arms"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-lying-two-arm-triceps-extension-with-dumbbell",
+  "mediaId": "ironsix-dumbbell-skull-crusher",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -1026,7 +1026,7 @@ const exercises=[
    "chest"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-push-up-feet-elevated",
+  "mediaId": "ironsix-feet-elevated-push-up",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -1070,8 +1070,8 @@ const exercises=[
    "shoulders_arms"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-half-kneeling-landmine-press",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1089,8 +1089,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-hamstring-walkout",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1107,8 +1107,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-hard-style-plank",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1129,7 +1129,7 @@ const exercises=[
    "lower_hypertrophy"
   ],
   "isSupersetComponent": false,
-  "mediaId": "ironsix-back-squat",
+  "mediaId": "ironsix-high-bar-back-squat",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -1154,7 +1154,7 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-incline-bench-press",
+  "mediaId": "ironsix-incline-barbell-bench-press",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -1175,8 +1175,8 @@ const exercises=[
    "shoulders_arms"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-incline-dumbbell-curl",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1199,7 +1199,7 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": "legacy-dumbbell-incline-bench-press",
+  "mediaId": "ironsix-incline-dumbbell-press",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -1218,8 +1218,8 @@ const exercises=[
    "back"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-isometric-lat-press",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1241,8 +1241,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-landmine-hack-squat",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1265,8 +1265,8 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-landmine-press",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1288,8 +1288,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-landmine-reverse-lunge",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1311,8 +1311,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-landmine-romanian-deadlift",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1332,8 +1332,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-landmine-rotation",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1355,8 +1355,8 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-landmine-row",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1378,8 +1378,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-landmine-squat",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1401,8 +1401,8 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-landmine-t-bar-row",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1420,8 +1420,8 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-lean-away-lateral-raise",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1442,8 +1442,8 @@ const exercises=[
    "back"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-meadows-row",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1465,8 +1465,8 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-one-arm-dumbbell-row",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1487,7 +1487,7 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": "ironsix-back-squat",
+  "mediaId": "ironsix-paused-barbell-back-squat",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -1511,7 +1511,7 @@ const exercises=[
    "chest"
   ],
   "isSupersetComponent": false,
-  "mediaId": "ironsix-bench-press",
+  "mediaId": "ironsix-paused-barbell-bench-press",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -1532,8 +1532,8 @@ const exercises=[
    "back"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-pendlay-row",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1552,8 +1552,8 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-pike-push-up",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1570,8 +1570,8 @@ const exercises=[
    "chest"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-plank",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1590,8 +1590,8 @@ const exercises=[
    "upper_specialization"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-prone-lat-pull",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1611,8 +1611,8 @@ const exercises=[
    "shoulders_arms"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-prone-y-t-raise",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1673,8 +1673,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-single-leg-calf-raise",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1693,8 +1693,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-single-leg-glute-bridge",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1713,8 +1713,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-single-leg-hip-hinge",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1733,7 +1733,7 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": "ironsix-bodyweight-squat",
+  "mediaId": "ironsix-tempo-bodyweight-squat",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -1753,7 +1753,7 @@ const exercises=[
    "chest"
   ],
   "isSupersetComponent": false,
-  "mediaId": "ironsix-push-up",
+  "mediaId": "ironsix-tempo-push-up",
   "mediaMatch": "exact",
   "fallbackMediaId": null
  },
@@ -1771,8 +1771,8 @@ const exercises=[
    "shoulders_arms"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-towel-isometric-curl",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1792,8 +1792,8 @@ const exercises=[
    "lower_strength"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-weighted-standing-calf-raise",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  },
  {
@@ -1810,8 +1810,8 @@ const exercises=[
    "chest"
   ],
   "isSupersetComponent": false,
-  "mediaId": null,
-  "mediaMatch": "none",
+  "mediaId": "ironsix-wide-push-up",
+  "mediaMatch": "exact",
   "fallbackMediaId": null
  }
 ];

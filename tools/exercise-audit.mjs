@@ -275,20 +275,27 @@ function main() {
   // 4. Resolve media coverage against exercise-media-catalog.js.
   // ---------------------------------------------------------------------
   const mediaCatalog = require(rel('exercise-media-catalog.js'));
+  const mediaManifest = require(rel('exercise-media-manifest.js'));
+  // Resolve the way the app resolves. This audit originally read the legacy catalogue directly,
+  // which predates the six-tier resolver: once first-party art landed it reported every approved
+  // illustration as "missing" because the catalogue had never heard of it.
+  const resolver = require(rel('exercise-media-resolver.js'));
 
   function classifyCoverage(name) {
-    const rec = mediaCatalog.resolve(name);
-    if (!rec) return { coverage: 'missing', mediaId: null, mediaTier: null };
-    const isExact = normalizeMediaName(rec.names[0]) === normalizeMediaName(name);
-    const tier = String(rec.author || '').includes('Iron Six') ? 'professional' : 'legacy';
-    return { coverage: isExact ? 'exact' : 'alias', mediaId: rec.id, mediaTier: tier };
+    const r = resolver.resolveOne(name);
+    if (!r.media) return { coverage: 'missing', mediaId: null, mediaTier: null, via: null };
+    const mediaTier = r.media.tier === 'professional' ? 'professional' : r.media.tier === 'schematic' ? 'schematic' : 'legacy';
+    // Tiers 4 and 5 show a different movement; that is a substitution, not coverage.
+    const coverage = r.tier <= 2 ? 'exact' : r.tier === 3 ? 'alias' : 'substituted';
+    return { coverage, mediaId: r.media.id, mediaTier, via: r.via || null };
   }
 
   for (const entry of exercises.values()) {
-    const { coverage, mediaId, mediaTier } = classifyCoverage(entry.name);
+    const { coverage, mediaId, mediaTier, via } = classifyCoverage(entry.name);
     entry.coverage = coverage;
     entry.mediaId = mediaId;
     entry.mediaTier = mediaTier;
+    entry.substitutedBy = via;
   }
 
   // fallbackOnly: a superset combo where exactly one of the two (or more)
@@ -332,17 +339,32 @@ function main() {
       if (!fs.existsSync(rel(frame))) brokenReferences.push({ recordId: rec.id, frame });
     }
   }
+  for (const rec of mediaManifest.media) {
+    for (const frame of [rec.thumbnail, rec.start, rec.finish, ...(rec.motion || [])]) {
+      if (frame && !fs.existsSync(rel(frame))) brokenReferences.push({ recordId: rec.id, frame });
+    }
+  }
   brokenReferences.sort((a, b) => a.recordId.localeCompare(b.recordId) || a.frame.localeCompare(b.frame));
 
-  const assetsDir = rel('assets', 'exercises');
-  const allAssetFiles = fs.existsSync(assetsDir)
-    ? fs.readdirSync(assetsDir).filter((f) => fs.statSync(path.join(assetsDir, f)).isFile())
-    : [];
   const referencedBasenames = new Set();
   for (const rec of mediaCatalog.records) {
     for (const frame of rec.frames || []) referencedBasenames.add(path.basename(frame));
   }
-  const orphanAssets = allAssetFiles.filter((f) => !referencedBasenames.has(f)).sort();
+  for (const rec of mediaManifest.media) {
+    for (const frame of [rec.thumbnail, rec.start, rec.finish, ...(rec.motion || [])]) {
+      if (frame) referencedBasenames.add(path.basename(frame));
+    }
+  }
+  const orphanAssets = [];
+  for (const dir of ['exercises', 'exercise-illustrations']) {
+    const full = rel('assets', dir);
+    if (!fs.existsSync(full)) continue;
+    for (const f of fs.readdirSync(full)) {
+      if (!fs.statSync(path.join(full, f)).isFile() || f === 'manifest.json') continue;
+      if (!referencedBasenames.has(f)) orphanAssets.push(dir + '/' + f);
+    }
+  }
+  orphanAssets.sort();
 
   // ---------------------------------------------------------------------
   // 6. Duplicate movement detection: same token set, different string.
@@ -400,29 +422,31 @@ function main() {
       workoutKeys: [...e.workoutKeys].sort(),
       isSupersetComponent: e.isSupersetComponent,
       alternativeOnly: e.alternativeOnly,
+      substitutedBy: e.substitutedBy || null,
     }));
 
   let professionalExact = 0;
   let legacyExact = 0;
   let aliasCovered = 0;
+  let substituted = 0;
   let missing = 0;
   for (const e of sortedExercises) {
     if (e.coverage === 'exact') {
       if (e.mediaTier === 'professional') professionalExact++;
       else legacyExact++;
-    } else if (e.coverage === 'alias') {
-      aliasCovered++;
-    } else {
-      missing++;
-    }
+    } else if (e.coverage === 'alias') aliasCovered++;
+    else if (e.coverage === 'substituted') substituted++;
+    else missing++;
   }
 
   const totals = {
-    canonicalExercises: mediaCatalog.records.length,
+    canonicalExercises: require(rel('exercise-registry.js')).exercises.length,
+    mediaRecords: mediaManifest.media.length,
     uniqueNames: sortedExercises.length,
     professionalExact,
     legacyExact,
     aliasCovered,
+    substituted,
     fallbackOnly,
     missing,
     broken: brokenReferences.length,
@@ -512,11 +536,13 @@ function extractObjectLiteral(source, varName) {
 
 function printSummaryTable(totals) {
   const rows = [
-    ['Canonical exercises (media catalog)', totals.canonicalExercises],
+    ['Canonical exercises (registry)', totals.canonicalExercises],
+    ['Media records (manifest)', totals.mediaRecords],
     ['Unique exercise names found in app', totals.uniqueNames],
     ['Professional exact', totals.professionalExact],
     ['Legacy exact', totals.legacyExact],
     ['Alias covered', totals.aliasCovered],
+    ['Substituted (different movement shown)', totals.substituted],
     ['Fallback only (superset, partial)', totals.fallbackOnly],
     ['Missing', totals.missing],
     ['Broken frame references', totals.broken],
@@ -542,11 +568,13 @@ function renderMarkdown(report) {
   lines.push('');
   lines.push('| Metric | Count |');
   lines.push('| --- | ---: |');
-  lines.push(`| Canonical exercises (media catalog) | ${totals.canonicalExercises} |`);
+  lines.push(`| Canonical exercises (registry) | ${totals.canonicalExercises} |`);
+  lines.push(`| Media records (manifest) | ${totals.mediaRecords} |`);
   lines.push(`| Unique exercise names found in app | ${totals.uniqueNames} |`);
   lines.push(`| Professional exact | ${totals.professionalExact} |`);
   lines.push(`| Legacy exact | ${totals.legacyExact} |`);
   lines.push(`| Alias covered | ${totals.aliasCovered} |`);
+  lines.push(`| Substituted (different movement shown) | ${totals.substituted} |`);
   lines.push(`| Fallback only (superset, partial) | ${totals.fallbackOnly} |`);
   lines.push(`| Missing | ${totals.missing} |`);
   lines.push(`| Broken frame references | ${totals.broken} |`);
@@ -556,10 +584,11 @@ function renderMarkdown(report) {
   lines.push('## Coverage by bucket');
   lines.push('');
   const buckets = [
-    ['exact', 'professional', 'Professional exact (first-party Iron Six art)'],
+    ['exact', 'professional', 'Approved exact (first-party Iron Six illustration)'],
     ['exact', 'legacy', 'Legacy exact (Everkinetic CC BY-SA, first name in record)'],
     ['alias', null, 'Alias covered (matches a non-first name in a record)'],
-    ['missing', null, 'Missing (no catalog match)'],
+    ['substituted', null, 'Substituted (a different movement is shown, always labelled)'],
+    ['missing', null, 'Missing (resolves to "demo coming soon")'],
   ];
   for (const [coverage, tier, label] of buckets) {
     const rows = exercises.filter(

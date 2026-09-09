@@ -1,9 +1,10 @@
 // Generates the canonical exercise registry and the media manifest from the workout
 // definitions plus whatever art exists. Both outputs are committed so the app ships static
 // data, but they are generated so they can never drift from the workouts they describe.
-import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import vm from 'node:vm';
+import { createHash } from 'node:crypto';
 
 const require = createRequire(import.meta.url);
 const WORKOUT_KEYS = ['lower_strength', 'shoulders_arms', 'chest', 'back', 'lower_hypertrophy', 'upper_specialization'];
@@ -63,26 +64,37 @@ function collect(context) {
 const context = loadWorkouts();
 const byName = collect(context);
 
-const art = existsSync('assets/exercise-art') ? readdirSync('assets/exercise-art').filter(f => f.endsWith('.svg')) : [];
-const artIds = [...new Set(art.map(f => f.replace(/-(start|finish)\.svg$/, '')))].sort();
 const legacy = require('../exercise-media-catalog.js');
 const poses = (await import('./exercise-art/poses.mjs')).POSES;
 const cues = JSON.parse(readFileSync('tools/exercise-art/cues.json', 'utf8'));
 
-const manifest = [];
-for (const id of artIds) {
-  const pose = poses[id] || {};
-  manifest.push({
-    id: 'ironsix-' + id, tier: 'schematic', style: 'ironsix-schematic-v1', status: 'schematic',
-    title: pose.title || id,
-    thumbnail: 'assets/exercise-art/' + id + '-start.svg',
-    start: 'assets/exercise-art/' + id + '-start.svg',
-    finish: 'assets/exercise-art/' + id + '-finish.svg',
-    motion: ['assets/exercise-art/' + id + '-start.svg', 'assets/exercise-art/' + id + '-finish.svg'],
-    muscles: pose.muscles || [], cues: (cues[id] && cues[id].cues) || [], mistake: (cues[id] && cues[id].mistake) || '',
-    author: 'Iron Six', license: 'First-party', licenseUrl: '', source: 'tools/exercise-art/poses.mjs'
-  });
+// Approved first-party illustrations. Each file is one wide composite holding all three
+// phases of the movement, so it is a single frame with its own in-image step labels rather
+// than a start/finish pair the app cross-fades between; `layout: 'composite'` tells the
+// renderers that. The manifest carries a sha256 per file so a silently swapped or truncated
+// asset fails the build instead of shipping.
+const ILLUSTRATION_DIR = 'assets/exercise-illustrations';
+const approved = existsSync(ILLUSTRATION_DIR + '/manifest.json')
+  ? JSON.parse(readFileSync(ILLUSTRATION_DIR + '/manifest.json', 'utf8')) : [];
+for (const row of approved) {
+  const file = ILLUSTRATION_DIR + '/' + row.filename;
+  if (!existsSync(file)) throw Error('approved illustration missing from disk: ' + file);
+  const digest = createHash('sha256').update(readFileSync(file)).digest('hex');
+  if (digest !== row.sha256) throw Error('approved illustration checksum mismatch: ' + row.filename);
 }
+const approvedByName = new Map(approved.map(row => [normalize(row.canonicalName), row]));
+
+// Cue text was written against the schematic pose library and is keyed by pose id. The
+// approved illustrations replace the drawings, not the coaching, so the cues are carried
+// across by movement name.
+const cuesByName = new Map();
+for (const [id, pose] of Object.entries(poses)) {
+  const entry = cues[id];
+  if (!entry) continue;
+  for (const n of pose.names || [pose.title || id]) cuesByName.set(normalize(n), entry);
+}
+
+const manifest = [];
 for (const rec of legacy.records) {
   manifest.push({
     id: 'legacy-' + rec.id, tier: 'legacy', style: 'everkinetic', status: 'approved',
@@ -92,27 +104,22 @@ for (const rec of legacy.records) {
   });
 }
 
-// Explicit name mapping beats fuzzy matching: a drawing only ever claims the movements its
-// pose actually depicts.
-const artByName = new Map();
-for (const id of artIds) {
-  const declared = (poses[id] && poses[id].names) || [(poses[id] && poses[id].title) || id];
-  for (const n of declared) artByName.set(normalize(n), 'ironsix-' + id);
-}
+// Explicit name mapping beats fuzzy matching: an illustration only ever claims the movement
+// it actually depicts.
 const legacyByName = new Map(legacy.records.flatMap(r => r.names.map((n, i) => [normalize(n), { id: 'legacy-' + r.id, primary: i === 0 }])));
 
 const rows = [];
 for (const [, e] of [...byName].sort((a, b) => a[0].localeCompare(b[0]))) {
   const tk = tokenKey(e.name);
   const legacyHit = legacyByName.get(normalize(e.name));
-  const artHit = artByName.get(normalize(e.name));
-  const mediaId = artHit || (legacyHit && legacyHit.id) || null;
+  const approvedHit = approvedByName.get(normalize(e.name));
+  const mediaId = approvedHit ? 'ironsix-' + slug(e.name) : (legacyHit && legacyHit.id) || null;
   rows.push({
     id: slug(e.name), name: e.name, aliases: [],
     equipment: e.requires, muscles: e.muscles, pattern: e.seedKey, base: e.base,
     workoutKeys: [...e.workoutKeys].sort(), isSupersetComponent: e.isSupersetComponent,
     mediaId,
-    mediaMatch: artHit ? 'exact' : legacyHit ? (legacyHit.primary ? 'exact' : 'alias') : 'none',
+    mediaMatch: approvedHit ? 'exact' : legacyHit ? (legacyHit.primary ? 'exact' : 'alias') : 'none',
     fallbackMediaId: null
   });
 }
@@ -126,6 +133,33 @@ for (const row of rows) {
   else { canonical.get(tk).aliases.push(row.name); collapsed.push(canonical.get(tk).name + ' = ' + row.name); }
 }
 const registry = [...canonical.values()].sort((a, b) => a.id.localeCompare(b.id));
+
+// Approved illustrations are emitted from the FINAL registry, after token-identical names have
+// been collapsed, so a media record only ever exists for a canonical exercise and its id is the
+// row that points at it. Anything left over means an illustration names a movement the app does
+// not program, which is a mapping error rather than something to quietly drop.
+const usedIllustrations = new Set();
+for (const row of registry) {
+  const hit = approvedByName.get(normalize(row.name));
+  if (!hit) continue;
+  usedIllustrations.add(hit.filename);
+  const file = ILLUSTRATION_DIR + '/' + hit.filename;
+  const cue = cuesByName.get(normalize(row.name)) || {};
+  manifest.push({
+    id: 'ironsix-' + row.id, tier: 'professional', style: 'ironsix-form-guide-v1', status: 'approved',
+    layout: 'composite', title: row.name,
+    thumbnail: file, start: file, finish: null, motion: [file],
+    width: hit.width, height: hit.height,
+    muscles: row.muscles, cues: cue.cues || [], mistake: cue.mistake || '',
+    author: 'Iron Six', license: 'First-party', licenseUrl: '', source: ILLUSTRATION_DIR + '/manifest.json'
+  });
+}
+const unusedIllustrations = approved.filter(row => !usedIllustrations.has(row.filename)).map(row => row.canonicalName);
+if (unusedIllustrations.length) throw Error('illustrations match no canonical exercise: ' + unusedIllustrations.join(', '));
+
+const manifestIds = new Set(manifest.map(m => m.id));
+const danglingMedia = registry.filter(row => row.mediaId && !manifestIds.has(row.mediaId)).map(row => row.name + ' -> ' + row.mediaId);
+if (danglingMedia.length) throw Error('registry points at missing media: ' + danglingMedia.join(', '));
 
 const banner = '/* GENERATED by tools/build-exercise-registry.mjs - do not edit by hand. */\n';
 const umd = (name, body) => banner + '(function(root){\n' + body + '\nif(typeof module!=="undefined"&&module.exports)module.exports=api;\nelse root.' + name + '=api;\n})(typeof window!=="undefined"?window:globalThis);\n';
@@ -144,11 +178,11 @@ writeFileSync('exercise-media-manifest.js', umd('IronSixMediaManifest',
 
 const counts = registry.reduce((a, e) => {
   const m = e.mediaId ? manifest.find(x => x.id === e.mediaId) : null;
-  const k = !m ? 'missing' : m.tier === 'schematic' ? 'schematic' : e.mediaMatch === 'alias' ? 'alias' : 'legacy';
+  const k = !m ? 'missing' : m.tier === 'professional' ? 'approved' : m.tier === 'schematic' ? 'schematic' : e.mediaMatch === 'alias' ? 'alias' : 'legacy';
   a[k] = (a[k] || 0) + 1;
   return a;
 }, {});
 console.log('registry: ' + registry.length + ' canonical exercises (from ' + byName.size + ' names)');
-console.log('manifest: ' + manifest.length + ' media records (' + artIds.length + ' Iron Six, ' + legacy.records.length + ' legacy)');
+console.log('manifest: ' + manifest.length + ' media records (' + usedIllustrations.size + ' approved Iron Six, ' + legacy.records.length + ' legacy)');
 console.log('coverage: ' + JSON.stringify(counts));
 console.log('collapsed duplicates: ' + (collapsed.join(' | ') || 'none'));
