@@ -1,155 +1,58 @@
 /* Conservative form observations plus motion-aware subject association for the opt-in camera assistant.
-   The subject tracker borrows the useful ideas behind ByteTrack/OC-SORT/Norfair: high-confidence
-   association first, low-confidence recovery second, short-horizon motion prediction, and matching
-   only landmarks actually visible in both frames. No faces, appearance embeddings, biometrics,
-   network calls, storage, frame uploads, or landmark uploads are used. */
+   v5 combines this working-side pose tracker with an independent person-isolation box in pose-spike.js.
+   No faces, appearance embeddings, biometrics, network calls, storage, frame uploads or landmark uploads. */
 (() => {
   function installPoseCameraCompat(){
-    if(typeof window==='undefined'||typeof navigator==='undefined'||!navigator.mediaDevices?.getUserMedia)return;
-    let enabled=false;
-    try{
-      const query=new URLSearchParams(location.search||'').get('pose');
-      const stored=localStorage.getItem('ironSixPoseSpike');
-      enabled=query==='1'||(query!=='0'&&stored==='1');
-    }catch(_){enabled=false}
-    if(!enabled||navigator.mediaDevices.__ironSixPoseCameraCompat)return;
-    const original=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-    navigator.mediaDevices.getUserMedia=async constraints=>{
-      const requested=constraints?.video;
-      const isPosePortraitRequest=!!requested&&typeof requested==='object'&&requested.aspectRatio&&requested.width&&requested.height;
-      if(!isPosePortraitRequest)return original(constraints);
-      const safeVideo={facingMode:requested.facingMode||{ideal:'user'},width:{ideal:960},height:{ideal:720},frameRate:requested.frameRate||{ideal:30,max:30},resizeMode:{ideal:'none'}};
-      let media;
-      try{media=await original({...constraints,video:safeVideo})}
-      catch(_){media=await original({...constraints,video:{facingMode:{ideal:'user'},width:{ideal:960},height:{ideal:720},frameRate:{ideal:30,max:30}}})}
-      const track=media?.getVideoTracks?.()[0]||null;
-      try{const caps=track?.getCapabilities?.();if(caps?.zoom&&Number.isFinite(caps.zoom.min))await track.applyConstraints({advanced:[{zoom:caps.zoom.min}]})}catch(_){}
-      return media;
-    };
+    if(typeof window==='undefined'||typeof navigator==='undefined'||!navigator.mediaDevices?.getUserMedia)return;let enabled=false;
+    try{const query=new URLSearchParams(location.search||'').get('pose'),stored=localStorage.getItem('ironSixPoseSpike');enabled=query==='1'||(query!=='0'&&stored==='1')}catch(_){enabled=false}
+    if(!enabled||navigator.mediaDevices.__ironSixPoseCameraCompat)return;const original=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+    navigator.mediaDevices.getUserMedia=async constraints=>{const requested=constraints?.video,isPosePortraitRequest=!!requested&&typeof requested==='object'&&requested.aspectRatio&&requested.width&&requested.height;if(!isPosePortraitRequest)return original(constraints);const safeVideo={facingMode:requested.facingMode||{ideal:'user'},width:{ideal:960},height:{ideal:720},frameRate:requested.frameRate||{ideal:30,max:30},resizeMode:{ideal:'none'}};let media;try{media=await original({...constraints,video:safeVideo})}catch(_){media=await original({...constraints,video:{facingMode:{ideal:'user'},width:{ideal:960},height:{ideal:720},frameRate:{ideal:30,max:30}}})}const track=media?.getVideoTracks?.()[0]||null;try{const caps=track?.getCapabilities?.();if(caps?.zoom&&Number.isFinite(caps.zoom.min))await track.applyConstraints({advanced:[{zoom:caps.zoom.min}]})}catch(_){}return media};
     try{Object.defineProperty(navigator.mediaDevices,'__ironSixPoseCameraCompat',{value:true,configurable:true})}catch(_){navigator.mediaDevices.__ironSixPoseCameraCompat=true}
   }
   installPoseCameraCompat();
 
-  const TRACK_BODY=[0,11,12,23,24,25,26,27,28];
-  const TRACK_SIDES=[[11,23,25,27],[12,24,26,28]];
-  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-  const trackConfidence=p=>{
-    if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.y))return 0;
-    const v=p.visibility===undefined?1:Number(p.visibility),q=p.presence===undefined?1:Number(p.presence);
-    return Math.max(0,Math.min(Number.isFinite(v)?v:0,Number.isFinite(q)?q:0));
-  };
-  const trackDistance=(a,b,aspect=1)=>a&&b?Math.hypot((a.x-b.x)*aspect,a.y-b.y):Infinity;
-  const trackMid=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
-  const boxIou=(a,b)=>{
-    if(!a||!b)return 0;const x1=Math.max(a.x1,b.x1),y1=Math.max(a.y1,b.y1),x2=Math.min(a.x2,b.x2),y2=Math.min(a.y2,b.y2);
-    const inter=Math.max(0,x2-x1)*Math.max(0,y2-y1),aa=Math.max(0,a.x2-a.x1)*Math.max(0,a.y2-a.y1),bb=Math.max(0,b.x2-b.x1)*Math.max(0,b.y2-b.y1);
-    return aa+bb-inter>0?inter/(aa+bb-inter):0;
-  };
-
+  const TRACK_BODY=[0,11,12,23,24,25,26,27,28],TRACK_SIDES=[[11,23,25,27],[12,24,26,28]],clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const trackConfidence=p=>{if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.y))return 0;const v=p.visibility===undefined?1:Number(p.visibility),q=p.presence===undefined?1:Number(p.presence);return Math.max(0,Math.min(Number.isFinite(v)?v:0,Number.isFinite(q)?q:0))};
+  const trackDistance=(a,b,aspect=1)=>a&&b?Math.hypot((a.x-b.x)*aspect,a.y-b.y):Infinity,trackMid=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+  const boxIou=(a,b)=>{if(!a||!b)return 0;const x1=Math.max(a.x1,b.x1),y1=Math.max(a.y1,b.y1),x2=Math.min(a.x2,b.x2),y2=Math.min(a.y2,b.y2),inter=Math.max(0,x2-x1)*Math.max(0,y2-y1),aa=Math.max(0,a.x2-a.x1)*Math.max(0,a.y2-a.y1),bb=Math.max(0,b.x2-b.x1)*Math.max(0,b.y2-b.y1);return aa+bb-inter>0?inter/(aa+bb-inter):0};
   function describeSubject(points,aspect=1,options={}){
-    if(!Array.isArray(points))return null;const low=options.lowConfidence??0.18,high=options.highConfidence??0.48;
-    const visible=TRACK_BODY.map(i=>({i,p:points[i],c:trackConfidence(points[i])})).filter(x=>x.c>=low&&x.p.x>-0.04&&x.p.x<1.04&&x.p.y>-0.04&&x.p.y<1.04);
-    if(visible.length<3)return null;
-    const xs=visible.map(x=>x.p.x),ys=visible.map(x=>x.p.y),box={x1:Math.min(...xs),y1:Math.min(...ys),x2:Math.max(...xs),y2:Math.max(...ys)};
-    const shoulder=[11,12].map(i=>({p:points[i],c:trackConfidence(points[i])})).filter(x=>x.c>=low).sort((a,b)=>b.c-a.c)[0];
-    const hip=[23,24].map(i=>({p:points[i],c:trackConfidence(points[i])})).filter(x=>x.c>=low).sort((a,b)=>b.c-a.c)[0];
-    let center,scale;
-    if(shoulder&&hip){center=trackMid(shoulder.p,hip.p);scale=trackDistance(shoulder.p,hip.p,aspect)}
-    else {center={x:(box.x1+box.x2)/2,y:(box.y1+box.y2)/2};scale=Math.max((box.y2-box.y1)*0.45,(box.x2-box.x1)*aspect*0.35)}
-    if(!Number.isFinite(scale)||scale<0.035||scale>0.8)return null;
-    const sideStats=TRACK_SIDES.map(indices=>{const cs=indices.map(i=>trackConfidence(points[i])),usable=cs.filter(c=>c>=low).length,strong=cs.filter(c=>c>=high).length,quality=cs.reduce((n,c)=>n+(c>=low?c:0),0)/indices.length;return {usable,strong,quality}});
-    const side=sideStats[0].quality>=sideStats[1].quality?0:1,best=sideStats[side],bodyQuality=visible.reduce((n,x)=>n+x.c,0)/visible.length;
-    return {points,center,scale,box,side,sideStats,quality:0.65*best.quality+0.35*bodyQuality,visible:visible.length};
+    if(!Array.isArray(points))return null;const low=options.lowConfidence??0.18,high=options.highConfidence??0.48,visible=TRACK_BODY.map(i=>({i,p:points[i],c:trackConfidence(points[i])})).filter(x=>x.c>=low&&x.p.x>-0.04&&x.p.x<1.04&&x.p.y>-0.04&&x.p.y<1.04);if(visible.length<3)return null;
+    const xs=visible.map(x=>x.p.x),ys=visible.map(x=>x.p.y),box={x1:Math.min(...xs),y1:Math.min(...ys),x2:Math.max(...xs),y2:Math.max(...ys)},shoulder=[11,12].map(i=>({p:points[i],c:trackConfidence(points[i])})).filter(x=>x.c>=low).sort((a,b)=>b.c-a.c)[0],hip=[23,24].map(i=>({p:points[i],c:trackConfidence(points[i])})).filter(x=>x.c>=low).sort((a,b)=>b.c-a.c)[0];let center,scale;
+    if(shoulder&&hip){center=trackMid(shoulder.p,hip.p);scale=trackDistance(shoulder.p,hip.p,aspect)}else{center={x:(box.x1+box.x2)/2,y:(box.y1+box.y2)/2};scale=Math.max((box.y2-box.y1)*0.45,(box.x2-box.x1)*aspect*0.35)}if(!Number.isFinite(scale)||scale<0.035||scale>0.8)return null;
+    const sideStats=TRACK_SIDES.map(indices=>{const cs=indices.map(i=>trackConfidence(points[i])),usable=cs.filter(c=>c>=low).length,strong=cs.filter(c=>c>=high).length,quality=cs.reduce((n,c)=>n+(c>=low?c:0),0)/indices.length;return {usable,strong,quality}}),side=sideStats[0].quality>=sideStats[1].quality?0:1,best=sideStats[side],bodyQuality=visible.reduce((n,x)=>n+x.c,0)/visible.length;return {points,center,scale,box,side,sideStats,quality:0.65*best.quality+0.35*bodyQuality,visible:visible.length};
   }
-
-  function subjectAssociation(track,candidate,t,aspect=1,options={}){
-    const low=options.lowConfidence??0.18,dt=track.lastAt===null?0:clamp((t-track.lastAt)/1000,0,1.2),pred={x:track.center.x+track.velocity.x*dt,y:track.center.y+track.velocity.y*dt};
-    const centerCost=trackDistance(pred,candidate.center,aspect)/Math.max(0.04,track.scale),scaleCost=Math.abs(Math.log(Math.max(0.05,candidate.scale)/Math.max(0.05,track.scale)));
-    let sum=0,weight=0,overlap=0;
-    for(const i of TRACK_BODY){const a=track.points?.[i],b=candidate.points?.[i],ca=trackConfidence(a),cb=trackConfidence(b);if(ca<low||cb<low)continue;const w=Math.min(ca,cb);sum+=trackDistance(a,b,aspect)/Math.max(0.04,track.scale)*w;weight+=w;overlap++}
-    const keypointCost=weight?sum/weight:2.5,iou=boxIou(track.box,candidate.box),cost=0.47*centerCost+0.28*Math.min(2.5,keypointCost)+0.13*Math.min(2,scaleCost)+0.12*(1-iou);
-    return {candidate,cost,centerCost,keypointCost,overlap,iou};
-  }
+  function subjectAssociation(track,candidate,t,aspect=1,options={}){const low=options.lowConfidence??0.18,dt=track.lastAt===null?0:clamp((t-track.lastAt)/1000,0,1.2),pred={x:track.center.x+track.velocity.x*dt,y:track.center.y+track.velocity.y*dt},centerCost=trackDistance(pred,candidate.center,aspect)/Math.max(0.04,track.scale),scaleCost=Math.abs(Math.log(Math.max(0.05,candidate.scale)/Math.max(0.05,track.scale)));let sum=0,weight=0,overlap=0;for(const i of TRACK_BODY){const a=track.points?.[i],b=candidate.points?.[i],ca=trackConfidence(a),cb=trackConfidence(b);if(ca<low||cb<low)continue;const w=Math.min(ca,cb);sum+=trackDistance(a,b,aspect)/Math.max(0.04,track.scale)*w;weight+=w;overlap++}const keypointCost=weight?sum/weight:2.5,iou=boxIou(track.box,candidate.box),cost=0.47*centerCost+0.28*Math.min(2.5,keypointCost)+0.13*Math.min(2,scaleCost)+0.12*(1-iou);return {candidate,cost,centerCost,keypointCost,overlap,iou}}
 
   function createSubjectTracker(rule,options={}){
-    const config={lowConfidence:0.18,highConfidence:0.48,acquireQuality:0.33,acquireMs:420,maxCoastMs:950,ambiguityMargin:0.16,highCost:1.35,lowCost:0.92,...options};
-    let track=null,pending=null,needsRelock=false,side=null,sideWeakSince=null,smoothed=null;
-    const stats={accepted:0,rejected:0,losses:0,coasted:0,lowConfidenceMatches:0,ambiguities:0};
-    const pool=(poses,aspect)=>(poses||[]).map(p=>describeSubject(p,aspect,config)).filter(Boolean);
-    const viable=c=>{const s=c.sideStats[c.side];return c.quality>=config.acquireQuality&&s.usable>=3&&c.center.x>0.14&&c.center.x<0.86&&c.center.y>0.08&&c.center.y<0.92};
-    const samePending=(a,b,aspect)=>!!a&&!!b&&trackDistance(a.center,b.center,aspect)/Math.max(0.04,a.scale)<0.65&&b.scale/a.scale>0.55&&b.scale/a.scale<1.8;
-    function chooseSide(c,t){
-      if(side===null){side=c.side;sideWeakSince=null;return side}const current=c.sideStats[side],other=c.sideStats[1-side];
-      if(current.usable>=3&&current.quality>=config.lowConfidence+0.05){sideWeakSince=null;return side}
-      if(other.usable>=3&&other.quality>current.quality+0.12){if(sideWeakSince===null)sideWeakSince=t;if(t-sideWeakSince>350){side=1-side;sideWeakSince=null}}else sideWeakSince=null;return side;
-    }
-    function smooth(current,dt){
-      if(!Array.isArray(current))return null;const out=current.map(p=>p?{...p}:p);if(!smoothed)return out;
-      for(const i of TRACK_BODY){const p=current[i],old=smoothed[i],c=trackConfidence(p);if(!p||!old||c<config.lowConfidence)continue;const speed=trackDistance(p,old,1)/Math.max(0.008,dt),alpha=clamp(0.22+speed*1.7+c*0.32,0.28,0.82);out[i]={...p,x:old.x+alpha*(p.x-old.x),y:old.y+alpha*(p.y-old.y)}}return out;
-    }
-    function accept(c,t,aspect,tier,cost=null,overlap=0){
-      const old=track,dt=old?.lastAt===null||old?.lastAt===undefined?1/30:clamp((t-old.lastAt)/1000,0.001,0.2);let velocity={x:0,y:0};
-      if(old){const vx=(c.center.x-old.center.x)/dt,vy=(c.center.y-old.center.y)/dt;velocity={x:old.velocity.x*0.68+vx*0.32,y:old.velocity.y*0.68+vy*0.32};const speed=Math.hypot(velocity.x*aspect,velocity.y);if(speed>1.2){const f=1.2/speed;velocity.x*=f;velocity.y*=f}}
-      side=chooseSide(c,t);smoothed=smooth(c.points,dt);track={center:c.center,scale:c.scale,box:c.box,points:c.points,velocity,lastAt:t,lastSeen:t,initialScale:old?.initialScale||c.scale,tier,cost,overlap};stats.accepted++;if(tier==='low')stats.lowConfidenceMatches++;
-      return {landmarks:smoothed,locked:true,needsRelock:false,side,message:'User locked · '+(side===0?'left':'right')+' side · '+(tier==='low'?'recovered':'motion track'),tier,matchCost:cost};
-    }
-    function hold(message,t){stats.rejected++;if(!track)return {landmarks:null,locked:false,needsRelock:false,side:null,message,tier:'acquire'};if(t-track.lastSeen>=config.maxCoastMs){needsRelock=true;stats.losses++;return {landmarks:null,locked:true,needsRelock:true,side,message:'Tracking paused. Clear the view, then tap Re-lock user.',tier:'lost'}}stats.coasted++;return {landmarks:null,locked:true,needsRelock:false,side,message:message||'Lock held · pose briefly obscured.',tier:'coast'}}
+    const config={lowConfidence:0.18,highConfidence:0.48,acquireQuality:0.33,acquireMs:420,maxCoastMs:950,ambiguityMargin:0.16,highCost:1.35,lowCost:0.92,...options};let track=null,pending=null,needsRelock=false,side=null,sideWeakSince=null,smoothed=null;const stats={accepted:0,rejected:0,losses:0,coasted:0,presenceCoasts:0,lowConfidenceMatches:0,ambiguities:0};
+    const pool=(poses,aspect)=>(poses||[]).map(p=>describeSubject(p,aspect,config)).filter(Boolean),viable=c=>{const s=c.sideStats[c.side];return c.quality>=config.acquireQuality&&s.usable>=3&&c.center.x>0.14&&c.center.x<0.86&&c.center.y>0.08&&c.center.y<0.92},samePending=(a,b,aspect)=>!!a&&!!b&&trackDistance(a.center,b.center,aspect)/Math.max(0.04,a.scale)<0.65&&b.scale/a.scale>0.55&&b.scale/a.scale<1.8;
+    function chooseSide(c,t){if(side===null){side=c.side;sideWeakSince=null;return side}const current=c.sideStats[side],other=c.sideStats[1-side];if(current.usable>=3&&current.quality>=config.lowConfidence+0.05){sideWeakSince=null;return side}if(other.usable>=3&&other.quality>current.quality+0.12){if(sideWeakSince===null)sideWeakSince=t;if(t-sideWeakSince>350){side=1-side;sideWeakSince=null}}else sideWeakSince=null;return side}
+    function smooth(current,dt){if(!Array.isArray(current))return null;const out=current.map(p=>p?{...p}:p);if(!smoothed)return out;for(const i of TRACK_BODY){const p=current[i],old=smoothed[i],c=trackConfidence(p);if(!p||!old||c<config.lowConfidence)continue;const speed=trackDistance(p,old,1)/Math.max(0.008,dt),alpha=clamp(0.22+speed*1.7+c*0.32,0.28,0.82);out[i]={...p,x:old.x+alpha*(p.x-old.x),y:old.y+alpha*(p.y-old.y)}}return out}
+    function accept(c,t,aspect,tier,cost=null,overlap=0){const old=track,dt=old?.lastAt===null||old?.lastAt===undefined?1/30:clamp((t-old.lastAt)/1000,0.001,0.2);let velocity={x:0,y:0};if(old){const vx=(c.center.x-old.center.x)/dt,vy=(c.center.y-old.center.y)/dt;velocity={x:old.velocity.x*0.68+vx*0.32,y:old.velocity.y*0.68+vy*0.32};const speed=Math.hypot(velocity.x*aspect,velocity.y);if(speed>1.2){const f=1.2/speed;velocity.x*=f;velocity.y*=f}}side=chooseSide(c,t);smoothed=smooth(c.points,dt);track={center:c.center,scale:c.scale,box:c.box,points:c.points,velocity,lastAt:t,lastSeen:t,initialScale:old?.initialScale||c.scale,tier,cost,overlap};needsRelock=false;stats.accepted++;if(tier==='low')stats.lowConfidenceMatches++;return {landmarks:smoothed,locked:true,needsRelock:false,side,message:'User locked · '+(side===0?'left':'right')+' side · '+(tier==='low'?'recovered':'motion track'),tier,matchCost:cost}}
+    function hold(message,t,presenceHeld=false){stats.rejected++;if(!track)return {landmarks:null,locked:false,needsRelock:false,side:null,message,tier:'acquire'};if(presenceHeld){stats.coasted++;stats.presenceCoasts++;return {landmarks:null,locked:true,needsRelock:false,side,message:'User isolated · pose confidence dipped; lock held.',tier:'isolated-coast'}}if(t-track.lastSeen>=config.maxCoastMs){needsRelock=true;stats.losses++;return {landmarks:null,locked:true,needsRelock:true,side,message:'Tracking paused. Clear the view, then tap Re-lock user.',tier:'lost'}}stats.coasted++;return {landmarks:null,locked:true,needsRelock:false,side,message:message||'Lock held · pose briefly obscured.',tier:'coast'}}
     function reset(){track=null;pending=null;needsRelock=false;side=null;sideWeakSince=null;smoothed=null}
-    function push(poses,t,aspect=1){
-      if(needsRelock)return {landmarks:null,locked:!!track,needsRelock:true,side,message:'Tracking paused. Clear the view, then tap Re-lock user.',tier:'lost'};
-      const candidates=pool(poses,aspect);
-      if(!track){
-        const choices=candidates.filter(viable);if(choices.length!==1){pending=null;return {landmarks:null,locked:false,needsRelock:false,side:null,message:choices.length>1?'More than one likely lifter is in the lock area. Move to the centre alone.':'Centre yourself so one shoulder/hip/knee/ankle chain is visible.',tier:'acquire'}}
-        const chosen=choices[0];if(!samePending(pending?.candidate,chosen,aspect)||t-(pending?.last||0)>280)pending={candidate:chosen,since:t,last:t};else{pending.candidate=chosen;pending.last=t}
-        if(t-pending.since<config.acquireMs)return {landmarks:null,locked:false,needsRelock:false,side:null,message:'Hold position for a moment…',tier:'acquire'};return accept(chosen,t,aspect,'high',0,chosen.visible);
-      }
-      const scored=candidates.map(c=>subjectAssociation(track,c,t,aspect,config)).filter(x=>x.candidate.scale/track.initialScale>0.48&&x.candidate.scale/track.initialScale<2.05).sort((a,b)=>a.cost-b.cost);
-      const choices=scored.filter(x=>(x.candidate.quality>=config.highConfidence&&x.cost<=config.highCost)||(x.candidate.quality>=config.lowConfidence&&x.overlap>=2&&x.cost<=config.lowCost)).sort((a,b)=>a.cost-b.cost);
-      if(!choices.length)return hold('Lock held · pose confidence dipped.',t);
-      if(choices.length>1&&choices[1].cost-choices[0].cost<config.ambiguityMargin){stats.ambiguities++;return hold('Two people overlap the predicted track. Counting paused until the view separates.',t)}
-      const best=choices[0],tier=best.candidate.quality>=config.highConfidence?'high':'low';return accept(best.candidate,t,aspect,tier,best.cost,best.overlap);
-    }
+    function push(poses,t,aspect=1,context={}){const subjectPresent=!!context?.subjectPresent;if(needsRelock&&!subjectPresent)return {landmarks:null,locked:!!track,needsRelock:true,side,message:'Tracking paused. Clear the view, then tap Re-lock user.',tier:'lost'};if(needsRelock&&subjectPresent)needsRelock=false;const candidates=pool(poses,aspect);
+      if(!track){const choices=candidates.filter(viable);if(choices.length!==1){pending=null;return {landmarks:null,locked:false,needsRelock:false,side:null,message:choices.length>1?'More than one likely lifter is in the lock area. Move to the centre alone.':'Centre yourself so one shoulder/hip/knee/ankle chain is visible.',tier:'acquire'}}const chosen=choices[0];if(!samePending(pending?.candidate,chosen,aspect)||t-(pending?.last||0)>280)pending={candidate:chosen,since:t,last:t};else{pending.candidate=chosen;pending.last=t}if(t-pending.since<config.acquireMs)return {landmarks:null,locked:false,needsRelock:false,side:null,message:'Hold position for a moment…',tier:'acquire'};return accept(chosen,t,aspect,'high',0,chosen.visible)}
+      const scored=candidates.map(c=>subjectAssociation(track,c,t,aspect,config)).filter(x=>x.candidate.scale/track.initialScale>0.48&&x.candidate.scale/track.initialScale<2.05).sort((a,b)=>a.cost-b.cost),choices=scored.filter(x=>(x.candidate.quality>=config.highConfidence&&x.cost<=config.highCost)||(x.candidate.quality>=config.lowConfidence&&x.overlap>=2&&x.cost<=config.lowCost)).sort((a,b)=>a.cost-b.cost);if(!choices.length)return hold('Lock held · pose confidence dipped.',t,subjectPresent);if(choices.length>1&&choices[1].cost-choices[0].cost<config.ambiguityMargin){stats.ambiguities++;return hold('Two people overlap the predicted track. Counting paused until the view separates.',t,subjectPresent)}const best=choices[0],tier=best.candidate.quality>=config.highConfidence?'high':'low';return accept(best.candidate,t,aspect,tier,best.cost,best.overlap)}
     function diagnostics(){return {...stats,locked:!!track,needsRelock,side,tier:track?.tier||null,matchCost:Number.isFinite(track?.cost)?Number(track.cost.toFixed(3)):null,overlap:track?.overlap||0}}
     return {push,reset,diagnostics};
   }
 
-  function installPoseTrackingTuning(){
-    if(typeof window==='undefined')return;const counterApi=window.IronSixRepCounter;if(!counterApi||counterApi.__ironSixTrackingTuned)return;
-    const activeFloor={squat:500,curl:400,pushup:400,press:450};for(const rule of counterApi.RULES||[]){if(activeFloor[rule.id]){rule.minRepMs=activeFloor[rule.id];rule.minActiveMs=activeFloor[rule.id]}}
-    counterApi.createTracker=(rule,options)=>{const tracker=createSubjectTracker(rule,options),reset=tracker.reset.bind(tracker);tracker.reset=()=>{counterApi.__ironSixForceInterrupt=true;return reset()};return tracker};
-    const createCounter=counterApi.createCounter;
-    counterApi.createCounter=(rule,options)=>{const counter=createCounter(rule,options),push=counter.push.bind(counter),hardInterrupt=counter.interrupt.bind(counter);let softInterrupts=0;counter.push=frame=>{if(frame?.landmarks)softInterrupts=0;return push(frame)};counter.interrupt=()=>{if(counterApi.__ironSixForceInterrupt){counterApi.__ironSixForceInterrupt=false;softInterrupts=0;return hardInterrupt()}softInterrupts++;if(softInterrupts>=15){softInterrupts=0;return hardInterrupt()}return counter.state()};return counter};
-    counterApi.__ironSixTrackingTuned=true;counterApi.__ironSixSubjectTrackerV4=true;
-  }
+  function installPoseTrackingTuning(){if(typeof window==='undefined')return;const counterApi=window.IronSixRepCounter;if(!counterApi||counterApi.__ironSixTrackingTuned)return;const activeFloor={squat:500,curl:400,pushup:400,press:450};for(const rule of counterApi.RULES||[]){if(activeFloor[rule.id]){rule.minRepMs=activeFloor[rule.id];rule.minActiveMs=activeFloor[rule.id]}}counterApi.createTracker=(rule,options)=>{const tracker=createSubjectTracker(rule,options),reset=tracker.reset.bind(tracker);tracker.reset=()=>{counterApi.__ironSixForceInterrupt=true;return reset()};return tracker};const createCounter=counterApi.createCounter;counterApi.createCounter=(rule,options)=>{const counter=createCounter(rule,options),push=counter.push.bind(counter),hardInterrupt=counter.interrupt.bind(counter);let softInterrupts=0;counter.push=frame=>{if(frame?.landmarks||frame?.subjectPresent)softInterrupts=0;return push(frame)};counter.interrupt=()=>{if(counterApi.__ironSixForceInterrupt){counterApi.__ironSixForceInterrupt=false;softInterrupts=0;return hardInterrupt()}softInterrupts++;if(softInterrupts>=15){softInterrupts=0;return hardInterrupt()}return counter.state()};return counter};counterApi.__ironSixTrackingTuned=true;counterApi.__ironSixSubjectTrackerV4=true;counterApi.__ironSixSubjectTrackerV5=true}
   installPoseTrackingTuning();
 
-  const P={LSHOULDER:11,RSHOULDER:12,LHIP:23,RHIP:24,LKNEE:25,RKNEE:26,LANKLE:27,RANKLE:28};
-  const median=values=>{const a=[...values].filter(Number.isFinite).sort((x,y)=>x-y);return a.length?a[(a.length-1)>>1]:null};
-  const dist=(a,b,aspect=1)=>a&&b?Math.hypot((a.x-b.x)*aspect,a.y-b.y):null;
+  const P={LSHOULDER:11,RSHOULDER:12,LHIP:23,RHIP:24,LKNEE:25,RKNEE:26,LANKLE:27,RANKLE:28},median=values=>{const a=[...values].filter(Number.isFinite).sort((x,y)=>x-y);return a.length?a[(a.length-1)>>1]:null},dist=(a,b,aspect=1)=>a&&b?Math.hypot((a.x-b.x)*aspect,a.y-b.y):null;
   function angle(a,b,c,aspect=1){if(!a||!b||!c)return null;const ax=(a.x-b.x)*aspect,ay=a.y-b.y,cx=(c.x-b.x)*aspect,cy=c.y-b.y,mag=Math.hypot(ax,ay)*Math.hypot(cx,cy);if(!mag)return null;return Math.acos(Math.max(-1,Math.min(1,(ax*cx+ay*cy)/mag)))*180/Math.PI}
-  function pointOk(p){return !!p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&(p.visibility===undefined||p.visibility>=0.45)&&(p.presence===undefined||p.presence>=0.45)}
+  function pointOk(p){return !!p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&(p.visibility===undefined||p.visibility>=0.42)&&(p.presence===undefined||p.presence>=0.42)}
   function indices(side){return side===1?{shoulder:P.RSHOULDER,hip:P.RHIP,knee:P.RKNEE,ankle:P.RANKLE}:{shoulder:P.LSHOULDER,hip:P.LHIP,knee:P.LKNEE,ankle:P.LANKLE}}
   function metrics(landmarks,side,aspect=1){if(!landmarks||side===null||side===undefined)return null;const i=indices(side),shoulder=landmarks[i.shoulder],hip=landmarks[i.hip],knee=landmarks[i.knee],ankle=landmarks[i.ankle];if(![shoulder,hip,knee,ankle].every(pointOk))return null;const torso=dist(shoulder,hip,aspect);if(!torso||torso<0.04)return null;const dx=Math.abs((shoulder.x-hip.x)*aspect),dy=Math.abs(shoulder.y-hip.y);return {shoulder,hip,knee,ankle,torso,kneeAngle:angle(hip,knee,ankle,aspect),torsoLean:Math.atan2(dx,Math.max(0.0001,dy))*180/Math.PI,depthRatio:(hip.y-knee.y)/torso}}
-
-  const COPY={
-    depth:{level:'watch',text:'Camera view suggests this rep finished a little higher than your other reps. If that depth is intentional, ignore this; otherwise aim for a more repeatable bottom position.'},
-    depthConsistency:{level:'watch',text:'Your bottom position changed noticeably from recent reps. Try to make the next rep match your intended depth.'},
-    torso:{level:'cue',text:'Your torso angle changed a lot from the setup position. Brace and try to let your chest and hips rise together.'},
-    hipLead:{level:'cue',text:'Your hips started rising ahead of your chest on this rep. Stay braced and try to bring chest and hips up together.'},
-    tempo:{level:'watch',text:'That rep was very quick. If speed was not intentional, use a more deliberate descent so the position is easier to control.'}
-  };
+  const COPY={depth:{level:'watch',text:'Camera view suggests this rep finished a little higher than your other reps. If that depth is intentional, ignore this; otherwise aim for a more repeatable bottom position.'},depthConsistency:{level:'watch',text:'Your bottom position changed noticeably from recent reps. Try to make the next rep match your intended depth.'},torso:{level:'cue',text:'Your torso angle changed a lot from the setup position. Brace and try to let your chest and hips rise together.'},hipLead:{level:'cue',text:'Your hips started rising ahead of your chest on this rep. Stay braced and try to bring chest and hips up together.'},tempo:{level:'watch',text:'That rep was very quick. If speed was not intentional, use a more deliberate descent so the position is easier to control.'}};
   function assessSquat(rep,prior){const issues=[];if(Number.isFinite(rep.depthRatio)&&rep.depthRatio<-0.10)issues.push('depth');const priorDepths=prior.slice(-3).map(x=>x.extreme).filter(Number.isFinite);if(priorDepths.length>=2&&Number.isFinite(rep.extreme)&&Math.abs(rep.extreme-median(priorDepths))>12)issues.push('depthConsistency');if(Number.isFinite(rep.maxLeanDelta)&&rep.maxLeanDelta>28)issues.push('torso');if(Number.isFinite(rep.maxHipLead)&&rep.maxHipLead>0.16)issues.push('hipLead');if(Number.isFinite(rep.descentMs)&&rep.descentMs>0&&rep.descentMs<550)issues.push('tempo');return issues}
-  function createSquatEvaluator(options){
-    const config={minFrames:8,...(options||{})};let topLean=[],current=null,history=[],latest=null,lastLogCount=0;
-    function reset(){topLean=[];current=null;history=[];latest=null;lastLogCount=0}function resetSet(){topLean=[];current=null;latest=null;lastLogCount=0}function interrupt(logCount){topLean=[];current=null;lastLogCount=Number.isFinite(Number(logCount))?Number(logCount):lastLogCount}
-    function begin(m,t){current={startedAt:t,baselineLean:median(topLean.slice(-20))??m.torsoLean,samples:0,bottomAt:null,depthRatio:null,maxLeanDelta:0,maxHipLead:0,bottomHipY:null,bottomShoulderY:null,extreme:null}}
+  function createSquatEvaluator(options){const config={minFrames:8,...(options||{})};let topLean=[],current=null,history=[],latest=null,lastLogCount=0;function reset(){topLean=[];current=null;history=[];latest=null;lastLogCount=0}function resetSet(){topLean=[];current=null;latest=null;lastLogCount=0}function interrupt(logCount){topLean=[];current=null;lastLogCount=Number.isFinite(Number(logCount))?Number(logCount):lastLogCount}function begin(m,t){current={startedAt:t,baselineLean:median(topLean.slice(-20))??m.torsoLean,samples:0,bottomAt:null,depthRatio:null,maxLeanDelta:0,maxHipLead:0,bottomHipY:null,bottomShoulderY:null,extreme:null}}
     function push(frame){const state=frame&&frame.counterState||{},phase=state.phase||'waiting',t=Number(frame&&frame.t)||0,m=metrics(frame&&frame.landmarks,frame&&frame.side,Number(frame&&frame.aspect)||1);if(!m){if(phase==='lost')current=null;return snapshot()}if((phase==='top'||phase==='waiting')&&!current){topLean.push(m.torsoLean);if(topLean.length>30)topLean.shift()}if((phase==='descending'||phase==='bottom'||phase==='ascending')&&!current)begin(m,t);if(current){current.samples++;current.maxLeanDelta=Math.max(current.maxLeanDelta,Math.max(0,m.torsoLean-current.baselineLean));if(phase==='bottom'&&current.bottomAt===null){current.bottomAt=t;current.depthRatio=m.depthRatio;current.bottomHipY=m.hip.y;current.bottomShoulderY=m.shoulder.y}if(phase==='ascending'&&current.bottomAt!==null){const hipRise=(current.bottomHipY-m.hip.y)/m.torso,shoulderRise=(current.bottomShoulderY-m.shoulder.y)/m.torso;current.maxHipLead=Math.max(current.maxHipLead,hipRise-shoulderRise)}}const log=Array.isArray(state.log)?state.log:[];if(log.length>lastLogCount){const item=log[log.length-1],rep={index:item.index,ms:item.ms,extreme:item.extreme,samples:current?.samples||0,descentMs:current?.bottomAt===null||current?.bottomAt===undefined?null:Math.max(0,current.bottomAt-current.startedAt),ascentMs:current?.bottomAt===null||current?.bottomAt===undefined?null:Math.max(0,t-current.bottomAt),depthRatio:current?.depthRatio??null,maxLeanDelta:current?.maxLeanDelta??null,maxHipLead:current?.maxHipLead??null},issues=rep.samples>=config.minFrames?assessSquat(rep,history):[];latest={...rep,issues,cues:issues.map(id=>({id,...COPY[id]})),confidence:rep.samples>=14&&rep.depthRatio!==null?'high':'medium'};history.push(latest);lastLogCount=log.length;current=null;topLean=[m.torsoLean]}else lastLogCount=Math.max(lastLogCount,log.length);return snapshot()}
-    function repeatedCue(){const recent=history.slice(-3),counts={};for(const rep of recent)for(const id of rep.issues)counts[id]=(counts[id]||0)+1;const id=Object.keys(counts).sort((a,b)=>counts[b]-counts[a])[0];return id&&counts[id]>=2?{id,...COPY[id],repeated:counts[id]}:null}
-    function snapshot(){return {kind:'squat',latest,repeatedCue:repeatedCue(),history:history.slice()}}function summary(){const counts={};for(const rep of history)for(const id of rep.issues)counts[id]=(counts[id]||0)+1;const top=Object.keys(counts).sort((a,b)=>counts[b]-counts[a])[0];return {reps:history.length,issues:counts,primary:top?{id:top,count:counts[top],...COPY[top]}:null}}
-    return {push,reset,resetSet,interrupt,state:snapshot,summary};
+    function repeatedCue(){const recent=history.slice(-3),counts={};for(const rep of recent)for(const id of rep.issues)counts[id]=(counts[id]||0)+1;const id=Object.keys(counts).sort((a,b)=>counts[b]-counts[a])[0];return id&&counts[id]>=2?{id,...COPY[id],repeated:counts[id]}:null}function snapshot(){return {kind:'squat',latest,repeatedCue:repeatedCue(),history:history.slice()}}function summary(){const counts={};for(const rep of history)for(const id of rep.issues)counts[id]=(counts[id]||0)+1;const top=Object.keys(counts).sort((a,b)=>counts[b]-counts[a])[0];return {reps:history.length,issues:counts,primary:top?{id:top,count:counts[top],...COPY[top]}:null}}return {push,reset,resetSet,interrupt,state:snapshot,summary};
   }
   function createGenericEvaluator(){let history=[],latest=null,lastLogCount=0;function push(frame){const log=Array.isArray(frame?.counterState?.log)?frame.counterState.log:[];if(log.length>lastLogCount){const item=log[log.length-1],issues=item.ms<1200?['tempo']:[];latest={...item,issues,cues:issues.map(id=>({id,...COPY[id]})),confidence:'medium'};history.push(latest)}lastLogCount=log.length;return state()}function state(){const recent=history.slice(-3),fast=recent.filter(x=>x.issues.includes('tempo')).length;return {kind:'generic',latest,repeatedCue:fast>=2?{id:'tempo',...COPY.tempo,repeated:fast}:null,history:history.slice()}}function summary(){return {reps:history.length,issues:{tempo:history.filter(x=>x.issues.includes('tempo')).length},primary:null}}function reset(){history=[];latest=null;lastLogCount=0}function resetSet(){latest=null;lastLogCount=0}function interrupt(logCount){lastLogCount=Number.isFinite(Number(logCount))?Number(logCount):lastLogCount}return {push,reset,resetSet,interrupt,state,summary}}
   function createEvaluator(rule,options){return rule?.id==='squat'?createSquatEvaluator(options):createGenericEvaluator(options)}
-  const api={POINTS:P,metrics,createEvaluator,COPY,createSubjectTracker,describeSubject,subjectAssociation,trackConfidence};
-  if(typeof window!=='undefined')window.IronSixFormCoach=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
+  const api={POINTS:P,metrics,createEvaluator,COPY,createSubjectTracker,describeSubject,subjectAssociation,trackConfidence};if(typeof window!=='undefined')window.IronSixFormCoach=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })();
