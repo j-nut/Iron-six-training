@@ -1,9 +1,13 @@
 name: Patch camera portrait and form feedback
+
 on:
   push:
-    branches: [feature/pose-form-voice-v3]
+    branches:
+      - feature/pose-form-voice-v3
+
 permissions:
   contents: write
+
 jobs:
   patch:
     runs-on: ubuntu-latest
@@ -11,77 +15,92 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: feature/pose-form-voice-v3
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
       - name: Patch camera framing and form feedback
-        shell: python
         run: |
+          python - <<'PY'
           from pathlib import Path
           import re
-          p=Path('pose-spike.js')
-          s=p.read_text()
 
-          s,n=re.subn(r"\.pose-stage\{position:relative;overflow:hidden;border-radius:16px;background:#050607;aspect-ratio:4/3;margin:12px 0\}",
-            ".pose-stage{position:relative;overflow:hidden;border-radius:16px;background:#050607;aspect-ratio:var(--pose-stage-ratio,3/4);margin:12px auto;width:100%}",s,count=1)
-          assert n==1, 'pose-stage rule not found'
-          s=s.replace('object-fit:cover;transform:scaleX(-1)','object-fit:contain;transform:scaleX(-1)',1)
-          s=s.replace('@media(max-width:520px){.pose-modal{padding:14px}', '@media(min-width:700px){.pose-stage{max-width:520px}}\n      @media(max-width:520px){.pose-modal{padding:14px}',1)
-          s=s.replace('<div class="pose-stage"><video id="poseVideo"', '<div class="pose-stage" id="poseStage"><video id="poseVideo"',1)
+          p = Path('pose-spike.js')
+          s = p.read_text()
 
-          old="""  async function startCamera(id){
-    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('This browser/app cannot open the camera. Camera permission and a secure page are required.');
-    const acquired=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:960},height:{ideal:720},frameRate:{ideal:30}},audio:false});
-    if(id!==sessionId){for(const track of acquired.getTracks())track.stop();return}stream=acquired;video.srcObject=stream;await video.play().catch(()=>{});
-    if(!video.videoWidth)await new Promise(resolve=>{video.addEventListener('loadedmetadata',resolve,{once:true});setTimeout(resolve,3000)});
-  }"""
-          new="""  function syncStageAspect(){
-    const stage=el('poseStage');if(!stage||!video?.videoWidth||!video?.videoHeight)return;
-    stage.style.setProperty('--pose-stage-ratio',`${video.videoWidth}/${video.videoHeight}`);
-    stage.dataset.orientation=video.videoHeight>=video.videoWidth?'portrait':'landscape';
-  }
-  async function startCamera(id){
-    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('This browser/app cannot open the camera. Camera permission and a secure page are required.');
-    const portrait=(window.innerHeight||0)>=(window.innerWidth||0);
-    const acquired=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'user'},width:{ideal:portrait?720:1280},height:{ideal:portrait?1280:720},aspectRatio:{ideal:portrait?9/16:16/9},frameRate:{ideal:30,max:30}},audio:false});
-    if(id!==sessionId){for(const track of acquired.getTracks())track.stop();return}stream=acquired;video.srcObject=stream;await video.play().catch(()=>{});
-    if(!video.videoWidth)await new Promise(resolve=>{video.addEventListener('loadedmetadata',resolve,{once:true});setTimeout(resolve,3000)});
-    syncStageAspect();
-  }"""
+          s, n = re.subn(
+              r"\.pose-stage\{position:relative;overflow:hidden;border-radius:16px;background:#050607;aspect-ratio:4/3;margin:12px 0\}",
+              ".pose-stage{position:relative;overflow:hidden;border-radius:16px;background:#050607;aspect-ratio:var(--pose-stage-ratio,3/4);margin:12px auto;width:100%}",
+              s,
+              count=1,
+          )
+          assert n == 1, 'pose-stage rule not found'
+          s = s.replace('object-fit:cover;transform:scaleX(-1)', 'object-fit:contain;transform:scaleX(-1)', 1)
+          s = s.replace(
+              '@media(max-width:520px){.pose-modal{padding:14px}',
+              '@media(min-width:700px){.pose-stage{max-width:520px}}\n      @media(max-width:520px){.pose-modal{padding:14px}',
+              1,
+          )
+          s = s.replace(
+              '<div class="pose-stage"><video id="poseVideo"',
+              '<div class="pose-stage" id="poseStage"><video id="poseVideo"',
+              1,
+          )
+
+          old = """  async function startCamera(id){
+            if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('This browser/app cannot open the camera. Camera permission and a secure page are required.');
+            const acquired=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:960},height:{ideal:720},frameRate:{ideal:30}},audio:false});
+            if(id!==sessionId){for(const track of acquired.getTracks())track.stop();return}stream=acquired;video.srcObject=stream;await video.play().catch(()=>{});
+            if(!video.videoWidth)await new Promise(resolve=>{video.addEventListener('loadedmetadata',resolve,{once:true});setTimeout(resolve,3000)});
+          }"""
+          new = """  function syncStageAspect(){
+            const stage=el('poseStage');if(!stage||!video?.videoWidth||!video?.videoHeight)return;
+            stage.style.setProperty('--pose-stage-ratio',`${video.videoWidth}/${video.videoHeight}`);
+            stage.dataset.orientation=video.videoHeight>=video.videoWidth?'portrait':'landscape';
+          }
+          async function startCamera(id){
+            if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('This browser/app cannot open the camera. Camera permission and a secure page are required.');
+            const portrait=(window.innerHeight||0)>=(window.innerWidth||0);
+            const acquired=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'user'},width:{ideal:portrait?720:1280},height:{ideal:portrait?1280:720},aspectRatio:{ideal:portrait?9/16:16/9},frameRate:{ideal:30,max:30}},audio:false});
+            if(id!==sessionId){for(const track of acquired.getTracks())track.stop();return}stream=acquired;video.srcObject=stream;await video.play().catch(()=>{});
+            if(!video.videoWidth)await new Promise(resolve=>{video.addEventListener('loadedmetadata',resolve,{once:true});setTimeout(resolve,3000)});
+            syncStageAspect();
+          }"""
           assert old in s, 'startCamera block not found'
-          s=s.replace(old,new,1)
+          s = s.replace(old, new, 1)
 
-          old="""  function paintForm(state){
-    const box=el('poseForm');if(!box)return;box.classList.remove('cue','watch');let text='Waiting for a completed rep. Camera-visible observations only.';
-    if(state?.repeatedCue){box.classList.add(state.repeatedCue.level==='cue'?'cue':'watch');text='Coach cue: '+state.repeatedCue.text}
-    else if(state?.latest?.cues?.length){const cue=state.latest.cues[0];box.classList.add(cue.level==='cue'?'cue':'watch');text='Possible on rep '+state.latest.index+': '+cue.text}
-    else if(state?.latest)text='Rep '+state.latest.index+': no repeated camera-visible issue detected.';
-    setText('poseFormCue',text);
-  }"""
-          new="""  function paintForm(state){
-    const box=el('poseForm');if(!box)return;box.classList.remove('cue','watch');
-    let text=formEvaluator?'Form watch active — complete a rep with your head, hips, knees and feet visible.':'Form watch is loading…';
-    if(state?.repeatedCue){box.classList.add(state.repeatedCue.level==='cue'?'cue':'watch');text='Coach cue: '+state.repeatedCue.text}
-    else if(state?.latest?.cues?.length){const cue=state.latest.cues[0];box.classList.add(cue.level==='cue'?'cue':'watch');text='Rep '+state.latest.index+' suggestion: '+cue.text}
-    else if(state?.latest){
-      const samples=Number(state.latest.samples)||0;
-      if(samples<8){box.classList.add('watch');text='Rep '+state.latest.index+' counted, but form analysis was skipped because only '+samples+' clean frames were available. Keep your full body visible and try again.'}
-      else{text='Rep '+state.latest.index+' analyzed: no camera-visible issue crossed the cue threshold. Keep the same controlled depth and torso path.'}
-    }
-    setText('poseFormCue',text);
-  }"""
+          old = """  function paintForm(state){
+            const box=el('poseForm');if(!box)return;box.classList.remove('cue','watch');let text='Waiting for a completed rep. Camera-visible observations only.';
+            if(state?.repeatedCue){box.classList.add(state.repeatedCue.level==='cue'?'cue':'watch');text='Coach cue: '+state.repeatedCue.text}
+            else if(state?.latest?.cues?.length){const cue=state.latest.cues[0];box.classList.add(cue.level==='cue'?'cue':'watch');text='Possible on rep '+state.latest.index+': '+cue.text}
+            else if(state?.latest)text='Rep '+state.latest.index+': no repeated camera-visible issue detected.';
+            setText('poseFormCue',text);
+          }"""
+          new = """  function paintForm(state){
+            const box=el('poseForm');if(!box)return;box.classList.remove('cue','watch');
+            let text=formEvaluator?'Form watch active — complete a rep with your head, hips, knees and feet visible.':'Form watch is loading…';
+            if(state?.repeatedCue){box.classList.add(state.repeatedCue.level==='cue'?'cue':'watch');text='Coach cue: '+state.repeatedCue.text}
+            else if(state?.latest?.cues?.length){const cue=state.latest.cues[0];box.classList.add(cue.level==='cue'?'cue':'watch');text='Rep '+state.latest.index+' suggestion: '+cue.text}
+            else if(state?.latest){
+              const samples=Number(state.latest.samples)||0;
+              if(samples<8){box.classList.add('watch');text='Rep '+state.latest.index+' counted, but form analysis was skipped because only '+samples+' clean frames were available. Keep your full body visible and try again.'}
+              else{text='Rep '+state.latest.index+' analyzed: no camera-visible issue crossed the cue threshold. Keep the same controlled depth and torso path.'}
+            }
+            setText('poseFormCue',text);
+          }"""
           assert old in s, 'paintForm block not found'
-          s=s.replace(old,new,1)
+          s = s.replace(old, new, 1)
 
-          old="""setText('poseReadout',[`${Math.round(fps)} fps`,`${tracked}% usable frames`,state.angle===null?'no angle':`${state.angle}°`,state.rejected?`${state.rejected} rejected`:'0 rejected',average?`avg rep ${(average/1000).toFixed(1)}s`:'—'].join(' · '));"""
-          new="""setText('poseReadout',[video?.videoWidth&&video?.videoHeight?`${video.videoWidth}×${video.videoHeight}`:'no video size',`${Math.round(fps)} fps`,`${tracked}% usable frames`,state.angle===null?'no angle':`${state.angle}°`,state.rejected?`${state.rejected} rejected`:'0 rejected',average?`avg rep ${(average/1000).toFixed(1)}s`:'—'].join(' · '));"""
+          old = "setText('poseReadout',[`${Math.round(fps)} fps`,`${tracked}% usable frames`,state.angle===null?'no angle':`${state.angle}°`,state.rejected?`${state.rejected} rejected`:'0 rejected',average?`avg rep ${(average/1000).toFixed(1)}s`:'—'].join(' · '));"
+          new = "setText('poseReadout',[video?.videoWidth&&video?.videoHeight?`${video.videoWidth}×${video.videoHeight}`:'no video size',`${Math.round(fps)} fps`,`${tracked}% usable frames`,state.angle===null?'no angle':`${state.angle}°`,state.rejected?`${state.rejected} rejected`:'0 rejected',average?`avg rep ${(average/1000).toFixed(1)}s`:'—'].join(' · '));"
           assert old in s, 'pose readout not found'
-          s=s.replace(old,new,1)
+          s = s.replace(old, new, 1)
           p.write_text(s)
 
-          t=Path('tests/pose-assistant-v3.test.js')
-          ts=t.read_text()
-          insert="""
+          t = Path('tests/pose-assistant-v3.test.js')
+          ts = t.read_text()
+          insert = """
 
 test('camera assistant preserves the full portrait camera frame and exposes form-analysis status',()=>{
   const source=fs.readFileSync('pose-spike.js','utf8');
@@ -92,13 +111,16 @@ test('camera assistant preserves the full portrait camera frame and exposes form
   assert(source.includes('analyzed: no camera-visible issue crossed the cue threshold'));
 });
 """
-          if "preserves the full portrait camera frame" not in ts:
+          if 'preserves the full portrait camera frame' not in ts:
               ts += insert
           t.write_text(ts)
+          PY
+
       - name: Validate changes
         run: |
           node --check pose-spike.js
           npm test
+
       - name: Commit patch and remove one-shot workflow
         run: |
           rm .github/workflows/patch-camera-portrait-form.yml
