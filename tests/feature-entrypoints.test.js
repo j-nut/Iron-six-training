@@ -6,7 +6,7 @@ const required = [
 ];
 for (const page of ['index.html','live.html']) {
   const html=fs.readFileSync(page,'utf8');
-  assert(html.includes('core.js?v=16'));assert(html.includes('engine.js?v=15'));assert(html.includes('ui1.js?v=16'));assert(html.includes('ui3.js?v=15'));assert(html.includes('ui2.js?v=16'));
+  assert(html.includes('core.js?v=16'));assert(html.includes('assets/brand/mark.svg'),`${page} must carry the brand mark`);assert(html.includes('engine.js?v=15'));assert(html.includes('ui1.js?v=16'));assert(html.includes('ui3.js?v=15'));assert(html.includes('ui2.js?v=16'));
   assert(html.indexOf('exercise-media-catalog.js?v=1')<html.indexOf('exercise-media.js?v=2'));
   assert(html.indexOf('exercise-media.js?v=2')<html.indexOf('ui2.js?v=16'));
   let previous=html.indexOf('ui3.js');assert.notEqual(previous,-1);

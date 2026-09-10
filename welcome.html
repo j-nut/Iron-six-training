@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0b0c0f" />
+<title>Iron Six — the training app that adapts to your life, not the other way round</title>
+<meta name="description" content="A strength app that rebuilds your workout around the time you actually have and the equipment you actually own, and sets your weights from what you really lifted. Six days a week, built by someone who needed it." />
+<link rel="icon" href="assets/brand/mark.svg" type="image/svg+xml" />
+<meta property="og:title" content="Iron Six — training that adapts to your life" />
+<meta property="og:description" content="Tell it how long you have and what you own. It rebuilds the session around that, and sets your weights from what you actually lifted." />
+<meta property="og:type" content="website" />
+<style>
+  :root{
+    --bg:#0b0c0f; --surface:#12141a; --surface2:#171a21; --line:#292d38;
+    --text:#f7f8fa; --muted:#a4aab8; --accent:#9ddf68; --accent-ink:#0b0c0f;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:0 20px}
+  a{color:inherit}
+
+  header{position:sticky;top:0;z-index:10;background:rgba(11,12,15,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .bar{display:flex;align-items:center;gap:12px;padding:13px 0}
+  .bar img{width:34px;height:34px;display:block}
+  .bar .name{font-weight:900;letter-spacing:.16em;font-size:15px}
+  .bar nav{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;
+    padding:11px 18px;font-weight:800;font-size:14px;text-decoration:none;border:1px solid var(--line);
+    background:var(--surface2);color:var(--text);cursor:pointer;min-height:44px}
+  .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .btn.primary:hover{filter:brightness(1.06)}
+  .btn.ghost:hover{border-color:rgba(255,255,255,.24)}
+
+  .hero{padding:64px 0 48px;text-align:center}
+  .hero .eyebrow{color:var(--accent);font-weight:850;letter-spacing:.18em;font-size:11.5px;text-transform:uppercase}
+  .hero h1{font-size:clamp(32px,6.4vw,54px);line-height:1.08;letter-spacing:-.02em;margin:14px 0 16px;font-weight:900}
+  .hero p{color:var(--muted);font-size:clamp(15px,2.4vw,18px);max-width:620px;margin:0 auto 26px}
+  .cta{display:flex;gap:11px;justify-content:center;flex-wrap:wrap}
+  .cta small{display:block;width:100%;color:var(--muted);font-size:12.5px;margin-top:12px}
+
+  section{padding:52px 0;border-top:1px solid var(--line)}
+  h2{font-size:clamp(23px,4vw,32px);line-height:1.15;letter-spacing:-.015em;margin:0 0 12px;font-weight:900}
+  .lede{color:var(--muted);max-width:640px;margin:0 0 28px}
+
+  .story{display:grid;gap:18px;max-width:680px}
+  .story p{margin:0;color:var(--muted)}
+  .story p strong{color:var(--text);font-weight:800}
+  .pull{border-left:3px solid var(--accent);padding:4px 0 4px 18px;color:var(--text);font-size:clamp(17px,3vw,21px);
+    line-height:1.4;font-weight:750}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+  .card{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:20px}
+  .card h3{margin:0 0 7px;font-size:16px;font-weight:850}
+  .card p{margin:0;color:var(--muted);font-size:14px}
+  .card .tag{display:inline-block;font-size:10.5px;font-weight:850;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:9px}
+
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:16px}
+  table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px}
+  th,td{padding:13px 14px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:var(--surface);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:850}
+  tbody tr:last-child td{border-bottom:0}
+  td.us{color:var(--accent);font-weight:800}
+  .yes{color:var(--accent);font-weight:850}
+  .no{color:#6c7284}
+  caption{caption-side:bottom;padding:12px 14px;color:var(--muted);font-size:12px;text-align:left}
+
+  .price{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:6px}
+  .price .card{text-align:center}
+  .price .amount{font-size:34px;font-weight:900;letter-spacing:-.02em;margin:6px 0 2px}
+  .price .card.hero-card{border-color:var(--accent);background:rgba(157,223,104,.07)}
+
+  footer{padding:34px 0 56px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
+  footer .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  footer a{color:var(--muted)}
+  @media(max-width:640px){ .hero{padding:44px 0 34px} section{padding:40px 0} .bar .name{display:none} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <img src="assets/brand/mark.svg" alt="" />
+    <span class="name">IRON SIX</span>
+    <nav>
+      <a class="btn ghost" href="#why">Why it's different</a>
+      <a class="btn primary" href="./">Open the app</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <div class="eyebrow">Strength training that fits a real week</div>
+    <h1>Your workout should bend to your life.<br>Not the other way round.</h1>
+    <p>Tell Iron Six how long you've got and what equipment you can reach. It rebuilds the whole session around
+      that — then sets your weights from what you actually lifted last time, not from a plan written for someone else.</p>
+    <div class="cta">
+      <a class="btn primary" href="./">Start training — free</a>
+      <a class="btn ghost" href="#story">Read the story</a>
+      <small>Works in your browser and on Android. No ads. Your log stays yours.</small>
+    </div>
+  </div>
+
+  <section id="story">
+    <div class="wrap">
+      <h2>Why this exists</h2>
+      <div class="story">
+        <p>I'm a dad with a job. For a few years that was my whole excuse, and it was a good one — right up until
+          I couldn't get through a Saturday at the park without needing to sit down.</p>
+        <p>It hadn't happened all at once. It never does. A missed session here, a long week there, and one day the
+          person in the photo didn't look like the person in the mirror.</p>
+        <div class="pull">So I made one deal with myself: iron, six days a week. No heroics, no perfect plan — just
+          turn up six times and let the rest sort itself out.</div>
+        <p>The turning up was the easy part. The apps were not. One wanted ninety minutes I didn't have. One wanted a
+          cable machine I'd never own. Most wanted me to build my own programme first, which is a strange thing to ask
+          of the exact person who doesn't yet know what they're doing.</p>
+        <p>So I built the thing I actually needed. <strong>Twenty minutes before the school run, with two dumbbells
+          and a bench, is a real workout</strong> — and it should be programmed like one, not treated as a failed
+          version of somebody's ideal hour.</p>
+        <p>That's Iron Six. Named after the deal.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="why">
+    <div class="wrap">
+      <h2>What it does that others don't</h2>
+      <p class="lede">Every one of these is in the app today — not a roadmap.</p>
+      <div class="grid">
+        <div class="card">
+          <span class="tag">Time-aware</span>
+          <h3>15 minutes is a session, not a failure</h3>
+          <p>Change the time and the workout is rebuilt around priorities. It drops the accessory work and keeps the
+            movements that matter — instead of cutting the end off an hour-long plan.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Equipment-aware</span>
+          <h3>It only ever programmes what you own</h3>
+          <p>Pick from a catalogue or type in anything. Add a kettlebell and the library grows to match it. A coverage
+            score shows which movements your setup can't train yet, and what would fix it.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Adaptive</span>
+          <h3>Your numbers come from your lifting</h3>
+          <p>Log weight, reps and how much you had left. The next suggestion moves from that — not from a formula
+            based on your body weight and a guess.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Focus</span>
+          <h3>One exercise on screen at a time</h3>
+          <p>The session opens on setup, then walks one movement at a time and remembers where you were when you come
+            back. Full form illustrations, big enough to actually read mid-set.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Coach</span>
+          <h3>An AI that can see your workout</h3>
+          <p>It knows today's session, your history and your equipment. Ask why a weight was suggested, swap a
+            movement, or get warm-up sets. It never invents equipment you don't have.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Yours</span>
+          <h3>Offline, exportable, multi-person</h3>
+          <p>Every set is written down locally first and survives a dead signal. Export a full backup whenever you
+            like and restore it anywhere. One account can hold several people's training.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="compare">
+    <div class="wrap">
+      <h2>Honestly compared</h2>
+      <p class="lede">Prices below are what these apps charge as of September 2026. We think you should know what
+        you'd otherwise be paying — and what you'd be paying for.</p>
+      <div class="tablewrap">
+        <table>
+          <caption>Competitor pricing verified September 2026. Feature comparison reflects each app's headline
+            offering; all of them are good at what they set out to do.</caption>
+          <thead>
+            <tr><th>&nbsp;</th><th>Iron Six</th><th>Fitbod</th><th>Hevy</th><th>Strong</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Per year</td><td class="us">Free, in early access</td><td>$95.99</td><td>$23.99</td><td>$29.99</td></tr>
+            <tr><td>Per month</td><td class="us">Free</td><td>$15.99</td><td>$2.99</td><td>$4.99</td></tr>
+            <tr><td>Free tier limits</td><td class="us">None</td><td>Trial only</td><td>4 routines, 3mo history</td><td>3 routines</td></tr>
+            <tr><td>Builds the workout for you</td><td class="us">Yes</td><td class="yes">Yes</td><td class="no">You build it</td><td class="no">You build it</td></tr>
+            <tr><td>Rebuilds for the time you have</td><td class="us">Yes</td><td class="no">Fixed length</td><td class="no">—</td><td class="no">—</td></tr>
+            <tr><td>Type in any equipment you own</td><td class="us">Yes</td><td class="no">Fixed list</td><td class="no">—</td><td class="no">—</td></tr>
+            <tr><td>Coach that sees your session</td><td class="us">Yes</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+            <tr><td>Several people per account</td><td class="us">Yes</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+            <tr><td>Full export you own</td><td class="us">Yes</td><td class="no">Limited</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="price">
+    <div class="wrap">
+      <h2>What it costs</h2>
+      <p class="lede">Free while Iron Six is in early access. When there is a paid tier it will undercut everyone in
+        the table above, and anything you have already logged stays yours either way.</p>
+      <div class="price">
+        <div class="card hero-card">
+          <span class="tag">Early access</span>
+          <div class="amount">Free</div>
+          <p>Everything in the app. No routine caps, no history window, no ads.</p>
+        </div>
+        <div class="card">
+          <span class="tag">What you're not paying</span>
+          <div class="amount">$95.99</div>
+          <p>Fitbod's yearly price for the closest thing to adaptive programming.</p>
+        </div>
+      </div>
+      <div class="cta" style="justify-content:flex-start;margin-top:26px">
+        <a class="btn primary" href="./">Start training — free</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap row">
+    <img src="assets/brand/mark.svg" alt="" width="26" height="26" />
+    <span>Iron Six — built by a dad who ran out of excuses.</span>
+    <span style="margin-left:auto"><a href="./">Open the app</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
