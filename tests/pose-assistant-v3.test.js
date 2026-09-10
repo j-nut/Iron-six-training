@@ -11,6 +11,16 @@ test('camera assistant v3 stays opt-in and contains no upload path',()=>{
   assert(!/fetch\(|XMLHttpRequest|supabase|\.upload\(/.test(source));
 });
 
+test('camera assistant preserves the full portrait camera frame and exposes form-analysis status',()=>{
+  const source=fs.readFileSync('pose-spike.js','utf8');
+  assert(source.includes('object-fit:contain'));
+  assert(source.includes("aspectRatio:{ideal:portrait?9/16:16/9}"));
+  assert(source.includes("stage.style.setProperty('--pose-stage-ratio'"));
+  assert(source.includes('form analysis was skipped'));
+  assert(source.includes('analyzed: no camera-visible issue crossed the cue threshold'));
+  assert(source.includes('video?.videoWidth&&video?.videoHeight'));
+});
+
 test('Android voice bridge is permission-gated, one-shot and destroyed after use',()=>{
   const source=fs.readFileSync('android/app/src/main/java/com/ironsix/training/VoiceCommandPlugin.java','utf8');
   assert(source.includes('@Permission(alias = "microphone"'));
