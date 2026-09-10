@@ -75,7 +75,7 @@
       <div class="pose-readout-row"><span class="helper" id="poseLock" role="status">Centre yourself and hold still to lock.</span><button type="button" class="pose-copy" id="poseRelock">Re-lock user</button></div>
       <div class="pose-form" id="poseForm"><strong>Form watch</strong><span id="poseFormCue">Waiting for a completed rep. Camera-visible observations only.</span></div>
       <div class="pose-voice" id="poseVoice"><button type="button" class="btn secondary" id="poseVoiceToggle">Enable voice</button><div class="pose-voice-text"><strong id="poseVoiceState">Voice is off</strong><span id="poseVoiceHint">Try “185 pounds”, “8 reps”, “RIR 2”, or “set done”.</span></div></div>
-      <div class="helper">Tracking v3 · One working side is measured. Tracking uncertainty pauses both rep counting and form observation; completed reps are never inferred across a gap.</div>
+      <div class="helper">Tracking v4 · Motion-aware subject association; one working side is measured. Tracking uncertainty pauses both rep counting and form observation; completed reps are never inferred across a gap.</div>
       <div class="helper pose-privacy">Video and pose landmarks stay on this device. Voice is optional; transcription uses your browser/device speech service and may use its network service. Iron Six does not store microphone audio.</div>
       <div class="cta"><button type="button" class="btn secondary" id="poseClose">Close</button><button type="button" class="btn primary" id="poseUse" disabled>Use count only</button></div>
     </div>`;
@@ -94,7 +94,7 @@
 
   async function loadModel(){
     if(landmarker)return landmarker;const vision=await import(VISION);const files=await vision.FilesetResolver.forVisionTasks(WASM);
-    const options={baseOptions:{modelAssetPath:MODEL,delegate:'GPU'},runningMode:'VIDEO',numPoses:3,minPoseDetectionConfidence:0.7,minPosePresenceConfidence:0.7,minTrackingConfidence:0.7};
+    const options={baseOptions:{modelAssetPath:MODEL,delegate:'GPU'},runningMode:'VIDEO',numPoses:3,minPoseDetectionConfidence:0.45,minPosePresenceConfidence:0.45,minTrackingConfidence:0.5};
     try{landmarker=await vision.PoseLandmarker.createFromOptions(files,options)}catch(_){landmarker=await vision.PoseLandmarker.createFromOptions(files,{...options,baseOptions:{...options.baseOptions,delegate:'CPU'}})}return landmarker;
   }
   function syncStageAspect(){
@@ -239,13 +239,13 @@
   }
   function stop(){sessionId++;cancelAnimationFrame(raf);raf=0;stopVoice();if(stream){for(const track of stream.getTracks())track.stop();stream=null}if(video)video.srcObject=null;release()}
   function close(){stop();if(sheet)sheet.classList.remove('show')}
-  function diagnostics(){const state=counter?counter.state():null;return {version:2,assistantVersion:3,trackingVersion:2,tracking:tracker?tracker.diagnostics():null,rule:rule&&rule.id,reps:state?state.reps:0,rejected:state?state.rejected:0,framesSeen,framesTracked,trackedPercent:framesSeen?Math.round(framesTracked/framesSeen*100):0,fps:Math.round(fps),seconds:startedAt?Math.round((Date.now()-startedAt)/1000):0,resolution:video&&video.videoWidth?`${video.videoWidth}x${video.videoHeight}`:null,form:formEvaluator?.summary?.()||null,voice:{enabled:voiceEnabled,mode:voiceMode,lastTranscript:lastTranscript||null},userAgent:navigator.userAgent,log:state?state.log:[]}}
+  function diagnostics(){const state=counter?counter.state():null;return {version:2,assistantVersion:3,trackingVersion:4,tracking:tracker?tracker.diagnostics():null,rule:rule&&rule.id,reps:state?state.reps:0,rejected:state?state.rejected:0,framesSeen,framesTracked,trackedPercent:framesSeen?Math.round(framesTracked/framesSeen*100):0,fps:Math.round(fps),seconds:startedAt?Math.round((Date.now()-startedAt)/1000):0,resolution:video&&video.videoWidth?`${video.videoWidth}x${video.videoHeight}`:null,form:formEvaluator?.summary?.()||null,voice:{enabled:voiceEnabled,mode:voiceMode,lastTranscript:lastTranscript||null},userAgent:navigator.userAgent,log:state?state.log:[]}}
   function copyDiagnostics(){const text=JSON.stringify(diagnostics(),null,2),done=()=>{if(typeof toast==='function')toast('Diagnostics copied')};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done).catch(()=>console.log(text));else console.log(text)}
   function useCount(){const state=counter&&counter.state();if(!state||!state.reps||!target)return close();const input=applyCount(target,state.reps);close();if(!input)return;if(typeof toast==='function')toast('Logged '+state.reps+' reps. Check it before you finish the set.');input.focus()}
 
   function decorate(){
     const workout=typeof finalWorkout==='function'&&typeof activeUser==='function'?finalWorkout(activeUser()):[];
-    for(const card of document.querySelectorAll('#exerciseList [data-exercise-index]')){if(card.querySelector('.pose-bar'))continue;const item=workout[Number(card.dataset.exerciseIndex)];if(!item||!counterApi.ruleFor(item))continue;const sets=card.querySelector('.sets');if(!sets)continue;const bar=document.createElement('div');bar.className='pose-bar';bar.innerHTML='<button type="button" class="pose-open">Camera + form + voice</button><span>Tracking v3 · opt-in · check the log</span>';bar.querySelector('.pose-open').addEventListener('click',()=>open(card,item));sets.appendChild(bar)}
+    for(const card of document.querySelectorAll('#exerciseList [data-exercise-index]')){if(card.querySelector('.pose-bar'))continue;const item=workout[Number(card.dataset.exerciseIndex)];if(!item||!counterApi.ruleFor(item))continue;const sets=card.querySelector('.sets');if(!sets)continue;const bar=document.createElement('div');bar.className='pose-bar';bar.innerHTML='<button type="button" class="pose-open">Camera + form + voice</button><span>Tracking v4 · opt-in · motion-aware lock</span>';bar.querySelector('.pose-open').addEventListener('click',()=>open(card,item));sets.appendChild(bar)}
   }
   const original=window.renderExercises;if(typeof original==='function')window.renderExercises=function(){const result=original.apply(this,arguments);try{decorate()}catch(_){}return result};
   window.addEventListener('pagehide',close);document.addEventListener('visibilitychange',()=>{if(document.hidden)close()});if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{try{decorate()}catch(_){}});else try{decorate()}catch(_){}

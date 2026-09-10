@@ -7,6 +7,10 @@ test('camera assistant v3 stays opt-in and contains no upload path',()=>{
   assert(source.indexOf("if(!readFlag())return")<source.indexOf('getUserMedia'));
   assert(source.includes('Camera + form + voice'));
   assert(source.includes('assistantVersion:3'));
+  assert(source.includes('trackingVersion:4'));
+  assert(source.includes('minPoseDetectionConfidence:0.45'));
+  assert(source.includes('minPosePresenceConfidence:0.45'));
+  assert(source.includes('minTrackingConfidence:0.5'));
   assert(source.includes('confirmedReps'));
   assert(!/fetch\(|XMLHttpRequest|supabase|\.upload\(/.test(source));
 });
@@ -30,15 +34,17 @@ test('pose camera compatibility shim restores known-good wide capture for portra
   assert(source.includes('__ironSixPoseCameraCompat'));
 });
 
-test('pose tracking tuning supports side-on acquisition and brief confidence flicker',()=>{
+test('pose tracking v4 uses motion association, side-on confidence tiers and brief-dropout tolerance',()=>{
   const source=fs.readFileSync('pose-form-coach.js','utf8');
-  assert(source.includes('confidence:0.58'));
-  assert(source.includes('acquireMs:650'));
-  assert(source.includes('lossMs:900'));
+  assert(source.includes('lowConfidence:0.18'));
+  assert(source.includes('highConfidence:0.48'));
+  assert(source.includes('acquireMs:420'));
+  assert(source.includes('maxCoastMs:950'));
+  assert(source.includes('subjectAssociation'));
   assert(source.includes('softInterrupts>=15'));
   assert(source.includes('__ironSixForceInterrupt'));
   assert(source.includes('squat:500'));
-  assert(source.includes('__ironSixTrackingTuned'));
+  assert(source.includes('__ironSixSubjectTrackerV4'));
 });
 
 test('Android voice bridge is permission-gated, one-shot and destroyed after use',()=>{

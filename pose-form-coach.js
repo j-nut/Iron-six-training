@@ -104,11 +104,10 @@
         if(t-pending.since<config.acquireMs)return {landmarks:null,locked:false,needsRelock:false,side:null,message:'Hold position for a moment…',tier:'acquire'};return accept(chosen,t,aspect,'high',0,chosen.visible);
       }
       const scored=candidates.map(c=>subjectAssociation(track,c,t,aspect,config)).filter(x=>x.candidate.scale/track.initialScale>0.48&&x.candidate.scale/track.initialScale<2.05).sort((a,b)=>a.cost-b.cost);
-      let choices=scored.filter(x=>x.candidate.quality>=config.highConfidence&&x.cost<=config.highCost),tier='high';
-      if(!choices.length){choices=scored.filter(x=>x.candidate.quality>=config.lowConfidence&&x.overlap>=2&&x.cost<=config.lowCost);tier='low'}
+      const choices=scored.filter(x=>(x.candidate.quality>=config.highConfidence&&x.cost<=config.highCost)||(x.candidate.quality>=config.lowConfidence&&x.overlap>=2&&x.cost<=config.lowCost)).sort((a,b)=>a.cost-b.cost);
       if(!choices.length)return hold('Lock held · pose confidence dipped.',t);
       if(choices.length>1&&choices[1].cost-choices[0].cost<config.ambiguityMargin){stats.ambiguities++;return hold('Two people overlap the predicted track. Counting paused until the view separates.',t)}
-      const best=choices[0];return accept(best.candidate,t,aspect,tier,best.cost,best.overlap);
+      const best=choices[0],tier=best.candidate.quality>=config.highConfidence?'high':'low';return accept(best.candidate,t,aspect,tier,best.cost,best.overlap);
     }
     function diagnostics(){return {...stats,locked:!!track,needsRelock,side,tier:track?.tier||null,matchCost:Number.isFinite(track?.cost)?Number(track.cost.toFixed(3)):null,overlap:track?.overlap||0}}
     return {push,reset,diagnostics};
