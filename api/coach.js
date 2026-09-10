@@ -52,23 +52,23 @@ function compactSuggested(value) {
   return {
     load: value.load ?? value.weight ?? null,
     target: value.target ?? value.reps ?? null,
-    text: String(value.text || value.display || '').slice(0, 180),
-    confidence: String(value.confidence || '').slice(0, 80),
-    detail: String(value.detail || '').slice(0, 220),
+    text: String(value.text || value.display || '').slice(0, 120),
+    confidence: String(value.confidence || '').slice(0, 60),
+    detail: String(value.detail || '').slice(0, 120),
   };
 }
 
 function compactHistory(input) {
-  return (Array.isArray(input) ? input : []).slice(0, 4).map(session => ({
+  return (Array.isArray(input) ? input : []).slice(0, 3).map(session => ({
     name: session?.name || null,
     date: session?.date || null,
     ts: session?.ts || null,
     workoutKey: session?.workoutKey || null,
     duration: session?.duration || null,
-    details: (Array.isArray(session?.details) ? session.details : []).slice(0, 8).map(detail => ({
+    details: (Array.isArray(session?.details) ? session.details : []).slice(0, 5).map(detail => ({
       name: detail?.name || null,
       base: detail?.base || null,
-      sets: (Array.isArray(detail?.sets) ? detail.sets : []).slice(-3).map(compactSet),
+      sets: (Array.isArray(detail?.sets) ? detail.sets : []).slice(-2).map(compactSet),
     })),
   }));
 }
@@ -79,8 +79,22 @@ function compactAnalytics(input) {
     sessions7: input.sessions7 ?? null,
     sets7: input.sets7 ?? null,
     volume7: input.volume7 ?? null,
-    trends: Array.isArray(input.trends) ? input.trends.slice(0, 6) : [],
+    trends: Array.isArray(input.trends) ? input.trends.slice(0, 4) : [],
     freshness: input.freshness || null,
+  };
+}
+
+function compactCoverage(input) {
+  if (!input || typeof input !== 'object') return null;
+  return {
+    score: input.score ?? null,
+    slotsCovered: input.slotsCovered ?? null,
+    slotsTotal: input.slotsTotal ?? null,
+    emptySlots: Array.isArray(input.emptySlots) ? input.emptySlots.slice(0, 6) : [],
+    thinSlots: Array.isArray(input.thinSlots) ? input.thinSlots.slice(0, 6) : [],
+    wouldHelp: Array.isArray(input.wouldHelp) ? input.wouldHelp.slice(0, 6) : [],
+    unrecognized: Array.isArray(input.unrecognized) ? input.unrecognized.slice(0, 6) : [],
+    conditioningOnly: Array.isArray(input.conditioningOnly) ? input.conditioningOnly.slice(0, 6) : [],
   };
 }
 
@@ -88,8 +102,9 @@ function compactContext(input) {
   const c = input && typeof input === 'object' ? input : {};
   const p = c.profile && typeof c.profile === 'object' ? c.profile : {};
   const today = Array.isArray(c.today)
-    ? c.today.slice(-24).map(row => ({ key: row?.key || null, ...compactSet(row) }))
-    : Object.entries(c.today && typeof c.today === 'object' ? c.today : {}).slice(-24).map(([key, row]) => ({ key, ...compactSet(row) }));
+    ? c.today.slice(-16).map(row => ({ key: row?.key || null, ...compactSet(row) }))
+    : Object.entries(c.today && typeof c.today === 'object' ? c.today : {}).slice(-16).map(([key, row]) => ({ key, ...compactSet(row) }));
+  const program = c.program && typeof c.program === 'object' ? c.program : {};
   return {
     profile: {
       name: p.name || null,
@@ -97,31 +112,34 @@ function compactContext(input) {
       age: p.age ?? null,
       heightIn: p.heightIn ?? null,
       trainingLevel: p.trainingLevel || null,
-      equipment: Array.isArray(p.equipment) ? p.equipment.slice(0, 18) : [],
+      equipment: Array.isArray(p.equipment) ? p.equipment.slice(0, 14) : [],
       capacities: p.capacities || null,
       workoutMinutes: p.workoutMinutes ?? null,
     },
     readiness: c.readiness || {},
-    workout: (Array.isArray(c.workout) ? c.workout : []).slice(0, 12).map(row => ({
+    workout: (Array.isArray(c.workout) ? c.workout : []).slice(0, 8).map(row => ({
       index: row?.index ?? null,
       name: row?.name || null,
-      prescription: String(row?.prescription || '').slice(0, 120),
+      prescription: String(row?.prescription || '').slice(0, 100),
       base: row?.base || null,
       suggested: compactSuggested(row?.suggested),
     })),
     today,
     history: compactHistory(c.history),
-    allowedSwaps: (Array.isArray(c.allowedSwaps) ? c.allowedSwaps : []).slice(0, 12).map(row => ({
+    allowedSwaps: (Array.isArray(c.allowedSwaps) ? c.allowedSwaps : []).slice(0, 8).map(row => ({
       targetIndex: row?.targetIndex ?? null,
       targetName: row?.targetName || null,
-      targetBase: row?.targetBase || null,
-      replacements: (Array.isArray(row?.replacements) ? row.replacements : []).slice(0, 6),
+      replacements: (Array.isArray(row?.replacements) ? row.replacements : []).slice(0, 4),
     })),
-    program: c.program || {},
+    program: {
+      currentWorkoutKey: program.currentWorkoutKey || null,
+      exposures: program.exposures || null,
+      lastAdaptation: program.lastAdaptation || null,
+    },
     selectedExercise: c.selectedExercise || null,
-    equipmentCoverage: c.equipmentCoverage || null,
+    equipmentCoverage: compactCoverage(c.equipmentCoverage),
     trainingState: c.trainingState || null,
-    setFeedback: (Array.isArray(c.setFeedback) ? c.setFeedback : []).slice(0, 12).map(row => ({
+    setFeedback: (Array.isArray(c.setFeedback) ? c.setFeedback : []).slice(0, 8).map(row => ({
       ts: row?.ts || null,
       exercise: row?.exercise || row?.exerciseName || null,
       feedback: row?.feedback || null,
@@ -135,9 +153,9 @@ function compactContext(input) {
 
 function compactConversation(input, currentMessage) {
   const turns = Array.isArray(input) ? input : [];
-  const cleaned = turns.slice(-6).map(turn => ({
+  const cleaned = turns.slice(-5).map(turn => ({
     role: turn?.role === 'assistant' ? 'assistant' : 'user',
-    content: String(turn?.text || turn?.content || '').trim().slice(0, 700)
+    content: String(turn?.text || turn?.content || '').trim().slice(0, 400)
   })).filter(turn => turn.content);
   const last = cleaned[cleaned.length - 1];
   if (last?.role === 'user' && last.content === currentMessage) cleaned.pop();
@@ -174,7 +192,7 @@ async function callGroq(model, messages, useSearch) {
       messages,
       response_format: { type: 'json_object' },
       temperature: 0.2,
-      max_completion_tokens: 600,
+      max_completion_tokens: 450,
       citation_options: useSearch ? 'enabled' : 'disabled'
     })
   });
@@ -202,7 +220,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
   if (!process.env.GROQ_API_KEY) return res.status(503).json({ error: 'Coach AI is not configured. GROQ_API_KEY is missing from the production environment.' });
 
-  const message = String(req.body?.message || '').trim().slice(0, 1400);
+  const message = String(req.body?.message || '').trim().slice(0, 1200);
   if (!message) return res.status(400).json({ error: 'Message required' });
   const context = compactContext(req.body?.context);
   const conversation = compactConversation(req.body?.conversation, message);
