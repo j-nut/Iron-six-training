@@ -1,6 +1,43 @@
-/* Conservative form observations from confidence-gated pose landmarks. Pure logic: no DOM,
-   camera, network or speech. It reports only things a single 2D view can reasonably observe. */
+/* Conservative form observations from confidence-gated pose landmarks.
+   The evaluator itself is pure logic. In the browser, this file also installs a very narrow
+   compatibility shim for the opt-in camera spike: some Android browsers crop/zoom aggressively
+   when a portrait aspect ratio is requested. The shim swaps only that pose-camera request back to
+   the last known-good 4:3 capture and asks for the widest supported zoom. */
 (() => {
+  function installPoseCameraCompat(){
+    if(typeof window==='undefined'||typeof navigator==='undefined'||!navigator.mediaDevices?.getUserMedia)return;
+    let enabled=false;
+    try{
+      const query=new URLSearchParams(location.search||'').get('pose');
+      const stored=localStorage.getItem('ironSixPoseSpike');
+      enabled=query==='1'||(query!=='0'&&stored==='1');
+    }catch(_){enabled=false}
+    if(!enabled||navigator.mediaDevices.__ironSixPoseCameraCompat)return;
+    const original=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+    navigator.mediaDevices.getUserMedia=async constraints=>{
+      const requested=constraints?.video;
+      const isPosePortraitRequest=!!requested&&typeof requested==='object'&&requested.aspectRatio&&requested.width&&requested.height;
+      if(!isPosePortraitRequest)return original(constraints);
+      const safeVideo={
+        facingMode:requested.facingMode||{ideal:'user'},
+        width:{ideal:960},height:{ideal:720},
+        frameRate:requested.frameRate||{ideal:30,max:30},
+        resizeMode:{ideal:'none'}
+      };
+      let media;
+      try{media=await original({...constraints,video:safeVideo})}
+      catch(_){media=await original({...constraints,video:{facingMode:{ideal:'user'},width:{ideal:960},height:{ideal:720},frameRate:{ideal:30,max:30}}})}
+      const track=media?.getVideoTracks?.()[0]||null;
+      try{
+        const caps=track?.getCapabilities?.();
+        if(caps?.zoom&&Number.isFinite(caps.zoom.min))await track.applyConstraints({advanced:[{zoom:caps.zoom.min}]});
+      }catch(_){}
+      return media;
+    };
+    try{Object.defineProperty(navigator.mediaDevices,'__ironSixPoseCameraCompat',{value:true,configurable:true})}catch(_){navigator.mediaDevices.__ironSixPoseCameraCompat=true}
+  }
+  installPoseCameraCompat();
+
   const P={LSHOULDER:11,RSHOULDER:12,LHIP:23,RHIP:24,LKNEE:25,RKNEE:26,LANKLE:27,RANKLE:28};
   const median=values=>{const a=[...values].filter(Number.isFinite).sort((x,y)=>x-y);return a.length?a[(a.length-1)>>1]:null};
   const dist=(a,b,aspect=1)=>a&&b?Math.hypot((a.x-b.x)*aspect,a.y-b.y):null;
