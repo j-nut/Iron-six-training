@@ -72,7 +72,8 @@ function oversizedContext() {
   await api.handler({ method: 'POST', body: { message: 'Can I hold the bar at my waist for calf raises?', context: oversizedContext() } }, rawRes);
   assert.equal(rawRes.code, 200);
   assert.match(rawRes.body.reply, /barbell at your waist/i, 'plain text model output must be accepted as a valid Coach reply');
-  assert.deepEqual(rawRes.body.actions, []);
+  assert.equal(Array.isArray(rawRes.body.actions), true);
+  assert.equal(rawRes.body.actions.length, 0);
   assert.equal('response_format' in rawCalls[0], false);
 
   context.fetch = async () => response(true, 200, { choices: [{ message: { content: JSON.stringify({ reply: "I'm running locally.", actions: [], videos: [], followUps: [] }) } }] });
