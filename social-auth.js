@@ -61,6 +61,22 @@
     }catch(_){}
   }
 
+  // The diagnosis is worth more than the moment it happens in: a sign-in failure that is only
+  // ever a disappearing message is one the user reports as "it just does nothing".
+  const FAILURE_KEY='ironSixGoogleBridgeFailure';
+  function rememberFailure(detail){
+    try{localStorage.setItem(FAILURE_KEY,JSON.stringify({detail,at:new Date().toISOString()}))}catch(_){ }
+  }
+  function clearFailure(){try{localStorage.removeItem(FAILURE_KEY)}catch(_){ }}
+  function lastFailure(){
+    try{const raw=JSON.parse(localStorage.getItem(FAILURE_KEY)||'null');return raw&&raw.detail?raw:null}catch(_){return null}
+  }
+  function showRememberedFailure(){
+    const failure=lastFailure();
+    if(!failure||!api||api.session()?.user)return;
+    api.notify('Last Google sign-in did not complete. '+failure.detail);
+  }
+
   async function finishGoogleBridge(token){
     if(!api||bridgeBusy||typeof token!=='string'||token.length<80)return;
     clearBridgeUrl();bridgeBusy=true;api.setBusy(true);render();api.notify('Verifying Google sign-in…');
@@ -86,9 +102,12 @@
       const result=await api.client.auth.verifyOtp({token_hash:body.token_hash,type:'email'});
       if(result.error)throw Error('Iron Six rejected the one-time sign-in token: '+(result.error.message||'unknown')+' (step: verifyOtp).');
       if(!result.data?.session)throw Error('Sign-in returned no session (step: verifyOtp).');
+      clearFailure();
       api.notify('Signed in with Google. Loading your Iron Six account…');
     }catch(error){
-      api.notify('Google sign-in did not complete. '+(error?.message||'Unknown error')+' Your local workout is unchanged; try again or use email.');
+      const detail=String(error?.message||'Unknown error');
+      rememberFailure(detail);
+      api.notify('Google sign-in did not complete. '+detail+' Your local workout is unchanged; try again or use email.');
       // A failure the user cannot see is a failure they will repeat. Put it in front of them.
       try{window.IronSixCloud?.openAccount?.()}catch(_){ }
     }
@@ -144,8 +163,9 @@
     const style=document.createElement('style');style.textContent='#socialMethods{margin:0}#socialMethods h3{margin:0 0 4px;font-size:15px;letter-spacing:.01em}#socialProviders{display:flex;flex-direction:column;gap:9px;margin-top:14px}.social-provider{width:100%;min-height:50px;display:grid;grid-template-columns:24px 1fr 18px;align-items:center;gap:10px;padding:0 14px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.035);color:var(--text);font:inherit;font-weight:780;cursor:pointer;text-align:left;transition:border-color .15s,background .15s,transform .08s}.social-provider:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.2)}.social-provider:active{transform:scale(.985)}.social-provider:disabled{opacity:.55;cursor:default;transform:none}.social-icon{width:22px;height:22px;display:flex;align-items:center;justify-content:center}.social-icon svg{width:21px;height:21px;display:block}.social-chevron{font-size:22px;color:var(--muted);text-align:right}.account-subcopy,#socialAvailability{font-size:12.5px;line-height:1.45;color:var(--muted);margin:4px 0 0}.account-link{border:0;background:none;color:var(--accent);padding:5px 0;font:inherit;font-size:12px;font-weight:750;cursor:pointer}.auth-divider{display:flex;align-items:center;gap:10px;margin:18px 0 2px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}.auth-divider:before,.auth-divider:after{content:"";height:1px;background:var(--line);flex:1}.auth-divider span{white-space:nowrap}';document.head.append(style);
     window.addEventListener('ironsix:google-bridge',event=>{if(event.detail?.error){api.notify('Google sign-in was cancelled. Your local workout is unchanged.');api.setBusy(false);render();return}void finishGoogleBridge(event.detail?.token)});
     const hash=new URLSearchParams(location.hash.slice(1)),token=hash.get('nomad_access_token');if(token)void finishGoogleBridge(token);
+    else showRememberedFailure();
     refresh();
   }
   window.addEventListener('pageshow',()=>{if(api){api.setBusy(false);refresh()}});
-  window.IronSixSocialAuth={install,render,callbackError};
+  window.IronSixSocialAuth={install,render,callbackError,lastFailure,clearFailure};
 })();
