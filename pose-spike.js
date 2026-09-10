@@ -20,10 +20,17 @@
 
   const counterApi=window.IronSixRepCounter;let formApi=window.IronSixFormCoach,voiceApi=window.IronSixWorkoutVoice;
   if(!counterApi)return;
+  function helperUrl(src){
+    const url=new URL(src,location.href);
+    const share=new URLSearchParams(location.search||'').get('_vercel_share');
+    if(share&&!url.searchParams.has('_vercel_share'))url.searchParams.set('_vercel_share',share);
+    return url.href;
+  }
   function loadHelper(src,globalName,ready){
-    if(window[globalName])return ready(window[globalName]);
-    const script=document.createElement('script');script.src=src;script.async=true;
-    script.onload=()=>ready(window[globalName]);script.onerror=()=>{};document.head.appendChild(script);
+    if(window[globalName])return queueMicrotask(()=>ready(window[globalName]));
+    const script=document.createElement('script');script.src=helperUrl(src);script.async=true;
+    script.onload=()=>{const api=window[globalName];if(api)ready(api);else console.error(`[Iron Six] ${globalName} loaded without registering its API.`)};
+    script.onerror=()=>console.error(`[Iron Six] Failed to load ${src}.`);document.head.appendChild(script);
   }
   loadHelper('pose-form-coach.js','IronSixFormCoach',api=>{formApi=api;if(rule&&!formEvaluator){formEvaluator=formApi?.createEvaluator?.(rule)||null;formState=formEvaluator?.state?.()||null;paintForm(formState)}});
   loadHelper('workout-voice.js','IronSixWorkoutVoice',api=>{voiceApi=api});
