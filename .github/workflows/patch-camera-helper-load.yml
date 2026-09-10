@@ -1,0 +1,56 @@
+name: Patch camera helper loading
+
+on:
+  push:
+    branches:
+      - feature/pose-form-voice-v3
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.head_commit.message == 'Temporarily add camera helper load patch workflow'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/pose-form-voice-v3
+          fetch-depth: 0
+      - name: Patch helper loading
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          pose = Path('pose-spike.js')
+          s = pose.read_text()
+
+          old = """  function loadHelper(src,globalName,ready){\n    if(window[globalName])return ready(window[globalName]);\n    const script=document.createElement('script');script.src=src;script.async=true;\n    script.onload=()=>ready(window[globalName]);script.onerror=()=>{};document.head.appendChild(script);\n  }\n"""
+          new = """  function helperUrl(src){\n    const url=new URL(src,location.href);\n    const share=new URLSearchParams(location.search||'').get('_vercel_share');\n    if(share&&!url.searchParams.has('_vercel_share'))url.searchParams.set('_vercel_share',share);\n    return url.href;\n  }\n  function loadHelper(src,globalName,ready){\n    if(window[globalName])return queueMicrotask(()=>ready(window[globalName]));\n    const script=document.createElement('script');script.src=helperUrl(src);script.async=true;\n    script.onload=()=>{const api=window[globalName];if(api)ready(api);else console.error(`[Iron Six] ${globalName} loaded without registering its API.`)};\n    script.onerror=()=>console.error(`[Iron Six] Failed to load ${src}.`);document.head.appendChild(script);\n  }\n"""
+          if old not in s:
+              raise SystemExit('Expected pose helper block not found')
+          pose.write_text(s.replace(old, new, 1))
+
+          index = Path('index.html')
+          html = index.read_text()
+          old_tail = '<script src="pose-rep-counter.js?v=2"></script><script src="pose-spike.js?v=2"></script>'
+          new_tail = '<script src="pose-rep-counter.js?v=2"></script><script src="pose-form-coach.js?v=1"></script><script src="workout-voice.js?v=1"></script><script src="pose-spike.js?v=3"></script>'
+          if old_tail not in html:
+              raise SystemExit('Expected camera script tail not found')
+          index.write_text(html.replace(old_tail, new_tail, 1))
+
+          wf = Path('.github/workflows/patch-camera-helper-load.yml')
+          wf.unlink()
+          PY
+      - name: Validate syntax and voice/form tests
+        run: |
+          node --check pose-spike.js
+          node --test tests/workout-voice.test.js tests/pose-form-coach.test.js
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pose-spike.js index.html .github/workflows/patch-camera-helper-load.yml
+          git commit -m "Fix protected-preview camera helper loading"
+          git push origin HEAD:feature/pose-form-voice-v3
