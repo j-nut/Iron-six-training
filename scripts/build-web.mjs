@@ -44,10 +44,13 @@ for (const row of illustrations) {
 }
 await cp(resolve(root, illustrationDir, 'manifest.json'), resolve(out, illustrationDir, 'manifest.json'));
 
+// Brand assets are small, first-party and hand-authored, so they ship as-is.
+await cp(resolve(root, 'assets/brand'), resolve(out, 'assets/brand'), { recursive: true });
+
 const html = await readFile(resolve(root, 'index.html'), 'utf8');
 const scripts = [...html.matchAll(/<script src="([^"?]+)(?:\?[^" ]*)?"/g)].map(match => match[1]);
 const runtimeScripts = ['coach-recovery.js','auth-hardening.js','account-polish.js','adaptive-insights.js','trainer-intelligence-v2.js','progress-analytics-v2.js','session-adaptation-v3.js','media-experience-v2.js','music-originals.js','music.js','session-resume.js'];
-const files = [...new Set(['index.html','live.html','style.css','EXERCISE_MEDIA.md','MUSIC.md',...scripts,...runtimeScripts])];
+const files = [...new Set(['index.html','live.html','welcome.html','style.css','EXERCISE_MEDIA.md','MUSIC.md',...scripts,...runtimeScripts])];
 for (const file of files) { if (!/^[a-zA-Z0-9_.-]+$/.test(file) || file.includes('..')) throw Error('Unexpected public file'); await cp(resolve(root,file),resolve(out,file)); }
 const checksums = {};
 for (const file of files) checksums[file] = createHash('sha256').update(await readFile(resolve(out,file))).digest('hex');
