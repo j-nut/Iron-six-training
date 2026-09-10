@@ -21,47 +21,7 @@ Primary goals:
 - When discussing exercise form, emphasize controllable technique cues rather than claiming one universally perfect form.
 - You are the cloud-hosted Iron Six Coach. Never claim that you are running locally or on-device. If asked about backend status, answer only from the transport metadata supplied by the server.
 
-Return only the requested structured JSON response.`;
-
-const COACH_SCHEMA = {
-  type: 'object',
-  properties: {
-    reply: { type: 'string' },
-    actions: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          type: { type: 'string', enum: ['swap_exercise', 'set_duration'] },
-          targetIndex: { type: ['integer', 'null'] },
-          replacementName: { type: ['string', 'null'] },
-          minutes: { type: ['integer', 'null'] },
-          reason: { type: 'string' },
-        },
-        required: ['type', 'targetIndex', 'replacementName', 'minutes', 'reason'],
-        additionalProperties: false,
-      },
-      maxItems: 3,
-    },
-    videos: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          title: { type: 'string' },
-          url: { type: 'string' },
-          source: { type: 'string' },
-        },
-        required: ['title', 'url', 'source'],
-        additionalProperties: false,
-      },
-      maxItems: 3,
-    },
-    followUps: { type: 'array', items: { type: 'string' }, maxItems: 3 },
-  },
-  required: ['reply', 'actions', 'videos', 'followUps'],
-  additionalProperties: false,
-};
+Reply as one JSON object with keys reply, actions, videos, and followUps. Use empty arrays when no actions, videos, or follow-ups are needed. Do not use markdown fences.`;
 
 function wantsSearch(message) {
   return /\b(video|demo|demonstrat|youtube|how (do|to) i|form video|show me|tutorial)\b/i.test(message);
@@ -155,15 +115,8 @@ function youtubeFromTools(tools) {
   return out;
 }
 
-function responseFormat(model) {
-  if (/^openai\/gpt-oss-(20b|120b)$/.test(model)) {
-    return { type: 'json_schema', json_schema: { name: 'iron_six_coach', strict: true, schema: COACH_SCHEMA } };
-  }
-  return { type: 'json_object' };
-}
-
 async function callGroq(model, messages, useSearch) {
-  const request = { model, messages, response_format: responseFormat(model), temperature: 0.2, max_completion_tokens: 450 };
+  const request = { model, messages, temperature: 0.2, max_completion_tokens: 450 };
   if (useSearch) request.citation_options = 'enabled';
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -237,12 +190,12 @@ export default async function handler(req, res) {
     if (!attempt.response.ok) {
       console.error('Iron Six Coach provider failed after retry', { model: usedModel, status: attempt.response.status, error: attempt.body?.error?.message || null });
       if (attempt.response.status === 429) return res.status(200).json(recoveryReply(message, context, attempt.response.headers.get('retry-after')));
-      if (!attempt.body) return res.status(502).json({ error: 'Coach provider returned an unreadable response. Please retry.' });
       return res.status(502).json({ error: attempt.body?.error?.message || `Coach provider failed (${attempt.response.status}). Please retry.` });
     }
 
     const msg = attempt.body?.choices?.[0]?.message || {};
     const parsed = cleanJson(msg.content);
+    parsed.reply = String(parsed.reply || 'I could not generate a coaching response.');
     parsed.actions = sanitizeActions(parsed.actions);
     parsed.videos = Array.isArray(parsed.videos) ? parsed.videos.slice(0, 3) : [];
     if (useSearch && !parsed.videos.length) parsed.videos = youtubeFromTools(msg.executed_tools);
