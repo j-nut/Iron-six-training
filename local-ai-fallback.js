@@ -4,6 +4,7 @@
 
   const nativeFetch = window.fetch.bind(window);
   const MODEL = 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC';
+  const CLOUD_TIMEOUT_MS = 9000;
   let enginePromise = null;
 
   function safeJson(text) {
@@ -57,7 +58,7 @@
       const target=match?.name?` for ${match.name}`:'';
       return { reply: `Use the suggested load${target} as a starting target, but your actual set performance wins. If you exceed the top of the rep range with about 2+ reps still in reserve, increase next time. If you miss the rep range or unexpectedly hit 0 RIR, hold or reduce the load. Iron Six saves those results and updates future suggestions.`, actions: [], videos: [], followUps: match?.name?[`Teach me ${match.name}`]:['Give me warm-up sets'] };
     }
-    return { reply: 'I can still coach this session even when the cloud model is unavailable. I can use your current workout, equipment, readiness, logged sets, recent performance, and the built-in exercise guide for form, loading, warm-ups, fatigue, and workout changes.', actions: [], videos: [], followUps: ['What should I do next?', 'Are my suggested weights right?'] };
+    return { reply: 'The cloud Coach could not be reached for this message, so I am using Iron Six’s built-in workout guidance. Your workout data are still intact.', actions: [], videos: [], followUps: ['Try the cloud Coach again'] };
   }
 
   async function getEngine() {
@@ -77,7 +78,7 @@
     const engine = await getEngine();
     const context = payload?.context || {};
     const allowed = Array.isArray(context.allowedSwaps) ? context.allowedSwaps : [];
-    const system = `You are Iron Six Coach, an evidence-informed strength and hypertrophy assistant running locally on the user's device. Be concise. Use actual logged weight, reps and RIR before demographic estimates. Respect available equipment. Do not diagnose injuries. If sharp pain or concerning symptoms are reported, tell the user to stop the provoking movement and seek appropriate medical evaluation.\n\nReturn ONLY JSON: {"reply":"...","actions":[],"videos":[],"followUps":[]}. You may add a swap_exercise action only by copying an EXACT replacement name from allowedSwaps. You may add set_duration from 10-120 minutes. No markdown.`;
+    const system = `You are Iron Six Coach, an evidence-informed strength and hypertrophy assistant running locally on the user's device. Be concise. Use actual logged weight, reps and RIR before demographic estimates. Respect available equipment. Do not diagnose injuries. If sharp pain or concerning symptoms are reported, tell the user to stop the provoking movement and seek appropriate medical evaluation. Return JSON with reply, actions, videos and followUps.`;
     const prompt = `APP CONTEXT:\n${JSON.stringify({ ...context, allowedSwaps: allowed }).slice(0, 14000)}\n\nUSER:\n${String(payload?.message || '').slice(0, 1400)}`;
     const result = await engine.chat.completions.create({messages:[{role:'system',content:system},{role:'user',content:prompt}],temperature:0.2,max_tokens:650});
     const out = safeJson(result?.choices?.[0]?.message?.content);
@@ -93,18 +94,40 @@
     return out;
   }
 
+  function withTimeout(promise, ms, label) {
+    return Promise.race([
+      promise,
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error(`${label} timeout`)),ms))
+    ]);
+  }
+
   async function supabaseCoach(payload){
     const cloud=window.IronSixCloud,client=cloud?.client?.(),session=cloud?.session?.();
     if(!client||!session?.user)return null;
     const enriched={...payload,context:{...(payload.context||{}),selectedExercise:window.__ironSixSelectedExercise||payload?.context?.selectedExercise||null}};
     try{
-      const result=await Promise.race([
-        client.functions.invoke('coach',{body:enriched}),
-        new Promise((_,reject)=>setTimeout(()=>reject(new Error('Supabase Coach timeout')),5500))
-      ]);
+      const result=await withTimeout(client.functions.invoke('coach',{body:enriched}),CLOUD_TIMEOUT_MS,'Supabase Coach');
       if(result?.error||!result?.data)return null;
       return result.data;
     }catch(_){return null}
+  }
+
+  async function vercelCoach(input,init,payload){
+    let timer;
+    try{
+      const controller=new AbortController();
+      timer=setTimeout(()=>controller.abort(),CLOUD_TIMEOUT_MS);
+      const response=await nativeFetch(input,{...(init||{}),body:JSON.stringify(payload),signal:controller.signal});
+      if(!response.ok)return null;
+      const contentType=response.headers.get('content-type')||'';
+      if(!contentType.includes('application/json'))return null;
+      return response;
+    }catch(_){return null}
+    finally{if(timer)clearTimeout(timer)}
+  }
+
+  function sameOriginCloudAvailable(){
+    return /^https?:$/.test(window.location?.protocol || '');
   }
 
   window.fetch = async function ironSixFetch(input, init) {
@@ -116,42 +139,27 @@
     try { payload = JSON.parse(init?.body || '{}'); } catch (_) {}
     payload.context={...(payload.context||{}),selectedExercise:window.__ironSixSelectedExercise||payload?.context?.selectedExercise||null};
 
-    // Exercise teaching is intentionally instant and deterministic. AI handles follow-ups.
     if(wantsExerciseTeaching(payload) && window.IronSixExerciseGuide){
       const output=window.IronSixExerciseGuide.teachingResponse(exerciseMatch(payload));
       return new Response(JSON.stringify(output),{status:200,headers:{'Content-Type':'application/json','X-Iron-Six-Coach':'exercise-guide'}});
     }
 
-    // First choice when signed in: authenticated Supabase Edge Function.
-    const supabaseOutput=await supabaseCoach(payload);
-    if(supabaseOutput){
-      return new Response(JSON.stringify(supabaseOutput),{status:200,headers:{'Content-Type':'application/json','X-Iron-Six-Coach':'supabase'}});
-    }
-
-    // Backward-compatible Vercel route if it happens to be configured. Static
-    // hosts commonly answer POST /api/coach with 400, 403, 405 or an HTML page;
-    // none of those responses should escape into the Coach UI.
-    let cloudTimer;
-    try {
-      const controller=new AbortController();
-      cloudTimer=setTimeout(()=>controller.abort(),3000);
-      const cloudResponse = await nativeFetch(input,{...(init||{}),body:JSON.stringify(payload),signal:controller.signal});
-      if (cloudResponse.ok) return cloudResponse;
-    } catch (_) {}
-    finally { if(cloudTimer)clearTimeout(cloudTimer); }
-
-    let output;
-    // Common coaching questions do not need a model download.
-    if(/warm.?up|what should i do next|what next|next exercise|deload|too tired|fatigue|weight|load|too heavy|too light/.test(String(payload?.message||'').toLowerCase())){
-      output=deterministicFallback(payload);output.model='Built-in adaptive coach';
+    // On the hosted web app, use the same-origin Vercel function first. This avoids
+    // waiting on one cloud path only to start a second request afterward.
+    if(sameOriginCloudAvailable()){
+      const cloudResponse=await vercelCoach(input,init,payload);
+      if(cloudResponse)return cloudResponse;
+      const supabaseOutput=await supabaseCoach(payload);
+      if(supabaseOutput)return new Response(JSON.stringify(supabaseOutput),{status:200,headers:{'Content-Type':'application/json','X-Iron-Six-Coach':'supabase'}});
     }else{
-      // A first-run WebLLM model download can be hundreds of MB and makes chat
-      // appear frozen on phones. Keep the session responsive when cloud AI is
-      // unavailable; authenticated users still use the deployed cloud model.
-      output = deterministicFallback(payload);
-      output.model = 'Built-in adaptive coach';
+      // Native/static builds cannot rely on a relative /api route, so authenticated
+      // Supabase remains their first cloud path.
+      const supabaseOutput=await supabaseCoach(payload);
+      if(supabaseOutput)return new Response(JSON.stringify(supabaseOutput),{status:200,headers:{'Content-Type':'application/json','X-Iron-Six-Coach':'supabase'}});
     }
 
+    const output=deterministicFallback(payload);
+    output.model='Built-in adaptive coach';
     return new Response(JSON.stringify(output), {status:200,headers:{'Content-Type':'application/json','X-Iron-Six-Coach':'local'}});
   };
 })();
