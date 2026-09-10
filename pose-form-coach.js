@@ -1,8 +1,7 @@
 /* Conservative form observations from confidence-gated pose landmarks.
-   The evaluator itself is pure logic. In the browser, this file also installs a very narrow
-   compatibility shim for the opt-in camera spike: some Android browsers crop/zoom aggressively
-   when a portrait aspect ratio is requested. The shim swaps only that pose-camera request back to
-   the last known-good 4:3 capture and asks for the widest supported zoom. */
+   The evaluator itself is pure logic. In the browser, this file also installs narrow compatibility
+   tuning for the opt-in camera assistant: avoid Android portrait sensor crop, make side-on lock
+   practical, and let the rep state machine survive brief landmark-confidence flicker. */
 (() => {
   function installPoseCameraCompat(){
     if(typeof window==='undefined'||typeof navigator==='undefined'||!navigator.mediaDevices?.getUserMedia)return;
@@ -37,6 +36,51 @@
     try{Object.defineProperty(navigator.mediaDevices,'__ironSixPoseCameraCompat',{value:true,configurable:true})}catch(_){navigator.mediaDevices.__ironSixPoseCameraCompat=true}
   }
   installPoseCameraCompat();
+
+  function installPoseTrackingTuning(){
+    if(typeof window==='undefined')return;
+    const counterApi=window.IronSixRepCounter;
+    if(!counterApi||counterApi.__ironSixTrackingTuned)return;
+
+    // The counter measures time spent below the top threshold, not full rep duration. These
+    // floors match the reviewed main-branch tuning and stop normal ~1 s reps being discarded.
+    const activeFloor={squat:500,curl:400,pushup:400,press:450};
+    for(const rule of counterApi.RULES||[]){
+      if(activeFloor[rule.id]){
+        rule.minRepMs=activeFloor[rule.id];
+        rule.minActiveMs=activeFloor[rule.id];
+      }
+    }
+
+    // Side-on poses routinely give the far side low confidence. Keep the same geometric subject
+    // lock and ambiguity checks, but let a clean near-side chain acquire at a realistic threshold.
+    const createTracker=counterApi.createTracker;
+    counterApi.createTracker=(rule,options)=>{
+      const tracker=createTracker(rule,{confidence:0.58,acquireMs:650,lossMs:900,...(options||{})});
+      const reset=tracker.reset.bind(tracker);
+      tracker.reset=()=>{counterApi.__ironSixForceInterrupt=true;return reset()};
+      return tracker;
+    };
+
+    // pose-spike historically called interrupt() for every single rejected tracker frame, which
+    // defeated createCounter's own short-occlusion tolerance. Give confidence flicker ~0.5 s at
+    // 30 fps; explicit Re-lock still forces an immediate hard interrupt through tracker.reset().
+    const createCounter=counterApi.createCounter;
+    counterApi.createCounter=(rule,options)=>{
+      const counter=createCounter(rule,options),push=counter.push.bind(counter),hardInterrupt=counter.interrupt.bind(counter);
+      let softInterrupts=0;
+      counter.push=frame=>{if(frame?.landmarks)softInterrupts=0;return push(frame)};
+      counter.interrupt=()=>{
+        if(counterApi.__ironSixForceInterrupt){counterApi.__ironSixForceInterrupt=false;softInterrupts=0;return hardInterrupt()}
+        softInterrupts++;
+        if(softInterrupts>=15){softInterrupts=0;return hardInterrupt()}
+        return counter.state();
+      };
+      return counter;
+    };
+    counterApi.__ironSixTrackingTuned=true;
+  }
+  installPoseTrackingTuning();
 
   const P={LSHOULDER:11,RSHOULDER:12,LHIP:23,RHIP:24,LKNEE:25,RKNEE:26,LANKLE:27,RANKLE:28};
   const median=values=>{const a=[...values].filter(Number.isFinite).sort((x,y)=>x-y);return a.length?a[(a.length-1)>>1]:null};
