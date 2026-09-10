@@ -7,7 +7,7 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 const {JSDOM}=require('jsdom');
 
-function app(enabled){
+function app(enabled,configure){
   const dom=new JSDOM(fs.readFileSync('index.html','utf8'),{url:'https://iron-six.test/',runScripts:'outside-only',pretendToBeVisual:true});
   const w=dom.window,context=dom.getInternalVMContext(),errors=[];
   w.confirm=()=>true;w.setInterval=()=>0;w.scrollTo=()=>{};
@@ -16,8 +16,13 @@ function app(enabled){
   w.fetch=async()=>({ok:false,json:async()=>({})});
   w.addEventListener('error',event=>errors.push(event.error));
   if(enabled)w.localStorage.setItem('ironSixPoseSpike','1');
-  for(const file of [...w.document.scripts].map(s=>s.getAttribute('src').split('?')[0]).filter(x=>!['cloud-sync.js','cloud-history-sync.js'].includes(x)))
-    vm.runInContext(fs.readFileSync(file,'utf8'),context,{filename:file});
+  if(configure)configure(w);
+  for(const file of [...w.document.scripts].map(s=>s.getAttribute('src').split('?')[0]).filter(x=>!['cloud-sync.js','cloud-history-sync.js'].includes(x))){
+    let source=fs.readFileSync(file,'utf8');
+    // Only replace the external module boundary; exercise the real lifecycle code.
+    if(file==='pose-spike.js'&&w.__poseVision)source=source.replace('await import(VISION)','await window.__poseVision()');
+    vm.runInContext(source,context,{filename:file});
+  }
   const run=code=>vm.runInContext(code,context);
   run("window.toast=function(){};activeUser().trainingMode='traditional';activeUser().today={};activeUser().program.currentWorkoutKey='lower_strength';saveData();renderAll()");
   run("document.getElementById('sessionBeginBtn').click()");
@@ -30,6 +35,69 @@ test('the spike is completely absent unless it is switched on',()=>{
     assert.equal(a.w.IronSixPoseSpike,undefined,'no global should be published when the flag is off');
     assert.equal(a.w.document.querySelectorAll('.pose-bar').length,0,'no camera control should reach a normal session');
     assert.deepEqual(a.errors,[],'the page must load without script errors');
+  }finally{a.close()}
+});
+
+function openSquat(a){
+  const card=[...a.w.document.querySelectorAll('#exerciseList [data-exercise-index]')].find(c=>c.querySelector('.pose-bar'));
+  return a.w.IronSixPoseSpike.open(card,{name:'Bodyweight squat',base:'squat'});
+}
+function deferred(){let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve}}
+
+test('closing while permission is pending immediately stops a late camera stream',async()=>{
+  const permission=deferred();let stops=0,loads=0;
+  const a=app(true,w=>{
+    Object.defineProperty(w.navigator,'mediaDevices',{value:{getUserMedia:()=>permission.promise}});
+    w.__poseVision=async()=>{loads++;throw new Error('must not load after close')};
+  });
+  try{
+    const opening=openSquat(a);
+    a.w.IronSixPoseSpike.close();
+    permission.resolve({getTracks:()=>[{stop:()=>stops++}]});
+    await opening;
+    assert.equal(stops,1);assert.equal(loads,0);
+    assert.equal(a.w.document.getElementById('poseVideo').srcObject,null);
+    assert.equal(a.w.document.getElementById('poseSheet').classList.contains('show'),false);
+  }finally{a.close()}
+});
+
+test('closing during model load does not restart inference or a wake lock',async()=>{
+  const model=deferred(),entered=deferred();let stops=0,wakes=0,frames=0,options;
+  const a=app(true,w=>{
+    Object.defineProperty(w.navigator,'mediaDevices',{value:{getUserMedia:async()=>({getTracks:()=>[{stop:()=>stops++}]})}});
+    Object.defineProperty(w.navigator,'wakeLock',{value:{request:async()=>{wakes++;return {release:async()=>{}}}}});
+    Object.defineProperty(w.HTMLVideoElement.prototype,'videoWidth',{get:()=>960});
+    w.HTMLMediaElement.prototype.play=async()=>{};
+    w.requestAnimationFrame=()=>{frames++;return 1};w.cancelAnimationFrame=()=>{};
+    w.__poseVision=async()=>({FilesetResolver:{forVisionTasks:async()=>({})},PoseLandmarker:{createFromOptions:async(_,o)=>{options=o;entered.resolve();return model.promise}}});
+  });
+  try{
+    const opening=openSquat(a);
+    await entered.promise;
+    a.w.IronSixPoseSpike.close();
+    const before=frames;
+    model.resolve({detectForVideo:()=>({landmarks:[]})});
+    await opening;
+    assert.equal(stops,1);assert.equal(wakes,0);assert.equal(frames,before);
+    assert.equal(options.numPoses,3);
+    assert.equal(options.minTrackingConfidence,0.7);
+    assert.equal(a.w.document.getElementById('poseVideo').srcObject,null);
+  }finally{a.close()}
+});
+
+test('re-lock control is present and does not write to a workout',async()=>{
+  const a=app(true);
+  try{
+    await openSquat(a);
+    const before=a.json('activeUser().today');
+    const button=a.w.document.getElementById('poseRelock');
+    assert.equal(button.textContent,'Re-lock user');
+    // Avoid jsdom canvas rendering; this test exercises the UI/logic boundary.
+    a.w.HTMLCanvasElement.prototype.getContext=()=>({clearRect:()=>{}});
+    button.click();
+    assert.match(a.w.document.getElementById('poseLock').textContent,/hold still/);
+    assert.deepEqual(a.json('activeUser().today'),before);
+    assert.equal(a.w.IronSixPoseSpike.diagnostics().version,2);
   }finally{a.close()}
 });
 
@@ -123,7 +191,7 @@ test('the spike ships no camera or upload path that runs without the flag',()=>{
   assert(!/fetch\(|XMLHttpRequest|supabase|\.upload\(/.test(source),'the spike must not send anything anywhere');
   for(const page of ['index.html','live.html']){
     const html=fs.readFileSync(page,'utf8');
-    assert(html.includes('pose-rep-counter.js?v=1'),`${page} must load the counter`);
+    assert(html.includes('pose-rep-counter.js?v=2'),`${page} must load the counter`);
     assert(html.indexOf('pose-rep-counter.js')<html.indexOf('pose-spike.js'),`${page} must load the counter before the spike that uses it`);
   }
 });

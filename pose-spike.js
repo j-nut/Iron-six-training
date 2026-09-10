@@ -24,6 +24,7 @@
 
   let sheet=null,video=null,canvas=null,landmarker=null,stream=null,counter=null,rule=null,target=null,raf=0,wake=null;
   let framesSeen=0,framesTracked=0,startedAt=0,fps=0,lastFrameAt=0,lastVideoTime=-1,loading=false;
+  let tracker=null,tracking=null,sessionId=0;
 
   const el=id=>document.getElementById(id);
   const setText=(id,value)=>{const node=el(id);if(node)node.textContent=value};
@@ -38,6 +39,8 @@
       <div class="pose-head"><div><h3 id="poseTitle">Count reps</h3><p id="poseSetup">Setting up the camera…</p><p class="pose-caution" id="poseCaution" hidden></p></div><div class="pose-count"><strong id="poseReps">0</strong><span>reps</span></div></div>
       <div class="pose-stage"><video id="poseVideo" playsinline muted autoplay></video><canvas id="poseCanvas"></canvas><div class="pose-status" id="poseStatus">Starting…</div></div>
       <div class="pose-readout-row"><span class="pose-readout" id="poseReadout"></span><button type="button" class="pose-copy" id="poseCopy">Copy diagnostics</button></div>
+      <div class="pose-readout-row"><span class="helper" id="poseLock" role="status">Centre yourself and hold still to lock.</span><button type="button" class="pose-copy" id="poseRelock">Re-lock user</button></div>
+      <div class="helper">Tracking v2 · One working side is measured and drawn. If tracking becomes uncertain, counting pauses. Re-lock only when you have a clear view; overlapping people cannot be reliably distinguished.</div>
       <div class="helper pose-privacy">Video stays on this device. Nothing is uploaded, recorded or sent to the coach — only the number you choose to keep.</div>
       <div class="cta"><button type="button" class="btn secondary" id="poseClose">Close</button><button type="button" class="btn primary" id="poseUse" disabled>Use count</button></div>
     </div>`;
@@ -46,6 +49,13 @@
     el('poseClose').addEventListener('click',close);
     el('poseUse').addEventListener('click',useCount);
     el('poseCopy').addEventListener('click',copyDiagnostics);
+    el('poseRelock').addEventListener('click',()=>{
+      if(!tracker||!counter)return;
+      tracker.reset();counter.interrupt();tracking=null;
+      setText('poseLock','Centre yourself and hold still to lock.');
+      setText('poseStatus','Re-locking. Completed reps are kept.');
+      if(canvas)canvas.getContext('2d')?.clearRect(0,0,canvas.width,canvas.height);
+    });
     sheet.addEventListener('click',event=>{if(event.target===sheet)close()});
     return sheet;
   }
@@ -57,22 +67,27 @@
     if(landmarker)return landmarker;
     const vision=await import(VISION);
     const files=await vision.FilesetResolver.forVisionTasks(WASM);
-    const options={baseOptions:{modelAssetPath:MODEL,delegate:'GPU'},runningMode:'VIDEO',numPoses:1};
+    // Multiple candidates let us detect an ambiguous crossing rather than silently accepting
+    // whoever happens to be returned first. Subject association lives in createTracker.
+    const options={baseOptions:{modelAssetPath:MODEL,delegate:'GPU'},runningMode:'VIDEO',numPoses:3,
+      minPoseDetectionConfidence:0.7,minPosePresenceConfidence:0.7,minTrackingConfidence:0.7};
     try{landmarker=await vision.PoseLandmarker.createFromOptions(files,options)}
     catch(_){landmarker=await vision.PoseLandmarker.createFromOptions(files,{...options,baseOptions:{...options.baseOptions,delegate:'CPU'}})}
     return landmarker;
   }
 
-  async function startCamera(){
+  async function startCamera(id){
     if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('This browser cannot open the camera. It needs a secure (https) page.');
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:960},height:{ideal:720},frameRate:{ideal:30}},audio:false});
+    const acquired=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:960},height:{ideal:720},frameRate:{ideal:30}},audio:false});
+    if(id!==sessionId){for(const track of acquired.getTracks())track.stop();return}
+    stream=acquired;
     video.srcObject=stream;
     await video.play().catch(()=>{});
     // Metadata can land after play() resolves, and the aspect correction needs real numbers.
     if(!video.videoWidth)await new Promise(resolve=>{video.addEventListener('loadedmetadata',resolve,{once:true});setTimeout(resolve,3000)});
   }
 
-  async function keepAwake(){try{if(navigator.wakeLock)wake=await navigator.wakeLock.request('screen')}catch(_){}}
+  async function keepAwake(id){try{if(navigator.wakeLock){const acquired=await navigator.wakeLock.request('screen');if(id!==sessionId)await acquired.release();else wake=acquired}}catch(_){}}
   function release(){if(wake){wake.release().catch(()=>{});wake=null}}
 
   // ---- the loop ----------------------------------------------------------------------
@@ -87,11 +102,15 @@
     const now=performance.now();
     if(lastFrameAt)fps=fps?fps*0.9+(1000/Math.max(1,now-lastFrameAt))*0.1:1000/Math.max(1,now-lastFrameAt);
     lastFrameAt=now;
-    let landmarks=null;
-    try{landmarks=landmarker.detectForVideo(video,now)?.landmarks?.[0]||null}catch(_){}
+    let poses=[];
+    try{poses=landmarker.detectForVideo(video,now)?.landmarks||[]}catch(_){}
+    tracking=tracker.push(poses,now,video.videoWidth/video.videoHeight);
+    const landmarks=tracking.landmarks;
     framesSeen++;if(landmarks)framesTracked++;
+    if(!landmarks)counter.interrupt();
     const state=counter.push({landmarks,t:now,aspect:video.videoWidth/video.videoHeight});
-    const frame=landmarks?counterApi.framing(rule,landmarks):{ok:false,message:'No one in frame yet.'};
+    const frame={ok:!!landmarks,message:tracking.message};
+    setText('poseLock',tracking.message);
     draw(landmarks,state);
     paint(state,frame);
   }
@@ -108,15 +127,15 @@
     const average=durations.length?Math.round(durations.reduce((a,b)=>a+b,0)/durations.length):0;
     setText('poseReadout',[
       `${Math.round(fps)} fps`,
-      `${tracked}% of frames tracked`,
+      `${tracked}% usable frames`,
       state.angle===null?'no angle':`${state.angle}°`,
       state.rejected?`${state.rejected} rejected`:'0 rejected',
       average?`avg rep ${(average/1000).toFixed(1)}s`:'—'
     ].join(' · '));
   }
 
-  // Draws what is actually being measured rather than a full skeleton: every landmark faintly,
-  // the tracked joint chain brightly, and the angle the count is being made from.
+  // Only the confidence-gated, smoothed working chain is drawn and measured. No raw/faint
+  // background landmarks or uncertain far-side leg to give a misleading second skeleton.
   function draw(landmarks,state){
     if(!canvas)return;
     if(canvas.width!==video.videoWidth||canvas.height!==video.videoHeight){canvas.width=video.videoWidth;canvas.height=video.videoHeight}
@@ -124,19 +143,17 @@
     context.clearRect(0,0,canvas.width,canvas.height);
     if(!landmarks)return;
     const toPixels=point=>[point.x*canvas.width,point.y*canvas.height];
-    context.fillStyle='rgba(255,255,255,.32)';
-    for(const point of landmarks){if(point.visibility===undefined||point.visibility>=counterApi.MIN_VISIBILITY){const [x,y]=toPixels(point);context.beginPath();context.arc(x,y,3,0,Math.PI*2);context.fill()}}
     const good=state.phase!=='lost'&&state.phase!=='waiting';
     context.strokeStyle=good?'#2ee580':'#ff8b8b';context.fillStyle=context.strokeStyle;context.lineWidth=Math.max(3,canvas.width/220);
-    for(const chain of rule.joint){
+    const selectedChain=rule.joint[tracking?.side??0];
+    for(const chain of [selectedChain]){
       const points=chain.map(index=>landmarks[index]);
       if(points.some(point=>!point||(point.visibility!==undefined&&point.visibility<counterApi.MIN_VISIBILITY)))continue;
       context.beginPath();points.forEach((point,index)=>{const [x,y]=toPixels(point);index?context.lineTo(x,y):context.moveTo(x,y)});context.stroke();
-      const [vx,vy]=toPixels(points[1]);
-      context.beginPath();context.arc(vx,vy,context.lineWidth*1.8,0,Math.PI*2);context.fill();
+      for(const point of points){const [vx,vy]=toPixels(point);context.beginPath();context.arc(vx,vy,context.lineWidth*1.5,0,Math.PI*2);context.fill()}
     }
     if(state.angle!==null){
-      const [ax,ay]=toPixels(landmarks[rule.joint[0][1]]);
+      const [ax,ay]=toPixels(landmarks[selectedChain[1]]);
       context.save();context.scale(-1,1); // the stage is mirrored for the lifter; text must not be
       context.font=`700 ${Math.round(canvas.width/24)}px system-ui,sans-serif`;context.textAlign='left';
       context.fillText(`${state.angle}°`,-ax+18,ay-14);context.restore();
@@ -148,9 +165,12 @@
     if(loading)return;
     rule=counterApi.ruleFor(exercise);
     if(!rule)return;
+    stop();
     build();
     target=card;
     counter=counterApi.createCounter(rule);
+    tracker=counterApi.createTracker(rule);tracking=null;
+    const id=++sessionId;
     framesSeen=0;framesTracked=0;fps=0;lastFrameAt=0;lastVideoTime=-1;startedAt=Date.now();
     sheet.classList.add('show');
     setText('poseTitle',rule.label+' · '+String(exercise.name||'').slice(0,40));
@@ -159,16 +179,21 @@
     if(cautionNode){cautionNode.textContent=caution||'';cautionNode.hidden=!caution}
     setText('poseReps','0');setText('poseReadout','');
     setText('poseStatus','Starting the camera…');
+    setText('poseLock','Centre yourself and hold still to lock.');
     const use=el('poseUse');if(use){use.disabled=true;use.textContent='Use count'}
     loading=true;
     try{
-      await startCamera();
+      await startCamera(id);
+      if(id!==sessionId)return;
       setText('poseStatus','Loading the pose model…');
       await loadModel();
-      await keepAwake();
-      setText('poseStatus','Stand at the top to start.');
+      if(id!==sessionId)return;
+      await keepAwake(id);
+      if(id!==sessionId)return;
+      setText('poseStatus','Centre yourself and hold still to lock.');
       cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);
     }catch(error){
+      if(id!==sessionId)return;
       const message=error&&error.name==='NotAllowedError'?'Camera permission was declined. Nothing else changed.':(error&&error.message)||'Could not start the camera.';
       fail(message);
       stop();
@@ -176,6 +201,7 @@
   }
 
   function stop(){
+    sessionId++;
     cancelAnimationFrame(raf);raf=0;
     if(stream){for(const track of stream.getTracks())track.stop();stream=null}
     if(video)video.srcObject=null;
@@ -186,7 +212,7 @@
 
   function diagnostics(){
     const state=counter?counter.state():null;
-    return {rule:rule&&rule.id,reps:state?state.reps:0,rejected:state?state.rejected:0,
+    return {version:2,tracking:tracker?tracker.diagnostics():null,rule:rule&&rule.id,reps:state?state.reps:0,rejected:state?state.rejected:0,
       framesSeen,framesTracked,trackedPercent:framesSeen?Math.round(framesTracked/framesSeen*100):0,
       fps:Math.round(fps),seconds:startedAt?Math.round((Date.now()-startedAt)/1000):0,
       resolution:video&&video.videoWidth?`${video.videoWidth}x${video.videoHeight}`:null,
@@ -233,7 +259,7 @@
       const sets=card.querySelector('.sets');if(!sets)continue;
       const bar=document.createElement('div');
       bar.className='pose-bar';
-      bar.innerHTML='<button type="button" class="pose-open">Count reps with camera</button><span>Spike · on-device · check the count</span>';
+      bar.innerHTML='<button type="button" class="pose-open">Count reps with camera</button><span>Tracking v2 · on-device · check the count</span>';
       bar.querySelector('.pose-open').addEventListener('click',()=>open(card,exercise));
       sets.appendChild(bar);
     }

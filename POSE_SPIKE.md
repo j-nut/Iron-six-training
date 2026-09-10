@@ -21,11 +21,61 @@ https://<your-deployment>/index.html?pose=1
 A **Count reps with camera** button then appears on the exercises that have a rule, inside the
 set table. Everything else in the app is untouched.
 
+## Tracking v2 — stabilization and conservative subject continuity
+
+The control now says **Tracking v2**. Centre yourself with shoulders, hips and the working
+limb visible, then hold still for about one second. The app selects the more reliable side
+and keeps that side for the lock; it no longer averages a clear leg with an obscured one.
+
+- Detection, presence and tracking confidence thresholds are 0.7. Up to three pose candidates
+  are requested so detection order is not treated as identity. The lite model is retained;
+  multi-person inference may lower FPS on older phones and needs device testing.
+- Torso position and scale associate subsequent detections with the locked subject. Only a
+  single stable, centred candidate can acquire a lock. A nearby crossing/ambiguous match
+  latches tracking off. A loss or inference gap of 600 ms also requires **Re-lock user**.
+- The working chain must meet per-landmark visibility/presence and in-frame checks. Sudden
+  joint displacement and large frame-to-frame limb-length changes are rejected before
+  filtering. A three-sample median plus a time-aware adaptive low-pass filter smooths both
+  the display and the input to the counter, with faster response during movement.
+- Only the measured working chain is drawn, not all 33 raw points or the uncertain far leg.
+  The overlay is cleared when confidence fails; stale landmarks are never shown as live.
+- Every unusable frame interrupts the unfinished rep. Completed reps remain, but resuming
+  or re-locking requires starting from the top again. This deliberately favors missed reps
+  over phantom reps. **Use count** still requires a user tap and never marks a set done.
+- Diagnostics version 2 reports accepted/rejected tracking frames, lock losses and measured
+  side. “Usable frames” means frames admitted to the counter, not merely model detections.
+- Closing/hiding the sheet during camera permission or model loading now cancels startup;
+  late camera streams are stopped and do not restart tracking in a hidden sheet.
+
+**Not an identity guarantee:** this is pose-geometry continuity, not face recognition or
+appearance re-identification. It cannot distinguish a similar person replacing the lifter in
+the same position without a visible gap, a missed second person, or every occlusion. Keep a
+clear exercise area; do not market this as “never tracks anyone else.” All tracking stays on
+the device. No form judgments or coach integration have been added by this change.
+
+Device acceptance checks before promotion:
+
+1. Stand still for 15 seconds: observe overlay jitter and verify zero counted reps.
+2. Perform 10 deliberate bodyweight squats, side-on, and compare the count to reality.
+3. Have another person walk in the distant background; the tracked side must not jump.
+4. Have them cross/obscure the lifter, then leave the frame yourself: counting must pause.
+5. Clear the scene and tap Re-lock user. Complete reps must remain; an interrupted rep must
+   not complete on return. Repeat at lower light and with the working knee/ankle obscured.
+6. Close the sheet while granting permission or loading the model; the camera must shut off.
+7. Copy diagnostics. Check usable-frame rate and FPS before interpreting rep measurements.
+
+Synthetic tests exercise these scenarios but are not proof of real-world tracking accuracy.
+Validate with a trainer-reviewed recorded set before adding form cues. A next phase could
+add view-specific, confidence-gated observations on tempo and depth consistency; a single
+2D angle is not sufficient to declare a squat safe or diagnose a form fault.
+
+Model configuration reference: [MediaPipe Pose Landmarker for Web](https://developers.google.com/edge/mediapipe/solutions/vision/pose_landmarker/web_js).
+
 ## What it does
 
 - Opens the front camera, runs MediaPipe Pose Landmarker on-device, and counts reps from a
   single joint angle with a hysteresis state machine.
-- Draws what it is actually measuring — the tracked joint chain and the live angle — rather
+- Draws what it is actually measuring — the smoothed working joint chain and the live angle — rather
   than a decorative skeleton, so a bad count is visibly a bad count.
 - Reports fps, percentage of frames tracked, rejected reps, and per-rep duration and depth.
   **These diagnostics are the point of the spike**, not the rep count.
@@ -95,6 +145,7 @@ and depth, resolution and user agent. That is the artefact worth keeping from a 
 | `pose-spike.js` | Camera, model loading, overlay, sheet, diagnostics. Flag-gated on line 20 |
 | `tests/pose-rep-counter.test.js` | Rep counting against synthetic landmark streams — jitter, partials, bounces, occlusion, aspect correction |
 | `tests/pose-spike.test.js` | Containment: off by default, only on movements with a rule, writes through the normal logging path, fails cleanly with no camera |
+| `tests/pose-tracking.test.js` | Stable-side selection, smoothing, outlier rejection, candidate reordering, ambiguous crossings, losses and end-to-end synthetic squats |
 
 `renderExercises` is wrapped rather than edited, so **deleting these two files and their two
 `<script>` tags removes the feature completely** with no changes to reverse in the logging path.
