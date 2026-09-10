@@ -11,14 +11,23 @@ test('camera assistant v3 stays opt-in and contains no upload path',()=>{
   assert(!/fetch\(|XMLHttpRequest|supabase|\.upload\(/.test(source));
 });
 
-test('camera assistant preserves the full portrait camera frame and exposes form-analysis status',()=>{
+test('camera assistant preserves the whole displayed frame and exposes form-analysis status',()=>{
   const source=fs.readFileSync('pose-spike.js','utf8');
   assert(source.includes('object-fit:contain'));
-  assert(source.includes("aspectRatio:{ideal:portrait?9/16:16/9}"));
   assert(source.includes("stage.style.setProperty('--pose-stage-ratio'"));
   assert(source.includes('form analysis was skipped'));
   assert(source.includes('analyzed: no camera-visible issue crossed the cue threshold'));
   assert(source.includes('video?.videoWidth&&video?.videoHeight'));
+});
+
+test('pose camera compatibility shim restores known-good wide capture for portrait-crop requests',()=>{
+  const source=fs.readFileSync('pose-form-coach.js','utf8');
+  assert(source.includes('isPosePortraitRequest'));
+  assert(source.includes("width:{ideal:960},height:{ideal:720}"));
+  assert(source.includes("resizeMode:{ideal:'none'}"));
+  assert(source.includes('getCapabilities'));
+  assert(source.includes('zoom:caps.zoom.min'));
+  assert(source.includes('__ironSixPoseCameraCompat'));
 });
 
 test('Android voice bridge is permission-gated, one-shot and destroyed after use',()=>{
