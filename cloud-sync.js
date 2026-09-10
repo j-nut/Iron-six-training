@@ -106,7 +106,7 @@
     try{if(nextId)localStorage.setItem('ironSixAccountScope',nextId);else localStorage.removeItem('ironSixAccountScope')}catch(_){notify('Account preference could not be saved on this device.')}
     data=loadData();data.ownerId=nextId;
     for(const u of data.users){if(nextId)u.accountOwner=nextId}
-    baseSave();renderAll();renderAccount();await journal().hydrated;if(version!==epoch)return;
+    baseSave();renderAccount();try{renderAll()}catch(error){notify('Signed in. Some of the screen could not be drawn: '+(error.message||'unknown error'))}await journal().hydrated;if(version!==epoch)return;
     for(const u of data.users){journal().migrateUser(u);journal().restore(u)}
     journal().setTransport(saveEntry);baseSave();renderAll();
     notify(nextId?'Signed in. Checking your saved records…':'Guest mode: saved on this device only.');
