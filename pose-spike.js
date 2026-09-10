@@ -1,16 +1,15 @@
-/* Camera rep-counting spike. Off unless explicitly enabled with ?pose=1.
-   Everything here is the plumbing around pose-rep-counter.js: camera, pose model, overlay,
-   and the diagnostics the spike exists to produce. No frame, image or landmark ever leaves
-   the device — the count is written into the reps field the lifter already fills in by hand.
+/* Camera rep counting + conservative form observations + opt-in voice workout controls.
+   Off unless explicitly enabled with ?pose=1 or localStorage ironSixPoseSpike=1.
 
-   The pose model and its wasm are fetched from a CDN on first use, so this needs a network
-   connection the first time and does not work in the packaged Android build yet. */
+   Video frames and pose landmarks stay on the device. Voice commands are transcribed by the
+   browser/device speech-recognition service and may use that platform's network service; Iron Six
+   does not record or upload microphone audio. The camera feature writes through the same set input
+   events/buttons the normal workout UI uses so journal/save/adaptation behavior remains canonical. */
 (() => {
   const FLAG='ironSixPoseSpike';
   const VISION='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/vision_bundle.mjs';
   const WASM='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm';
   const MODEL='https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
-
   function readFlag(){
     let stored=null;try{stored=localStorage.getItem(FLAG)}catch(_){}
     const query=new URLSearchParams(location.search||'').get('pose');
@@ -19,260 +18,216 @@
   }
   if(!readFlag())return;
 
-  const counterApi=window.IronSixRepCounter;
+  const counterApi=window.IronSixRepCounter;let formApi=window.IronSixFormCoach,voiceApi=window.IronSixWorkoutVoice;
   if(!counterApi)return;
+  function loadHelper(src,globalName,ready){
+    if(window[globalName])return ready(window[globalName]);
+    const script=document.createElement('script');script.src=src;script.async=true;
+    script.onload=()=>ready(window[globalName]);script.onerror=()=>{};document.head.appendChild(script);
+  }
+  loadHelper('pose-form-coach.js','IronSixFormCoach',api=>{formApi=api;if(rule&&!formEvaluator){formEvaluator=formApi?.createEvaluator?.(rule)||null;formState=formEvaluator?.state?.()||null;paintForm(formState)}});
+  loadHelper('workout-voice.js','IronSixWorkoutVoice',api=>{voiceApi=api});
 
-  let sheet=null,video=null,canvas=null,landmarker=null,stream=null,counter=null,rule=null,target=null,raf=0,wake=null;
+  let sheet=null,video=null,canvas=null,landmarker=null,stream=null,counter=null,rule=null,target=null,exercise=null,raf=0,wake=null;
   let framesSeen=0,framesTracked=0,startedAt=0,fps=0,lastFrameAt=0,lastVideoTime=-1,loading=false;
-  let tracker=null,tracking=null,sessionId=0;
+  let tracker=null,tracking=null,formEvaluator=null,formState=null,sessionId=0;
+  let voiceEnabled=false,voiceRun=0,voiceRecognizer=null,voiceMode=null,lastTranscript='';
 
   const el=id=>document.getElementById(id);
   const setText=(id,value)=>{const node=el(id);if(node)node.textContent=value};
+  const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
-  // ---- the sheet ---------------------------------------------------------------------
+  function injectStyles(){
+    if(el('poseAssistStyles'))return;
+    const style=document.createElement('style');style.id='poseAssistStyles';style.textContent=`
+      .pose-modal{max-width:720px}.pose-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+      .pose-head h3{margin:0 0 5px}.pose-head p{margin:0 0 6px}.pose-count{text-align:center;min-width:72px;background:var(--surface2);border:1px solid var(--line);border-radius:15px;padding:9px}
+      .pose-count strong{display:block;font-size:28px;line-height:1}.pose-count span{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+      .pose-stage{position:relative;overflow:hidden;border-radius:16px;background:#050607;aspect-ratio:4/3;margin:12px 0}
+      .pose-stage video,.pose-stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+      .pose-stage canvas{pointer-events:none}.pose-status{position:absolute;left:10px;right:10px;bottom:10px;background:rgba(5,6,7,.78);border:1px solid rgba(255,255,255,.13);border-radius:11px;padding:8px 10px;font-size:12px;font-weight:750;backdrop-filter:blur(8px)}
+      .pose-readout-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px}.pose-readout{font-size:11px;color:var(--muted);line-height:1.45}
+      .pose-copy{border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:10px;padding:8px 10px;font-size:11px;font-weight:800;white-space:nowrap}
+      .pose-caution{color:#ffd18a!important}.pose-privacy{margin-top:10px}.pose-form{margin-top:10px;border:1px solid var(--line);background:var(--surface2);border-radius:14px;padding:11px 12px}
+      .pose-form strong{display:block;font-size:12px;margin-bottom:4px}.pose-form span{display:block;font-size:12px;line-height:1.45;color:var(--muted)}.pose-form.cue{border-color:rgba(46,229,128,.5)}.pose-form.watch{border-color:rgba(255,209,138,.45)}
+      .pose-voice{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;margin-top:10px;border:1px solid var(--line);border-radius:14px;padding:10px 11px}.pose-voice button{min-width:118px}.pose-voice-text{min-width:0}.pose-voice-text strong{display:block;font-size:12px}.pose-voice-text span{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:2px}.pose-voice.on{border-color:rgba(46,229,128,.5);background:rgba(46,229,128,.055)}
+      .pose-bar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:11px;padding-top:11px;border-top:1px solid var(--line)}.pose-bar button{border:1px solid rgba(46,229,128,.35);background:rgba(46,229,128,.08);color:var(--accent);border-radius:11px;padding:9px 11px;font-weight:800}.pose-bar span{font-size:11px;color:var(--muted)}
+      @media(max-width:520px){.pose-modal{padding:14px}.pose-stage{margin:9px 0}.pose-voice{grid-template-columns:1fr}.pose-voice button{width:100%}.pose-readout-row{align-items:flex-start}}
+    `;document.head.appendChild(style);
+  }
+
   function build(){
-    if(sheet)return sheet;
-    sheet=document.createElement('div');
-    sheet.className='modal-backdrop pose-sheet';sheet.id='poseSheet';
-    sheet.setAttribute('role','dialog');sheet.setAttribute('aria-modal','true');sheet.setAttribute('aria-label','Count reps with the camera');
+    if(sheet)return sheet;injectStyles();
+    sheet=document.createElement('div');sheet.className='modal-backdrop pose-sheet';sheet.id='poseSheet';
+    sheet.setAttribute('role','dialog');sheet.setAttribute('aria-modal','true');sheet.setAttribute('aria-label','Camera workout assistant');
     sheet.innerHTML=`<div class="modal pose-modal">
-      <div class="pose-head"><div><h3 id="poseTitle">Count reps</h3><p id="poseSetup">Setting up the camera…</p><p class="pose-caution" id="poseCaution" hidden></p></div><div class="pose-count"><strong id="poseReps">0</strong><span>reps</span></div></div>
+      <div class="pose-head"><div><h3 id="poseTitle">Camera workout assistant</h3><p id="poseSetup">Setting up the camera…</p><p class="pose-caution" id="poseCaution" hidden></p></div><div class="pose-count"><strong id="poseReps">0</strong><span>reps</span></div></div>
       <div class="pose-stage"><video id="poseVideo" playsinline muted autoplay></video><canvas id="poseCanvas"></canvas><div class="pose-status" id="poseStatus">Starting…</div></div>
       <div class="pose-readout-row"><span class="pose-readout" id="poseReadout"></span><button type="button" class="pose-copy" id="poseCopy">Copy diagnostics</button></div>
       <div class="pose-readout-row"><span class="helper" id="poseLock" role="status">Centre yourself and hold still to lock.</span><button type="button" class="pose-copy" id="poseRelock">Re-lock user</button></div>
-      <div class="helper">Tracking v2 · One working side is measured and drawn. If tracking becomes uncertain, counting pauses. Re-lock only when you have a clear view; overlapping people cannot be reliably distinguished.</div>
-      <div class="helper pose-privacy">Video stays on this device. Nothing is uploaded, recorded or sent to the coach — only the number you choose to keep.</div>
-      <div class="cta"><button type="button" class="btn secondary" id="poseClose">Close</button><button type="button" class="btn primary" id="poseUse" disabled>Use count</button></div>
+      <div class="pose-form" id="poseForm"><strong>Form watch</strong><span id="poseFormCue">Waiting for a completed rep. Camera-visible observations only.</span></div>
+      <div class="pose-voice" id="poseVoice"><button type="button" class="btn secondary" id="poseVoiceToggle">Enable voice</button><div class="pose-voice-text"><strong id="poseVoiceState">Voice is off</strong><span id="poseVoiceHint">Try “185 pounds”, “8 reps”, “RIR 2”, or “set done”.</span></div></div>
+      <div class="helper">Tracking v3 · One working side is measured. Tracking uncertainty pauses both rep counting and form observation; completed reps are never inferred across a gap.</div>
+      <div class="helper pose-privacy">Video and pose landmarks stay on this device. Voice is optional; transcription uses your browser/device speech service and may use its network service. Iron Six does not store microphone audio.</div>
+      <div class="cta"><button type="button" class="btn secondary" id="poseClose">Close</button><button type="button" class="btn primary" id="poseUse" disabled>Use count only</button></div>
     </div>`;
-    document.body.appendChild(sheet);
-    video=el('poseVideo');canvas=el('poseCanvas');
-    el('poseClose').addEventListener('click',close);
-    el('poseUse').addEventListener('click',useCount);
-    el('poseCopy').addEventListener('click',copyDiagnostics);
-    el('poseRelock').addEventListener('click',()=>{
-      if(!tracker||!counter)return;
-      tracker.reset();counter.interrupt();tracking=null;
-      setText('poseLock','Centre yourself and hold still to lock.');
-      setText('poseStatus','Re-locking. Completed reps are kept.');
-      if(canvas)canvas.getContext('2d')?.clearRect(0,0,canvas.width,canvas.height);
-    });
-    sheet.addEventListener('click',event=>{if(event.target===sheet)close()});
-    return sheet;
+    document.body.appendChild(sheet);video=el('poseVideo');canvas=el('poseCanvas');
+    el('poseClose').addEventListener('click',close);el('poseUse').addEventListener('click',useCount);el('poseCopy').addEventListener('click',copyDiagnostics);
+    el('poseRelock').addEventListener('click',relock);el('poseVoiceToggle').addEventListener('click',toggleVoice);
+    sheet.addEventListener('click',event=>{if(event.target===sheet)close()});return sheet;
   }
 
   function fail(message){setText('poseStatus',message);setText('poseSetup',message)}
-
-  // ---- camera and model --------------------------------------------------------------
-  async function loadModel(){
-    if(landmarker)return landmarker;
-    const vision=await import(VISION);
-    const files=await vision.FilesetResolver.forVisionTasks(WASM);
-    // Multiple candidates let us detect an ambiguous crossing rather than silently accepting
-    // whoever happens to be returned first. Subject association lives in createTracker.
-    const options={baseOptions:{modelAssetPath:MODEL,delegate:'GPU'},runningMode:'VIDEO',numPoses:3,
-      minPoseDetectionConfidence:0.7,minPosePresenceConfidence:0.7,minTrackingConfidence:0.7};
-    try{landmarker=await vision.PoseLandmarker.createFromOptions(files,options)}
-    catch(_){landmarker=await vision.PoseLandmarker.createFromOptions(files,{...options,baseOptions:{...options.baseOptions,delegate:'CPU'}})}
-    return landmarker;
+  function relock(){
+    if(!tracker||!counter)return;tracker.reset();counter.interrupt();tracking=null;formEvaluator?.interrupt(counter.state().log.length);formState=formEvaluator?.state?.()||null;
+    setText('poseLock','Centre yourself and hold still to lock.');setText('poseStatus','Re-locking. Completed reps are kept.');
+    if(canvas)canvas.getContext('2d')?.clearRect(0,0,canvas.width,canvas.height);
   }
 
+  async function loadModel(){
+    if(landmarker)return landmarker;const vision=await import(VISION);const files=await vision.FilesetResolver.forVisionTasks(WASM);
+    const options={baseOptions:{modelAssetPath:MODEL,delegate:'GPU'},runningMode:'VIDEO',numPoses:3,minPoseDetectionConfidence:0.7,minPosePresenceConfidence:0.7,minTrackingConfidence:0.7};
+    try{landmarker=await vision.PoseLandmarker.createFromOptions(files,options)}catch(_){landmarker=await vision.PoseLandmarker.createFromOptions(files,{...options,baseOptions:{...options.baseOptions,delegate:'CPU'}})}return landmarker;
+  }
   async function startCamera(id){
-    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('This browser cannot open the camera. It needs a secure (https) page.');
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('This browser/app cannot open the camera. Camera permission and a secure page are required.');
     const acquired=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:960},height:{ideal:720},frameRate:{ideal:30}},audio:false});
-    if(id!==sessionId){for(const track of acquired.getTracks())track.stop();return}
-    stream=acquired;
-    video.srcObject=stream;
-    await video.play().catch(()=>{});
-    // Metadata can land after play() resolves, and the aspect correction needs real numbers.
+    if(id!==sessionId){for(const track of acquired.getTracks())track.stop();return}stream=acquired;video.srcObject=stream;await video.play().catch(()=>{});
     if(!video.videoWidth)await new Promise(resolve=>{video.addEventListener('loadedmetadata',resolve,{once:true});setTimeout(resolve,3000)});
   }
-
   async function keepAwake(id){try{if(navigator.wakeLock){const acquired=await navigator.wakeLock.request('screen');if(id!==sessionId)await acquired.release();else wake=acquired}}catch(_){}}
   function release(){if(wake){wake.release().catch(()=>{});wake=null}}
 
-  // ---- the loop ----------------------------------------------------------------------
   function tick(){
-    raf=requestAnimationFrame(tick);
-    if(!landmarker||!video||video.readyState<2||!video.videoWidth)return;
-    // The display refreshes at 60Hz and the camera delivers about 30fps, so half these calls
-    // would re-detect a frame already seen: wasted inference, and a frame count that no longer
-    // means what the diagnostics claim it means.
-    if(video.currentTime===lastVideoTime)return;
-    lastVideoTime=video.currentTime;
-    const now=performance.now();
-    if(lastFrameAt)fps=fps?fps*0.9+(1000/Math.max(1,now-lastFrameAt))*0.1:1000/Math.max(1,now-lastFrameAt);
-    lastFrameAt=now;
-    let poses=[];
-    try{poses=landmarker.detectForVideo(video,now)?.landmarks||[]}catch(_){}
-    tracking=tracker.push(poses,now,video.videoWidth/video.videoHeight);
-    const landmarks=tracking.landmarks;
-    framesSeen++;if(landmarks)framesTracked++;
-    if(!landmarks)counter.interrupt();
-    const state=counter.push({landmarks,t:now,aspect:video.videoWidth/video.videoHeight});
-    const frame={ok:!!landmarks,message:tracking.message};
-    setText('poseLock',tracking.message);
-    draw(landmarks,state);
-    paint(state,frame);
+    raf=requestAnimationFrame(tick);if(!landmarker||!video||video.readyState<2||!video.videoWidth)return;if(video.currentTime===lastVideoTime)return;lastVideoTime=video.currentTime;
+    const now=performance.now();if(lastFrameAt)fps=fps?fps*0.9+(1000/Math.max(1,now-lastFrameAt))*0.1:1000/Math.max(1,now-lastFrameAt);lastFrameAt=now;
+    let poses=[];try{poses=landmarker.detectForVideo(video,now)?.landmarks||[]}catch(_){}
+    const aspect=video.videoWidth/video.videoHeight;tracking=tracker.push(poses,now,aspect);const landmarks=tracking.landmarks;framesSeen++;if(landmarks)framesTracked++;
+    if(!landmarks){counter.interrupt();formEvaluator?.interrupt(counter.state().log.length)}
+    const state=counter.push({landmarks,t:now,aspect});
+    if(formEvaluator)formState=formEvaluator.push({landmarks,side:tracking.side,t:now,aspect,counterState:state});
+    const frame={ok:!!landmarks,message:tracking.message};setText('poseLock',tracking.message);draw(landmarks,state);paint(state,frame);paintForm(formState);
   }
 
   function paint(state,frame){
-    setText('poseReps',String(state.reps));
-    // Nothing counted is not a count worth writing into the log, so the button stays inert.
-    const use=el('poseUse');
-    if(use){use.disabled=!state.reps;use.textContent=state.reps?('Use '+state.reps+' reps'):'Use count'}
-    const status=!frame.ok?frame.message:(state.message||{waiting:'Stand at the top to start.',top:'Ready.',descending:'Down…',bottom:'Bottom.',ascending:'Up…',lost:'Lost you.'}[state.phase]||'Tracking.');
-    setText('poseStatus',status);
-    const tracked=framesSeen?Math.round(framesTracked/framesSeen*100):0;
-    const durations=state.log.map(r=>r.ms);
-    const average=durations.length?Math.round(durations.reduce((a,b)=>a+b,0)/durations.length):0;
-    setText('poseReadout',[
-      `${Math.round(fps)} fps`,
-      `${tracked}% usable frames`,
-      state.angle===null?'no angle':`${state.angle}°`,
-      state.rejected?`${state.rejected} rejected`:'0 rejected',
-      average?`avg rep ${(average/1000).toFixed(1)}s`:'—'
-    ].join(' · '));
+    setText('poseReps',String(state.reps));const use=el('poseUse');if(use){use.disabled=!state.reps;use.textContent=state.reps?('Use '+state.reps+' reps only'):'Use count only'}
+    const status=!frame.ok?frame.message:(state.message||{waiting:'Stand at the top to start.',top:'Ready.',descending:'Down…',bottom:'Bottom.',ascending:'Up…',lost:'Lost you.'}[state.phase]||'Tracking.');setText('poseStatus',status);
+    const tracked=framesSeen?Math.round(framesTracked/framesSeen*100):0,durations=state.log.map(r=>r.ms),average=durations.length?Math.round(durations.reduce((a,b)=>a+b,0)/durations.length):0;
+    setText('poseReadout',[`${Math.round(fps)} fps`,`${tracked}% usable frames`,state.angle===null?'no angle':`${state.angle}°`,state.rejected?`${state.rejected} rejected`:'0 rejected',average?`avg rep ${(average/1000).toFixed(1)}s`:'—'].join(' · '));
+  }
+  function paintForm(state){
+    const box=el('poseForm');if(!box)return;box.classList.remove('cue','watch');let text='Waiting for a completed rep. Camera-visible observations only.';
+    if(state?.repeatedCue){box.classList.add(state.repeatedCue.level==='cue'?'cue':'watch');text='Coach cue: '+state.repeatedCue.text}
+    else if(state?.latest?.cues?.length){const cue=state.latest.cues[0];box.classList.add(cue.level==='cue'?'cue':'watch');text='Possible on rep '+state.latest.index+': '+cue.text}
+    else if(state?.latest)text='Rep '+state.latest.index+': no repeated camera-visible issue detected.';
+    setText('poseFormCue',text);
   }
 
-  // Only the confidence-gated, smoothed working chain is drawn and measured. No raw/faint
-  // background landmarks or uncertain far-side leg to give a misleading second skeleton.
   function draw(landmarks,state){
-    if(!canvas)return;
-    if(canvas.width!==video.videoWidth||canvas.height!==video.videoHeight){canvas.width=video.videoWidth;canvas.height=video.videoHeight}
-    const context=canvas.getContext('2d');if(!context)return;
-    context.clearRect(0,0,canvas.width,canvas.height);
-    if(!landmarks)return;
-    const toPixels=point=>[point.x*canvas.width,point.y*canvas.height];
-    const good=state.phase!=='lost'&&state.phase!=='waiting';
-    context.strokeStyle=good?'#2ee580':'#ff8b8b';context.fillStyle=context.strokeStyle;context.lineWidth=Math.max(3,canvas.width/220);
-    const selectedChain=rule.joint[tracking?.side??0];
-    for(const chain of [selectedChain]){
-      const points=chain.map(index=>landmarks[index]);
-      if(points.some(point=>!point||(point.visibility!==undefined&&point.visibility<counterApi.MIN_VISIBILITY)))continue;
-      context.beginPath();points.forEach((point,index)=>{const [x,y]=toPixels(point);index?context.lineTo(x,y):context.moveTo(x,y)});context.stroke();
-      for(const point of points){const [vx,vy]=toPixels(point);context.beginPath();context.arc(vx,vy,context.lineWidth*1.5,0,Math.PI*2);context.fill()}
+    if(!canvas)return;if(canvas.width!==video.videoWidth||canvas.height!==video.videoHeight){canvas.width=video.videoWidth;canvas.height=video.videoHeight}
+    const context=canvas.getContext('2d');if(!context)return;context.clearRect(0,0,canvas.width,canvas.height);if(!landmarks)return;
+    const toPixels=point=>[point.x*canvas.width,point.y*canvas.height],good=state.phase!=='lost'&&state.phase!=='waiting';context.strokeStyle=good?'#2ee580':'#ff8b8b';context.fillStyle=context.strokeStyle;context.lineWidth=Math.max(3,canvas.width/220);
+    const side=tracking?.side??0,selectedChain=rule.joint[side],chains=rule.id==='squat'?[[side?12:11,side?24:23],selectedChain]:[selectedChain];
+    for(const chain of chains){const points=chain.map(index=>landmarks[index]);if(points.some(point=>!point||(point.visibility!==undefined&&point.visibility<counterApi.MIN_VISIBILITY)))continue;context.beginPath();points.forEach((point,index)=>{const [x,y]=toPixels(point);index?context.lineTo(x,y):context.moveTo(x,y)});context.stroke();for(const point of points){const [x,y]=toPixels(point);context.beginPath();context.arc(x,y,context.lineWidth*1.5,0,Math.PI*2);context.fill()}}
+    if(state.angle!==null&&landmarks[selectedChain[1]]){const [ax,ay]=toPixels(landmarks[selectedChain[1]]);context.save();context.scale(-1,1);context.font=`700 ${Math.round(canvas.width/24)}px system-ui,sans-serif`;context.textAlign='left';context.fillText(`${state.angle}°`,-ax+18,ay-14);context.restore()}
+  }
+
+  function voiceSupported(){return !!(window.IronSixNative?.listenVoice||(window.SpeechRecognition||window.webkitSpeechRecognition))}
+  function setVoiceUi(title,hint){setText('poseVoiceState',title);if(hint!==undefined)setText('poseVoiceHint',hint);const box=el('poseVoice'),button=el('poseVoiceToggle');box?.classList.toggle('on',voiceEnabled);if(button)button.textContent=voiceEnabled?'Disable voice':'Enable voice'}
+  async function listenWebOnce(token){
+    const Ctor=window.SpeechRecognition||window.webkitSpeechRecognition;if(!Ctor)throw new Error('Speech recognition is not available in this browser.');
+    return new Promise((resolve,reject)=>{const recognition=new Ctor();voiceRecognizer=recognition;let settled=false;
+      const finish=value=>{if(settled)return;settled=true;if(voiceRecognizer===recognition)voiceRecognizer=null;resolve(value)};
+      const failVoice=error=>{if(settled)return;settled=true;if(voiceRecognizer===recognition)voiceRecognizer=null;reject(error)};
+      recognition.lang='en-US';recognition.continuous=false;recognition.interimResults=false;recognition.maxAlternatives=3;
+      recognition.onresult=event=>finish({text:event.results?.[0]?.[0]?.transcript||'',mode:'browser'});
+      recognition.onerror=event=>{const error=event?.error||'speech-error';if(error==='no-speech'||error==='aborted')finish({text:'',mode:'browser',error});else failVoice(new Error(error))};
+      recognition.onend=()=>finish({text:'',mode:'browser',error:'ended'});
+      if(token!==voiceRun)return finish({text:'',mode:'browser',error:'cancelled'});try{recognition.start()}catch(error){failVoice(error)}
+    });
+  }
+  async function listenOnce(token){
+    if(window.IronSixNative?.listenVoice){voiceMode='native';const result=await window.IronSixNative.listenVoice({language:'en-US'});return {text:String(result?.text||''),mode:result?.onDevice?'on-device Android':'Android speech service',error:result?.error||null}}
+    voiceMode='browser';return listenWebOnce(token);
+  }
+  async function voiceLoop(token){
+    while(voiceEnabled&&token===voiceRun&&sheet?.classList.contains('show')){
+      setVoiceUi('Listening…','Say a load, reps/RIR, “set done”, “move on”, or “re-lock”.');
+      try{
+        const result=await listenOnce(token);if(!voiceEnabled||token!==voiceRun)break;
+        if(result.mode)voiceMode=result.mode;if(result.text){lastTranscript=result.text;handleVoice(result.text)}else if(result.error!=='aborted'&&result.error!=='cancelled')setVoiceUi('Listening…','No speech heard. Still listening for your next command.');
+      }catch(error){
+        if(!voiceEnabled||token!==voiceRun)break;const message=String(error?.message||error||'').toLowerCase();
+        if(/permission|not-allowed|denied|insufficient/.test(message)){stopVoice();setVoiceUi('Microphone permission is needed','Voice stayed off; camera tracking continues normally.');break}
+        setVoiceUi('Voice had trouble',`Still retrying. ${String(error?.message||'Speech recognition error').slice(0,90)}`);
+      }
+      await sleep(450);
     }
-    if(state.angle!==null){
-      const [ax,ay]=toPixels(landmarks[selectedChain[1]]);
-      context.save();context.scale(-1,1); // the stage is mirrored for the lifter; text must not be
-      context.font=`700 ${Math.round(canvas.width/24)}px system-ui,sans-serif`;context.textAlign='left';
-      context.fillText(`${state.angle}°`,-ax+18,ay-14);context.restore();
-    }
+  }
+  function startVoice(){
+    if(voiceEnabled)return;if(!voiceSupported()){setVoiceUi('Voice is unavailable','This device/browser has no supported speech-recognition interface. Camera and form watch still work.');return}
+    voiceEnabled=true;const token=++voiceRun;setVoiceUi('Starting voice…');void voiceLoop(token);
+  }
+  function stopVoice(){
+    voiceEnabled=false;voiceRun++;try{voiceRecognizer?.abort?.()}catch(_){}voiceRecognizer=null;try{window.IronSixNative?.stopVoice?.()}catch(_){}setVoiceUi('Voice is off','Try “185 pounds”, “8 reps”, “RIR 2”, or “set done”.');
+  }
+  function toggleVoice(){voiceEnabled?stopVoice():startVoice()}
+
+  function activeSet(card=target){
+    if(!card)return null;const rows=[...card.querySelectorAll('.set-row')],row=rows.find(r=>!r.querySelector('.done')?.classList.contains('active'))||null;if(!row)return null;
+    return {rows,row,index:rows.indexOf(row),weight:row.querySelector('.weight'),reps:row.querySelector('.reps'),rir:row.querySelector('.rir'),done:row.querySelector('.done')};
+  }
+  function writeField(input,value,event='input'){if(!input)return false;input.value=String(value);input.dispatchEvent(new Event(event,{bubbles:true}));return true}
+  function applyCount(card,reps){const current=activeSet(card);if(!current)return null;writeField(current.reps,reps);return current.reps}
+  function completeCurrentSet(command){
+    const current=activeSet();if(!current){setVoiceUi('Exercise already complete','Say “move on” or close the camera assistant.');return false}
+    if(command.bodyweight)writeField(current.weight,'');else if(command.weight!==null)writeField(current.weight,command.weight);
+    if(command.reps!==null)writeField(current.reps,command.reps);
+    if(command.rir!==null)writeField(current.rir,command.rir,'change');
+    const exerciseIndex=Number(target?.dataset.exerciseIndex),key=Number.isFinite(exerciseIndex)?`${exerciseIndex}-${current.index}`:null;
+    const saved=key&&typeof activeUser==='function'?activeUser().today?.[key]:null,cameraReps=counter?.state().reps||0;
+    if(command.reps===null&&!String(saved?.reps||'').trim()&&cameraReps)writeField(current.reps,cameraReps);
+    const confirmedReps=command.reps!==null||cameraReps>0||String(saved?.reps||'').trim();
+    if(!confirmedReps){setVoiceUi('I need the actual rep count first','Say “8 reps”, type the reps, or let the camera count at least one rep before “set done”.');return false}
+    if(!current.done.classList.contains('active'))current.done.click();window.IronSixSessionCards?.apply?.();
+    const next=activeSet();
+    if(next){counter?.reset();formEvaluator=formApi?.createEvaluator?.(rule)||null;formState=formEvaluator?.state?.()||null;paintForm(formState);setText('poseReps','0');setVoiceUi(`Set ${current.index+1} saved · set ${next.index+1} ready`,'Stay at the top position and begin when ready. Voice remains on.');return true}
+    const summary=formEvaluator?.summary?.();const index=Number(target?.dataset.exerciseIndex);const workout=typeof finalWorkout==='function'&&typeof activeUser==='function'?finalWorkout(activeUser()):[];
+    close();if(Number.isFinite(index)&&window.IronSixSessionCards?.goTo)window.IronSixSessionCards.goTo(Math.min(workout.length,index+1),workout);
+    const note=summary?.primary&&summary.primary.count>=2?' Form watch: '+summary.primary.text:'';if(typeof toast==='function')toast('Exercise complete. Next exercise ready.'+note);return true;
+  }
+  function handleVoice(transcript){
+    if(!voiceApi?.parseCommand){setVoiceUi('Voice parser did not load','Camera tracking is unchanged.');return}
+    const command=voiceApi.parseCommand(transcript),summary=voiceApi.summary(command);if(command.stopVoice){stopVoice();return}
+    if(command.relock)relock();
+    if(command.complete){completeCurrentSet(command);return}
+    const current=activeSet();
+    if(current){if(command.bodyweight)writeField(current.weight,'');else if(command.weight!==null)writeField(current.weight,command.weight);if(command.reps!==null)writeField(current.reps,command.reps);if(command.rir!==null)writeField(current.rir,command.rir,'change')}
+    if(command.next||command.previous){const workout=typeof finalWorkout==='function'&&typeof activeUser==='function'?finalWorkout(activeUser()):[],index=Number(target?.dataset.exerciseIndex)||0,dest=command.previous?Math.max(0,index-1):Math.min(workout.length,index+1);close();window.IronSixSessionCards?.goTo?.(dest,workout);return}
+    if(summary)setVoiceUi('Heard: '+summary,`Transcript: “${String(transcript).slice(0,80)}”`);else setVoiceUi('I heard you, but did not change the workout','Use a field word or unit: “185 pounds”, “8 reps”, “RIR 2”, or “set done”.');
   }
 
-  // ---- open / close ------------------------------------------------------------------
-  async function open(card,exercise){
-    if(loading)return;
-    rule=counterApi.ruleFor(exercise);
-    if(!rule)return;
-    stop();
-    build();
-    target=card;
-    counter=counterApi.createCounter(rule);
-    tracker=counterApi.createTracker(rule);tracking=null;
-    const id=++sessionId;
-    framesSeen=0;framesTracked=0;fps=0;lastFrameAt=0;lastVideoTime=-1;startedAt=Date.now();
-    sheet.classList.add('show');
-    setText('poseTitle',rule.label+' · '+String(exercise.name||'').slice(0,40));
-    setText('poseSetup',rule.setup);
-    const caution=counterApi.cautionFor(exercise),cautionNode=el('poseCaution');
-    if(cautionNode){cautionNode.textContent=caution||'';cautionNode.hidden=!caution}
-    setText('poseReps','0');setText('poseReadout','');
-    setText('poseStatus','Starting the camera…');
-    setText('poseLock','Centre yourself and hold still to lock.');
-    const use=el('poseUse');if(use){use.disabled=true;use.textContent='Use count'}
-    loading=true;
-    try{
-      await startCamera(id);
-      if(id!==sessionId)return;
-      setText('poseStatus','Loading the pose model…');
-      await loadModel();
-      if(id!==sessionId)return;
-      await keepAwake(id);
-      if(id!==sessionId)return;
-      setText('poseStatus','Centre yourself and hold still to lock.');
-      cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);
-    }catch(error){
-      if(id!==sessionId)return;
-      const message=error&&error.name==='NotAllowedError'?'Camera permission was declined. Nothing else changed.':(error&&error.message)||'Could not start the camera.';
-      fail(message);
-      stop();
-    }finally{loading=false}
+  async function open(card,item){
+    if(loading)return;rule=counterApi.ruleFor(item);if(!rule)return;stop();build();target=card;exercise=item;counter=counterApi.createCounter(rule);tracker=counterApi.createTracker(rule);tracking=null;formEvaluator=formApi?.createEvaluator?.(rule)||null;formState=formEvaluator?.state?.()||null;
+    const id=++sessionId;framesSeen=0;framesTracked=0;fps=0;lastFrameAt=0;lastVideoTime=-1;startedAt=Date.now();lastTranscript='';sheet.classList.add('show');
+    setText('poseTitle',rule.label+' · '+String(item.name||'').slice(0,40));setText('poseSetup',rule.setup);const caution=counterApi.cautionFor(item),cautionNode=el('poseCaution');if(cautionNode){cautionNode.textContent=caution||'';cautionNode.hidden=!caution}
+    setText('poseReps','0');setText('poseReadout','');setText('poseStatus','Starting the camera…');setText('poseLock','Centre yourself and hold still to lock.');paintForm(formState);setVoiceUi('Voice is off','Enable it for hands-free load/reps/RIR and “set done” commands.');
+    const use=el('poseUse');if(use){use.disabled=true;use.textContent='Use count only'}loading=true;
+    try{await startCamera(id);if(id!==sessionId)return;setText('poseStatus','Loading the pose model…');await loadModel();if(id!==sessionId)return;await keepAwake(id);if(id!==sessionId)return;setText('poseStatus','Centre yourself and hold still to lock.');cancelAnimationFrame(raf);raf=requestAnimationFrame(tick)}
+    catch(error){if(id!==sessionId)return;const message=error&&error.name==='NotAllowedError'?'Camera permission was declined. Nothing else changed.':(error&&error.message)||'Could not start the camera.';fail(message);stop()}
+    finally{loading=false}
   }
-
-  function stop(){
-    sessionId++;
-    cancelAnimationFrame(raf);raf=0;
-    if(stream){for(const track of stream.getTracks())track.stop();stream=null}
-    if(video)video.srcObject=null;
-    release();
-  }
-
+  function stop(){sessionId++;cancelAnimationFrame(raf);raf=0;stopVoice();if(stream){for(const track of stream.getTracks())track.stop();stream=null}if(video)video.srcObject=null;release()}
   function close(){stop();if(sheet)sheet.classList.remove('show')}
+  function diagnostics(){const state=counter?counter.state():null;return {version:2,assistantVersion:3,trackingVersion:2,tracking:tracker?tracker.diagnostics():null,rule:rule&&rule.id,reps:state?state.reps:0,rejected:state?state.rejected:0,framesSeen,framesTracked,trackedPercent:framesSeen?Math.round(framesTracked/framesSeen*100):0,fps:Math.round(fps),seconds:startedAt?Math.round((Date.now()-startedAt)/1000):0,resolution:video&&video.videoWidth?`${video.videoWidth}x${video.videoHeight}`:null,form:formEvaluator?.summary?.()||null,voice:{enabled:voiceEnabled,mode:voiceMode,lastTranscript:lastTranscript||null},userAgent:navigator.userAgent,log:state?state.log:[]}}
+  function copyDiagnostics(){const text=JSON.stringify(diagnostics(),null,2),done=()=>{if(typeof toast==='function')toast('Diagnostics copied')};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done).catch(()=>console.log(text));else console.log(text)}
+  function useCount(){const state=counter&&counter.state();if(!state||!state.reps||!target)return close();const input=applyCount(target,state.reps);close();if(!input)return;if(typeof toast==='function')toast('Logged '+state.reps+' reps. Check it before you finish the set.');input.focus()}
 
-  function diagnostics(){
-    const state=counter?counter.state():null;
-    return {version:2,tracking:tracker?tracker.diagnostics():null,rule:rule&&rule.id,reps:state?state.reps:0,rejected:state?state.rejected:0,
-      framesSeen,framesTracked,trackedPercent:framesSeen?Math.round(framesTracked/framesSeen*100):0,
-      fps:Math.round(fps),seconds:startedAt?Math.round((Date.now()-startedAt)/1000):0,
-      resolution:video&&video.videoWidth?`${video.videoWidth}x${video.videoHeight}`:null,
-      userAgent:navigator.userAgent,log:state?state.log:[]};
-  }
-
-  function copyDiagnostics(){
-    const text=JSON.stringify(diagnostics(),null,2);
-    const done=()=>{if(typeof toast==='function')toast('Diagnostics copied')};
-    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done).catch(()=>console.log(text));
-    else console.log(text);
-  }
-
-  // Writes into the reps field the lifter would have typed, then fires the same input event
-  // the keyboard fires, so the existing journal/save path runs untouched. The first set that
-  // is not already marked done is the one being worked on.
-  function applyCount(card,reps){
-    const rows=[...card.querySelectorAll('.set-row')];
-    const row=rows.find(r=>!r.querySelector('.done')?.classList.contains('active'))||rows[rows.length-1];
-    const input=row&&row.querySelector('.reps');
-    if(!input)return null;
-    input.value=String(reps);
-    input.dispatchEvent(new Event('input',{bubbles:true}));
-    return input;
-  }
-
-  function useCount(){
-    const state=counter&&counter.state();
-    if(!state||!state.reps||!target)return close();
-    const input=applyCount(target,state.reps);
-    close();
-    if(!input)return;
-    if(typeof toast==='function')toast('Logged '+state.reps+' reps. Check it before you finish the set.');
-    input.focus();
-  }
-
-  // ---- injection into the exercise list ----------------------------------------------
   function decorate(){
     const workout=typeof finalWorkout==='function'&&typeof activeUser==='function'?finalWorkout(activeUser()):[];
-    for(const card of document.querySelectorAll('#exerciseList [data-exercise-index]')){
-      if(card.querySelector('.pose-bar'))continue;
-      const exercise=workout[Number(card.dataset.exerciseIndex)];
-      if(!exercise||!counterApi.ruleFor(exercise))continue;
-      const sets=card.querySelector('.sets');if(!sets)continue;
-      const bar=document.createElement('div');
-      bar.className='pose-bar';
-      bar.innerHTML='<button type="button" class="pose-open">Count reps with camera</button><span>Tracking v2 · on-device · check the count</span>';
-      bar.querySelector('.pose-open').addEventListener('click',()=>open(card,exercise));
-      sets.appendChild(bar);
-    }
+    for(const card of document.querySelectorAll('#exerciseList [data-exercise-index]')){if(card.querySelector('.pose-bar'))continue;const item=workout[Number(card.dataset.exerciseIndex)];if(!item||!counterApi.ruleFor(item))continue;const sets=card.querySelector('.sets');if(!sets)continue;const bar=document.createElement('div');bar.className='pose-bar';bar.innerHTML='<button type="button" class="pose-open">Camera + form + voice</button><span>Tracking v3 · opt-in · check the log</span>';bar.querySelector('.pose-open').addEventListener('click',()=>open(card,item));sets.appendChild(bar)}
   }
-
-  // renderExercises is wrapped rather than edited so the spike adds no risk to the logging
-  // path it sits next to. Removing this file removes the feature completely.
-  const original=window.renderExercises;
-  if(typeof original==='function')window.renderExercises=function(){const result=original.apply(this,arguments);try{decorate()}catch(_){}return result};
-  window.addEventListener('pagehide',close);
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)close()});
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{try{decorate()}catch(_){}});
-  else try{decorate()}catch(_){}
-
-  window.IronSixPoseSpike={open,close,decorate,diagnostics,applyCount};
+  const original=window.renderExercises;if(typeof original==='function')window.renderExercises=function(){const result=original.apply(this,arguments);try{decorate()}catch(_){}return result};
+  window.addEventListener('pagehide',close);document.addEventListener('visibilitychange',()=>{if(document.hidden)close()});if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{try{decorate()}catch(_){}});else try{decorate()}catch(_){}
+  window.IronSixPoseSpike={open,close,decorate,diagnostics,applyCount,relock,handleVoice,startVoice,stopVoice,activeSet};
 })();
