@@ -19,7 +19,7 @@
     let fatigue=0; if(avgEnergy!=null)fatigue+=(5-avgEnergy)*12; if(r.sets>=35)fatigue+=12;if(r.sets>=50)fatigue+=10;if(r.hard>=8)fatigue+=10;if(hardFeedback>=3)fatigue+=12;if(hardFeedback>=6)fatigue+=8;if(volumeChange!=null&&volumeChange>35)fatigue+=10;
     fatigue=clamp(Math.round(fatigue),0,100);
     let phase='Build',recommendation='Continue progressive training and let performance drive small load changes.';
-    if(recent.length<3){phase='Learning';recommendation='Keep logging weight, reps, RIR, and set feedback so Iron Six can establish a reliable baseline.'}
+    if(recent.length<3){phase='Learning';recommendation='Keep logging your weight, reps and how hard each set felt. A few sessions in, your coach can start setting targets from your real numbers.'}
     else if(fatigue>=65){phase='Deload suggested';recommendation='Reduce working sets about 25–35% for the next several sessions, keep technique crisp, and avoid forcing failure.'}
     else if(fatigue>=45){phase='Manage fatigue';recommendation='Keep priority lifts, trim accessory volume about 10–20%, and avoid unnecessary failure work until readiness improves.'}
     else if(easyFeedback>=4&&hardFeedback===0){phase='Progress';recommendation='Performance feedback supports gradual progression; increase only where rep quality and RIR remain on target.'}
@@ -46,7 +46,7 @@
     if(typeof document==='undefined'||typeof activeUser!=='function')return;const plan=document.getElementById('plan');if(!plan)return;
     let box=document.getElementById('trainingBlockStatus');if(!box){box=document.createElement('div');box.id='trainingBlockStatus';box.className='section';const first=plan.querySelector('.section');if(first)plan.insertBefore(box,first);else plan.appendChild(box)}
     const state=trainingState(activeUser()),pct=state.volumeChange==null?'Not enough history':`${state.volumeChange>=0?'+':''}${state.volumeChange}% vs prior 14 days`;
-    box.innerHTML=`<div class="section-head"><div><h2>Training block</h2><small>Uses recent workload, readiness, RIR and set feedback</small></div></div><div class="note"><strong>${state.phase}</strong><br><br>${state.recommendation}<br><br><strong>Fatigue signal:</strong> ${state.fatigue}/100<br><strong>Recent workload:</strong> ${state.recent14.sets} logged sets across ${state.recent14.sessions} sessions<br><strong>Volume trend:</strong> ${pct}</div>`;
+    box.innerHTML=`<div class="section-head"><div><h2>How recovered you are</h2><small>Based on your recent sessions and how you have been feeling</small></div></div><div class="note"><strong>${state.phase}</strong><br><br>${state.recommendation}<br><br><strong>How fatigued you are:</strong> ${state.fatigue}/100<br><strong>Recent work:</strong> ${state.recent14.sets} logged sets across ${state.recent14.sessions} sessions<br><strong>Trend:</strong> ${pct}</div>`;
   }
   const oldRender=window.IronSixInsights?.render;
   if(oldRender)window.IronSixInsights.render=function(){const out=oldRender.apply(this,arguments);renderPlan();return out};

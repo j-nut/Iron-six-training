@@ -2,17 +2,17 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 
 const required = [
-  'exercise-guide.js?v=8','exercise-visuals.js?v=9','equipment-catalog.js?v=1','equipment-exercise-library.js?v=1','equipment-coverage.js?v=1','local-ai-fallback.js?v=7','coach.js?v=11','equipment-manager.js?v=1','social-auth.js?v=1','cloud-sync.js?v=14','cloud-history-sync.js?v=8'
+  'exercise-guide.js?v=8','exercise-visuals.js?v=9','equipment-catalog.js?v=1','equipment-exercise-library.js?v=1','equipment-coverage.js?v=1','local-ai-fallback.js?v=7','coach.js?v=12','equipment-manager.js?v=1','social-auth.js?v=1','cloud-sync.js?v=14','cloud-history-sync.js?v=8','ui-shell.js?v=1'
 ];
 for (const page of ['index.html','live.html']) {
   const html=fs.readFileSync(page,'utf8');
-  assert(html.includes('core.js?v=14'));assert(html.includes('engine.js?v=13'));assert(html.includes('ui1.js?v=14'));assert(html.includes('ui3.js?v=13'));assert(html.includes('ui2.js?v=14'));
+  assert(html.includes('core.js?v=14'));assert(html.includes('engine.js?v=14'));assert(html.includes('ui1.js?v=15'));assert(html.includes('ui3.js?v=14'));assert(html.includes('ui2.js?v=15'));
   assert(html.indexOf('exercise-media-catalog.js?v=1')<html.indexOf('exercise-media.js?v=2'));
-  assert(html.indexOf('exercise-media.js?v=2')<html.indexOf('ui2.js?v=14'));
+  assert(html.indexOf('exercise-media.js?v=2')<html.indexOf('ui2.js?v=15'));
   let previous=html.indexOf('ui3.js');assert.notEqual(previous,-1);
   for(const script of required){const position=html.indexOf(script);assert(position>previous,`${page} must load ${script} in order`);previous=position}
 }
-const ui=fs.readFileSync('ui3.js','utf8');assert(!ui.includes('loadIronSixScript'));assert(ui.includes('function chooseWorkout(key)'));assert(ui.includes('u.program.currentWorkoutKey=key'));assert(ui.includes('u.today={}'));assert(ui.includes('Finish all sets of the first exercise'));
+const ui=fs.readFileSync('ui3.js','utf8');assert(!ui.includes('loadIronSixScript'));assert(ui.includes('function chooseWorkout(key)'));assert(ui.includes('u.program.currentWorkoutKey=key'));assert(ui.includes('u.today={}'));assert(ui.includes('Finish all sets of one exercise before moving to the next'));
 const visuals=fs.readFileSync('exercise-visuals.js','utf8'),guide=fs.readFileSync('exercise-guide.js','utf8'),coach=fs.readFileSync('coach.js','utf8');
 assert(visuals.includes('window.__ironSixGuideFocus=true'));assert(!visuals.includes("key==='hinge'||key==='row'||key==='rear_delt'||key==='lat_iso'"));assert(guide.indexOf("b==='arms'")<guide.indexOf("b==='curl'"));assert(coach.includes("guide.scrollIntoView({behavior:'smooth',block:'start'})"));
 for(const page of ['index.html','live.html']){const html=fs.readFileSync(page,'utf8');assert(html.indexOf('session-planner.js')>html.indexOf('engine.js'));assert(html.indexOf('workout-store.js')<html.indexOf('ui2.js'));assert(html.indexOf('circuit-player.js')>html.indexOf('ui3.js'))}

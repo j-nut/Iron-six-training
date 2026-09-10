@@ -28,7 +28,7 @@
       if(score<25)factor=Math.min(factor,.65);else if(score<45)factor=Math.min(factor,.8);
       if(soreness>=4)factor=Math.min(factor,.75);
       const oldSets=Math.max(1,n(chosen.sets)||1),sets=Math.max(1,Math.min(oldSets,Math.ceil(oldSets*factor)));
-      if(sets<oldSets){chosen.sets=sets;chosen._adaptReason=chosen._adaptReason||`${state.phase==='Build'?'Readiness':'Training block'} adjusted volume (${oldSets}→${sets} sets).`;chosen.prescription=String(chosen.prescription||'').replace(/^\d+\s*×/,sets+' ×')}
+      if(sets<oldSets){chosen.sets=sets;chosen._adaptReason=chosen._adaptReason||`${state.phase==='Build'?'Readiness':'How recovered you are'} adjusted volume (${oldSets}→${sets} sets).`;chosen.prescription=String(chosen.prescription||'').replace(/^\d+\s*×/,sets+' ×')}
       chosen._readinessScore=score;
       return chosen;
     });
