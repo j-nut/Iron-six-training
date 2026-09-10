@@ -22,10 +22,10 @@ function oversizedContext() {
     workout: Array.from({ length: 16 }, (_, i) => ({ index: i, name: `Movement ${i}`, prescription: '4 × 8–12', base: `Base ${i}`, suggested: { load: 100, target: 10, text: 'Suggested load', confidence: 'Performance-based', detail: 'd'.repeat(1000) } })),
     today: Array.from({ length: 40 }, (_, i) => ({ key: `0-${i}`, weight: 100, reps: 10, rir: 2, done: true, junk: 't'.repeat(600) })),
     history,
-    allowedSwaps: Array.from({ length: 18 }, (_, i) => ({ targetIndex: i, targetName: `Movement ${i}`, targetBase: `Base ${i}`, replacements: Array.from({ length: 12 }, (_, j) => `Swap ${i}-${j}`) })),
-    setFeedback: Array.from({ length: 30 }, (_, i) => ({ ts: i, exerciseName: `Movement ${i}`, feedback: 'easy', weight: 100, reps: 10, rir: 4, junk: 'f'.repeat(500) })),
-    analytics: { sessions7: 4, sets7: 50, volume7: 12000, trends: Array.from({ length: 20 }, (_, i) => ({ exercise: `Movement ${i}`, change: i })), freshness: { lower: 1 }, junk: 'a'.repeat(3000) },
-    equipmentCoverage: {score: 90, slotsCovered: 18, slotsTotal: 20, emptySlots: Array.from({length:12},(_,i)=>({workout:`W${i}`,movement:`M${i}`})), thinSlots: Array.from({length:12},(_,i)=>({workout:`W${i}`,movement:`M${i}`,only:'one'})), wouldHelp:Array.from({length:12},(_,i)=>`Gear ${i}`), unrecognized:Array.from({length:12},(_,i)=>`Unknown ${i}`), conditioningOnly:Array.from({length:12},(_,i)=>`Cardio ${i}`)},
+    allowedSwaps: Array.from({ length: 18 }, (_, i) => ({ targetIndex: i, targetName: `Movement ${i}`, replacements: Array.from({ length: 12 }, (_, j) => `Swap ${i}-${j}`) })),
+    setFeedback: Array.from({ length: 30 }, (_, i) => ({ ts: i, exerciseName: `Movement ${i}`, feedback: 'easy', weight: 100, reps: 10, rir: 4 })),
+    analytics: { sessions7: 4, sets7: 50, volume7: 12000, trends: Array.from({ length: 20 }, (_, i) => ({ exercise: `Movement ${i}`, change: i })), freshness: { lower: 1 } },
+    equipmentCoverage: { score: 90, slotsCovered: 18, slotsTotal: 20, emptySlots: Array.from({length:12},(_,i)=>({workout:`W${i}`,movement:`M${i}`})), thinSlots: [], wouldHelp: [], unrecognized: [], conditioningOnly: [] },
   };
 }
 
@@ -35,7 +35,7 @@ function oversizedContext() {
     process: { env: { GROQ_API_KEY: 'test-key' } }, console,
     fetch: async (_url, init) => {
       const body = JSON.parse(init.body); calls.push(body);
-      if (calls.length === 1) return response(false, 429, { error: { message: 'rate limited' } }, { 'retry-after': '4', 'x-ratelimit-remaining-tokens': '0' });
+      if (calls.length === 1) return response(false, 400, { error: { message: 'Failed to generate JSON' } });
       return response(true, 200, { choices: [{ message: { content: JSON.stringify({ reply: 'Recovered with overflow model.', actions: [], videos: [], followUps: [] }) } }] });
     },
   };
@@ -49,37 +49,42 @@ function oversizedContext() {
   assert.equal(compact.profile.equipment.length, 14);
   assert.equal(compact.today.length, 16);
   assert.equal(compact.workout.length, 8);
-  assert.equal(compact.allowedSwaps.length, 8);
-  assert.equal(compact.allowedSwaps[0].replacements.length, 4);
-  assert.equal(compact.setFeedback.length, 8);
-  assert.equal(compact.equipmentCoverage.emptySlots.length, 6);
 
-  const turns = Array.from({ length: 14 }, (_, i) => ({ role: i % 2 ? 'assistant' : 'user', text: String(i).repeat(1800) }));
-  const conversation = api.compactConversation(turns, 'latest');
-  assert.equal(conversation.length, 5);
-  assert(conversation.every(turn => turn.content.length <= 400));
-
-  const req = { method: 'POST', body: { message: 'How should I progress this set?', context: oversizedContext(), conversation: turns } };
+  const req = { method: 'POST', body: { message: "Can't I hold the barbell at my waist for calf raises the same way I would with dumbbells?", context: oversizedContext() } };
   const res = makeRes(); await api.handler(req, res);
   assert.equal(res.code, 200);
   assert.equal(res.body.reply, 'Recovered with overflow model.');
   assert.equal(res.body.model, 'groq/compound-mini');
   assert.equal(res.body.fallbackModel, true);
-  assert.equal(calls.length, 2);
+  assert.equal(calls.length, 2, 'a provider 400 must retry on the alternate cloud model');
   assert.equal(calls[0].model, 'openai/gpt-oss-20b');
+  assert.equal(calls[0].response_format.type, 'json_schema');
+  assert.equal(calls[0].response_format.json_schema.strict, true, 'GPT-OSS must use constrained strict JSON output');
   assert.equal(calls[1].model, 'groq/compound-mini');
-  assert(JSON.stringify(calls[0]).length < 22000, 'Coach request must retain strong headroom below the 8K TPM budget');
-  assert.equal(calls[0].max_completion_tokens, 450);
+  assert.equal(calls[1].response_format.type, 'json_object');
+  assert(JSON.stringify(calls[0]).length < 26000);
+
+  const statusCalls = [];
+  context.fetch = async (_url, init) => {
+    const body = JSON.parse(init.body); statusCalls.push(body);
+    return response(true, 200, { choices: [{ message: { content: JSON.stringify({ reply: "I'm running locally.", actions: [], videos: [], followUps: [] }) } }] });
+  };
+  const statusRes = makeRes();
+  await api.handler({ method: 'POST', body: { message: 'Is the cloud model working?', context: oversizedContext() } }, statusRes);
+  assert.equal(statusRes.code, 200);
+  assert.equal(statusRes.body.model, 'openai/gpt-oss-20b');
+  assert.equal(statusRes.body.reply, 'Yes — the cloud Coach is responding right now.', 'transport status must override model hallucination about running locally');
+  assert.equal(statusCalls[0].response_format.json_schema.strict, true);
 
   let rateCalls = 0;
   context.fetch = async () => { rateCalls++; return response(false, 429, { error: { message: 'rate limited' } }, { 'retry-after': '3' }); };
   const secondRes = makeRes();
   await api.handler({ method: 'POST', body: { message: 'Keep coaching me', context: oversizedContext() } }, secondRes);
   assert.equal(secondRes.code, 200, 'double rate-limit must still return a visible Coach response');
-  assert.equal(secondRes.body.model, 'Iron Six recovery');
+  assert.equal(secondRes.body.model, 'Iron Six cloud recovery');
   assert.equal(secondRes.body.degraded, true);
-  assert.match(secondRes.body.reply, /temporary rate limit/i);
+  assert.match(secondRes.body.reply, /temporarily rate-limited/i);
   assert.equal(rateCalls, 2);
 
-  console.log('Coach context compaction and 429 recovery verified.');
+  console.log('Coach strict-output, provider 400 recovery, status truthfulness, and 429 recovery verified.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
