@@ -23,7 +23,9 @@
   if(!counterApi)return;
 
   let sheet=null,video=null,canvas=null,landmarker=null,stream=null,counter=null,rule=null,target=null,raf=0,wake=null;
-  let framesSeen=0,framesTracked=0,startedAt=0,fps=0,lastFrameAt=0,lastVideoTime=-1,loading=false;
+  let framesSeen=0,framesTracked=0,startedAt=0,fps=0,lastFrameAt=0,lastVideoTime=-1,loading=false,session=0;
+  // Identifies the currently-open sheet. Anything awaited during open() compares against it.
+  const current=()=>!!sheet&&sheet.classList.contains('show');
 
   const el=id=>document.getElementById(id);
   const setText=(id,value)=>{const node=el(id);if(node)node.textContent=value};
@@ -65,14 +67,26 @@
 
   async function startCamera(){
     if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('This browser cannot open the camera. It needs a secure (https) page.');
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:960},height:{ideal:720},frameRate:{ideal:30}},audio:false});
+    const opened=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:960},height:{ideal:720},frameRate:{ideal:30}},audio:false});
+    // The sheet can be closed while this promise is in flight. Handing a live camera to a
+    // closed sheet leaves the phone's camera light on for the rest of the session.
+    if(!current()){for(const track of opened.getTracks())track.stop();throw new Error('closed');}
+    if(stream)for(const track of stream.getTracks())track.stop();
+    stream=opened;
     video.srcObject=stream;
     await video.play().catch(()=>{});
     // Metadata can land after play() resolves, and the aspect correction needs real numbers.
     if(!video.videoWidth)await new Promise(resolve=>{video.addEventListener('loadedmetadata',resolve,{once:true});setTimeout(resolve,3000)});
   }
 
-  async function keepAwake(){try{if(navigator.wakeLock)wake=await navigator.wakeLock.request('screen')}catch(_){}}
+  async function keepAwake(){
+    try{
+      if(!navigator.wakeLock)return;
+      const lock=await navigator.wakeLock.request('screen');
+      if(!current()){lock.release().catch(()=>{});return}
+      release();wake=lock;
+    }catch(_){}
+  }
   function release(){if(wake){wake.release().catch(()=>{});wake=null}}
 
   // ---- the loop ----------------------------------------------------------------------
@@ -90,8 +104,10 @@
     let landmarks=null;
     try{landmarks=landmarker.detectForVideo(video,now)?.landmarks?.[0]||null}catch(_){}
     framesSeen++;if(landmarks)framesTracked++;
-    const state=counter.push({landmarks,t:now,aspect:video.videoWidth/video.videoHeight});
+    // Framing is decided before the frame is counted, not after it is displayed: a lifter who
+    // is half out of shot produces angles that look fine and are wrong.
     const frame=landmarks?counterApi.framing(rule,landmarks):{ok:false,message:'No one in frame yet.'};
+    const state=counter.push({landmarks,t:now,aspect:video.videoWidth/video.videoHeight,framed:frame.ok});
     draw(landmarks,state);
     paint(state,frame);
   }
@@ -150,6 +166,7 @@
     if(!rule)return;
     build();
     target=card;
+    session++;
     counter=counterApi.createCounter(rule);
     framesSeen=0;framesTracked=0;fps=0;lastFrameAt=0;lastVideoTime=-1;startedAt=Date.now();
     sheet.classList.add('show');
@@ -161,18 +178,26 @@
     setText('poseStatus','Starting the camera…');
     const use=el('poseUse');if(use){use.disabled=true;use.textContent='Use count'}
     loading=true;
+    const mine=session;
     try{
+      // Opening is several awaits long — camera permission, then ~17MB of model on first use.
+      // Close is reachable from four places during that window (button, backdrop, pagehide,
+      // visibilitychange), so every step re-checks that this open is still the current one.
       await startCamera();
+      if(mine!==session)return;
       setText('poseStatus','Loading the pose model…');
       await loadModel();
+      if(mine!==session)return;
       await keepAwake();
+      if(mine!==session)return;
       setText('poseStatus','Stand at the top to start.');
       cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);
     }catch(error){
+      if(mine!==session)return;
       const message=error&&error.name==='NotAllowedError'?'Camera permission was declined. Nothing else changed.':(error&&error.message)||'Could not start the camera.';
       fail(message);
       stop();
-    }finally{loading=false}
+    }finally{loading=false;if(mine!==session)stop()}
   }
 
   function stop(){
@@ -182,7 +207,9 @@
     release();
   }
 
-  function close(){stop();if(sheet)sheet.classList.remove('show')}
+  // Bumping the session invalidates any open() still in flight, so a camera or wake lock that
+  // arrives after this point is released by whoever receives it rather than being orphaned.
+  function close(){session++;stop();if(sheet)sheet.classList.remove('show')}
 
   function diagnostics(){
     const state=counter?counter.state():null;
@@ -205,7 +232,9 @@
   // is not already marked done is the one being worked on.
   function applyCount(card,reps){
     const rows=[...card.querySelectorAll('.set-row')];
-    const row=rows.find(r=>!r.querySelector('.done')?.classList.contains('active'))||rows[rows.length-1];
+    // No unfinished set means there is nowhere honest to put this. Overwriting a set already
+    // marked done would silently rewrite work the lifter has finished.
+    const row=rows.find(r=>!r.querySelector('.done')?.classList.contains('active'));
     const input=row&&row.querySelector('.reps');
     if(!input)return null;
     input.value=String(reps);
@@ -218,7 +247,7 @@
     if(!state||!state.reps||!target)return close();
     const input=applyCount(target,state.reps);
     close();
-    if(!input)return;
+    if(!input){if(typeof toast==='function')toast('Every set here is already marked done, so nothing was changed.');return}
     if(typeof toast==='function')toast('Logged '+state.reps+' reps. Check it before you finish the set.');
     input.focus();
   }

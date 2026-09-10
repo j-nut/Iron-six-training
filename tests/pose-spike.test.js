@@ -50,12 +50,28 @@ test('with the flag on, the camera control appears only on movements that have a
   }finally{a.close()}
 });
 
-test('re-rendering does not stack duplicate camera controls',()=>{
+test('decorating the same cards repeatedly does not stack duplicate camera controls',()=>{
   const a=app(true);
   try{
-    a.run('renderExercises();renderExercises();renderExercises()');
-    for(const card of a.w.document.querySelectorAll('#exerciseList [data-exercise-index]'))
+    // decorate() directly, NOT renderExercises() — a re-render rebuilds the cards, so it would
+    // pass with the dedupe guard deleted and assert nothing about the guard it names.
+    a.run('IronSixPoseSpike.decorate();IronSixPoseSpike.decorate();IronSixPoseSpike.decorate()');
+    const cards=[...a.w.document.querySelectorAll('#exerciseList [data-exercise-index]')];
+    assert(cards.some(c=>c.querySelector('.pose-bar')),'there should be a control to duplicate');
+    for(const card of cards)
       assert(card.querySelectorAll('.pose-bar').length<=1,'each exercise gets at most one camera control');
+  }finally{a.close()}
+});
+
+test('a count is refused rather than overwriting a set already marked done',()=>{
+  const a=app(true);
+  try{
+    const card=[...a.w.document.querySelectorAll('#exerciseList [data-exercise-index]')].find(c=>c.querySelector('.pose-bar'));
+    const index=card.dataset.exerciseIndex;
+    for(const row of card.querySelectorAll('.set-row'))row.querySelector('.done').click();
+    const before=a.json(`activeUser().today['${index}-0']`);
+    assert.equal(a.w.IronSixPoseSpike.applyCount(card,99),null,'there is nowhere honest to put the count');
+    assert.deepEqual(a.json(`activeUser().today['${index}-0']`),before,'finished work must not be rewritten');
   }finally{a.close()}
 });
 

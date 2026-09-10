@@ -89,6 +89,47 @@ test('starting the camera mid-rep waits for the top before counting',()=>{
   assert.equal(state.reps,1,'the next full rep counts normally');
 });
 
+test('an ordinary one-second-per-rep cadence counts',()=>{
+  // The duration floor measures time below the top threshold, not the whole rep. Read as rep
+  // duration it rejects a normal cadence outright and reports every rep as a bounce.
+  for(const [rule,top,bottom] of [[squat,175,85],[curl,165,45],[pushup,170,85],[press,60,175]]){
+    const counter=pose.createCounter(rule),clock={t:0};
+    let state;
+    for(let i=0;i<5;i++)state=feed(counter,rule,repAngles(top,bottom,15),clock); // ~1.0s per rep
+    assert.equal(state.reps,5,`${rule.id} should count a one-second cadence`);
+    assert.equal(state.rejected,0,`${rule.id} should not call a normal rep a bounce`);
+  }
+});
+
+test('flickering occlusion re-arms just like a solid one',()=>{
+  // Real occlusion is intermittent. A consecutive-null counter never fires on it, and the
+  // machine bridges a gap it was effectively blind through — inventing a rep.
+  const counter=pose.createCounter(squat),clock={t:0};
+  const knees=[squat.joint[0][1],squat.joint[1][1]];
+  feed(counter,squat,[...Array(6).fill(175),...ramp(175,85,25)],clock);
+  assert.equal(counter.state().reps,0);
+  // 270 frames in which the knees are visible only one frame in fifteen.
+  for(let i=0;i<270;i++)feed(counter,squat,[85],clock,i%15===0?{}:{drop:knees});
+  const state=feed(counter,squat,ramp(85,175,25),clock);
+  assert.equal(state.reps,0,'a mostly-blind stretch must not be bridged into a rep');
+});
+
+test('a frame the caller marks badly framed is not counted',()=>{
+  // The angle still computes when a lifter is half out of shot, and it still looks plausible.
+  const counter=pose.createCounter(squat);
+  let t=0;
+  for(let i=0;i<4;i++)for(const theta of repAngles(175,85,20)){
+    counter.push({landmarks:poseFrame(squat,theta),t,aspect:1,framed:false});t+=FRAME_MS;
+  }
+  assert.equal(counter.state().reps,0,'reps must not accumulate while framing is bad');
+  // Counting resumes once framing is good again, after the quality window refills — about
+  // half a second, so the rep in progress at the moment of recovery is not counted.
+  const clock={t};
+  let state;
+  for(let i=0;i<2;i++)state=feed(counter,squat,repAngles(175,85,20),clock);
+  assert(state.reps>=1,'counting must resume when the lifter is back in shot');
+});
+
 test('a brief occlusion keeps the rep; a long one re-arms from the top',()=>{
   const brief=pose.createCounter(squat),clock={t:0};
   const [hip]=squat.joint[0],[hip2]=squat.joint[1];

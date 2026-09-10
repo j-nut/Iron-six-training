@@ -66,6 +66,8 @@ excluded — how bad "badly" is, is part of what the spike measures.
   `INTERNET`. Not added yet, since the spike is web-only.
 - **Battery and heat.** The camera and inference run only while the sheet is open, and stop on
   close, tab-hide and page-hide. Do not leave it open between sets.
+- **Counting pauses when framing is bad**, and needs about half a second of good framing
+  before it resumes — so the rep in progress when you step back into shot will not be counted.
 - **A single 2D camera cannot see what a coach sees.** Depth is inferred from a projected
   skeleton; a bar, a rack or a bad angle removes information the count depends on.
 
@@ -80,7 +82,8 @@ Watch the readout:
 - **`% of frames tracked` below ~85** — framing or lighting is the problem, not the counter.
 - **`fps` below ~15** — the phone is struggling; expect missed reps at speed.
 - **rejections climbing** — reps are being seen but discarded as too fast or too slow. Check
-  `minRepMs` for that rule in `pose-rep-counter.js`.
+  `minActiveMs` for that rule in `pose-rep-counter.js`. Note it bounds *time spent below the
+  top threshold*, not full rep duration; anything from about 0.7s per rep upward counts.
 - **the angle readout not reaching the rule's `bottom`** — the thresholds are wrong for your
   build or camera angle, which is a tuning problem rather than a tracking one.
 
