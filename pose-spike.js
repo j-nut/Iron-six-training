@@ -50,8 +50,8 @@
       .pose-modal{max-width:720px}.pose-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
       .pose-head h3{margin:0 0 5px}.pose-head p{margin:0 0 6px}.pose-count{text-align:center;min-width:72px;background:var(--surface2);border:1px solid var(--line);border-radius:15px;padding:9px}
       .pose-count strong{display:block;font-size:28px;line-height:1}.pose-count span{display:block;color:var(--muted);font-size:11px;margin-top:4px}
-      .pose-stage{position:relative;overflow:hidden;border-radius:16px;background:#050607;aspect-ratio:4/3;margin:12px 0}
-      .pose-stage video,.pose-stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+      .pose-stage{position:relative;overflow:hidden;border-radius:16px;background:#050607;aspect-ratio:var(--pose-stage-ratio,3/4);margin:12px auto;width:100%}
+      .pose-stage video,.pose-stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform:scaleX(-1)}
       .pose-stage canvas{pointer-events:none}.pose-status{position:absolute;left:10px;right:10px;bottom:10px;background:rgba(5,6,7,.78);border:1px solid rgba(255,255,255,.13);border-radius:11px;padding:8px 10px;font-size:12px;font-weight:750;backdrop-filter:blur(8px)}
       .pose-readout-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px}.pose-readout{font-size:11px;color:var(--muted);line-height:1.45}
       .pose-copy{border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:10px;padding:8px 10px;font-size:11px;font-weight:800;white-space:nowrap}
@@ -59,7 +59,8 @@
       .pose-form strong{display:block;font-size:12px;margin-bottom:4px}.pose-form span{display:block;font-size:12px;line-height:1.45;color:var(--muted)}.pose-form.cue{border-color:rgba(46,229,128,.5)}.pose-form.watch{border-color:rgba(255,209,138,.45)}
       .pose-voice{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;margin-top:10px;border:1px solid var(--line);border-radius:14px;padding:10px 11px}.pose-voice button{min-width:118px}.pose-voice-text{min-width:0}.pose-voice-text strong{display:block;font-size:12px}.pose-voice-text span{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:2px}.pose-voice.on{border-color:rgba(46,229,128,.5);background:rgba(46,229,128,.055)}
       .pose-bar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:11px;padding-top:11px;border-top:1px solid var(--line)}.pose-bar button{border:1px solid rgba(46,229,128,.35);background:rgba(46,229,128,.08);color:var(--accent);border-radius:11px;padding:9px 11px;font-weight:800}.pose-bar span{font-size:11px;color:var(--muted)}
-      @media(max-width:520px){.pose-modal{padding:14px}.pose-stage{margin:9px 0}.pose-voice{grid-template-columns:1fr}.pose-voice button{width:100%}.pose-readout-row{align-items:flex-start}}
+      @media(min-width:700px){.pose-stage{max-width:520px}}
+      @media(max-width:520px){.pose-modal{padding:14px}.pose-stage{margin:9px auto}.pose-voice{grid-template-columns:1fr}.pose-voice button{width:100%}.pose-readout-row{align-items:flex-start}}
     `;document.head.appendChild(style);
   }
 
@@ -69,7 +70,7 @@
     sheet.setAttribute('role','dialog');sheet.setAttribute('aria-modal','true');sheet.setAttribute('aria-label','Camera workout assistant');
     sheet.innerHTML=`<div class="modal pose-modal">
       <div class="pose-head"><div><h3 id="poseTitle">Camera workout assistant</h3><p id="poseSetup">Setting up the camera…</p><p class="pose-caution" id="poseCaution" hidden></p></div><div class="pose-count"><strong id="poseReps">0</strong><span>reps</span></div></div>
-      <div class="pose-stage"><video id="poseVideo" playsinline muted autoplay></video><canvas id="poseCanvas"></canvas><div class="pose-status" id="poseStatus">Starting…</div></div>
+      <div class="pose-stage" id="poseStage"><video id="poseVideo" playsinline muted autoplay></video><canvas id="poseCanvas"></canvas><div class="pose-status" id="poseStatus">Starting…</div></div>
       <div class="pose-readout-row"><span class="pose-readout" id="poseReadout"></span><button type="button" class="pose-copy" id="poseCopy">Copy diagnostics</button></div>
       <div class="pose-readout-row"><span class="helper" id="poseLock" role="status">Centre yourself and hold still to lock.</span><button type="button" class="pose-copy" id="poseRelock">Re-lock user</button></div>
       <div class="pose-form" id="poseForm"><strong>Form watch</strong><span id="poseFormCue">Waiting for a completed rep. Camera-visible observations only.</span></div>
@@ -96,11 +97,18 @@
     const options={baseOptions:{modelAssetPath:MODEL,delegate:'GPU'},runningMode:'VIDEO',numPoses:3,minPoseDetectionConfidence:0.7,minPosePresenceConfidence:0.7,minTrackingConfidence:0.7};
     try{landmarker=await vision.PoseLandmarker.createFromOptions(files,options)}catch(_){landmarker=await vision.PoseLandmarker.createFromOptions(files,{...options,baseOptions:{...options.baseOptions,delegate:'CPU'}})}return landmarker;
   }
+  function syncStageAspect(){
+    const stage=el('poseStage');if(!stage||!video?.videoWidth||!video?.videoHeight)return;
+    stage.style.setProperty('--pose-stage-ratio',`${video.videoWidth}/${video.videoHeight}`);
+    stage.dataset.orientation=video.videoHeight>=video.videoWidth?'portrait':'landscape';
+  }
   async function startCamera(id){
     if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('This browser/app cannot open the camera. Camera permission and a secure page are required.');
-    const acquired=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:960},height:{ideal:720},frameRate:{ideal:30}},audio:false});
+    const portrait=(window.innerHeight||0)>=(window.innerWidth||0);
+    const acquired=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'user'},width:{ideal:portrait?720:1280},height:{ideal:portrait?1280:720},aspectRatio:{ideal:portrait?9/16:16/9},frameRate:{ideal:30,max:30}},audio:false});
     if(id!==sessionId){for(const track of acquired.getTracks())track.stop();return}stream=acquired;video.srcObject=stream;await video.play().catch(()=>{});
     if(!video.videoWidth)await new Promise(resolve=>{video.addEventListener('loadedmetadata',resolve,{once:true});setTimeout(resolve,3000)});
+    syncStageAspect();
   }
   async function keepAwake(id){try{if(navigator.wakeLock){const acquired=await navigator.wakeLock.request('screen');if(id!==sessionId)await acquired.release();else wake=acquired}}catch(_){}}
   function release(){if(wake){wake.release().catch(()=>{});wake=null}}
@@ -120,13 +128,18 @@
     setText('poseReps',String(state.reps));const use=el('poseUse');if(use){use.disabled=!state.reps;use.textContent=state.reps?('Use '+state.reps+' reps only'):'Use count only'}
     const status=!frame.ok?frame.message:(state.message||{waiting:'Stand at the top to start.',top:'Ready.',descending:'Down…',bottom:'Bottom.',ascending:'Up…',lost:'Lost you.'}[state.phase]||'Tracking.');setText('poseStatus',status);
     const tracked=framesSeen?Math.round(framesTracked/framesSeen*100):0,durations=state.log.map(r=>r.ms),average=durations.length?Math.round(durations.reduce((a,b)=>a+b,0)/durations.length):0;
-    setText('poseReadout',[`${Math.round(fps)} fps`,`${tracked}% usable frames`,state.angle===null?'no angle':`${state.angle}°`,state.rejected?`${state.rejected} rejected`:'0 rejected',average?`avg rep ${(average/1000).toFixed(1)}s`:'—'].join(' · '));
+    setText('poseReadout',[video?.videoWidth&&video?.videoHeight?`${video.videoWidth}×${video.videoHeight}`:'no video size',`${Math.round(fps)} fps`,`${tracked}% usable frames`,state.angle===null?'no angle':`${state.angle}°`,state.rejected?`${state.rejected} rejected`:'0 rejected',average?`avg rep ${(average/1000).toFixed(1)}s`:'—'].join(' · '));
   }
   function paintForm(state){
-    const box=el('poseForm');if(!box)return;box.classList.remove('cue','watch');let text='Waiting for a completed rep. Camera-visible observations only.';
+    const box=el('poseForm');if(!box)return;box.classList.remove('cue','watch');
+    let text=formEvaluator?'Form watch active — complete a rep with your head, hips, knees and feet visible.':'Form watch is loading…';
     if(state?.repeatedCue){box.classList.add(state.repeatedCue.level==='cue'?'cue':'watch');text='Coach cue: '+state.repeatedCue.text}
-    else if(state?.latest?.cues?.length){const cue=state.latest.cues[0];box.classList.add(cue.level==='cue'?'cue':'watch');text='Possible on rep '+state.latest.index+': '+cue.text}
-    else if(state?.latest)text='Rep '+state.latest.index+': no repeated camera-visible issue detected.';
+    else if(state?.latest?.cues?.length){const cue=state.latest.cues[0];box.classList.add(cue.level==='cue'?'cue':'watch');text='Rep '+state.latest.index+' suggestion: '+cue.text}
+    else if(state?.latest){
+      const samples=Number(state.latest.samples)||0;
+      if(samples<8){box.classList.add('watch');text='Rep '+state.latest.index+' counted, but form analysis was skipped because only '+samples+' clean frames were available. Keep your full body visible and try again.'}
+      else{text='Rep '+state.latest.index+' analyzed: no camera-visible issue crossed the cue threshold. Keep the same controlled depth and torso path.'}
+    }
     setText('poseFormCue',text);
   }
 
