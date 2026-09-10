@@ -1,5 +1,5 @@
 const NOMAD_URL='https://nemgmavvuoulrahvrdwh.supabase.co';
-const NOMAD_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYXNlIiwicmVmIjoibmVtZ21hdnZ1b3VscmFodnJkd2giLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc3OTI1NDA1NSwiZXhwIjoyMDk0ODMwMDU1fQ.6g0YhUutPI-wydfv2dClMDXT-8fhKEJSdzkipGc7_Yo';
+const NOMAD_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5lbWdtYXZ2dW91bHJhaHZyZHdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNTQwNTUsImV4cCI6MjA5NDgzMDA1NX0.6g0YhUutPI-wydfv2dClMDXT-8fhKEJSdzkipGc7_Yo';
 
 export default async function handler(req,res){
   res.setHeader('Cache-Control','no-store');
