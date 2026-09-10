@@ -1,0 +1,31 @@
+name: Validate pose v5
+
+on:
+  push:
+    branches: [feature/pose-form-voice-v3]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-v5:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Syntax check camera v5
+        run: |
+          node --check pose-person-isolation.js
+          node --check pose-form-coach.js
+          node --check pose-rep-counter.js
+          node --check pose-spike.js
+          node --check scripts/build-android-web.mjs
+      - name: Run full JavaScript test suite
+        run: npm test
+      - name: Build Android debug APK
+        run: npm run android:apk
