@@ -1,0 +1,24 @@
+name: Apply pose v4
+on:
+  push:
+    branches: [feature/pose-form-voice-v3]
+    paths: [.github/workflows/apply-pose-v4.yml]
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/pose-form-voice-v3
+      - run: python3 scripts/apply-pose-tracker-v4.py
+      - run: node --check pose-spike.js && node --check pose-form-coach.js
+      - run: node --test tests/pose-subject-tracker-v4.test.js tests/pose-form-coach.test.js tests/pose-assistant-v3.test.js
+      - run: |
+          rm .github/workflows/apply-pose-v4.yml scripts/apply-pose-tracker-v4.py pose-subject-tracker.js
+          git config user.name "Iron Six camera patch"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "Integrate motion-aware pose tracker v4"
+          git push origin HEAD:feature/pose-form-voice-v3
