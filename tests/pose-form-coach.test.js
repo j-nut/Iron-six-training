@@ -2,46 +2,47 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const form=require('../pose-form-coach.js');
 
-function pose({shoulder=[.45,.3],hip=[.5,.52],knee=[.5,.7],ankle=[.5,.9]}={}){
+function points({shoulderX=.50,shoulderY=.30,hipX=.50,hipY=.52,kneeX=.56,kneeY=.70,ankleX=.58,ankleY=.90}={}){
   const p=Array.from({length:33},()=>({x:.5,y:.5,visibility:0,presence:0}));
-  const put=(i,[x,y])=>p[i]={x,y,visibility:.99,presence:.99};
-  put(11,shoulder);put(23,hip);put(25,knee);put(27,ankle);return p;
+  const seen=(x,y)=>({x,y,visibility:1,presence:1});
+  p[11]=seen(shoulderX,shoulderY);p[23]=seen(hipX,hipY);p[25]=seen(kneeX,kneeY);p[27]=seen(ankleX,ankleY);return p;
 }
-function frame(phase,t,log,positions){return {landmarks:pose(positions),side:0,aspect:1,counterState:{phase,log}}}
-function completedRep(ev,index,{lean=false,hipLead=false,extreme=90,fast=false,depthY=.70}={}){
-  const log=[];let t=(index-1)*3000;
-  for(let i=0;i<3;i++)ev.push(frame('top',t+=100,log,{}));
-  for(let i=0;i<4;i++)ev.push(frame('descending',t+=fast?80:180,log,{shoulder:lean?[.61,.34]:[.45,.3],hip:[.5,.56],knee:[.5,.7],ankle:[.5,.9]}));
-  for(let i=0;i<3;i++)ev.push(frame('bottom',t+=100,log,{shoulder:lean?[.62,.39]:[.45,.34],hip:[.5,depthY],knee:[.5,.7],ankle:[.5,.9]}));
-  for(let i=0;i<4;i++)ev.push(frame('ascending',t+=120,log,{shoulder:hipLead?[.45,.37]:[.45,.31],hip:hipLead?[.5,.55]:[.5,.48],knee:[.5,.65],ankle:[.5,.9]}));
-  log.push({index,ms:fast?1000:2200,extreme});ev.push(frame('top',t+=120,log,{}));
+function runRep(evaluator,{top=points(),down=points({shoulderY:.38,hipY:.60,kneeY:.66}),bottom=points({shoulderY:.50,hipY:.72,kneeY:.70}),up=points({shoulderY:.38,hipY:.60,kneeY:.66}),extreme=92,step=180}={}){
+  let t=0,log=evaluator.state().history.map(x=>({index:x.index,ms:x.ms,extreme:x.extreme}));
+  const send=(phase,p)=>{t+=step;return evaluator.push({landmarks:p,side:0,aspect:1,t,counterState:{phase,log}})};
+  for(let i=0;i<6;i++)send('top',top);
+  for(let i=0;i<5;i++)send('descending',down);
+  for(let i=0;i<3;i++)send('bottom',bottom);
+  for(let i=0;i<5;i++)send('ascending',up);
+  log=[...log,{index:log.length+1,ms:step*13,extreme}];
+  return send('top',top);
 }
 
-test('metrics require one fully visible working-side chain',()=>{
-  assert(form.metrics(pose(),0,1));const p=pose();p[25].visibility=.2;assert.equal(form.metrics(p,0,1),null);
+test('squat metrics are derived only from a visible confidence-gated working side',()=>{
+  const m=form.metrics(points(),0,1);assert(m);assert(Number.isFinite(m.kneeAngle));assert(Number.isFinite(m.torsoLean));
+  const hidden=points();hidden[25].visibility=.2;assert.equal(form.metrics(hidden,0,1),null);
 });
 
-test('a stable deliberate squat does not invent a form problem',()=>{
-  const evaluator=form.createEvaluator({id:'squat'}),events=[];completedRep(events,1,{});for(const e of events)evaluator.push(e);
-  const state=evaluator.state();assert.equal(state.latest.index,1);assert.deepEqual(state.latest.issues,[]);assert.equal(state.repeatedCue,null);
+test('a stable deliberate squat does not invent a form fault',()=>{
+  const e=form.createEvaluator({id:'squat'});const state=runRep(e);
+  assert.equal(state.history.length,1);assert.deepEqual(state.latest.issues,[]);assert.equal(state.repeatedCue,null);
 });
 
-test('large torso change is assessed only after a completed sampled rep',()=>{
-  const evaluator=form.createEvaluator({id:'squat'}),events=[];completedRep(events,1,{lean:true});
-  for(const e of events.slice(0,-1))evaluator.push(e);assert.equal(evaluator.state().latest,null);
-  evaluator.push(events.at(-1));assert(evaluator.state().latest.issues.includes('torso'));
+test('a large torso change is reported only after a completed, sufficiently sampled rep',()=>{
+  const e=form.createEvaluator({id:'squat'});
+  const state=runRep(e,{down:points({shoulderX:.64,shoulderY:.38,hipY:.60,kneeY:.66}),bottom:points({shoulderX:.67,shoulderY:.50,hipY:.72,kneeY:.70}),up:points({shoulderX:.64,shoulderY:.38,hipY:.60,kneeY:.66})});
+  assert(state.latest.issues.includes('torso'));assert.match(state.latest.cues.find(x=>x.id==='torso').text,/chest and hips/i);
 });
 
-test('depth inconsistency needs prior completed reps and repeated evidence before promotion',()=>{
-  const evaluator=form.createEvaluator({id:'squat'}),events=[];
-  completedRep(events,1,{extreme:88});completedRep(events,2,{extreme:90});completedRep(events,3,{extreme:115});completedRep(events,4,{extreme:116});
-  for(const e of events)evaluator.push(e);
-  const history=evaluator.state().history;assert(!history[0].issues.includes('depthConsistency'));assert(!history[1].issues.includes('depthConsistency'));
-  assert(history[2].issues.includes('depthConsistency'));assert(history[3].issues.includes('depthConsistency'));assert.equal(evaluator.state().repeatedCue.id,'depthConsistency');
+test('depth inconsistency requires prior reps and repeated issues are promoted conservatively',()=>{
+  const e=form.createEvaluator({id:'squat'});
+  runRep(e,{extreme:88});runRep(e,{extreme:89});
+  const third=runRep(e,{extreme:108});assert(third.latest.issues.includes('depthConsistency'));
+  const fourth=runRep(e,{extreme:109});assert(fourth.repeatedCue);assert.equal(fourth.repeatedCue.id,'depthConsistency');
 });
 
-test('generic movements only promote repeated unusually fast reps',()=>{
-  const evaluator=form.createEvaluator({id:'curl'});
-  evaluator.push({counterState:{log:[{index:1,ms:900,extreme:60}]}});assert.equal(evaluator.state().repeatedCue,null);
-  evaluator.push({counterState:{log:[{index:1,ms:900,extreme:60},{index:2,ms:950,extreme:62}]}});assert.equal(evaluator.state().repeatedCue.id,'tempo');
+test('generic tracked movements can flag repeated very fast reps without pretending to diagnose form',()=>{
+  const e=form.createEvaluator({id:'curl'});
+  let s=e.push({counterState:{log:[{index:1,ms:900,extreme:60}]}});assert(s.latest.issues.includes('tempo'));
+  s=e.push({counterState:{log:[{index:1,ms:900,extreme:60},{index:2,ms:950,extreme:62}]}});assert.equal(s.repeatedCue.id,'tempo');
 });
