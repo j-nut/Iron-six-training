@@ -66,9 +66,9 @@
     style.id = 'sessionResumeStyle';
     style.textContent = `
       .set-row.resume-highlight{border-radius:12px;animation:ironSixResumeGlow 1.8s ease-out 1}
-      @keyframes ironSixResumeGlow{0%{box-shadow:0 0 0 2px var(--accent,#9ddf68)}100%{box-shadow:0 0 0 0 rgba(157,223,104,0)}}
+      @keyframes ironSixResumeGlow{0%{box-shadow:0 0 0 2px var(--accent,#2ee580)}100%{box-shadow:0 0 0 0 rgba(46,229,128,0)}}
       @media (prefers-reduced-motion: reduce){
-        .set-row.resume-highlight{animation:none;outline:2px solid var(--accent,#9ddf68);outline-offset:2px}
+        .set-row.resume-highlight{animation:none;outline:2px solid var(--accent,#2ee580);outline-offset:2px}
       }
     `;
     document.head.appendChild(style);

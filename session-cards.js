@@ -83,7 +83,7 @@
       #sessionCardNav .sc-step span{display:block;font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       .sc-arrow{flex:0 0 auto;min-width:46px;min-height:46px;border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:13px;font-size:17px;font-weight:800;cursor:pointer}
       .sc-arrow:disabled{opacity:.35;cursor:default}
-      .sc-arrow.ready{border-color:var(--accent);background:rgba(157,223,104,.12);color:var(--accent)}
+      .sc-arrow.ready{border-color:var(--accent);background:rgba(46,229,128,.12);color:var(--accent)}
       #sessionCardFoot{display:flex;gap:9px;margin:11px 0 0}
       #sessionCardFoot button{flex:1;min-height:46px}
       #sessionReview{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:16px;margin:12px 0 0}
