@@ -1,0 +1,58 @@
+name: Patch pose tracker v4
+
+on:
+  push:
+    branches:
+      - feature/pose-form-voice-v3
+    paths:
+      - .github/workflows/patch-pose-tracker-v4.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/pose-form-voice-v3
+          fetch-depth: 0
+      - name: Apply detector and version changes
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('pose-spike.js')
+          s=p.read_text()
+          old="minPoseDetectionConfidence:0.7,minPosePresenceConfidence:0.7,minTrackingConfidence:0.7"
+          new="minPoseDetectionConfidence:0.45,minPosePresenceConfidence:0.45,minTrackingConfidence:0.5"
+          if old not in s:
+              raise SystemExit('expected MediaPipe threshold string not found')
+          s=s.replace(old,new,1)
+          s=s.replace('Tracking v3 · One working side is measured.','Tracking v4 · Motion-aware subject association; one working side is measured.',1)
+          s=s.replace('Tracking v3 · opt-in · check the log','Tracking v4 · opt-in · motion-aware lock',1)
+          s=s.replace('trackingVersion:2','trackingVersion:4',1)
+          p.write_text(s)
+          t=Path('tests/pose-assistant-v3.test.js')
+          q=t.read_text()
+          marker="assert(source.includes('assistantVersion:3'));"
+          if marker in q and "trackingVersion:4" not in q:
+              q=q.replace(marker,marker+"\n  assert(source.includes('trackingVersion:4'));\n  assert(source.includes('minPoseDetectionConfidence:0.45'));\n  assert(source.includes('minPosePresenceConfidence:0.45'));\n  assert(source.includes('minTrackingConfidence:0.5'));",1)
+          t.write_text(q)
+          PY
+      - name: Validate tracker files
+        shell: bash
+        run: |
+          node --check pose-spike.js
+          node --check pose-form-coach.js
+          node --test tests/pose-subject-tracker-v4.test.js tests/pose-form-coach.test.js tests/pose-assistant-v3.test.js
+      - name: Commit patch and remove one-shot workflow
+        shell: bash
+        run: |
+          rm .github/workflows/patch-pose-tracker-v4.yml
+          git config user.name "Iron Six camera patch"
+          git config user.email "actions@users.noreply.github.com"
+          git add pose-spike.js tests/pose-assistant-v3.test.js .github/workflows/patch-pose-tracker-v4.yml
+          git commit -m "Integrate motion-aware tracker v4 with pose detector"
+          git push origin HEAD:feature/pose-form-voice-v3
