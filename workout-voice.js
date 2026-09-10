@@ -39,16 +39,66 @@
     return null;
   }
 
+  const LB_UNITS=['pound','pounds','lb','lbs'];
+  const KG_UNITS=['kilo','kilos','kilogram','kilograms','kg','kgs'];
+  const KG_TO_LB=2.20462;
+  const JOINERS=new Set(['and','point']);
+  // Words that mean the number in front of them is a different field, not a load.
+  const FIELD_FOLLOWERS=new Set(['rir','rep','reps','repetition','repetitions','in']);
+
+  const isDigitWord=t=>/^\d$/.test(t)||(SMALL[t]>=0&&SMALL[t]<=9);
+  const digitValue=t=>/^\d$/.test(t)?t:String(SMALL[t]);
+
+  function parseWhole(parts){
+    if(!parts.length)return null;
+    // "two two five" is how a recognizer commonly renders 225; summing those words gives 9.
+    if(parts.length>=2&&parts.every(isDigitWord))return Number(parts.map(digitValue).join(''));
+    const parsed=spokenNumber(parts);
+    return parsed&&parsed.used===parts.length?parsed.value:null;
+  }
+
+  function parsePhrase(tokens){
+    const parts=tokens.filter(t=>t!=='and');
+    if(!parts.length)return null;
+    const dot=parts.indexOf('point');
+    if(dot<0)return parseWhole(parts);
+    const whole=parseWhole(parts.slice(0,dot)),frac=parts.slice(dot+1);
+    if(whole===null||!frac.length||!frac.every(isDigitWord))return null;
+    return Number(String(whole)+'.'+frac.map(digitValue).join(''));
+  }
+
+  // Reads the WHOLE contiguous number phrase in front of the unit and parses it as one value.
+  // Falling back to a shorter suffix when the full phrase fails silently turned "two hundred
+  // and twenty five pounds" into 25, so a phrase that does not fully parse is rejected.
   function numberBeforeUnit(text,units){
     const tokens=clean(text).split(' ');
     for(let i=0;i<tokens.length;i++){
       if(!units.includes(tokens[i]))continue;
-      for(let start=Math.max(0,i-4);start<i;start++){
-        const slice=tokens.slice(start,i);
-        if(!slice.every(t=>UNIT_WORDS.has(t)||/^\d+(?:\.\d+)?$/.test(t)))continue;
-        const result=spokenNumber(slice);
-        if(result&&result.used===slice.length)return result.value;
-      }
+      let start=i;
+      while(start>0&&(UNIT_WORDS.has(tokens[start-1])||/^\d+(?:\.\d+)?$/.test(tokens[start-1])||JOINERS.has(tokens[start-1])))start--;
+      while(start<i&&JOINERS.has(tokens[start]))start++;
+      const value=parsePhrase(tokens.slice(start,i));
+      if(value!==null)return value;
+    }
+    return null;
+  }
+
+  // Anchored loads ("weight 185", "at 185") are only trusted when the number is not qualified by
+  // another gym field: "8 reps at 2 rir" means two reps in reserve, not a 2 lb squat. `strict`
+  // additionally requires the anchor to follow a gym word or nothing, so "rack it at 6" and
+  // "I'm at 8 reps" do not become loads.
+  function anchoredLoad(text,anchors,strict){
+    const tokens=clean(text).split(' ');
+    for(let i=0;i<tokens.length;i++){
+      if(!anchors.includes(tokens[i]))continue;
+      const before=tokens[i-1];
+      if(strict&&i>0&&!/^\d+(?:\.\d+)?$/.test(before)&&!FIELD_FOLLOWERS.has(before)&&!UNIT_WORDS.has(before))continue;
+      const result=spokenNumber(tokens.slice(i+1));
+      if(!result||!Number.isFinite(result.value))continue;
+      const follower=tokens[i+1+result.used];
+      if(FIELD_FOLLOWERS.has(follower))continue;
+      if(KG_UNITS.includes(follower))return result.value*KG_TO_LB;
+      return result.value;
     }
     return null;
   }
@@ -74,11 +124,11 @@
     command.complete=/\b(?:set (?:is )?(?:done|complete|finished)|done with (?:the )?set|finish (?:the )?set|complete (?:the )?set|finished (?:the )?set|thats it|that is it)\b/.test(text);
     command.bodyweight=/\b(?:body ?weight|no weight)\b/.test(text);
 
-    let weight=numberBeforeUnit(text,['pound','pounds','lb','lbs']);
-    if(weight===null)weight=numberAfter(text,['weight','load','using','used']);
-    // "at 185" is common gym shorthand, but only treat it as load when a second gym field
-    // is not attached to the same anchor.
-    if(weight===null)weight=numberAfter(text,['at']);
+    let weight=numberBeforeUnit(text,LB_UNITS);
+    // Kilograms were previously logged as pounds, so 100 kg became a 100 lb set.
+    if(weight===null){const kg=numberBeforeUnit(text,KG_UNITS);if(kg!==null)weight=kg*KG_TO_LB}
+    if(weight===null)weight=anchoredLoad(text,['weight','load','using','used'],false);
+    if(weight===null)weight=anchoredLoad(text,['at'],true);
     command.weight=clampLoad(weight);
 
     let reps=numberBeforeUnit(text,['rep','reps','repetition','repetitions']);
@@ -88,6 +138,8 @@
     command.reps=clampInt(reps,1,100);
 
     let rir=numberAfter(text,['rir']);
+    // "8 reps at 2 rir" puts the number before the field word, which nothing used to read.
+    if(rir===null)rir=numberBeforeUnit(text,['rir']);
     if(rir===null){
       const tokens=text.split(' ');
       for(let i=0;i<tokens.length-2&&rir===null;i++){
