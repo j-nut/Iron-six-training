@@ -35,7 +35,7 @@ function oversizedContext() {
     process: { env: { GROQ_API_KEY: 'test-key' } }, console,
     fetch: async (_url, init) => {
       const body = JSON.parse(init.body); calls.push(body);
-      if (calls.length === 1) return response(false, 400, { error: { message: 'Failed to generate JSON' } });
+      if (calls.length === 1) return response(false, 400, { error: { message: 'Failed to validate JSON' } });
       return response(true, 200, { choices: [{ message: { content: JSON.stringify({ reply: 'Recovered with overflow model.', actions: [], videos: [], followUps: [] }) } }] });
     },
   };
@@ -58,33 +58,39 @@ function oversizedContext() {
   assert.equal(res.body.fallbackModel, true);
   assert.equal(calls.length, 2, 'a provider 400 must retry on the alternate cloud model');
   assert.equal(calls[0].model, 'openai/gpt-oss-20b');
-  assert.equal(calls[0].response_format.type, 'json_schema');
-  assert.equal(calls[0].response_format.json_schema.strict, true, 'GPT-OSS must use constrained strict JSON output');
   assert.equal(calls[1].model, 'groq/compound-mini');
-  assert.equal(calls[1].response_format.type, 'json_object');
-  assert(JSON.stringify(calls[0]).length < 26000);
+  assert.equal('response_format' in calls[0], false, 'provider-side JSON enforcement must stay disabled');
+  assert.equal('response_format' in calls[1], false, 'backup model must also avoid provider JSON rejection');
+  assert(JSON.stringify(calls[0]).length < 24000);
 
-  const statusCalls = [];
+  const rawCalls = [];
   context.fetch = async (_url, init) => {
-    const body = JSON.parse(init.body); statusCalls.push(body);
-    return response(true, 200, { choices: [{ message: { content: JSON.stringify({ reply: "I'm running locally.", actions: [], videos: [], followUps: [] }) } }] });
+    rawCalls.push(JSON.parse(init.body));
+    return response(true, 200, { choices: [{ message: { content: 'Yes. Holding a barbell at your waist can work for standing calf raises if you can control it securely and keep the setup stable.' } }] });
   };
+  const rawRes = makeRes();
+  await api.handler({ method: 'POST', body: { message: 'Can I hold the bar at my waist for calf raises?', context: oversizedContext() } }, rawRes);
+  assert.equal(rawRes.code, 200);
+  assert.match(rawRes.body.reply, /barbell at your waist/i, 'plain text model output must be accepted as a valid Coach reply');
+  assert.deepEqual(rawRes.body.actions, []);
+  assert.equal('response_format' in rawCalls[0], false);
+
+  context.fetch = async () => response(true, 200, { choices: [{ message: { content: JSON.stringify({ reply: "I'm running locally.", actions: [], videos: [], followUps: [] }) } }] });
   const statusRes = makeRes();
   await api.handler({ method: 'POST', body: { message: 'Is the cloud model working?', context: oversizedContext() } }, statusRes);
   assert.equal(statusRes.code, 200);
   assert.equal(statusRes.body.model, 'openai/gpt-oss-20b');
-  assert.equal(statusRes.body.reply, 'Yes — the cloud Coach is responding right now.', 'transport status must override model hallucination about running locally');
-  assert.equal(statusCalls[0].response_format.json_schema.strict, true);
+  assert.equal(statusRes.body.reply, 'Yes — the cloud Coach is responding right now.');
 
   let rateCalls = 0;
   context.fetch = async () => { rateCalls++; return response(false, 429, { error: { message: 'rate limited' } }, { 'retry-after': '3' }); };
   const secondRes = makeRes();
   await api.handler({ method: 'POST', body: { message: 'Keep coaching me', context: oversizedContext() } }, secondRes);
-  assert.equal(secondRes.code, 200, 'double rate-limit must still return a visible Coach response');
+  assert.equal(secondRes.code, 200);
   assert.equal(secondRes.body.model, 'Iron Six cloud recovery');
   assert.equal(secondRes.body.degraded, true);
   assert.match(secondRes.body.reply, /temporarily rate-limited/i);
   assert.equal(rateCalls, 2);
 
-  console.log('Coach strict-output, provider 400 recovery, status truthfulness, and 429 recovery verified.');
+  console.log('Coach unconstrained output, provider recovery, plain-text fallback, status truthfulness, and 429 recovery verified.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
