@@ -48,7 +48,7 @@
       .eqmgr-section{margin-bottom:16px}
       .eqmgr-section-title{font-size:12px;font-weight:850;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
       .eqmgr-chips{display:flex;flex-wrap:wrap;gap:8px}
-      .eqmgr-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(157,223,104,.08);border:1px solid rgba(157,223,104,.3);border-radius:999px;padding:8px 6px 8px 12px;font-size:12.5px;min-height:40px}
+      .eqmgr-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(46,229,128,.08);border:1px solid rgba(46,229,128,.3);border-radius:999px;padding:8px 6px 8px 12px;font-size:12.5px;min-height:40px}
       .eqmgr-chip>span{display:flex;flex-direction:column;line-height:1.3}
       .eqmgr-chip small{color:var(--muted);font-size:10px;font-weight:700}
       .eqmgr-chip-x{border:0;background:none;color:var(--muted);font-size:17px;line-height:1;cursor:pointer;padding:4px;min-width:32px;min-height:32px}
@@ -56,7 +56,7 @@
       .eqmgr-item{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:13px;padding:10px 12px;min-height:40px;cursor:pointer;max-width:100%}
       .eqmgr-item>span{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;font-size:13px;font-weight:750}
       .eqmgr-item small{color:var(--muted);font-size:10.5px;font-weight:700}
-      .eqmgr-item.active{border-color:var(--accent);background:rgba(157,223,104,.12)}
+      .eqmgr-item.active{border-color:var(--accent);background:rgba(46,229,128,.12)}
       .eqmgr-fills{color:var(--muted);font-size:11px;margin-top:2px}
       .eqmgr-suggestion{background:rgba(143,184,255,.08);border-color:rgba(143,184,255,.3)}
       .eqmgr-gap{border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:8px;background:var(--surface)}
