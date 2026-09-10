@@ -2,13 +2,13 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 
 const required = [
-  'exercise-guide.js?v=8','exercise-visuals.js?v=9','equipment-catalog.js?v=1','equipment-exercise-library.js?v=1','equipment-coverage.js?v=1','local-ai-fallback.js?v=7','coach.js?v=12','equipment-manager.js?v=1','social-auth.js?v=1','cloud-sync.js?v=14','cloud-history-sync.js?v=8','ui-shell.js?v=1'
+  'exercise-guide.js?v=9','exercise-visuals.js?v=9','equipment-catalog.js?v=1','equipment-exercise-library.js?v=1','equipment-coverage.js?v=1','local-ai-fallback.js?v=7','coach.js?v=13','equipment-manager.js?v=1','social-auth.js?v=1','cloud-sync.js?v=14','cloud-history-sync.js?v=8','ui-shell.js?v=1'
 ];
 for (const page of ['index.html','live.html']) {
   const html=fs.readFileSync(page,'utf8');
-  assert(html.includes('core.js?v=14'));assert(html.includes('engine.js?v=14'));assert(html.includes('ui1.js?v=15'));assert(html.includes('ui3.js?v=14'));assert(html.includes('ui2.js?v=15'));
+  assert(html.includes('core.js?v=15'));assert(html.includes('engine.js?v=15'));assert(html.includes('ui1.js?v=16'));assert(html.includes('ui3.js?v=15'));assert(html.includes('ui2.js?v=16'));
   assert(html.indexOf('exercise-media-catalog.js?v=1')<html.indexOf('exercise-media.js?v=2'));
-  assert(html.indexOf('exercise-media.js?v=2')<html.indexOf('ui2.js?v=15'));
+  assert(html.indexOf('exercise-media.js?v=2')<html.indexOf('ui2.js?v=16'));
   let previous=html.indexOf('ui3.js');assert.notEqual(previous,-1);
   for(const script of required){const position=html.indexOf(script);assert(position>previous,`${page} must load ${script} in order`);previous=position}
 }

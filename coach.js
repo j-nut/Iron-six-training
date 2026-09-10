@@ -6,9 +6,9 @@
   const style = document.createElement('style');
   style.textContent = `
     .bottom-inner{grid-template-columns:repeat(5,1fr)}
-    .coach-quick{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}.coach-quick::-webkit-scrollbar{display:none}
+    .coach-quick{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none;-webkit-mask-image:linear-gradient(to right,#000 88%,transparent);mask-image:linear-gradient(to right,#000 88%,transparent)}.coach-quick::-webkit-scrollbar{display:none}.coach-quick::-webkit-scrollbar{display:none}
     .coach-chip{white-space:nowrap;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:10px 12px;font-size:12px;font-weight:750;min-height:42px}
-    .coach-chat{display:flex;flex-direction:column;gap:10px;margin-top:12px}.coach-msg{max-width:88%;padding:12px 14px;border-radius:16px;line-height:1.5;font-size:14px;white-space:pre-wrap}.coach-msg.user{align-self:flex-end;background:var(--accent);color:#0b0c0f;border-bottom-right-radius:5px}.coach-msg.assistant{align-self:flex-start;background:var(--surface);border:1px solid var(--line);color:var(--text);border-bottom-left-radius:5px}.coach-msg .meta{display:block;color:var(--muted);font-size:10px;margin-top:7px}.coach-compose{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:14px}.coach-compose textarea{resize:none;min-height:50px;max-height:140px;background:var(--surface2);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:13px;font-size:16px;outline:none}.coach-compose textarea:focus{border-color:var(--accent)}.coach-send{min-width:76px}.coach-action{margin-top:9px;border:1px solid rgba(157,223,104,.3);background:rgba(157,223,104,.08);border-radius:12px;padding:10px}.coach-action p{margin:0 0 8px;color:var(--muted);font-size:12px}.coach-video{margin-top:10px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#000}.coach-video iframe{display:block;width:100%;aspect-ratio:16/9;border:0}.coach-video-link{display:block;padding:11px 12px;color:var(--accent);text-decoration:none;background:var(--surface2);font-size:13px;font-weight:750}.coach-status{color:var(--muted);font-size:12px;margin-top:8px}.coach-thinking{opacity:.75}.coach-disclaimer{font-size:11px;color:var(--muted);line-height:1.45;margin-top:10px}
+    .coach-chat{display:flex;flex-direction:column;gap:10px;margin-top:12px}.coach-msg{max-width:88%;padding:12px 14px;border-radius:16px;line-height:1.5;font-size:14px;white-space:pre-wrap}.coach-msg.user{align-self:flex-end;background:var(--accent);color:#0b0c0f;border-bottom-right-radius:5px}.coach-msg.assistant{align-self:flex-start;background:var(--surface);border:1px solid var(--line);color:var(--text);border-bottom-left-radius:5px}.coach-msg .meta{display:block;color:var(--muted);font-size:10px;margin-top:7px}.coach-compose{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:14px}.coach-compose textarea{resize:none;min-height:72px;max-height:140px;line-height:1.35;background:var(--surface2);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:13px;font-size:16px;outline:none}.coach-compose textarea:focus{border-color:var(--accent)}.coach-send{min-width:76px}.coach-action{margin-top:9px;border:1px solid rgba(157,223,104,.3);background:rgba(157,223,104,.08);border-radius:12px;padding:10px}.coach-action p{margin:0 0 8px;color:var(--muted);font-size:12px}.coach-video{margin-top:10px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#000}.coach-video iframe{display:block;width:100%;aspect-ratio:16/9;border:0}.coach-video-link{display:block;padding:11px 12px;color:var(--accent);text-decoration:none;background:var(--surface2);font-size:13px;font-weight:750}.coach-status{color:var(--muted);font-size:12px;margin-top:8px}.coach-thinking{opacity:.75}.coach-disclaimer{font-size:11px;color:var(--muted);line-height:1.45;margin-top:10px}
     @media(max-width:390px){.navbtn{font-size:10px;padding-left:3px;padding-right:3px}.coach-msg{max-width:94%}}
   `;
   document.head.appendChild(style);
@@ -44,7 +44,7 @@
       </div>
       <div class="coach-chat" id="coachChat"></div>
       <form class="coach-compose" id="coachForm">
-        <textarea id="coachInput" rows="2" maxlength="1400" placeholder="Ask to change an exercise, explain a weight, find a form video…" aria-label="Ask Iron Six Coach"></textarea>
+        <textarea id="coachInput" rows="2" maxlength="1400" placeholder="Ask about today’s workout…" aria-label="Ask Iron Six Coach"></textarea>
         <button class="btn primary coach-send" type="submit">Ask</button>
       </form>
       <div class="coach-status" id="coachStatus"></div>
@@ -213,7 +213,7 @@
       if(out.followUps?.length)renderFollowUps(out.followUps);
       status.textContent='';
     }catch(err){arr.push({role:'assistant',text:`Coach is unavailable: ${err.message}. Please try again.`,ts:Date.now()});uTrim(arr);saveData();renderMessages();status.textContent='';}
-    finally{send.disabled=false;input.focus()}
+    finally{send.disabled=false;if(!window.__ironSixAutoAsk)input.focus();window.__ironSixAutoAsk=false}
   }
 
   function uTrim(arr){while(arr.length>30)arr.shift()}

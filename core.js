@@ -56,4 +56,7 @@ function successfulExposure(h){
 function exposureStats(u,key){const sessions=(u.history||[]).filter(h=>h.workoutKey===key);const successful=sessions.filter(successfulExposure);return {total:sessions.length,successful:successful.length,recent:successful.slice(0,4)}}
 function variantUnlocked(u,key){const stats=exposureStats(u,key);const current=Math.max(1,Number(u.program.unlocked?.[key])||1);let unlocked=current;if(stats.successful>=4)unlocked=Math.max(unlocked,2);if(stats.successful>=8)unlocked=Math.max(unlocked,3);u.program.unlocked[key]=Math.min(workoutVariantCount(key),unlocked);return u.program.unlocked[key]}
 function currentVariant(u,key){const unlocked=variantUnlocked(u,key);const exposure=Number(u.program.exposures?.[key])||0;return unlocked<=1?0:exposure%unlocked}
+const VARIANT_NAMES=['Foundation','Momentum','Apex'];
 function variantLabel(i){return ['A','B','C'][i]||'A'}
+function variantName(i){return VARIANT_NAMES[i]||VARIANT_NAMES[0]}
+function variantDisplay(value){if(typeof value==='number')return variantName(value);const i=['A','B','C'].indexOf(String(value||'').trim().toUpperCase());return i>=0?VARIANT_NAMES[i]:String(value||'')}
