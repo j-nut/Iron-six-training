@@ -2,11 +2,11 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 
 const required = [
-  'exercise-guide.js?v=9','exercise-visuals.js?v=9','equipment-catalog.js?v=1','equipment-exercise-library.js?v=1','equipment-coverage.js?v=1','local-ai-fallback.js?v=7','coach.js?v=13','equipment-manager.js?v=1','social-auth.js?v=3','cloud-sync.js?v=15','cloud-history-sync.js?v=8','backup-restore.js?v=2','profile-delete.js?v=1','ui-shell.js?v=1','profile-menu.js?v=1','session-cards.js?v=1'
+  'exercise-guide.js?v=9','exercise-visuals.js?v=9','equipment-catalog.js?v=1','equipment-exercise-library.js?v=1','equipment-coverage.js?v=1','local-ai-fallback.js?v=7','coach.js?v=13','equipment-manager.js?v=1','social-auth.js?v=3','cloud-sync.js?v=15','cloud-history-sync.js?v=8','backup-restore.js?v=2','profile-delete.js?v=1','ui-shell.js?v=1','profile-menu.js?v=1','session-cards.js?v=1','onboarding.js?v=1'
 ];
 for (const page of ['index.html','live.html']) {
   const html=fs.readFileSync(page,'utf8');
-  assert(html.includes('core.js?v=15'));assert(html.includes('engine.js?v=15'));assert(html.includes('ui1.js?v=16'));assert(html.includes('ui3.js?v=15'));assert(html.includes('ui2.js?v=16'));
+  assert(html.includes('core.js?v=16'));assert(html.includes('engine.js?v=15'));assert(html.includes('ui1.js?v=16'));assert(html.includes('ui3.js?v=15'));assert(html.includes('ui2.js?v=16'));
   assert(html.indexOf('exercise-media-catalog.js?v=1')<html.indexOf('exercise-media.js?v=2'));
   assert(html.indexOf('exercise-media.js?v=2')<html.indexOf('ui2.js?v=16'));
   let previous=html.indexOf('ui3.js');assert.notEqual(previous,-1);
@@ -22,7 +22,7 @@ assert(cloudHistory.indexOf('adaptive-insights.js')<cloudHistory.indexOf('progre
 for(const builder of ['scripts/build-web.mjs','scripts/build-android-web.mjs']){const source=fs.readFileSync(builder,'utf8');for(const runtime of runtimes)assert(source.includes(runtime),`${builder} must package ${runtime}`)}
 for(const backend of ['api/coach.js','supabase/functions/coach/index.ts']){const source=fs.readFileSync(backend,'utf8');assert(source.includes('trainingState'));assert(source.includes('setFeedback'));assert(source.includes('analytics'))}
 for(const file of ['api/music.js','progress-analytics-v2.js','session-adaptation-v3.js','media-experience-v2.js'])assert(fs.existsSync(file),`${file} must ship`);
-for(const file of ['backup-restore.js','profile-delete.js','profile-menu.js','session-cards.js','equipment-catalog.js','equipment-exercise-library.js','equipment-coverage.js','equipment-manager.js','api/equipment-exercises.js'])assert(fs.existsSync(file),`${file} must ship`);
+for(const file of ['backup-restore.js','profile-delete.js','profile-menu.js','session-cards.js','onboarding.js','equipment-catalog.js','equipment-exercise-library.js','equipment-coverage.js','equipment-manager.js','api/equipment-exercises.js'])assert(fs.existsSync(file),`${file} must ship`);
 // The picker's promise and the generator's output come from the same two files; if the API stops
 // importing them it can silently drift from what the UI told the user it would add.
 const generator=fs.readFileSync('api/equipment-exercises.js','utf8');
