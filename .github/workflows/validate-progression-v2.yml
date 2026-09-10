@@ -1,0 +1,40 @@
+name: Validate load progression v2
+
+on:
+  push:
+    branches: [feature/pose-form-voice-v3]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-progression:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Syntax check progression files
+        run: |
+          node --check load-progression-v2.js
+          node --check cloud-history-sync.js
+          node --check scripts/build-web.mjs
+          node --check scripts/build-android-web.mjs
+      - name: Run full JavaScript test suite
+        run: npm test
+      - name: Build web release
+        run: node scripts/build-web.mjs
+      - name: Verify progression module ships on web
+        run: test -s web-dist/load-progression-v2.js
+      - name: Build Android debug APK
+        run: npm run android:apk
+      - name: Verify progression module ships on Android
+        run: test -s android/app/src/main/assets/public/load-progression-v2.js
