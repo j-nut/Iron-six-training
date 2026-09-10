@@ -27,6 +27,12 @@ grant select,insert on public.workout_entries to authenticated;
 grant usage,select on sequence public.workout_entries_sequence_seq to authenticated;
 create policy entries_read_own on public.workout_entries for select to authenticated using ((select auth.uid())=user_id);
 create policy entries_append_own on public.workout_entries for insert to authenticated with check ((select auth.uid())=user_id);
+-- Deleting a profile must be able to take its journal rows with it. Without this the client's
+-- delete is refused by RLS, the rows survive in the cloud, and every later sync re-downloads
+-- entries for a profile the user removed. Scoped to the caller's own rows, like every other
+-- policy here.
+drop policy if exists entries_delete_own on public.workout_entries;
+create policy entries_delete_own on public.workout_entries for delete to authenticated using ((select auth.uid())=user_id);
 
 -- Ownership must include the parent relationship, not only a client-supplied user_id.
 drop policy if exists sessions_insert_own on public.workout_sessions;

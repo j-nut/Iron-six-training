@@ -169,7 +169,22 @@
     request.onerror=()=>resolve();request.onblocked=()=>resolve();
     request.onsuccess=()=>{db=request.result;const read=db.transaction('entries').objectStore('entries').getAll();read.onsuccess=()=>{for(const event of read.result){const local=events.get(event.event_id);if(!local||(!local.sequence&&event.sequence)){event._durable=true;events.set(event.event_id,event)}}resolve()};read.onerror=()=>resolve()};
   });
-  window.IronSixJournal={captureSet,ensure,archive,finish,changePlan,timerCheckpoint,migrateUser,restore,replay,pending,all,ingest,flush,status,renderTable,installUI,exportLog,hydrated,setTransport:fn=>{transport=fn;schedule()}};
+  // Removes every local record of one profile: the in-memory map, the localStorage mirror and
+  // the IndexedDB copy. Deleting a profile has to take its journal with it, otherwise the
+  // entries linger and a later restore or replay can surface workouts the user deleted.
+  function forget(profileClientId){
+    const id=String(profileClientId||'');
+    if(!id)return 0;
+    const doomed=[...events.values()].filter(event=>event.profile_client_id===id);
+    for(const event of doomed){
+      events.delete(event.event_id);
+      try{localStorage.removeItem(storageKey(event))}catch(_){}
+      if(db)try{db.transaction('entries','readwrite').objectStore('entries').delete(event.event_id)}catch(_){}
+    }
+    return doomed.length;
+  }
+
+  window.IronSixJournal={forget,captureSet,ensure,archive,finish,changePlan,timerCheckpoint,migrateUser,restore,replay,pending,all,ingest,flush,status,renderTable,installUI,exportLog,hydrated,setTransport:fn=>{transport=fn;schedule()}};
   window.addEventListener('online',schedule);
   window.addEventListener('storage',event=>{if(event.key?.startsWith(PREFIX)&&event.newValue){try{const record=JSON.parse(event.newValue);const old=events.get(record.event_id);if(!old?.sequence||record.sequence){record._durable=true;events.set(record.event_id,record);status();schedule()}}catch(_){}}});
   window.addEventListener('beforeunload',event=>{if(pending().some(e=>!e._durable)){event.preventDefault();event.returnValue='Some edits are not saved.'}});

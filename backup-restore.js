@@ -52,9 +52,58 @@
     return `${users.length} profile${users.length === 1 ? '' : 's'} (${names}${users.length > 4 ? '…' : ''}) and ${sessions} saved session${sessions === 1 ? '' : 's'}`;
   }
 
-  function restore(text) {
+  // Sessions are identified by the id the journal already uses, falling back to the timestamp
+  // for history logged before session ids existed.
+  const sessionKey = session => String((session && (session.sessionId || session.ts)) || '');
+
+  // Merge adds the sessions the target does not already have and leaves every date it does have
+  // exactly as it is. Filling a gap is recoverable; overwriting a session someone has been
+  // training against is not, so the profile in active use always wins a collision.
+  function mergeInto(target, sources) {
+    target.history = target.history || [];
+    const existing = new Set(target.history.map(sessionKey).filter(Boolean));
+    let addedSessions = 0, keptOnCollision = 0;
+    for (const source of sources) {
+      for (const session of source.history || []) {
+        const key = sessionKey(session);
+        if (!key) continue;
+        if (existing.has(key)) { keptOnCollision++; continue; }
+        existing.add(key);
+        target.history.push(JSON.parse(JSON.stringify(session)));
+        addedSessions++;
+      }
+    }
+    // History is newest-first everywhere else in the app; keep it that way after a merge.
+    target.history.sort((a, b) => (Number(b.ts) || 0) - (Number(a.ts) || 0));
+    return { addedSessions, keptOnCollision };
+  }
+
+  function mergeRestore(backup, options) {
+    const scope = window.ironSixAccountScope || null;
+    const wanted = (options && options.targetId) || (typeof activeUser === 'function' ? activeUser().id : null);
+    const target = data.users.find(u => u.id === wanted);
+    if (!target) throw Error('Choose which profile to merge the backup into.');
+    const before = (target.history || []).length;
+    const { addedSessions, keptOnCollision } = mergeInto(target, backup.users);
+    if (!addedSessions) {
+      say('Nothing new to add \u2014 ' + target.name + ' already has every session in that backup.');
+      return { added: 0, merged: true, addedSessions: 0, keptOnCollision, target: target.id };
+    }
+    target.localUpdatedAt = Date.now();
+    if (scope) target.accountOwner = scope;
+    window.IronSixJournal?.migrateUser(target);
+    saveData();
+    if (typeof renderAll === 'function') renderAll();
+    say('Added ' + addedSessions + ' session' + (addedSessions === 1 ? '' : 's') + ' to ' + target.name
+      + ' (' + before + ' \u2192 ' + target.history.length + ')'
+      + (keptOnCollision ? ', kept ' + keptOnCollision + ' you already had' : '') + '.');
+    return { added: 0, merged: true, addedSessions, keptOnCollision, target: target.id };
+  }
+
+  function restore(text, options) {
     const backup = readBackup(text);
     const stamp = digest(text);
+    if (options && options.mode === 'merge') return mergeRestore(backup, options);
     const scope = window.ironSixAccountScope || null;
     const where = scope ? 'your signed-in account' : 'this device';
     if (!confirm(`Import ${summarise(backup.users)} into ${where}?\n\nThey are added as new profiles. Nothing already here is changed or removed.`)) return null;
@@ -84,6 +133,43 @@
     return { added, skipped };
   }
 
+
+  const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // Adding a profile and merging into one are different enough to be worth asking about rather
+  // than guessing: the first keeps two histories side by side, the second makes one.
+  function chooseMode(text) {
+    const backup = readBackup(text);
+    const existing = data.users.map(u => ({ id: u.id, name: u.name, sessions: (u.history || []).length }));
+    const modal = document.createElement('div');
+    modal.className = 'modal-backdrop show';
+    modal.id = 'restoreChooser';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.innerHTML = '<div class="modal"><h3>Restore backup</h3>'
+      + '<p>This file holds ' + esc(summarise(backup.users)) + '.</p>'
+      + '<div class="setting"><label for="restoreTarget">Merge into an existing profile</label>'
+      + '<select id="restoreTarget">' + existing.map(u => '<option value="' + esc(u.id) + '">' + esc(u.name) + ' \u00b7 ' + u.sessions + ' session' + (u.sessions === 1 ? '' : 's') + '</option>').join('') + '</select>'
+      + '<div class="helper" style="margin-top:7px">Adds only the sessions that profile is missing. A date it already has is kept exactly as it is.</div></div>'
+      + '<div class="cta"><button class="btn primary" id="restoreMerge" type="button">Merge</button></div>'
+      + '<div class="setting" style="margin-top:6px"><label>Or keep them separate</label>'
+      + '<div class="helper">Adds the backup as its own profile, leaving everything here untouched.</div></div>'
+      + '<div class="cta"><button class="btn secondary" id="restoreAsNew" type="button">Add as new profile</button>'
+      + '<button class="btn secondary" id="restoreCancel" type="button">Cancel</button></div></div>';
+    document.body.appendChild(modal);
+    const close = () => modal.remove();
+    const run = options => {
+      close();
+      try { restore(text, options); }
+      catch (error) { say(error.message || 'That backup could not be imported.'); }
+    };
+    modal.querySelector('#restoreCancel').addEventListener('click', close);
+    modal.addEventListener('click', event => { if (event.target === modal) close(); });
+    modal.querySelector('#restoreAsNew').addEventListener('click', () => run({ mode: 'new' }));
+    modal.querySelector('#restoreMerge').addEventListener('click', () => run({ mode: 'merge', targetId: modal.querySelector('#restoreTarget').value }));
+    return modal;
+  }
+
   function pickFile() {
     const input = document.createElement('input');
     input.type = 'file';
@@ -95,7 +181,7 @@
       const reader = new FileReader();
       reader.onerror = () => say('That file could not be read.');
       reader.onload = () => {
-        try { restore(String(reader.result || '')); }
+        try { chooseMode(String(reader.result || '')); }
         catch (error) { say(error.message || 'That backup could not be imported.'); }
       };
       reader.readAsText(file);
@@ -134,5 +220,5 @@
   addEventListener('load', install);
   setTimeout(install, 1500);
 
-  window.IronSixBackupRestore = { readBackup, restore, pickFile, install };
+  window.IronSixBackupRestore = { readBackup, restore, mergeInto, sessionKey, chooseMode, pickFile, install };
 })();
