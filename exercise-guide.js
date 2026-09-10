@@ -230,6 +230,8 @@
       const input=document.getElementById('coachInput'),form=document.getElementById('coachForm');
       if(!input||!form)return false;
       input.value=prompt;
+      // Asked on the user's behalf, so do not steal focus and open the keyboard.
+      window.__ironSixAutoAsk=true;
       form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
       return true;
     };
