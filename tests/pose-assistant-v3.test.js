@@ -30,6 +30,17 @@ test('pose camera compatibility shim restores known-good wide capture for portra
   assert(source.includes('__ironSixPoseCameraCompat'));
 });
 
+test('pose tracking tuning supports side-on acquisition and brief confidence flicker',()=>{
+  const source=fs.readFileSync('pose-form-coach.js','utf8');
+  assert(source.includes('confidence:0.58'));
+  assert(source.includes('acquireMs:650'));
+  assert(source.includes('lossMs:900'));
+  assert(source.includes('softInterrupts>=15'));
+  assert(source.includes('__ironSixForceInterrupt'));
+  assert(source.includes('squat:500'));
+  assert(source.includes('__ironSixTrackingTuned'));
+});
+
 test('Android voice bridge is permission-gated, one-shot and destroyed after use',()=>{
   const source=fs.readFileSync('android/app/src/main/java/com/ironsix/training/VoiceCommandPlugin.java','utf8');
   assert(source.includes('@Permission(alias = "microphone"'));
