@@ -35,6 +35,10 @@ Configure the production URL in Supabase Auth's site URL and redirect allowlist 
 
 The planner reserves warm-up, transitions/rest, and cool-down time before allocating working sets. Circuit mode avoids heavy barbell/technical stations, uses 30/30, 40/20, or 45/20 work/transition intervals, and reserves 45 seconds between rounds. Low energy selects the steady pace. The timer uses elapsed timestamps, pauses when hidden, and recovers paused after reload. Browser sound requires an initial tap and may depend on device sound settings. Timer completion never fabricates reps or marks skipped work complete.
 
+## Camera rep counting (experiment, off by default)
+
+An off-by-default spike counts reps from the front camera using on-device pose estimation. Open the app with `?pose=1` to enable it; with the flag off it loads nothing and changes nothing. No frame, image or landmark leaves the device, and it makes no form judgments. It is web-only for now and needs a network connection on first use. See `POSE_SPIKE.md`.
+
 ## Verification
 
 `npm ci && npm test` runs engine, DOM interaction, account-isolation, conflict-resolution, offline retry, recovery, time-budget, and timer regression tests. Auth tests use a simulated Supabase client; they do not send emails or exercise the project's SMTP configuration. Live database checks were performed inside a rolled-back transaction for own-account writes, cross-account reads/inserts, parent ownership, and append-only permissions.
