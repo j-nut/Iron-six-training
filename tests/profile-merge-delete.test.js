@@ -189,6 +189,21 @@ test('when signed in, the cloud row is deleted so sync cannot resurrect the prof
   }finally{a.close()}
 });
 
+test('a Postgrest builder with no .catch() does not break deletion',async()=>{
+  // PostgrestBuilder implements PromiseLike: it has then() and no catch(). Calling .catch() on
+  // it threw a TypeError that surfaced to the user as "could not remove this profile".
+  const a=app({signedIn:true});
+  try{
+    a.run(`window.__deleted=[];window.IronSixCloud={session:()=>({user:{id:'acct-1'}}),client:()=>({from:function(table){return{delete:function(){const q={_f:{},eq:function(k,v){this._f[k]=v;return this},
+      then:function(res){window.__deleted.push(table);return Promise.resolve({error:null}).then(res)}};return q}}}})}`);
+    a.run("data.users.push(normalizeUser({id:'dupe',name:'Duplicate',weight:200,history:[]}));saveData()");
+    const ok=await a.w.IronSixProfileDelete.deleteProfile('dupe');
+    assert.equal(ok,true,'a builder without catch() must not fail the delete');
+    assert.equal(a.json("data.users.some(u=>u.id==='dupe')"),false,'the profile must actually be gone');
+    assert(a.json('window.__deleted').includes('profiles'),'the cloud profile row must still be deleted');
+  }finally{a.close()}
+});
+
 test('a failed cloud delete keeps the profile rather than half-deleting it',async()=>{
   const a=app({signedIn:true,cloud:'fail'});
   try{

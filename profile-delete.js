@@ -40,13 +40,20 @@
       // Match on client_id so a profile that never received its cloud id is still removed.
       const result = await client.from('profiles').delete().eq('user_id', scope).eq('client_id', user.id);
       if (result.error) return { attempted: true, ok: false, error: result.error.message };
-      // Journal rows have no delete policy, so this is expected to be refused. It is attempted
-      // anyway so that the day the policy is added, deletion becomes complete on its own.
-      await client.from('workout_entries').delete().eq('user_id', scope).eq('profile_client_id', user.id).catch(() => {});
-      return { attempted: true, ok: true };
     } catch (error) {
       return { attempted: true, ok: false, error: error?.message };
     }
+    // Journal rows have no delete policy yet, so this is expected to be refused. It is attempted
+    // anyway so that the day the policy is added, deletion becomes complete on its own — and it
+    // is isolated in its own try, because a failure to tidy optional rows must never undo a
+    // profile deletion that already succeeded.
+    //
+    // It cannot use .catch(): a Postgrest builder is only PromiseLike, so it has then() and no
+    // catch(), and calling it threw a TypeError that surfaced as "could not remove this profile".
+    try {
+      await client.from('workout_entries').delete().eq('user_id', scope).eq('profile_client_id', user.id);
+    } catch (_) { /* optional cleanup */ }
+    return { attempted: true, ok: true };
   }
 
   async function deleteProfile(id) {
