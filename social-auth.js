@@ -70,11 +70,28 @@
         body:JSON.stringify({token}),signal:AbortSignal.timeout(15000)
       });
       const body=await response.json().catch(()=>({}));
-      if(!response.ok||!body.token_hash)throw Error(body.error||'Google sign-in could not be verified.');
+      // Each step fails differently and the difference is the whole diagnosis, so say which one
+      // it was. This used to collapse into one message that vanished after 1.9 seconds, which
+      // is how a sign-in could fail repeatedly and look like it had worked.
+      if(!response.ok||!body.token_hash){
+        const reason=response.status===401||response.status===403
+            ? 'Google verified you, but Iron Six would not accept that identity (step: verification, '+response.status+').'
+          :response.status===503
+            ? 'The Iron Six sign-in service is missing its server credentials (step: bridge, 503).'
+          :response.ok
+            ? 'The sign-in service replied without a one-time token (step: bridge).'
+          :(body.error||'The sign-in service returned '+response.status)+' (step: bridge, '+response.status+').';
+        throw Error(reason);
+      }
       const result=await api.client.auth.verifyOtp({token_hash:body.token_hash,type:'email'});
-      if(result.error)throw result.error;
+      if(result.error)throw Error('Iron Six rejected the one-time sign-in token: '+(result.error.message||'unknown')+' (step: verifyOtp).');
+      if(!result.data?.session)throw Error('Sign-in returned no session (step: verifyOtp).');
       api.notify('Signed in with Google. Loading your Iron Six account…');
-    }catch(_){api.notify('Google sign-in could not be completed. Your local workout is unchanged; try again or use email.')}
+    }catch(error){
+      api.notify('Google sign-in did not complete. '+(error?.message||'Unknown error')+' Your local workout is unchanged; try again or use email.');
+      // A failure the user cannot see is a failure they will repeat. Put it in front of them.
+      try{window.IronSixCloud?.openAccount?.()}catch(_){ }
+    }
     finally{bridgeBusy=false;api.setBusy(false);render()}
   }
 
