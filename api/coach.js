@@ -7,11 +7,12 @@ You receive structured context about the active user's physical profile, equipme
 
 Primary goals:
 - Help the user get stronger and build muscle while respecting their stated available equipment and time.
+- Answer the user's exact question first. If they ask whether a specific setup, grip, position, technique, or variation can work, address that exact proposed setup before mentioning a more conventional alternative. Never silently replace the setup they asked about with a different exercise variation.
 - Base load advice primarily on actual logged performance (weight, reps, RIR), then recent set feedback and training-block state. Profile variables are only conservative starting context when performance data are absent.
 - Treat "too easy / about right / too hard" feedback as supporting evidence, not as stronger evidence than recorded reps and RIR.
 - Treat pain/discomfort feedback as a reason to avoid forcing progression on that movement. Do not diagnose.
 - If trainingState indicates Manage fatigue or Deload suggested, explain why and prefer conservative volume changes over arbitrary exercise churn.
-- Explain recommendations briefly and clearly.
+- Explain recommendations briefly and clearly. For ordinary questions, usually answer in 2-5 sentences unless the user asks for detail.
 - Never invent equipment the user does not have.
 - equipmentCoverage is measured, not estimated: it reports how many exercise options each movement slot has with the user's actual equipment. When asked what equipment to buy or how their setup limits them, reason from emptySlots and thinSlots and recommend only from wouldHelp. Say plainly when a slot has no option at all. Items in conditioningOnly add no strength exercises; items in unrecognized are equipment the app could not identify, so ask what it is rather than guessing.
 - If the user asks to change an exercise, choose only an EXACT replacementName from the allowedSwaps list for that target exercise. If none fits, explain instead of creating an action.
@@ -19,12 +20,16 @@ Primary goals:
 - If the user reports sharp pain, sudden injury, neurological symptoms, chest pain, fainting, or other concerning symptoms, do not optimize through it. Recommend stopping the provoking exercise and seeking appropriate medical evaluation when warranted. Do not diagnose.
 - Ordinary muscle soreness/fatigue can be handled with conservative training modifications.
 - When discussing exercise form, emphasize controllable technique cues rather than claiming one universally perfect form.
-- You are the cloud-hosted Iron Six Coach. Never claim that you are running locally or on-device. If asked about backend status, answer only from the transport metadata supplied by the server.
-
-Reply as one JSON object with keys reply, actions, videos, and followUps. Use empty arrays when no actions, videos, or follow-ups are needed. Do not use markdown fences.`;
+- You are the cloud-hosted Iron Six Coach. Never claim that you are running locally or on-device. If asked about backend status, answer only from the transport metadata supplied by the server.`;
 
 function wantsSearch(message) {
   return /\b(video|demo|demonstrat|youtube|how (do|to) i|form video|show me|tutorial)\b/i.test(message);
+}
+
+function wantsAction(message) {
+  const text = String(message || '');
+  return /\b(swap|replace|substitute|switch|change)\b.{0,45}\b(exercise|movement)\b/i.test(text)
+    || /\b(shorter|longer|duration|workout length|\d+\s*minutes?)\b/i.test(text);
 }
 
 function isCloudStatusQuestion(message) {
@@ -94,11 +99,38 @@ function compactConversation(input, currentMessage) {
   return cleaned;
 }
 
-function cleanJson(text) {
+function decodeReplyFragment(fragment) {
+  let out = '', escaped = false;
+  for (let i = 0; i < fragment.length; i++) {
+    const c = fragment[i];
+    if (escaped) {
+      if (c === 'n') out += '\n';
+      else if (c === 'r') out += '\r';
+      else if (c === 't') out += '\t';
+      else if (c === 'b') out += '\b';
+      else if (c === 'f') out += '\f';
+      else if (c === 'u' && /^[0-9a-fA-F]{4}$/.test(fragment.slice(i + 1, i + 5))) { out += String.fromCharCode(parseInt(fragment.slice(i + 1, i + 5), 16)); i += 4; }
+      else out += c;
+      escaped = false;
+      continue;
+    }
+    if (c === '\\') { escaped = true; continue; }
+    if (c === '"') break;
+    out += c;
+  }
+  return out.trim();
+}
+
+function cleanModelOutput(text) {
   const raw = String(text || '').trim();
   try { return JSON.parse(raw); } catch (_) {}
   const start = raw.indexOf('{'), end = raw.lastIndexOf('}');
   if (start >= 0 && end > start) { try { return JSON.parse(raw.slice(start, end + 1)); } catch (_) {} }
+  const marker = /["']reply["']\s*:\s*"/i.exec(raw);
+  if (marker) {
+    const reply = decodeReplyFragment(raw.slice(marker.index + marker[0].length));
+    if (reply) return { reply, actions: [], videos: [], followUps: [], salvaged: true };
+  }
   return { reply: raw || 'I could not generate a coaching response.', actions: [], videos: [], followUps: [] };
 }
 
@@ -116,7 +148,11 @@ function youtubeFromTools(tools) {
 }
 
 async function callGroq(model, messages, useSearch) {
-  const request = { model, messages, temperature: 0.2, max_completion_tokens: 450 };
+  const request = { model, messages, temperature: 0.2, max_completion_tokens: 800 };
+  if (/^openai\/gpt-oss-(20b|120b)$/.test(model)) {
+    request.reasoning_effort = 'low';
+    request.include_reasoning = false;
+  }
   if (useSearch) request.citation_options = 'enabled';
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -150,6 +186,12 @@ function sanitizeActions(actions) {
   }).filter(Boolean);
 }
 
+function formattingInstruction(structured) {
+  return structured
+    ? 'Return one JSON object with keys reply, actions, videos, and followUps. Use empty arrays when none are needed. Do not use markdown fences.'
+    : 'Answer the user in plain text only — no JSON wrapper, no markdown fence, and no field names. Lead with the direct answer to the exact setup they asked about, then give only the most relevant caveat or alternative.';
+}
+
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
@@ -160,12 +202,13 @@ export default async function handler(req, res) {
   const context = compactContext(req.body?.context);
   const conversation = compactConversation(req.body?.conversation, message);
   const useSearch = wantsSearch(message);
+  const structured = useSearch || wantsAction(message);
   const requestedModel = useSearch ? SEARCH_MODEL : NORMAL_MODEL;
   const extra = useSearch ? 'The user wants or may benefit from a demonstration. If useful, use web search and prioritize a clear reputable exercise demonstration. Return direct video/page URLs in videos. Do not claim you watched a video.' : '';
 
   try {
     const messages = [
-      { role: 'system', content: SYSTEM + '\n' + extra },
+      { role: 'system', content: `${SYSTEM}\n${formattingInstruction(structured)}\n${extra}` },
       { role: 'user', content: `TRANSPORT: cloud-hosted Iron Six Coach.\nACTIVE APP CONTEXT:\n${JSON.stringify(context)}\n\nContinue the conversation below using this live app context.` },
       ...conversation,
       { role: 'user', content: message }
@@ -193,8 +236,18 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: attempt.body?.error?.message || `Coach provider failed (${attempt.response.status}). Please retry.` });
     }
 
-    const msg = attempt.body?.choices?.[0]?.message || {};
-    const parsed = cleanJson(msg.content);
+    let choice = attempt.body?.choices?.[0] || {};
+    if (choice.finish_reason === 'length') {
+      const alternate = usedModel === NORMAL_MODEL ? OVERFLOW_MODEL : NORMAL_MODEL;
+      if (alternate && alternate !== usedModel) {
+        const retryMessages = [...messages, { role: 'user', content: 'Your previous answer was cut off. Answer the same question completely in no more than 120 words.' }];
+        const retry = await callGroq(alternate, retryMessages, false);
+        if (retry.response.ok) { usedModel = alternate; attempt = retry; choice = retry.body?.choices?.[0] || {}; }
+      }
+    }
+
+    const msg = choice.message || {};
+    const parsed = cleanModelOutput(msg.content);
     parsed.reply = String(parsed.reply || 'I could not generate a coaching response.');
     parsed.actions = sanitizeActions(parsed.actions);
     parsed.videos = Array.isArray(parsed.videos) ? parsed.videos.slice(0, 3) : [];
@@ -202,6 +255,7 @@ export default async function handler(req, res) {
     parsed.followUps = Array.isArray(parsed.followUps) ? parsed.followUps.slice(0, 3) : [];
     parsed.model = usedModel;
     parsed.fallbackModel = usedModel !== requestedModel;
+    parsed.truncated = choice.finish_reason === 'length';
     if (isCloudStatusQuestion(message)) {
       parsed.reply = parsed.fallbackModel
         ? 'Yes — the cloud Coach is responding right now through its backup cloud model.'
