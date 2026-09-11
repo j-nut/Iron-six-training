@@ -39,7 +39,7 @@
     if(!roi)return poses||[];return (poses||[]).map(points=>(points||[]).map(p=>p?{...p,x:roi.x+p.x*roi.w,y:roi.y+p.y*roi.h,z:Number.isFinite(p.z)?p.z*Math.max(roi.w,roi.h):p.z}:p));
   }
   function createPersonTracker(options={}){
-    const config={acquireMs:260,maxCoastMs:1800,maxLossMs:3200,ambiguityMargin:0.16,maxCost:1.25,...options};
+    const config={acquireMs:260,maxCoastMs:1800,maxLossMs:3200,ambiguityMargin:0.16,maxCost:1.25,minIou:0.10,...options};
     let track=null,pending=null,needsRelock=false,lastDetectionAt=null;
     const stats={accepted:0,coasted:0,losses:0,ambiguities:0,poseRefreshes:0};
     const predict=t=>{
@@ -71,7 +71,11 @@
         if(t-pending.since<config.acquireMs)return {...snapshot(t,false),message:'Hold position for a moment while Iron Six isolates you…'};
         pending=null;return accept(chosen,t,'detector');
       }
-      const pred=predict(t),scored=boxes.map(b=>({box:b,cost:matchCost(pred,b)})).filter(x=>x.box.h/track.h>0.48&&x.box.h/track.h<2.1).sort((a,b)=>a.cost-b.cost);
+      // The cost function normalises displacement by the box DIAGONAL, so a body a third of the frame
+      // away still scored well under maxCost, and the ambiguity guard below only runs with two or more
+      // candidates — so a lone stranger inherited the lock on a single frame with zero overlap. The
+      // predicted box already follows the lifter's motion, so requiring it to overlap at all is cheap.
+      const pred=predict(t),scored=boxes.map(b=>({box:b,cost:matchCost(pred,b),overlap:iou(pred,b)})).filter(x=>x.box.h/track.h>0.48&&x.box.h/track.h<2.1&&x.overlap>=config.minIou).sort((a,b)=>a.cost-b.cost);
       if(scored.length&&scored[0].cost<=config.maxCost){
         if(scored.length>1&&scored[1].cost-scored[0].cost<config.ambiguityMargin){stats.ambiguities++;stats.coasted++;return {...snapshot(t,false),message:'Two people overlap your track. User lock is held while they separate.'}}
         return accept(scored[0].box,t,'detector');

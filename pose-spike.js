@@ -60,6 +60,9 @@
     // Framing is decided before the frame is counted, not after it is displayed: a lifter half
     // out of shot produces joint angles that look entirely plausible and are wrong. Side-aware,
     // so a locked working side is judged on the joints that side actually needs.
+    // The tracked side changed limb mid-set. The counter's in-progress rep was measured on the old
+    // limb, so continuing would compare two different joints; start the rep over instead.
+    if(tracking.sideChanged)counter.interrupt();
     const framed=landmarks?counterApi.framing(rule,landmarks,tracking.side,0.42):{ok:false,missing:[],message:'No one in frame yet.'};
     const state=counter.push({landmarks,t:now,aspect,side:tracking.side,subjectPresent,minVisibility:0.42,framed:framed.ok});if(formEvaluator)formState=formEvaluator.push({landmarks,side:tracking.side,t:now,aspect,counterState:state});const frame={ok:!!landmarks&&framed.ok,message:tracking.message||personState?.message||(framed.ok?'':framed.message)};setText('poseLock',subjectPresent&&!landmarks?'User isolated · pose reacquiring…':(tracking.message||personState?.message));draw(landmarks,state);paint(state,frame);paintForm(formState);
   }
