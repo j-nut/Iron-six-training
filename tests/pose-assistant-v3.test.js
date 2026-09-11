@@ -2,17 +2,18 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 
-test('camera assistant v3 stays opt-in and contains no upload path',()=>{
+test('camera assistant stays opt-in, pose-only and contains no upload path',()=>{
   const source=fs.readFileSync('pose-spike.js','utf8');
   assert(source.indexOf("if(!readFlag())return")<source.indexOf('getUserMedia'));
   assert(source.includes('Camera + form + voice'));
-  assert(source.includes('assistantVersion:3'));
-  assert(source.includes('trackingVersion:5'));
-  assert(source.includes('minPoseDetectionConfidence:0.45'));
-  assert(source.includes('minPosePresenceConfidence:0.45'));
-  assert(source.includes('minTrackingConfidence:0.5'));
-  assert(source.includes('confirmedReps'));
   assert(!/fetch\(|XMLHttpRequest|supabase|\.upload\(/.test(source));
+  // Physical-phone lesson: running a second synchronous detector beside PoseLandmarker on the main
+  // thread froze the camera and the UI. The recovery runtime is one multi-person pose model.
+  assert(!/ObjectDetector|categoryAllowlist|PERSON_DETECT_MS/.test(source));
+  assert(source.includes('const MAX_POSES=3'));
+  assert(source.includes('numPoses:MAX_POSES'));
+  assert(source.includes('personDetector:false'));
+  assert(source.includes('poseOnly:true'));
 });
 
 test('camera assistant preserves the whole displayed frame and exposes form-analysis status',()=>{
@@ -21,6 +22,7 @@ test('camera assistant preserves the whole displayed frame and exposes form-anal
   assert(source.includes("stage.style.setProperty('--pose-stage-ratio'"));
   assert(source.includes('form analysis was skipped'));
   assert(source.includes('analyzed: no camera-visible issue crossed the cue threshold'));
+  assert(source.includes('are not validated yet'));
   assert(source.includes('video?.videoWidth&&video?.videoHeight'));
 });
 
@@ -34,16 +36,13 @@ test('pose camera compatibility shim restores known-good wide capture for portra
   assert(source.includes('__ironSixPoseCameraCompat'));
 });
 
-test('pose tracking v5 isolates one person, crops pose inference and preserves v4 motion association',()=>{
+test('pose tracking associates the lifter inside the pose tracker and preserves v4/v5 motion association',()=>{
   const spike=fs.readFileSync('pose-spike.js','utf8');
   const form=fs.readFileSync('pose-form-coach.js','utf8');
   const isolation=fs.readFileSync('pose-person-isolation.js','utf8');
   const counter=fs.readFileSync('pose-rep-counter.js','utf8');
-  assert(spike.includes("categoryAllowlist:['person']"));
-  assert(spike.includes('PERSON_DETECT_MS=240'));
-  assert(spike.includes('cropSource(roi)'));
-  assert(spike.includes('remapLandmarks'));
   assert(spike.includes('subjectPresent'));
+  assert(spike.includes('createSubjectTracker'));
   assert(isolation.includes('createPersonTracker'));
   assert(isolation.includes('roiFromBox'));
   assert(isolation.includes('remapLandmarks'));

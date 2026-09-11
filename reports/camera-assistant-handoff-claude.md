@@ -204,3 +204,61 @@ Production `main` remains unchanged. Test only preview deployments from `fix/cam
 Read `pose-spike.js`, `pose-rep-counter.js`, `pose-form-coach.js`, `pose-movement-detectors.js`, `exercise-registry.js`, existing pose tests, and PR #37 before editing.
 
 Then implement the view-classifier layer and redesign vertical-press counting without disturbing the currently working squat and multi-person tracker. Add regression tests before deploying a preview. Do not merge PR #37 until a real phone test confirms the new behavior.
+
+---
+
+## Session 2026-09-11 (Claude) — view classifier + vertical press redesign
+
+### What changed
+- `pose-view-classifier.js` (new, pure logic, no extra inference): torso yaw from shoulder/hip
+  width vs torso length, MediaPipe `z` depth, and far-side occlusion; labels `front`,
+  `front-quarter`, `side`, `rear-quarter`, `rear` with EMA smoothing, a hysteresis margin and a
+  450 ms dwell. Planes: frontal < 32°, oblique, sagittal ≥ 58°.
+- `pose-movement-detectors.js`:
+  - every family declares `views: {frontal, oblique, sagittal}` → `ok | degraded | blocked`
+    plus `viewAdvice`. Hinge frontal = **blocked** (counting pauses, "Turn side-on"); hinge
+    oblique = degraded. Squat is never blocked (frontal = degraded advice only).
+  - `createSession(rule)` = framing → view gate → counter. The live runtime and offline trace
+    replay use the same pipeline.
+  - vertical press = `createVerticalPressCounter` (`detector:'vertical_press_phase'`): rack is found
+    by wrist height above the shoulder (torso-normalised), lockout needs height **and** elbow
+    extension (≥145°) with ≥0.4 torso of travel from this rep's own rack; after real lockouts the
+    required height adapts to 85% of the lifter's recent peaks. Short-of-lockout presses are
+    rejected with a visible message; bar wobble near the shoulders is ignored. Continuity/stall
+    rules mirror `createCounter` exactly (`createContinuity`).
+  - exercise overrides instead of new algorithms: Pike Push-Up → elbow-angle detector; Landmine
+    Press → lower lockout height. `chest_press` pattern routed to horizontal press.
+- `pose-spike.js` (v7): uses the session; new "Camera view" line; caution line restored; stall
+  detection (media time not advancing, plus a cheap watchdog); stops after 8 consecutive inference
+  failures; form panel says "Rep counting only — form cues … not validated yet" for every family
+  except squat, and "unavailable" when the camera failed; diagnostics v7 add exercise family /
+  detector / validated, view + gate + blocked-frame counts, framing misses, phase, press signals,
+  rep log, stalls. **Copy trace** exports the last ~480 tracked frames (compact integers) that
+  `IronSixMovementDetectors.replayTrace()` replays through the same pipeline — turn any phone test
+  into a regression fixture.
+- Still exactly one `detectForVideo` per frame; no ObjectDetector (now asserted by tests).
+- Tests: 289/301 → 336/336. The 12 pre-existing failures were stale assertions for the removed
+  synchronous person-detector runtime plus a fixture whose ramps stopped exactly on thresholds;
+  they were rewritten to assert the same safety intent against the current architecture.
+  `tests/helpers/pose-synth.js` projects a 3D stick figure at any camera yaw for view/press tests.
+
+### Honest limits
+- The "2 of 6" OHP regression is synthetic: soft face-on lockouts (150–160° projected) that the
+  old ≥160° rule misses. It is not the recorded footage. Only a phone re-test validates it.
+- Curl, row, hinge, horizontal press remain **not validated**; only view gating/advice was added.
+
+### Phone test protocol (preview only, `?pose=1`)
+1. Barbell Overhead Press, 6 reps, face-on or slightly angled. Expect 6. Copy diagnostics + trace.
+2. Same, side-on. Expect 6.
+3. Romanian Deadlift face-on: expect "Turn side-on" and no counting; then turn side-on: reps count.
+4. Squat side-on (regression): expect the same count as before.
+5. Optional: Dumbbell Shoulder Press.
+For each: real reps, app reps, camera angle, any bystanders, diagnostics JSON, trace JSON.
+Replay a trace: `node -e "const d=require('./pose-movement-detectors.js');console.log(d.replayTrace(require('./trace.json')).state)"`.
+
+### Next steps
+1. Phone-validate OHP + hinge gating with traces; tune thresholds from traces, not guesses.
+2. Curl → row → hinge → horizontal press, one family at a time, each with a recorded trace as a
+   regression fixture.
+3. Remaining families (hip thrust, vertical pull, elbow extension, shoulder isolation, knee
+   flexion, calves, holds) after the first six are reliable. Form cues family by family last.
