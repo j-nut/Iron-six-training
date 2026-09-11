@@ -54,7 +54,8 @@ const exercises=[
   "pattern": "fly",
   "base": "Chest isolation",
   "workoutKeys": [
-   "chest"
+   "chest",
+   "upper_specialization"
   ],
   "isSupersetComponent": false,
   "mediaId": "ironsix-band-chest-fly",
@@ -790,7 +791,8 @@ const exercises=[
   "pattern": "fly",
   "base": "Chest isolation",
   "workoutKeys": [
-   "chest"
+   "chest",
+   "upper_specialization"
   ],
   "isSupersetComponent": false,
   "mediaId": "ironsix-dumbbell-fly",
@@ -979,8 +981,7 @@ const exercises=[
   "pattern": "overhead_press",
   "base": "Vertical press",
   "workoutKeys": [
-   "shoulders_arms",
-   "upper_specialization"
+   "shoulders_arms"
   ],
   "isSupersetComponent": false,
   "mediaId": "ironsix-dumbbell-shoulder-press",
@@ -1261,8 +1262,7 @@ const exercises=[
   "base": "Vertical press",
   "workoutKeys": [
    "chest",
-   "shoulders_arms",
-   "upper_specialization"
+   "shoulders_arms"
   ],
   "isSupersetComponent": false,
   "mediaId": "ironsix-landmine-press",
@@ -1548,8 +1548,7 @@ const exercises=[
   "pattern": "overhead_press",
   "base": "Vertical press",
   "workoutKeys": [
-   "shoulders_arms",
-   "upper_specialization"
+   "shoulders_arms"
   ],
   "isSupersetComponent": false,
   "mediaId": "ironsix-pike-push-up",
@@ -1807,7 +1806,8 @@ const exercises=[
   "pattern": "fly",
   "base": "Chest isolation",
   "workoutKeys": [
-   "chest"
+   "chest",
+   "upper_specialization"
   ],
   "isSupersetComponent": false,
   "mediaId": "ironsix-wide-push-up",

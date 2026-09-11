@@ -104,3 +104,69 @@ test('circuit controls, swaps and profile switching use the current saved plan',
   assert.equal(d.getElementById('circuitPlayer').hidden,true);a.close();
 });
 module.exports={app};
+
+test('rotation is fixed across history and time, with two sessions between leg workouts',()=>{
+  const a=app();
+  const expected=['chest','shoulders_arms','lower_strength','back','upper_specialization','lower_hypertrophy'];
+  assert.deepEqual(Array.from(a.run('ROTATION')),expected);
+  for(let i=0;i<expected.length;i++){
+    const key=expected[i];
+    a.run(`activeUser().program.currentWorkoutKey=${JSON.stringify(key)};activeUser().history=[{ts:1,workoutKey:'back',muscles:['back'],details:[]}];Date.now=()=>4102444800000;renderAll()`);
+    assert.equal(a.run('activeUser().program.currentWorkoutKey'),key);
+    assert.equal(a.run('nextWorkoutKey(activeUser())'),expected[(i+1)%expected.length]);
+  }
+  a.close();
+});
+test('skipped days and reload preserve the exact unfinished workout and its set entries',async()=>{
+  const a=app();await a.w.IronSixJournal.hydrated;
+  a.run("chooseWorkout('upper_specialization');activeUser().today['0-0']={weight:'55',reps:'9',rir:'2',done:true};IronSixJournal.captureSet(activeUser(),finalWorkout(activeUser()),0,0,activeUser().today['0-0']);saveData()");
+  const plan=JSON.stringify(a.run('finalWorkout(activeUser())')),snapshot=a.storage();a.close();
+  const b=app(snapshot);await b.w.IronSixJournal.hydrated;
+  b.run('Date.now=()=>4102444800000;IronSixJournal.restore(activeUser());renderAll()');
+  assert.equal(b.run('activeUser().program.currentWorkoutKey'),'upper_specialization');
+  assert.equal(JSON.stringify(b.run('finalWorkout(activeUser())')),plan);
+  assert.equal(b.run("activeUser().today['0-0'].weight"),'55');
+  assert.equal(b.run('activeUser().history.length'),0);b.close();
+});
+test('empty sessions cannot advance and unfinished sessions require explicit confirmation',async()=>{
+  const a=app();await a.w.IronSixJournal.hydrated;
+  const key=a.run('activeUser().program.currentWorkoutKey');let confirmations=0;
+  a.w.confirm=()=>{confirmations++;return false};
+  a.run("activeUser().today['999-0']={done:true};finishWorkout()");
+  assert.equal(confirmations,0);assert.equal(a.run('activeUser().history.length'),0);
+  a.run("activeUser().today={};finalWorkout(activeUser()).forEach((e,ei)=>{for(let i=0;i<e.sets;i++)activeUser().today[ei+'-'+i]={weight:'25',reps:'8',rir:'2',done:true}});activeUser().today['0-0'].done=false;finishWorkout()");
+  assert.equal(confirmations,1);assert.equal(a.run('activeUser().program.currentWorkoutKey'),key);
+  assert.equal(a.run('activeUser().history.length'),0);
+  a.w.confirm=()=>true;a.run('finishWorkout()');
+  assert.equal(a.run('activeUser().history.length'),1);
+  assert.equal(a.run('activeUser().program.currentWorkoutKey'),'back');
+  a.run('finishWorkout()');assert.equal(a.run('activeUser().history.length'),1);a.close();
+});
+test('recovering an archive never advances; recovering a finish advances exactly once',async()=>{
+  const a=app();await a.w.IronSixJournal.hydrated;
+  a.run("chooseWorkout('upper_specialization');IronSixJournal.ensure(activeUser());const archivedDraft=JSON.parse(JSON.stringify(activeUser().workoutDraft));IronSixJournal.archive(activeUser(),'Reset');activeUser().workoutDraft=archivedDraft;IronSixJournal.restore(activeUser())");
+  assert.equal(a.run('activeUser().program.currentWorkoutKey'),'upper_specialization');
+  a.run("IronSixJournal.ensure(activeUser());const finishedDraft=JSON.parse(JSON.stringify(activeUser().workoutDraft));IronSixJournal.finish(activeUser(),{ts:Date.now(),workoutKey:'upper_specialization',details:[],sets:1});activeUser().workoutDraft=finishedDraft;activeUser().program.currentWorkoutKey='lower_hypertrophy';IronSixJournal.restore(activeUser());IronSixJournal.restore(activeUser())");
+  assert.equal(a.run('activeUser().program.currentWorkoutKey'),'lower_hypertrophy');
+  assert.equal(a.run('activeUser().history.length'),1);a.close();
+});
+test('a completed session advances only after Finish and stays advanced on reload',async()=>{
+  const a=app();await a.w.IronSixJournal.hydrated;
+  a.run("chooseWorkout('lower_hypertrophy');finalWorkout(activeUser()).forEach((e,ei)=>{for(let i=0;i<e.sets;i++)activeUser().today[ei+'-'+i]={weight:'25',reps:'10',rir:'2',done:true}});saveData();renderAll()");
+  assert.equal(a.run('activeUser().program.currentWorkoutKey'),'lower_hypertrophy');
+  a.run('finishWorkout()');assert.equal(a.run('activeUser().program.currentWorkoutKey'),'chest');
+  const saved=a.storage();a.close();const b=app(saved);await b.w.IronSixJournal.hydrated;
+  b.run('IronSixJournal.restore(activeUser());renderAll()');
+  assert.equal(b.run('activeUser().program.currentWorkoutKey'),'chest');
+  assert.equal(b.run('activeUser().history.length'),1);b.close();
+});
+test('full upper specialization includes two direct chest movements across variants and equipment',()=>{
+  const a=app();
+  a.run(`for(const equipment of [DEFAULT_EQUIPMENT,{}, {dumbbells:true,bench:true}])for(let variant=0;variant<3;variant++){
+    const u=makeUser('Chest coverage',180,equipment);u.program.currentWorkoutKey='upper_specialization';
+    const plan=budgetSessionWorkout(u,build_upper_specialization(variant,u));
+    const chest=plan.filter(e=>exerciseMuscles(e).includes('chest'));
+    if(chest.length<2||chest.reduce((n,e)=>n+e.sets,0)<6)throw Error('Insufficient direct chest work');
+    if(!plan.some(e=>exerciseMuscles(e).includes('back')))throw Error('Back coverage lost');
+  }`);a.close();
+});

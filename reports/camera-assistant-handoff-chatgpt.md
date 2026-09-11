@@ -320,3 +320,29 @@ For each set, record the real reps, the app reps, the camera angle, and any byst
   `node --check` on every root `.js` file.
 - Bump script `?v=` query strings in `index.html` / `live.html` when a pose script changes.
 - Commit only to `fix/camera-reliability-v6`. Do not merge PR #37 or touch `main`.
+
+## Workout sequence follow-up (Codex)
+
+User requested a stable completion-based rotation and more chest work, then requested
+swapping the lower-hypertrophy and upper-specialization positions. Final sequence:
+**Chest → Shoulders/arms → Lower strength → Back → Upper specialization → Lower hypertrophy**.
+The two leg sessions have two intervening workouts. This does not guarantee that spacing
+for upper-body muscles: upper specialization overlaps back, chest, shoulders and arms.
+A further shoulders/upper swap was discussed but not applied because it places chest and
+upper specialization adjacent.
+
+- Replaced coverage-scored scheduling with the fixed cyclic successor. Existing saved
+  current keys and draft plans remain in place; elapsed days never select a new session.
+- An empty Finish action cannot advance. Every partial Finish requires confirmation;
+  cancelling leaves the workout in place. Fully marked sets wait for Finish too.
+- Journal recovery only advances finished sessions, not archived ones, and derives the
+  successor from the finished session key so stale snapshots cannot double-advance.
+- Upper specialization replaces its extra overhead-press slot with chest isolation
+  (existing band fly / dumbbell fly / wide push-up options). Full 60-minute baseline
+  sessions provide six direct chest sets; shorter/adapted sessions remain budgeted.
+  Saved in-progress plans are retained. All 85 canonical media IDs remain unchanged.
+- Validation: 347/347 tests; web and Android web packaging succeed; media audit has
+  85 exact canonical illustrations and zero broken references. New regressions cover
+  fixed sequence, elapsed time/reload, explicit completion, archive/finish recovery,
+  duplicate completion prevention and chest coverage.
+- Keep this branch preview-only under the existing physical-phone validation requirement.

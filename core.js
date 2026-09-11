@@ -6,7 +6,8 @@ const STORAGE_KEY='ironSixMultiV5';
 const BACKUP_STORAGE_KEY=STORAGE_KEY+'_recovery';
 const PRIOR_STORAGE_KEYS=['ironSixMultiV4','ironSixMultiV3'];
 const LEGACY_KEY='ironSixState';
-const ROTATION=['lower_strength','shoulders_arms','chest','back','lower_hypertrophy','upper_specialization'];
+// A session sequence, never a calendar schedule. Preserve existing users' current key.
+const ROTATION=['chest','shoulders_arms','lower_strength','back','upper_specialization','lower_hypertrophy'];
 const WORKOUT_META={
   lower_strength:{name:'Lower strength + core',short:'Lower strength',muscles:['quads','glutes','hamstrings','core']},
   shoulders_arms:{name:'Shoulders + arms',short:'Shoulders + arms',muscles:['shoulders','biceps','triceps']},
