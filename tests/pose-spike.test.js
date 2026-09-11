@@ -91,3 +91,5 @@ test('person-detector ambiguity vetoes a pose even when the pose tracker would a
     assert.equal(inputs.at(-1),0);assert.match(a.w.document.getElementById('poseStatus').textContent,/Two people/);assert.equal(a.w.IronSixPoseSpike.diagnostics().measurementValid,false);
   }finally{a.close()}
 });
+
+ test('camera startup failure never claims that form watch is active',async()=>{const a=app(true);try{await openSquat(a);assert.match(a.w.document.getElementById('poseFormCue').textContent,/unavailable/);assert.match(a.w.document.getElementById('poseLock').textContent,/Camera unavailable/);assert.equal(a.w.document.getElementById('poseUse').disabled,true)}finally{a.close()}});

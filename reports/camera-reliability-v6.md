@@ -19,7 +19,7 @@ This change is based on current `main` (8abdf45) plus the existing `feature/pose
 ## Verification
 
 - Baseline: 277 tests passed after incorporating the existing feature branch.
-- Updated suite: 295 tests passed, including 18 added behavioral regressions.
+- Updated suite: 296 tests passed, including 19 added behavioral regressions.
 - Added cases cover 10/15/30/60 fps, frozen video, silent timestamp gaps, duplicate timestamps, mixed-rate visibility, limb interrupts, expired locks, person-box disagreement, persisted ambiguity, wrist jitter, incomplete form evidence and frontal views.
 - DOM integration tests drive the actual camera animation loop with deterministic camera/model results, checking visible freeze/failure messages and ambiguity vetoes.
 - Android web packaging succeeds with all camera helpers. No APK build or physical Android camera test was performed.
@@ -35,3 +35,7 @@ The current MediaPipe inference remains synchronous on the main thread. Google d
 ## Trainer validation before broad release
 
 Use independently hand-counted sets, and label form cues before viewing the app's output. Include side-view bodyweight and loaded squats, good and dim lighting, portrait/landscape capture, cropped ankles, racks/occlusion, deliberate partials, varied tempo, close bystanders and crossings, and low-end Android/iOS devices. Compare exact-set count agreement, extra/missed reps, false cues per set, subject-switch events, unusable-time percentage and inference latency. Report failure cases separately rather than averaging them away. Do not label this a reliable form assessor for a movement until it has passed that footage review.
+
+## Deployed browser check
+
+The Vercel preview of commit 37629c8 loaded successfully. Browser verification opened a guest workout and its Barbell Back Squat camera assistant; controls and the camera modal rendered. This remote browser has no camera device, so actual inference could not be verified. Its no-device state exposed one remaining UI issue (form watch still said active), fixed in the follow-up along with clearer camera errors and a regression. No workout was logged. Local standalone browser installation was unavailable; deployed UI checks used the connected browser.
