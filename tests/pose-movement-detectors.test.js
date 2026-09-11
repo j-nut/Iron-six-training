@@ -33,7 +33,7 @@ test('exercise overrides adjust a family instead of adding an algorithm',()=>{
   assert.equal(detectors.ruleFor({name:'Barbell Overhead Press'}).detector,'vertical_press_phase');
   assert.equal(detectors.ruleFor({name:'Dumbbell Shoulder Press'}).detector,'vertical_press_phase');
   const pike=detectors.ruleFor({name:'Pike Push-Up'});assert.equal(pike.detectorFamily,'vertical_press');assert.equal(pike.detector,'angle');assert(pike.top>pike.bottom);
-  const landmine=detectors.ruleFor({name:'Landmine Press'});assert.equal(landmine.press.lockHeight,0.45);assert.equal(landmine.press.rackMax,detectors.PRESS.rackMax);
+  const landmine=detectors.ruleFor({name:'Landmine Press'});assert.equal(landmine.press.lockHeight,0.45);assert.equal(landmine.press.rackMax,0.3);assert.equal(landmine.press.lockElbow,detectors.PRESS.lockElbow,'untouched thresholds keep family defaults');
   assert.equal(detectors.familyFor({name:'Machine Chest Press',pattern:'chest_press'}),'horizontal_press');
 });
 
@@ -113,6 +113,17 @@ test('squat counting is unchanged by the session pipeline (frame-by-frame parity
     assert.equal(b.phase,a.phase);assert.equal(b.reps,a.reps);t+=33;
   }
   assert.equal(s.state().reps,4);
+});
+
+test('a face-on squat is only advised, never blocked, and counts exactly as the raw counter does',()=>{
+  const rule=detectors.ruleFor({name:'Barbell Back Squat'}),raw=pose.createCounter(rule),s=detectors.createSession(rule);let t=0,last;
+  const front=theta=>{const lm=squatPose(theta);lm[11]={...lm[11],x:lm[11].x+.1};lm[12]={...lm[12],x:lm[12].x-.1};lm[23]={...lm[23],x:lm[23].x+.07};lm[24]={...lm[24],x:lm[24].x-.07};return lm};
+  for(let r=0;r<3;r++)for(let i=0;i<72;i++){
+    const theta=i<10||i>60?175:175-95*Math.sin(Math.PI*(i-10)/50),lm=front(theta);
+    const framed=pose.framing(rule,lm,0,.32).ok,a=raw.push({landmarks:lm,t,aspect:1,side:0,subjectPresent:true,minVisibility:.32,framed});last=s.push({landmarks:lm,t,aspect:1,side:0});
+    assert.equal(last.state.phase,a.phase);assert.equal(last.state.reps,a.reps);t+=33;
+  }
+  assert.equal(last.view.plane,'frontal');assert.equal(last.gate.status,'degraded');assert.match(last.gate.message,/still count/);
 });
 
 test('a recorded landmark trace replays through the same pipeline to the same count',()=>{

@@ -56,12 +56,30 @@ test('presses that stop short of lockout are rejected, not counted',()=>{
 });
 
 test('a three-quarter press after real lockouts is rejected even if the arm reads nearly straight',()=>{
-  // Two full reps establish this lifter's reach; the next stops well short of it.
-  const full=pressFrames({reps:2}),s=detectors.createSession(ohp);let last=0;
+  // Three full reps establish this lifter's reach; the next stops well short of it.
+  const full=pressFrames({reps:3}),s=detectors.createSession(ohp);let last=0;
   for(const f of full){s.push({...f,aspect:A,side:0});last=f.t}
-  const short=pressFrames({reps:1,lead:[],rep:[[600,0,0],[700,0,0.8],[250,0.8,0.8],[800,0.8,0],[450,0,0]],bends:[1],seed:21});
+  const short=pressFrames({reps:1,lead:[],rep:[[600,0,0],[700,0,0.75],[250,0.75,0.75],[800,0.75,0],[450,0,0]],bends:[1],seed:21});
   for(const f of short)s.push({...f,t:f.t+last+40,aspect:A,side:0});
-  assert.equal(s.state().reps,2);assert.equal(s.state().rejected,1);
+  assert.equal(s.state().reps,3);assert.equal(s.state().rejected,1);
+});
+
+test('a few unusually high reps (shrug, leg drive) do not lock out the ordinary reps after them',()=>{
+  const high=[];for(let i=0;i<3;i++)high.push([800,0,0],[850,0,1.3],[250,1.3,1.3],[1000,1.3,0],[450,0,0]);
+  const s=count(ohp,pressFrames({reps:4,lead:[[900,0,0],...high]}));assert.equal(s.reps,7);assert.equal(s.rejected,0);
+});
+
+test('sweeping the arms from the sides straight overhead is not a rep',()=>{
+  for(const ms of [500,700,1000]){
+    const down=synth.standing(),up=synth.press(1),rand=synth.rng(ms),frames=[];
+    for(const {t,p} of synth.timeline([[800,0,0],[ms,0,1],[400,1,1],[ms,1,0],[800,0,0]],24))frames.push({t,landmarks:synth.frame(synth.mix(down,up,p),{noise:0.003,rand})});
+    assert.equal(count(ohp,frames).reps,0,`${ms} ms sweep`);
+  }
+});
+
+test('every press configuration keeps rack < leave-rack < lockout, so its lockout is reachable',()=>{
+  const names=['Barbell Overhead Press','Dumbbell Shoulder Press','Landmine Press','Half-Kneeling Landmine Press','Arnold Press'];
+  for(const name of names){const p=detectors.ruleFor({name}).press;assert(p.rackMax<p.leaveRack&&p.leaveRack<p.lockHeight&&p.lockHeight<=p.highLock&&p.lockHeight<=p.adaptCap,name)}
 });
 
 test('small bar movements near the shoulders are neither reps nor rejections',()=>{

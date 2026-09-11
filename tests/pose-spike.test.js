@@ -99,6 +99,15 @@ test('a frozen camera clears current measurement and shows a recovery instructio
   const {a,state,next}=cameraApp();
   try{await openSquat(a);next();next(800,{frozen:true});assert.match(text(a,'poseStatus'),/frames paused/);assert.match(text(a,'poseFormCue'),/paused/);assert.equal(a.w.IronSixPoseSpike.diagnostics().measurementValid,false);assert.equal(a.w.IronSixPoseSpike.diagnostics().stalls,1);assert.equal(state.stops,0,'temporary stalls keep the camera available to recover')}finally{a.close()}
 });
+test('frames resuming after a stall clear the pause; a timestamp jumping backwards is a restart, not a stall',async()=>{
+  const {a,state,next}=cameraApp();
+  try{
+    await openSquat(a);state.poses=[squatPose(175)];next();next(800,{frozen:true});assert.equal(a.w.IronSixPoseSpike.diagnostics().stalled,true);
+    next();assert.equal(a.w.IronSixPoseSpike.diagnostics().stalled,false);assert.doesNotMatch(text(a,'poseStatus'),/frames paused/);
+    for(let i=0;i<4;i++)next();const before=state.detects;state.videoTime=0.05;next();next();
+    assert.equal(state.detects,before+2,'a restarted stream is analysed immediately');assert.equal(a.w.IronSixPoseSpike.diagnostics().stalled,false);
+  }finally{a.close()}
+});
 test('repeated inference failures stop the camera and expose a retry message',async()=>{
   const {a,state,next}=cameraApp();
   try{await openSquat(a);state.throwPose=true;for(let i=0;i<8;i++)next();assert.equal(state.stops,1);assert.match(text(a,'poseStatus'),/analysis failed/);assert.equal(a.w.IronSixPoseSpike.diagnostics().inferenceErrors,8);assert.equal(a.w.document.getElementById('poseVideo').srcObject,null);assert.match(text(a,'poseFormCue'),/unavailable/)}finally{a.close()}

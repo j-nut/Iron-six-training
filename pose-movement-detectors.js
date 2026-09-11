@@ -62,13 +62,17 @@
     // apply, while the elbow angle is clean from the side, exactly like a push-up.
     {family:'vertical_press',match:/pike/i,apply:{detector:'angle',top:155,bottom:95,minActiveMs:400,setup:'Place the phone side-on at floor level, far enough back to keep your whole body in frame.',preferredView:'side',views:{frontal:'degraded',oblique:'ok',sagittal:'ok'},viewAdvice:{frontal:'Face-on view. Film a pike push-up from the side so the elbow bend is visible.'}}},
     // A landmine press finishes up and forward rather than straight overhead.
-    {family:'vertical_press',match:/landmine/i,apply:{press:{lockHeight:0.45,highLock:0.8}}}
+    // Its whole rack/leave/lock ladder sits lower, or the lower lockout could never be reached.
+    {family:'vertical_press',match:/landmine/i,apply:{press:{rackMax:0.3,leaveRack:0.38,lockHeight:0.45,highLock:0.8}}}
   ];
 
   // Vertical press phase thresholds, in torso lengths (shoulder-to-hip), measured as wrist height
   // above the shoulder. Rack at the shoulders is roughly 0 to 0.5; a locked-out arm reaches about
   // 1.0. The gaps between them are hysteresis, so noise near one threshold cannot flip phases.
-  const PRESS={rackMin:-0.6,rackMax:0.55,leaveRack:0.67,lockHeight:0.75,lockElbow:145,highLock:0.95,minTravel:0.4,partialTravel:0.25};
+  // rackDwellMs/rackSteady: the start position must be held briefly and steadily before the first
+  // press arms, so sweeping the arms from the sides straight overhead (a stretch, a wave) is not a
+  // rep. adaptCap bounds the learned lockout height so one shrugged rep cannot lock out the rest.
+  const PRESS={rackMin:-0.6,rackMax:0.55,leaveRack:0.67,lockHeight:0.75,lockElbow:145,highLock:0.95,minTravel:0.4,partialTravel:0.25,rackDwellMs:250,rackSteady:0.2,adaptCap:0.9};
 
   const originalRuleFor = counter.ruleFor.bind(counter);
   function ruleFor(exercise) {
@@ -138,10 +142,10 @@
     const config={...rule,...(options||{})},cfg={...PRESS,...(config.press||{})},gate=createContinuity();
     const minActiveMs=config.minActiveMs??450,maxActiveMs=config.maxActiveMs??12000;
     let reps=[],rejected=0,dropped=0,phase='waiting',message='',samples=[],angleNow=null,measurementValid=false,signal=null;
-    let armed=false,rackLevel=null,peak=null,peakElbow=null,locked=false,repStart=0,torsoRef=null,upperArmMax=0,notice=null;
-    function clearRep(){armed=false;samples=[];rackLevel=null;peak=null;peakElbow=null;locked=false;angleNow=null;measurementValid=false}
+    let armed=false,rackLevel=null,peak=null,peakElbow=null,locked=false,repStart=0,torsoRef=null,upperArmMax=0,notice=null,rackSince=null,rackLo=null,rackHi=null;
+    function clearRep(){armed=false;samples=[];rackLevel=null;peak=null;peakElbow=null;locked=false;angleNow=null;measurementValid=false;rackSince=null}
     function rearm(text){clearRep();phase='lost';message=text}
-    function reset(){gate.reset();clearRep();reps=[];rejected=0;dropped=0;phase='waiting';message='';signal=null;repStart=0;torsoRef=null;upperArmMax=0}
+    function reset(){gate.reset();clearRep();reps=[];rejected=0;dropped=0;phase='waiting';message='';signal=null;repStart=0;torsoRef=null;upperArmMax=0;notice=null}
     function interrupt(){gate.reset();rearm('Tracking paused. Start again from your shoulders.')}
     function state(){return {rule:config.id,detector:'vertical_press_phase',reps:reps.length,phase,angle:angleNow,tracking:measurementValid,measurementValid,dropped,rejected,message,log:reps.slice(),signal}}
     function measure(landmarks,aspect,minVis){
@@ -174,8 +178,13 @@
       const h=median(samples.map(s=>s.h)),elbows=samples.map(s=>s.e).filter(Number.isFinite),e=elbows.length?median(elbows):null;
       // A rejection is explained for a moment rather than for one frame the user never sees.
       angleNow=e===null?null:Math.round(e);message=notice&&t<notice.until?notice.text:'';
-      if(h<cfg.rackMin){armed=false;rackLevel=null;peak=null;peakElbow=null;locked=false;phase='waiting';message='Bring the weight up to your shoulders to start.'}
-      else if(!armed){if(h<=cfg.rackMax){armed=true;phase='rack';rackLevel=h;repStart=t}else{phase='waiting';message='Lower to the start position at your shoulders.'}}
+      if(h<cfg.rackMin){armed=false;rackLevel=null;peak=null;peakElbow=null;locked=false;rackSince=null;phase='waiting';message='Bring the weight up to your shoulders to start.'}
+      else if(!armed){
+        if(h<=cfg.rackMax){
+          if(rackSince===null||Math.max(rackHi,h)-Math.min(rackLo,h)>cfg.rackSteady){rackSince=t;rackLo=rackHi=h}else{rackLo=Math.min(rackLo,h);rackHi=Math.max(rackHi,h)}
+          if(t-rackSince>=cfg.rackDwellMs){armed=true;phase='rack';rackLevel=rackLo;repStart=t}else{phase='waiting';message='Hold the start position at your shoulders.'}
+        }else{rackSince=null;phase='waiting';message='Lower to the start position at your shoulders.'}
+      }
       else{
         if(phase==='rack'&&h<cfg.leaveRack){rackLevel=Math.min(rackLevel,h);repStart=t}
         else{
@@ -183,7 +192,9 @@
           peak=Math.max(peak,h);if(e!==null)peakElbow=Math.max(peakElbow??e,e);
           // Once this lifter has shown real lockouts, a rep must reach most of that height too. A
           // three-quarter press can read nearly straight-armed face-on; it cannot fake the reach.
-          const shown=reps.slice(-3).map(r=>r.peakHeight).filter(Number.isFinite),lockHeight=shown.length?Math.max(cfg.lockHeight,0.85*median(shown)):cfg.lockHeight;
+          // Learned only from 3+ counted reps and capped, so one high (shrugged/driven) rep cannot
+          // raise the bar above what ordinary lockouts reach.
+          const shown=reps.slice(-5).map(r=>r.peakHeight).filter(Number.isFinite),lockHeight=shown.length>=3?Math.max(cfg.lockHeight,Math.min(cfg.adaptCap,0.85*median(shown))):cfg.lockHeight;
           const risen=h-rackLevel>=cfg.minTravel,extended=e!==null&&e>=cfg.lockElbow;
           if(risen&&((extended&&h>=lockHeight)||h>=Math.max(cfg.highLock,lockHeight))){locked=true;phase='lockout'}
           else if(h<=cfg.rackMax){
