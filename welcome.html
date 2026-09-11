@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#0b0c0f" />
 <title>Iron Six — a strength app for people short on time</title>
-<meta name="description" content="Tell it how long you have and what equipment you own. Iron Six builds the session around that and works out your weights from what you actually lifted. Free." />
+<meta name="description" content="Tell it how long you have and what equipment you own. Iron Six builds the session around that and works out your weights from what you actually lifted. $1.99 a month or $20 a year." />
 <link rel="icon" href="assets/brand/icon-32.png" sizes="32x32" />
 <link rel="apple-touch-icon" href="assets/brand/icon-180.png" />
 <meta property="og:image" content="assets/brand/logo-stacked.png" />
@@ -61,6 +61,8 @@
   .card p{margin:0;color:var(--muted);font-size:14px}
   .card .tag{display:inline-block;font-size:10.5px;font-weight:850;letter-spacing:.07em;text-transform:uppercase;
     color:var(--accent);margin-bottom:9px}
+  .card .tag em{font-style:normal;color:var(--muted);margin-left:5px}
+  .lede em{font-style:normal;color:var(--text);font-weight:800}
 
   .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:16px}
   table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px}
@@ -105,7 +107,7 @@
     <div class="cta">
       <a class="btn primary" href="./">Start training</a>
       <a class="btn ghost" href="#story">Why I built it</a>
-      <small>Free. Works in a browser and on Android. No ads.</small>
+      <small>$1.99 a month, or $20 a year. Works in a browser and on Android. No ads.</small>
     </div>
   </div>
 
@@ -123,12 +125,14 @@
         <p>So I built this. It treats a short session with limited kit as a real workout and
           programmes it properly. The name is just that: iron, six days a week.</p>
       </div>
+    </div>
   </section>
 
   <section id="why">
     <div class="wrap">
       <h2>What it does</h2>
-      <p class="lede">All of this is in the app now.</p>
+      <p class="lede">All of this is in the app now. The two marked <em>beta</em> are opt-in —
+        you turn them on yourself, and they stay off until you do.</p>
       <div class="grid">
         <div class="card">
           <span class="tag">Time</span>
@@ -156,6 +160,21 @@
           <p>Ask why a weight was suggested, swap an exercise, or get warm-up sets. It can see today's workout, your history and your equipment, so it won't suggest kit you don't have.</p>
         </div>
         <div class="card">
+          <span class="tag">Camera <em>beta</em></span>
+          <h3>It can watch the set and count it</h3>
+          <p>Point the camera at yourself and it counts your reps, picks you out if other people
+            walk through the frame, and flags things worth knowing — a rep noticeably shallower
+            than the rest, hips rising ahead of your chest, or a descent you rushed. Video never
+            leaves the phone.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Voice <em>beta</em></span>
+          <h3>Log a set without touching anything</h3>
+          <p>Say &ldquo;135 for 8, two left&rdquo; and it goes in. Also &ldquo;next exercise&rdquo;,
+            &ldquo;set is done&rdquo;, &ldquo;bodyweight&rdquo;. Useful with chalk on your hands or
+            a phone propped across the room.</p>
+        </div>
+        <div class="card">
           <span class="tag">Your data</span>
           <h3>Your data, and more than one of you</h3>
           <p>Sets are saved on your phone first, so a dead signal doesn't lose anything. You can export a full backup any time and restore it later. One account can hold more than one person's training.</p>
@@ -167,11 +186,22 @@
   <section id="price">
     <div class="wrap">
       <h2>What it costs</h2>
-      <p class="lede">Nothing at the moment. Iron Six is early, and everything in it is free while
-        it is. If there's ever a paid tier it'll be cheap, and anything you've already logged stays
-        yours and stays exportable either way.</p>
-      <div class="cta style="justify-content:flex-start;margin-top:26px">
-        <a class="btn primary" href="./">Start training — free</a>
+      <p class="lede">One price, everything included. No tiers, no add-ons, nothing held back for a
+        premium plan. Your training log stays yours and stays exportable, whatever happens.</p>
+      <div class="price">
+        <div class="card">
+          <span class="tag">Monthly</span>
+          <div class="amount">$1.99</div>
+          <p>per month, cancel whenever</p>
+        </div>
+        <div class="card hero-card">
+          <span class="tag">Yearly</span>
+          <div class="amount">$20</div>
+          <p>per year &mdash; about $1.67 a month</p>
+        </div>
+      </div>
+      <div class="cta" style="justify-content:flex-start;margin-top:26px">
+        <a class="btn primary" href="./">Start training</a>
       </div>
     </div>
   </section>
