@@ -4,7 +4,7 @@ const vm = require('node:vm');
 
 let source = fs.readFileSync('api/coach.js', 'utf8');
 source = source.replace('export default async function handler', 'async function handler');
-source += '\nthis.__coachTest = { handler, compactContext, compactConversation };';
+source += '\nthis.__coachTest = { handler, compactContext, compactConversation, cleanModelOutput, wantsAction, formattingInstruction };';
 
 function response(ok, status, body, headers = {}) {
   return { ok, status, headers: { get: name => headers[String(name).toLowerCase()] ?? null }, async json() { return body; } };
@@ -35,8 +35,8 @@ function oversizedContext() {
     process: { env: { GROQ_API_KEY: 'test-key' } }, console,
     fetch: async (_url, init) => {
       const body = JSON.parse(init.body); calls.push(body);
-      if (calls.length === 1) return response(false, 400, { error: { message: 'Failed to validate JSON' } });
-      return response(true, 200, { choices: [{ message: { content: JSON.stringify({ reply: 'Recovered with overflow model.', actions: [], videos: [], followUps: [] }) } }] });
+      if (calls.length === 1) return response(false, 400, { error: { message: 'provider failure' } });
+      return response(true, 200, { choices: [{ finish_reason: 'stop', message: { content: 'Recovered with overflow model.' } }] });
     },
   };
   vm.createContext(context); vm.runInContext(source, context, { filename: 'api/coach.js' });
@@ -50,33 +50,59 @@ function oversizedContext() {
   assert.equal(compact.today.length, 16);
   assert.equal(compact.workout.length, 8);
 
-  const req = { method: 'POST', body: { message: "Can't I hold the barbell at my waist for calf raises the same way I would with dumbbells?", context: oversizedContext() } };
-  const res = makeRes(); await api.handler(req, res);
+  const exactQuestion = "Can't I hold the barbell at my waist for calf raises the same way I would with dumbbells?";
+  const res = makeRes(); await api.handler({ method: 'POST', body: { message: exactQuestion, context: oversizedContext() } }, res);
   assert.equal(res.code, 200);
   assert.equal(res.body.reply, 'Recovered with overflow model.');
   assert.equal(res.body.model, 'groq/compound-mini');
   assert.equal(res.body.fallbackModel, true);
   assert.equal(calls.length, 2, 'a provider 400 must retry on the alternate cloud model');
   assert.equal(calls[0].model, 'openai/gpt-oss-20b');
-  assert.equal(calls[1].model, 'groq/compound-mini');
-  assert.equal('response_format' in calls[0], false, 'provider-side JSON enforcement must stay disabled');
-  assert.equal('response_format' in calls[1], false, 'backup model must also avoid provider JSON rejection');
-  assert(JSON.stringify(calls[0]).length < 24000);
+  assert.equal(calls[0].reasoning_effort, 'low');
+  assert.equal(calls[0].include_reasoning, false);
+  assert.equal(calls[0].max_completion_tokens, 800);
+  assert.equal('response_format' in calls[0], false);
+  assert.match(calls[0].messages[0].content, /plain text only/i, 'ordinary advice must not ask the model to create JSON');
+  assert.match(calls[0].messages[0].content, /exact question first/i, 'Coach must answer the user’s proposed setup instead of substituting a conventional variation');
+  assert(JSON.stringify(calls[0]).length < 25000);
 
   const rawCalls = [];
   context.fetch = async (_url, init) => {
     rawCalls.push(JSON.parse(init.body));
-    return response(true, 200, { choices: [{ message: { content: 'Yes. Holding a barbell at your waist can work for standing calf raises if you can control it securely and keep the setup stable.' } }] });
+    return response(true, 200, { choices: [{ finish_reason: 'stop', message: { content: 'Yes. Holding a barbell at your waist can work for standing calf raises if you can control it securely. It is closer to holding heavy dumbbells than to a bar-on-shoulders calf raise, although grip and bar position can become the limiting factors.' } }] });
   };
   const rawRes = makeRes();
-  await api.handler({ method: 'POST', body: { message: 'Can I hold the bar at my waist for calf raises?', context: oversizedContext() } }, rawRes);
+  await api.handler({ method: 'POST', body: { message: exactQuestion, context: oversizedContext() } }, rawRes);
   assert.equal(rawRes.code, 200);
-  assert.match(rawRes.body.reply, /barbell at your waist/i, 'plain text model output must be accepted as a valid Coach reply');
+  assert.match(rawRes.body.reply, /barbell at your waist/i);
+  assert.equal(rawRes.body.reply.startsWith('{'), false);
   assert.equal(Array.isArray(rawRes.body.actions), true);
   assert.equal(rawRes.body.actions.length, 0);
-  assert.equal('response_format' in rawCalls[0], false);
+  assert.equal(rawCalls[0].reasoning_effort, 'low');
 
-  context.fetch = async () => response(true, 200, { choices: [{ message: { content: JSON.stringify({ reply: "I'm running locally.", actions: [], videos: [], followUps: [] }) } }] });
+  const ugly = '{"reply":"You can do barbell calf raises, but it’s a bit trickier than using dumbbells. The barbell sits on your shoulders (or a squat-rack), so you need a stable base and a good grip.\n\n1. Setup – Place the barbell on a sturdy platform so you can stand on a raised';
+  const salvaged = api.cleanModelOutput(ugly);
+  assert.match(salvaged.reply, /^You can do barbell calf raises/);
+  assert.equal(salvaged.reply.includes('{"reply"'), false, 'a malformed JSON wrapper must never leak into the chat bubble');
+  assert.match(salvaged.reply, /raised$/);
+
+  let truncCalls = 0;
+  context.fetch = async (_url, init) => {
+    truncCalls++;
+    const body = JSON.parse(init.body);
+    if (truncCalls === 1) return response(true, 200, { choices: [{ finish_reason: 'length', message: { content: '{"reply":"Yes, you can hold it at your waist, but this answer got cut' } }] });
+    assert.equal(body.model, 'groq/compound-mini');
+    assert.match(body.messages[body.messages.length - 1].content, /no more than 120 words/i);
+    return response(true, 200, { choices: [{ finish_reason: 'stop', message: { content: 'Yes. You can hold the barbell at waist/thigh level for calf raises if you can keep it secure and balanced. That setup is mechanically similar to holding heavy dumbbells at your sides, but your grip and the bar contacting your thighs may limit how much load you can use.' } }] });
+  };
+  const truncRes = makeRes();
+  await api.handler({ method: 'POST', body: { message: exactQuestion, context: oversizedContext() } }, truncRes);
+  assert.equal(truncCalls, 2, 'a length-cut response must get one automatic completion retry');
+  assert.match(truncRes.body.reply, /waist\/thigh level/i);
+  assert.equal(truncRes.body.truncated, false);
+  assert.equal(truncRes.body.fallbackModel, true);
+
+  context.fetch = async () => response(true, 200, { choices: [{ finish_reason: 'stop', message: { content: "I'm running locally." } }] });
   const statusRes = makeRes();
   await api.handler({ method: 'POST', body: { message: 'Is the cloud model working?', context: oversizedContext() } }, statusRes);
   assert.equal(statusRes.code, 200);
@@ -93,5 +119,5 @@ function oversizedContext() {
   assert.match(secondRes.body.reply, /temporarily rate-limited/i);
   assert.equal(rateCalls, 2);
 
-  console.log('Coach unconstrained output, provider recovery, plain-text fallback, status truthfulness, and 429 recovery verified.');
+  console.log('Coach direct-answer format, low-reasoning budget, malformed-wrapper recovery, truncation retry, provider recovery, and 429 recovery verified.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
