@@ -116,6 +116,11 @@ excluded — how bad "badly" is, is part of what the spike measures.
   `INTERNET`. Not added yet, since the spike is web-only.
 - **Battery and heat.** The camera and inference run only while the sheet is open, and stop on
   close, tab-hide and page-hide. Do not leave it open between sets.
+- **Squats can be counted without ankles in frame.** The normal measurement is the hip-knee-ankle
+  angle, so if your room is too shallow to fit ankles in shot, the app switches after ~2 seconds to
+  measuring thigh angle from vertical, which needs only hip and knee, and says so on screen. That
+  mode is lean-independent and still rejects quarter squats, but it cannot see your shin, so depth
+  is approximate and **form watch is off** while it is active. Mid-shin to head is enough room.
 - **Counting pauses when framing is bad**, and needs about half a second of good framing
   before it resumes — so the rep in progress when you step back into shot will not be counted.
 - **A single 2D camera cannot see what a coach sees.** Depth is inferred from a projected

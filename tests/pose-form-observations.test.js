@@ -144,3 +144,39 @@ test('landmark jitter alone does not manufacture a torso cue',()=>{
   }
   assert(flagged<=1,`an upright lifter should not be told their torso moved; flagged ${flagged}/12 reps`);
 });
+
+test('a camera that cannot see ankles still counts squats, and rejects partials',()=>{
+  // Mid-shin-to-head is a normal amount of room. The primary rule measures hip-knee-ankle, so
+  // without ankles it counts nothing; the fallback measures thigh angle from vertical instead.
+  const {counter:api}=load();
+  const squat=api.RULES.find(r=>r.id==='squat');
+  const fallback=api.degradedRule(squat);
+  assert(!fallback.framing.includes(api.POINTS.LANKLE),'the fallback must not require ankles');
+
+  // Torso lean must not move the measurement; that is why the shoulder is not in the chain.
+  const read=(knee,lean)=>api.jointAngle(fallback,squatPose(knee,lean),1,0,0.42);
+  for(const knee of [175,120,90,70])
+    assert(Math.abs(read(knee,10)-read(knee,45))<1,`lean changed the reading at knee ${knee}`);
+  // A hip hinge with straight legs must not register as depth.
+  assert(read(178,45)<15,'bowing at the hips is not a squat');
+
+  for(const lean of [10,25,45]){
+    const deep=api.createCounter(fallback),clock={t:0};
+    let state;
+    for(let i=0;i<4;i++)state=repWith(api,deep,fallback,clock,{bottom:80,lean});
+    assert.equal(state.reps,4,`a real squat at ${lean} degrees of lean must count`);
+
+    const partial=api.createCounter(fallback),clock2={t:0};
+    let shallow;
+    for(let i=0;i<4;i++)shallow=repWith(api,partial,fallback,clock2,{bottom:135,lean});
+    assert.equal(shallow.reps,0,`a quarter squat at ${lean} degrees of lean must not count`);
+  }
+});
+
+// Drives a counter directly with squat geometry, for rules whose angle is not the knee angle.
+function repWith(api,counter,rule,clock,{bottom=70,lean=8,half=30}={}){
+  const angles=[...Array(6).fill(175),...ramp(175,bottom,half),...ramp(bottom,175,half),...Array(6).fill(175)];
+  let state=null;
+  for(const a of angles){state=counter.push({landmarks:squatPose(a,lean),t:clock.t,aspect:1,framed:true,side:0});clock.t+=33}
+  return state;
+}

@@ -22,7 +22,7 @@
 
   let sheet=null,video=null,canvas=null,landmarker=null,personDetector=null,stream=null,counter=null,rule=null,target=null,exercise=null,raf=0,wake=null;
   let framesSeen=0,framesTracked=0,startedAt=0,fps=0,lastFrameAt=0,lastVideoTime=-1,loading=false,detectorFrames=0,roiFrames=0,lastPersonDetectAt=-Infinity;
-  let tracker=null,tracking=null,personTracker=null,personState=null,roiCanvas=null,formEvaluator=null,formState=null,sessionId=0,lastRoi=null;
+  let tracker=null,tracking=null,personTracker=null,personState=null,roiCanvas=null,formEvaluator=null,formState=null,sessionId=0,lastRoi=null,ankleGap=0;
   let voiceEnabled=false,voiceRun=0,voiceRecognizer=null,voiceMode=null,lastTranscript='',voiceFailures=0;
   let repsConfirmed=new Set();
   const el=id=>document.getElementById(id),setText=(id,value)=>{const node=el(id);if(node)node.textContent=value},sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -62,6 +62,23 @@
   }
   function runPose(now,roi){const source=cropSource(roi);let poses=[];try{poses=landmarker.detectForVideo(source,now)?.landmarks||[]}catch(_){}if(roi&&source!==video&&isolationApi)poses=isolationApi.remapLandmarks(poses,roi);return poses}
 
+  // Not every room has the depth to fit ankles in shot. Rather than silently refusing to count,
+  // fall back to a measurement that does not need them — but only when the ankles are genuinely the
+  // one thing missing, only before any rep has been counted, and never silently.
+  function maybeDegrade(framed){
+    if(!rule||rule.degraded||!rule.fallback||!counter||counter.state().reps)return;
+    const onlyAnkles=!framed.ok&&Array.isArray(framed.missing)&&framed.missing.length===1&&framed.missing[0]==='ankles';
+    if(!onlyAnkles){if(framed.ok)ankleGap=0;return}
+    if(++ankleGap<60)return; // ~2 seconds of the ankles being the only problem
+    const degraded=counterApi.degradedRule(rule);
+    if(!degraded)return;
+    rule=degraded;counter=counterApi.createCounter(rule);
+    formEvaluator=null;formState=null;paintForm(null);
+    ankleGap=0;
+    setText('poseSetup',rule.note||rule.setup);
+    if(typeof toast==='function')toast('Ankles out of frame — counting from hips and knees instead.');
+  }
+
   function tick(){
     raf=requestAnimationFrame(tick);if(!landmarker||!video||video.readyState<2||!video.videoWidth)return;if(video.currentTime===lastVideoTime)return;lastVideoTime=video.currentTime;const now=performance.now();if(lastFrameAt)fps=fps?fps*0.9+(1000/Math.max(1,now-lastFrameAt))*0.1:1000/Math.max(1,now-lastFrameAt);lastFrameAt=now;
     updatePersonDetection(now);if(personTracker)personState=personTracker.sample(now);const roi=stableRoi(personState?.locked&&!personState.needsRelock?personState.roi:null),poses=runPose(now,roi);if(personTracker&&personState?.locked&&poses.length)personState=personTracker.observePose(poses[0],now);
@@ -73,7 +90,7 @@
     // Framing is decided before the frame is counted, not after it is displayed: a lifter half out
     // of shot produces joint angles that look entirely plausible and are wrong. Side-aware, so a
     // locked working side is judged on the joints that side actually needs.
-    const framed=landmarks?counterApi.framing(rule,landmarks,tracking.side,0.42):{ok:false,missing:[],message:'No one in frame yet.'};
+    const framed=landmarks?counterApi.framing(rule,landmarks,tracking.side,0.42):{ok:false,missing:[],message:'No one in frame yet.'};maybeDegrade(framed);
     const state=counter.push({landmarks,t:now,aspect,side:tracking.side,subjectPresent,minVisibility:0.42,framed:framed.ok});if(formEvaluator)formState=formEvaluator.push({landmarks,side:tracking.side,t:now,aspect,counterState:state});const frame={ok:!!landmarks&&framed.ok,message:tracking.message||personState?.message||(framed.ok?'':framed.message)};setText('poseLock',subjectPresent&&!landmarks?'User isolated · pose reacquiring…':(tracking.message||personState?.message));draw(landmarks,state);paint(state,frame);paintForm(formState);
   }
   function paint(state,frame){setText('poseReps',String(state.reps));const use=el('poseUse');if(use){use.disabled=!state.reps;use.textContent=state.reps?('Use '+state.reps+' reps only'):'Use count only'}const status=!frame.ok?(frame.message||'Pose reacquiring…'):(state.message||{waiting:'Stand at the top to start.',top:'Ready.',descending:'Down…',bottom:'Bottom.',ascending:'Up…',lost:'Lost you.'}[state.phase]||'Tracking.');setText('poseStatus',status);const tracked=framesSeen?Math.round(framesTracked/framesSeen*100):0,durations=state.log.map(r=>r.ms),average=durations.length?Math.round(durations.reduce((a,b)=>a+b,0)/durations.length):0;setText('poseReadout',[video?.videoWidth&&video?.videoHeight?`${video.videoWidth}×${video.videoHeight}`:'no video size',`${Math.round(fps)} fps`,`${tracked}% pose`,personState?.locked?'person locked':'person search',roiFrames?`${Math.round(roiFrames/Math.max(1,framesSeen)*100)}% ROI`:'full frame',state.angle===null?'no angle':`${state.angle}°`,state.rejected?`${state.rejected} rejected`:'0 rejected',average?`avg rep ${(average/1000).toFixed(1)}s`:'—'].join(' · '))}
@@ -115,7 +132,7 @@
 
   async function open(card,item){if(loading)return;rule=counterApi.ruleFor(item);if(!rule)return;stop();build();target=card;exercise=item;counter=counterApi.createCounter(rule);tracker=counterApi.createTracker(rule);personTracker=isolationApi?.createPersonTracker?.()||null;tracking=null;personState=null;// Reps already saved before this session are the user's own work, so they seed as confirmed.
     repsConfirmed=new Set();{const ei=Number(card?.dataset.exerciseIndex),today=typeof activeUser==='function'?activeUser().today||{}:{};if(Number.isFinite(ei))for(const k of Object.keys(today))if(k.startsWith(ei+'-')&&String(today[k]?.reps||'').trim())repsConfirmed.add(k)}formEvaluator=formApi?.createEvaluator?.(rule)||null;formState=formEvaluator?.state?.()||null;const id=++sessionId;framesSeen=0;framesTracked=0;detectorFrames=0;roiFrames=0;lastPersonDetectAt=-Infinity;fps=0;lastFrameAt=0;lastVideoTime=-1;startedAt=Date.now();lastTranscript='';sheet.classList.add('show');setText('poseTitle',rule.label+' · '+String(item.name||'').slice(0,40));setText('poseSetup',rule.setup);const caution=counterApi.cautionFor(item),cautionNode=el('poseCaution');if(cautionNode){cautionNode.textContent=caution||'';cautionNode.hidden=!caution}setText('poseReps','0');setText('poseReadout','');setText('poseStatus','Starting the camera…');setText('poseLock','Centre yourself and hold still to lock.');paintForm(formState);setVoiceUi('Voice is off','Enable it for hands-free load/reps/RIR and “set done” commands.');const use=el('poseUse');if(use){use.disabled=true;use.textContent='Use count only'}loading=true;try{await startCamera(id);if(id!==sessionId)return;setText('poseStatus','Loading pose + person isolation…');await loadModel();if(id!==sessionId)return;if(!personTracker&&isolationApi)personTracker=isolationApi.createPersonTracker();await keepAwake(id);if(id!==sessionId)return;setText('poseStatus','Centre yourself and hold still while Iron Six isolates you.');cancelAnimationFrame(raf);raf=requestAnimationFrame(tick)}catch(error){if(id!==sessionId)return;const message=error&&error.name==='NotAllowedError'?'Camera permission was declined. Nothing else changed.':(error&&error.message)||'Could not start the camera.';fail(message);stop()}finally{loading=false}}
-  function stop(){sessionId++;lastRoi=null;cancelAnimationFrame(raf);raf=0;stopVoice();personTracker?.reset?.();personTracker=null;personState=null;if(stream){for(const track of stream.getTracks())track.stop();stream=null}if(video)video.srcObject=null;release()}
+  function stop(){sessionId++;lastRoi=null;ankleGap=0;cancelAnimationFrame(raf);raf=0;stopVoice();personTracker?.reset?.();personTracker=null;personState=null;if(stream){for(const track of stream.getTracks())track.stop();stream=null}if(video)video.srcObject=null;release()}
   function close(){stop();if(sheet)sheet.classList.remove('show')}
   function diagnostics(){const state=counter?counter.state():null;return {version:2,assistantVersion:3,trackingVersion:5,tracking:tracker?tracker.diagnostics():null,isolation:personTracker?personTracker.diagnostics():null,personDetector:!!personDetector,detectorFrames,roiFrames,rule:rule&&rule.id,reps:state?state.reps:0,rejected:state?state.rejected:0,framesSeen,framesTracked,trackedPercent:framesSeen?Math.round(framesTracked/framesSeen*100):0,fps:Math.round(fps),seconds:startedAt?Math.round((Date.now()-startedAt)/1000):0,resolution:video&&video.videoWidth?`${video.videoWidth}x${video.videoHeight}`:null,form:formEvaluator?.summary?.()||null,voice:{enabled:voiceEnabled,mode:voiceMode,lastTranscript:lastTranscript||null},userAgent:navigator.userAgent,log:state?state.log:[]}}
   function copyDiagnostics(){const text=JSON.stringify(diagnostics(),null,2),done=()=>{if(typeof toast==='function')toast('Diagnostics copied')};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done).catch(()=>console.log(text));else console.log(text)}

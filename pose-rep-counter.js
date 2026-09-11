@@ -5,7 +5,22 @@
   const P={LSHOULDER:11,RSHOULDER:12,LELBOW:13,RELBOW:14,LWRIST:15,RWRIST:16,LHIP:23,RHIP:24,LKNEE:25,RKNEE:26,LANKLE:27,RANKLE:28};
   const PART={11:'shoulders',12:'shoulders',13:'elbows',14:'elbows',15:'wrists',16:'wrists',23:'hips',24:'hips',25:'knees',26:'knees',27:'ankles',28:'ankles'};
   const RULES=[
-    {id:'squat',label:'Squat',test:x=>/squat/i.test(x.name||'')||x.base==='squat',joint:[[P.LHIP,P.LKNEE,P.LANKLE],[P.RHIP,P.RKNEE,P.RANKLE]],framing:[P.LHIP,P.RHIP,P.LKNEE,P.RKNEE,P.LANKLE,P.RANKLE,P.LSHOULDER,P.RSHOULDER],top:160,bottom:100,minActiveMs:500,maxActiveMs:15000,setup:'Place the phone around hip height, roughly level and side-on, about 8 feet back with your full body in frame.'},
+    {id:'squat',label:'Squat',test:x=>/squat/i.test(x.name||'')||x.base==='squat',joint:[[P.LHIP,P.LKNEE,P.LANKLE],[P.RHIP,P.RKNEE,P.RANKLE]],framing:[P.LHIP,P.RHIP,P.LKNEE,P.RKNEE,P.LANKLE,P.RANKLE,P.LSHOULDER,P.RSHOULDER],top:160,bottom:100,minActiveMs:500,maxActiveMs:15000,setup:'Place the phone around hip height, roughly level and side-on, about 8 feet back with your full body in frame.',
+     // Not every room has the depth to get ankles in shot. This measures the same movement from
+     // shoulder-hip-knee, which needs only the upper two thirds of the body. It is genuinely
+     // weaker — it cannot see the shin, so it cannot judge depth as precisely — so it is used only
+     // when the ankles really are unavailable, and the UI says so while it is in use.
+     fallback:{
+       // Thigh angle from vertical, measured at the hip. A three-point shoulder-hip-knee angle was
+       // tried first and is unusable: it moves with torso lean as much as with depth, so at a 45
+       // degree lean a standing lifter already reads below the top threshold and no rep ever
+       // starts. This uses only hip and knee, so lean cannot contaminate it. The scale inverts:
+       // standing is near zero degrees, a parallel squat around ninety.
+       joint:[[P.LHIP,P.LKNEE],[P.RHIP,P.RKNEE]],
+       framing:[P.LSHOULDER,P.RSHOULDER,P.LHIP,P.RHIP,P.LKNEE,P.RKNEE],
+       top:30,bottom:75,
+       note:'Ankles are out of frame, so reps are counted from your hips and knees. Depth is approximate and form watch is off.'
+     }},
     {id:'curl',label:'Biceps curl',test:x=>/curl/i.test(x.name||'')&&!/leg|hamstring|nordic/i.test(x.name||''),joint:[[P.LSHOULDER,P.LELBOW,P.LWRIST],[P.RSHOULDER,P.RELBOW,P.RWRIST]],framing:[P.LSHOULDER,P.RSHOULDER,P.LELBOW,P.RELBOW,P.LWRIST,P.RWRIST],top:150,bottom:70,minActiveMs:400,maxActiveMs:12000,setup:'Face the phone from about 6 feet back with both arms in frame.'},
     {id:'pushup',label:'Push-up',test:x=>/push[- ]?up/i.test(x.name||''),joint:[[P.LSHOULDER,P.LELBOW,P.LWRIST],[P.RSHOULDER,P.RELBOW,P.RWRIST]],framing:[P.LSHOULDER,P.RSHOULDER,P.LELBOW,P.RELBOW,P.LWRIST,P.RWRIST],top:155,bottom:100,minActiveMs:400,maxActiveMs:12000,setup:'Lay the phone on the floor side-on, far enough back to keep your whole body in frame.'},
     {id:'press',label:'Overhead press',test:x=>/overhead press|shoulder press|military press/i.test(x.name||''),joint:[[P.LSHOULDER,P.LELBOW,P.LWRIST],[P.RSHOULDER,P.RELBOW,P.RWRIST]],framing:[P.LSHOULDER,P.RSHOULDER,P.LELBOW,P.RELBOW,P.LWRIST,P.RWRIST],top:75,bottom:160,minActiveMs:450,maxActiveMs:12000,setup:'Face the phone from about 8 feet back so your hands stay in frame overhead.'}
@@ -25,11 +40,24 @@
     {when:/bulgarian|split squat|lunge|single[- ]leg|pistol/i,note:'One leg is behind the other from most angles, so film this one square to your working side.'}
   ];
   function cautionFor(exercise){const name=String(exercise&&exercise.name||'');const hit=CAUTIONS.find(c=>c.when.test(name));return hit?hit.note:null}
+  // A reduced-information variant of a rule, for a camera that cannot see the whole body.
+  function degradedRule(rule){
+    if(!rule||!rule.fallback)return null;
+    return {...rule,...rule.fallback,id:rule.id,label:rule.label,fallback:null,degraded:true};
+  }
+
   function ruleFor(exercise){const x=exercise||{};return RULES.find(r=>{try{return r.test(x)}catch(_){return false}})||null}
   function angle(a,b,c,aspect){if(!a||!b||!c)return null;const scale=Number(aspect)||1,ax=(a.x-b.x)*scale,ay=a.y-b.y,cx=(c.x-b.x)*scale,cy=c.y-b.y,mag=Math.hypot(ax,ay)*Math.hypot(cx,cy);if(!mag)return null;return Math.acos(Math.max(-1,Math.min(1,(ax*cx+ay*cy)/mag)))*180/Math.PI}
   function seen(point,threshold=MIN_VISIBILITY){if(!point||!Number.isFinite(point.x)||!Number.isFinite(point.y))return false;const v=point.visibility===undefined?1:Number(point.visibility),p=point.presence===undefined?1:Number(point.presence);return (Number.isFinite(v)?v:0)>=threshold&&(Number.isFinite(p)?p:0)>=threshold}
   function jointAngle(rule,landmarks,aspect,side=null,minVisibility=MIN_VISIBILITY){
-    if(!landmarks)return null;const chains=side===0||side===1?[rule.joint[side]]:rule.joint,values=chains.map(([a,b,c])=>seen(landmarks[a],minVisibility)&&seen(landmarks[b],minVisibility)&&seen(landmarks[c],minVisibility)?angle(landmarks[a],landmarks[b],landmarks[c],aspect):null).filter(v=>v!==null);if(!values.length)return null;return values.reduce((n,v)=>n+v,0)/values.length;
+    if(!landmarks)return null;const chains=side===0||side===1?[rule.joint[side]]:rule.joint,values=chains.map(chain=>{
+      if(!chain.every(i=>seen(landmarks[i],minVisibility)))return null;
+      // A two-point chain measures that limb's angle from vertical, at its first point, against a
+      // virtual point directly below it. Nothing above that point is involved, so torso lean
+      // cannot contaminate it the way it contaminates a three-point hip angle.
+      if(chain.length===2){const pivot=landmarks[chain[0]];return angle(landmarks[chain[1]],pivot,{x:pivot.x,y:pivot.y+0.2},aspect)}
+      return angle(landmarks[chain[0]],landmarks[chain[1]],landmarks[chain[2]],aspect);
+    }).filter(v=>v!==null);if(!values.length)return null;return values.reduce((n,v)=>n+v,0)/values.length;
   }
   function framing(rule,landmarks,side=null,minVisibility=MIN_VISIBILITY){
     if(!landmarks||!landmarks.length)return {ok:false,missing:[],message:'No one in frame yet.'};
@@ -98,6 +126,6 @@
     }
     return {push,reset,interrupt,state,rule:config,inverted};
   }
-  const api={POINTS:P,PART,RULES,CAUTIONS,MIN_VISIBILITY,SMOOTHING,LOST_FRAMES,LOCKED_LOST_FRAMES,ruleFor,cautionFor,angle,jointAngle,framing,createCounter,createTracker};
+  const api={POINTS:P,PART,RULES,CAUTIONS,MIN_VISIBILITY,SMOOTHING,LOST_FRAMES,LOCKED_LOST_FRAMES,ruleFor,cautionFor,degradedRule,angle,jointAngle,framing,createCounter,createTracker};
   if(typeof window!=='undefined')window.IronSixRepCounter=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })();
