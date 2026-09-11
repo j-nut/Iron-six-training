@@ -148,3 +148,25 @@ test('the person box does not jump to a body it does not overlap at all',()=>{
   assert(Math.abs(tracker.diagnostics().box.x-before)<0.1,'the lock must not teleport onto a non-overlapping body');
   assert.equal(r.visible,false,'and it must not report that as seeing the user');
 });
+
+test('a spurious second detection off to the side does not block the lock',()=>{
+  // The pose model is asked for up to three poses, and requiring EXACTLY one viable candidate meant
+  // any flickering extra body refused the lock outright — which reads as "it only locks when I do a
+  // perfect rep".
+  const {form,squat}=load();
+  const tracker=form.createSubjectTracker(squat);
+  const lifter=person({cx:0.50}),ghost=person({cx:0.82,scale:0.13});
+  let t=0,r=null;
+  for(let i=0;i<24;i++){r=tracker.push([lifter,ghost],t,1,{subjectPresent:true});t+=33}
+  assert.equal(r.locked,true,`a clearly central lifter must lock; got "${r.message}"`);
+  assert(Math.abs(hipX(r.landmarks)-0.50)<0.03,'and it must lock onto the central one, not the ghost');
+});
+
+test('two equally central people still refuse to lock',()=>{
+  const {form,squat}=load();
+  const tracker=form.createSubjectTracker(squat);
+  let t=0,r=null;
+  for(let i=0;i<24;i++){r=tracker.push([person({cx:0.44}),person({cx:0.56})],t,1,{subjectPresent:true});t+=33}
+  assert.equal(r.locked,false,'genuine ambiguity must not be resolved by guessing');
+  assert.match(r.message,/central|centre/i);
+});

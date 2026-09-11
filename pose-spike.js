@@ -22,7 +22,7 @@
 
   let sheet=null,video=null,canvas=null,landmarker=null,personDetector=null,stream=null,counter=null,rule=null,target=null,exercise=null,raf=0,wake=null;
   let framesSeen=0,framesTracked=0,startedAt=0,fps=0,lastFrameAt=0,lastVideoTime=-1,loading=false,detectorFrames=0,roiFrames=0,lastPersonDetectAt=-Infinity;
-  let tracker=null,tracking=null,personTracker=null,personState=null,roiCanvas=null,formEvaluator=null,formState=null,sessionId=0;
+  let tracker=null,tracking=null,personTracker=null,personState=null,roiCanvas=null,formEvaluator=null,formState=null,sessionId=0,lastRoi=null;
   let voiceEnabled=false,voiceRun=0,voiceRecognizer=null,voiceMode=null,lastTranscript='',voiceFailures=0;
   let repsConfirmed=new Set();
   const el=id=>document.getElementById(id),setText=(id,value)=>{const node=el(id);if(node)node.textContent=value},sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -50,19 +50,29 @@
   function release(){if(wake){wake.release().catch(()=>{});wake=null}}
   function cropSource(roi){if(!roi||!video?.videoWidth||!video?.videoHeight)return video;if(!roiCanvas)roiCanvas=document.createElement('canvas');const sw=Math.max(2,roi.w*video.videoWidth),sh=Math.max(2,roi.h*video.videoHeight),scale=Math.min(1,560/Math.max(sw,sh));roiCanvas.width=Math.max(96,Math.round(sw*scale));roiCanvas.height=Math.max(96,Math.round(sh*scale));const ctx=roiCanvas.getContext('2d',{alpha:false});if(!ctx)return video;ctx.drawImage(video,roi.x*video.videoWidth,roi.y*video.videoHeight,sw,sh,0,0,roiCanvas.width,roiCanvas.height);roiFrames++;return roiCanvas}
   function updatePersonDetection(now){if(!personDetector||!personTracker||now-lastPersonDetectAt<PERSON_DETECT_MS)return;lastPersonDetectAt=now;try{const result=personDetector.detectForVideo(video,now),boxes=isolationApi.normalizeDetections(result,video.videoWidth,video.videoHeight);personState=personTracker.push(boxes,now);detectorFrames++}catch(_){}}
+  // Pose runs inside the locked person's ROI and the landmarks are then remapped back to frame
+  // coordinates, so any movement of the ROI is ADDED to the landmarks' own jitter. The ROI came
+  // from a velocity-extrapolated box recomputed every frame, which made the whole skeleton shimmer.
+  // It is padded well beyond the body, so holding it still until the subject actually drifts costs
+  // nothing and removes that entire shake component.
+  function stableRoi(next){
+    if(!next){lastRoi=null;return null}
+    if(lastRoi&&Math.abs(next.cx-lastRoi.cx)<0.03&&Math.abs(next.cy-lastRoi.cy)<0.03&&Math.abs(next.w-lastRoi.w)<0.04&&Math.abs(next.h-lastRoi.h)<0.04)return lastRoi;
+    lastRoi=next;return next;
+  }
   function runPose(now,roi){const source=cropSource(roi);let poses=[];try{poses=landmarker.detectForVideo(source,now)?.landmarks||[]}catch(_){}if(roi&&source!==video&&isolationApi)poses=isolationApi.remapLandmarks(poses,roi);return poses}
 
   function tick(){
     raf=requestAnimationFrame(tick);if(!landmarker||!video||video.readyState<2||!video.videoWidth)return;if(video.currentTime===lastVideoTime)return;lastVideoTime=video.currentTime;const now=performance.now();if(lastFrameAt)fps=fps?fps*0.9+(1000/Math.max(1,now-lastFrameAt))*0.1:1000/Math.max(1,now-lastFrameAt);lastFrameAt=now;
-    updatePersonDetection(now);if(personTracker)personState=personTracker.sample(now);const roi=personState?.locked&&!personState.needsRelock?personState.roi:null,poses=runPose(now,roi);if(personTracker&&personState?.locked&&poses.length)personState=personTracker.observePose(poses[0],now);
+    updatePersonDetection(now);if(personTracker)personState=personTracker.sample(now);const roi=stableRoi(personState?.locked&&!personState.needsRelock?personState.roi:null),poses=runPose(now,roi);if(personTracker&&personState?.locked&&poses.length)personState=personTracker.observePose(poses[0],now);
     const aspect=video.videoWidth/video.videoHeight,subjectPresent=!!personState?.locked&&!personState?.needsRelock;tracking=tracker.push(poses,now,aspect,{subjectPresent,personBox:personState?.box||null});const landmarks=tracking.landmarks;framesSeen++;if(landmarks)framesTracked++;
     if(!landmarks&&!subjectPresent){counter.interrupt();formEvaluator?.interrupt(counter.state().log.length)}
-    // Framing is decided before the frame is counted, not after it is displayed: a lifter half
-    // out of shot produces joint angles that look entirely plausible and are wrong. Side-aware,
-    // so a locked working side is judged on the joints that side actually needs.
     // The tracked side changed limb mid-set. The counter's in-progress rep was measured on the old
     // limb, so continuing would compare two different joints; start the rep over instead.
     if(tracking.sideChanged)counter.interrupt();
+    // Framing is decided before the frame is counted, not after it is displayed: a lifter half out
+    // of shot produces joint angles that look entirely plausible and are wrong. Side-aware, so a
+    // locked working side is judged on the joints that side actually needs.
     const framed=landmarks?counterApi.framing(rule,landmarks,tracking.side,0.42):{ok:false,missing:[],message:'No one in frame yet.'};
     const state=counter.push({landmarks,t:now,aspect,side:tracking.side,subjectPresent,minVisibility:0.42,framed:framed.ok});if(formEvaluator)formState=formEvaluator.push({landmarks,side:tracking.side,t:now,aspect,counterState:state});const frame={ok:!!landmarks&&framed.ok,message:tracking.message||personState?.message||(framed.ok?'':framed.message)};setText('poseLock',subjectPresent&&!landmarks?'User isolated · pose reacquiring…':(tracking.message||personState?.message));draw(landmarks,state);paint(state,frame);paintForm(formState);
   }
@@ -105,7 +115,7 @@
 
   async function open(card,item){if(loading)return;rule=counterApi.ruleFor(item);if(!rule)return;stop();build();target=card;exercise=item;counter=counterApi.createCounter(rule);tracker=counterApi.createTracker(rule);personTracker=isolationApi?.createPersonTracker?.()||null;tracking=null;personState=null;// Reps already saved before this session are the user's own work, so they seed as confirmed.
     repsConfirmed=new Set();{const ei=Number(card?.dataset.exerciseIndex),today=typeof activeUser==='function'?activeUser().today||{}:{};if(Number.isFinite(ei))for(const k of Object.keys(today))if(k.startsWith(ei+'-')&&String(today[k]?.reps||'').trim())repsConfirmed.add(k)}formEvaluator=formApi?.createEvaluator?.(rule)||null;formState=formEvaluator?.state?.()||null;const id=++sessionId;framesSeen=0;framesTracked=0;detectorFrames=0;roiFrames=0;lastPersonDetectAt=-Infinity;fps=0;lastFrameAt=0;lastVideoTime=-1;startedAt=Date.now();lastTranscript='';sheet.classList.add('show');setText('poseTitle',rule.label+' · '+String(item.name||'').slice(0,40));setText('poseSetup',rule.setup);const caution=counterApi.cautionFor(item),cautionNode=el('poseCaution');if(cautionNode){cautionNode.textContent=caution||'';cautionNode.hidden=!caution}setText('poseReps','0');setText('poseReadout','');setText('poseStatus','Starting the camera…');setText('poseLock','Centre yourself and hold still to lock.');paintForm(formState);setVoiceUi('Voice is off','Enable it for hands-free load/reps/RIR and “set done” commands.');const use=el('poseUse');if(use){use.disabled=true;use.textContent='Use count only'}loading=true;try{await startCamera(id);if(id!==sessionId)return;setText('poseStatus','Loading pose + person isolation…');await loadModel();if(id!==sessionId)return;if(!personTracker&&isolationApi)personTracker=isolationApi.createPersonTracker();await keepAwake(id);if(id!==sessionId)return;setText('poseStatus','Centre yourself and hold still while Iron Six isolates you.');cancelAnimationFrame(raf);raf=requestAnimationFrame(tick)}catch(error){if(id!==sessionId)return;const message=error&&error.name==='NotAllowedError'?'Camera permission was declined. Nothing else changed.':(error&&error.message)||'Could not start the camera.';fail(message);stop()}finally{loading=false}}
-  function stop(){sessionId++;cancelAnimationFrame(raf);raf=0;stopVoice();personTracker?.reset?.();personTracker=null;personState=null;if(stream){for(const track of stream.getTracks())track.stop();stream=null}if(video)video.srcObject=null;release()}
+  function stop(){sessionId++;lastRoi=null;cancelAnimationFrame(raf);raf=0;stopVoice();personTracker?.reset?.();personTracker=null;personState=null;if(stream){for(const track of stream.getTracks())track.stop();stream=null}if(video)video.srcObject=null;release()}
   function close(){stop();if(sheet)sheet.classList.remove('show')}
   function diagnostics(){const state=counter?counter.state():null;return {version:2,assistantVersion:3,trackingVersion:5,tracking:tracker?tracker.diagnostics():null,isolation:personTracker?personTracker.diagnostics():null,personDetector:!!personDetector,detectorFrames,roiFrames,rule:rule&&rule.id,reps:state?state.reps:0,rejected:state?state.rejected:0,framesSeen,framesTracked,trackedPercent:framesSeen?Math.round(framesTracked/framesSeen*100):0,fps:Math.round(fps),seconds:startedAt?Math.round((Date.now()-startedAt)/1000):0,resolution:video&&video.videoWidth?`${video.videoWidth}x${video.videoHeight}`:null,form:formEvaluator?.summary?.()||null,voice:{enabled:voiceEnabled,mode:voiceMode,lastTranscript:lastTranscript||null},userAgent:navigator.userAgent,log:state?state.log:[]}}
   function copyDiagnostics(){const text=JSON.stringify(diagnostics(),null,2),done=()=>{if(typeof toast==='function')toast('Diagnostics copied')};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done).catch(()=>console.log(text));else console.log(text)}
