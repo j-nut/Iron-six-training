@@ -28,13 +28,17 @@
   // 0.60 was too strict for true side profiles: the near-side knee/ankle regularly dipped below it
   // even while MediaPipe and the identity tracker still had a coherent person. Rep geometry remains
   // stricter than identity maintenance, but now matches the form-analysis confidence floor.
-  // LOST_FRAMES/LOCKED_LOST_FRAMES catch a clean dropout. Real occlusion is not clean — it
+  // LOST_MS/LOCKED_LOST_MS catch a clean dropout. Real occlusion is not clean — it
   // flickers, so a consecutive-null counter alone never fires and the machine bridges a gap it
-  // was blind through. QUALITY_WINDOW/MIN_QUALITY judge the recent past as a whole instead.
+  // was blind through. QUALITY_WINDOW_MS/MIN_QUALITY judge the recent past as a whole instead.
   // The window is deliberately longer than the longest permitted contiguous dropout
-  // (LOCKED_LOST_FRAMES), so a gap the identity lock is entitled to ride out cannot trip it,
+  // (LOCKED_LOST_MS), so a gap the identity lock is entitled to ride out cannot trip it,
   // while a sustained flickering blindness — which no single-gap counter ever notices — does.
-  const MIN_VISIBILITY=0.42,SMOOTHING=5,LOST_FRAMES=20,LOCKED_LOST_FRAMES=42,QUALITY_WINDOW=120,MIN_QUALITY=0.5,EDGE=0.02;
+  // These bound TIME, so they are expressed in milliseconds. As frame counts their meaning drifted
+  // with the device: a phone delivering 18fps in dim light silently got 2.3s of occlusion tolerance
+  // where a 30fps phone got 1.4s, and the quality window stretched from 4s to 6.7s.
+  // SMOOTHING stays a frame count because it is a signal filter, not a deadline.
+  const MIN_VISIBILITY=0.42,SMOOTHING=5,LOST_MS=650,LOCKED_LOST_MS=1400,QUALITY_WINDOW_MS=4000,MIN_QUALITY=0.5,EDGE=0.02;
   const CAUTIONS=[
     {when:/back squat|front squat|barbell squat/i,note:'A loaded bar and the rack can hide your hips from a single camera. A level side view around hip height usually tracks best.'},
     {when:/bulgarian|split squat|lunge|single[- ]leg|pistol/i,note:'One leg is behind the other from most angles, so film this one square to your working side.'}
@@ -87,13 +91,13 @@
   }
 
   function createCounter(rule,options){
-    const config={...rule,...(options||{})},inverted=config.top<config.bottom,atTop=v=>inverted?v<=config.top:v>=config.top,atBottom=v=>inverted?v>=config.bottom:v<=config.bottom;let samples=[],reps=[],armed=false,bottomed=false,repStart=0,extreme=null,lost=0,dropped=0,rejected=0,phase='waiting',angleNow=null,message='',recent=[];
-    function reset(){samples=[];reps=[];armed=false;bottomed=false;repStart=0;extreme=null;lost=0;dropped=0;rejected=0;phase='waiting';angleNow=null;message='';recent=[]}
-    function interrupt(){samples=[];armed=false;bottomed=false;repStart=0;extreme=null;lost=0;recent=[];phase='lost';angleNow=null;message='Tracking paused. Start again from the top.'}
+    const config={...rule,...(options||{})},inverted=config.top<config.bottom,atTop=v=>inverted?v<=config.top:v>=config.top,atBottom=v=>inverted?v>=config.bottom:v<=config.bottom;let samples=[],reps=[],armed=false,bottomed=false,repStart=0,extreme=null,lostSince=null,firstAt=null,dropped=0,rejected=0,phase='waiting',angleNow=null,message='',recent=[];
+    function reset(){samples=[];reps=[];armed=false;bottomed=false;repStart=0;extreme=null;lostSince=null;firstAt=null;dropped=0;rejected=0;phase='waiting';angleNow=null;message='';recent=[]}
+    function interrupt(){samples=[];armed=false;bottomed=false;repStart=0;extreme=null;lostSince=null;recent=[];firstAt=null;phase='lost';angleNow=null;message='Tracking paused. Start again from the top.'}
     // True once the recent past is more blind than seeing. Judged only on a full window, so a
     // set never starts out "low quality". Independent of the identity lock: a locked person the
     // counter cannot actually see is still a person whose reps it must not invent.
-    function qualityLow(){return recent.length>=QUALITY_WINDOW&&recent.reduce((a,b)=>a+b,0)/recent.length<MIN_QUALITY}
+    function qualityLow(t){return firstAt!==null&&t-firstAt>=QUALITY_WINDOW_MS&&recent.length>=10&&recent.reduce((n,x)=>n+x.ok,0)/recent.length<MIN_QUALITY}
     function rearm(text){armed=false;bottomed=false;samples=[];phase='lost';message=text}
     function state(){return {rule:config.id,reps:reps.length,phase,angle:angleNow,tracking:phase!=='lost',dropped,rejected,message,log:reps.slice()}}
     function push(frame){
@@ -101,19 +105,20 @@
       // `framed` lets the caller veto a frame the lifter is only half inside. Without it the
       // angle still computes and still looks plausible, which is worse than not counting.
       const usable=raw!==null&&frame?.framed!==false;
-      recent.push(usable?1:0);if(recent.length>QUALITY_WINDOW)recent.shift();
-      if(!usable||qualityLow()){
-        if(!usable){dropped++;lost++}
+      if(firstAt===null)firstAt=t;
+      recent.push({t,ok:usable?1:0});while(recent.length&&t-recent[0].t>QUALITY_WINDOW_MS)recent.shift();
+      if(!usable||qualityLow(t)){
+        if(!usable){dropped++;if(lostSince===null)lostSince=t}
         // A brief occlusion mid-rep is survivable, and the identity lock buys more patience for
         // it. A sustained gap — solid or flickering — means the counter no longer knows where in
         // the movement the lifter is, so it re-arms rather than counting across what it missed.
-        const limit=subjectPresent?LOCKED_LOST_FRAMES:LOST_FRAMES;
-        if(lost>=limit)rearm('Lost the working-side joints. Return to the top position.');
-        else if(qualityLow())rearm('Too little of you in frame to count. Move back and re-aim.');
+        const limit=subjectPresent?LOCKED_LOST_MS:LOST_MS;
+        if(lostSince!==null&&t-lostSince>=limit)rearm('Lost the working-side joints. Return to the top position.');
+        else if(qualityLow(t))rearm('Too little of you in frame to count. Move back and re-aim.');
         else if(subjectPresent)message='User lock held · reacquiring the working-side pose.';
         return state();
       }
-      lost=0;samples.push(raw);if(samples.length>SMOOTHING)samples.shift();const value=median(samples);angleNow=Math.round(value);message='';
+      lostSince=null;samples.push(raw);if(samples.length>SMOOTHING)samples.shift();const value=median(samples);angleNow=Math.round(value);message='';
       if(!armed){if(atTop(value)){armed=true;repStart=t;extreme=value;phase='top'}else{phase='waiting';message='Start from the top of the movement.'}return state()}
       extreme=extreme===null?value:(inverted?Math.max(extreme,value):Math.min(extreme,value));
       if(!bottomed){if(atBottom(value)){bottomed=true;phase='bottom'}else{phase=atTop(value)?'top':'descending';if(atTop(value)){repStart=t;extreme=value}}return state()}
@@ -126,6 +131,6 @@
     }
     return {push,reset,interrupt,state,rule:config,inverted};
   }
-  const api={POINTS:P,PART,RULES,CAUTIONS,MIN_VISIBILITY,SMOOTHING,LOST_FRAMES,LOCKED_LOST_FRAMES,ruleFor,cautionFor,degradedRule,angle,jointAngle,framing,createCounter,createTracker};
+  const api={POINTS:P,PART,RULES,CAUTIONS,MIN_VISIBILITY,SMOOTHING,LOST_MS,LOCKED_LOST_MS,QUALITY_WINDOW_MS,ruleFor,cautionFor,degradedRule,angle,jointAngle,framing,createCounter,createTracker};
   if(typeof window!=='undefined')window.IronSixRepCounter=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })();
