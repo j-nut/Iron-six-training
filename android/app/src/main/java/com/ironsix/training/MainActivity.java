@@ -7,6 +7,7 @@ import android.view.WindowManager;
 public class MainActivity extends BridgeActivity {
     @Override public void onCreate(Bundle savedInstanceState) {
         registerPlugin(WorkoutBackupPlugin.class);
+        registerPlugin(VoiceCommandPlugin.class);
         super.onCreate(savedInstanceState);
     }
     @Override public void onResume() {

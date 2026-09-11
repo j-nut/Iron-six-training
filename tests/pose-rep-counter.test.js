@@ -75,7 +75,7 @@ test('a partial that never reaches the bottom does not count',()=>{
 
 test('a bounce faster than a real rep is rejected, not counted',()=>{
   const counter=pose.createCounter(squat),clock={t:0};
-  const state=feed(counter,squat,repAngles(175,85,8),clock); // a ~0.5s dip, under minRepMs
+  const state=feed(counter,squat,repAngles(175,85,8),clock); // a ~0.5s dip, under minActiveMs
   assert.equal(state.reps,0);
   assert.equal(state.rejected,1,'the rejection is recorded so the spike can report it');
 });

@@ -43,7 +43,7 @@ function validBackup(json){
   try{const value=JSON.parse(json);return !!value&&typeof value==='object'&&Array.isArray(value.entries)&&value.profiles&&typeof value.profiles==='object'&&typeof value.exportedAt==='string'}catch(_){return false}
 }
 
-export function installNative({win,App,Browser,createClient,WorkoutBackup}){
+export function installNative({win,App,Browser,createClient,WorkoutBackup,VoiceCommand=null}){
   let client=null,pendingUrl=null,notify=()=>{},lastCode=null,inFlightCode=null;
   let callbacks=Promise.resolve();
   installSafeArea(win);
@@ -85,10 +85,11 @@ export function installNative({win,App,Browser,createClient,WorkoutBackup}){
   }
   const ready=App.addListener('appUrlOpen',({url})=>{void onUrl(url)});
   App.addListener('appStateChange',({isActive})=>{
-    if(!isActive){win.IronSixCircuit?.pause('Paused while the app is in the background');win.saveData?.();client?.auth.stopAutoRefresh();}
+    if(!isActive){win.IronSixPoseSpike?.close?.();win.IronSixCircuit?.pause('Paused while the app is in the background');win.saveData?.();client?.auth.stopAutoRefresh();}
     else {client?.auth.startAutoRefresh();void win.IronSixCloud?.syncNow(false);win.dispatchEvent(new win.Event('pageshow'));}
   });
   App.addListener('backButton',()=>{
+    if(win.document.getElementById('poseSheet')?.classList.contains('show')){win.IronSixPoseSpike?.close?.();return}
     win.IronSixCircuit?.pause('Paused');
     const imageDialog=win.document.querySelector('dialog[data-exercise-image][open]');
     if(imageDialog){imageDialog.close();return}
@@ -116,6 +117,11 @@ export function installNative({win,App,Browser,createClient,WorkoutBackup}){
     exportBackup:json=>validBackup(json)?WorkoutBackup.save({json}):Promise.reject(new Error('Backup payload is empty or invalid. Your workout remains saved on this device.')),
     authOptions:{flowType:'pkce',detectSessionInUrl:false},
     async openOAuth(url){if(new URL(url).protocol!=='https:')throw Error('Invalid sign-in URL');await Browser.open({url})},
+    async listenVoice(options={}){
+      if(!VoiceCommand?.listen)throw new Error('Native voice recognition is unavailable in this build.');
+      return VoiceCommand.listen({language:String(options.language||'en-US').slice(0,32)});
+    },
+    async stopVoice(){if(VoiceCommand?.stop)await VoiceCommand.stop();},
     async connectCloud(value,message){
       client=value;notify=message;await ready;
       const launch=await App.getLaunchUrl();
