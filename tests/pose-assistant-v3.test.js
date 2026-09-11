@@ -55,7 +55,25 @@ test('pose tracking v5 isolates one person, crops pose inference and preserves v
   assert(form.includes('presenceCoasts'));
   assert(form.includes('__ironSixSubjectTrackerV5'));
   assert(counter.includes('const MIN_VISIBILITY=0.42'));
-  assert(counter.includes('LOCKED_LOST_FRAMES=42'));
+  // Behaviour, not spelling: a locked subject must ride out a longer pose dropout than an
+  // unlocked one. Asserting the constant's NAME pinned an implementation detail and broke the
+  // moment those deadlines moved from frame counts to milliseconds, which they had to.
+  {
+    const api=require('../pose-rep-counter.js'),rule=api.RULES.find(r=>r.id==='squat');
+    const gapSurvives=(ms,subjectPresent)=>{
+      const c=api.createCounter(rule),lm=[];
+      for(let i=0;i<33;i++)lm[i]={x:0.5,y:0.5,visibility:0.05};
+      for(const [i,p] of [[23,{x:.5,y:.5}],[25,{x:.5,y:.7}],[27,{x:.5,y:.9}]])lm[i]={x:p.x,y:p.y,visibility:.95,presence:.95};
+      let t=0;
+      for(let i=0;i<20;i++){c.push({landmarks:lm,t,aspect:1,framed:true,subjectPresent});t+=33}
+      for(let i=0;i*33<ms;i++){c.push({landmarks:null,t,aspect:1,framed:true,subjectPresent});t+=33}
+      return c.state().phase!=='lost';
+    };
+    assert(gapSurvives(400,false),'a brief dropout must not drop the track');
+    assert(!gapSurvives(1000,false),'an unlocked track must give up inside a second');
+    assert(gapSurvives(1000,true),'a locked subject must ride out the same gap');
+    assert(!gapSurvives(2000,true),'but not indefinitely');
+  }
 });
 
 test('Android voice bridge is permission-gated, one-shot and destroyed after use',()=>{
