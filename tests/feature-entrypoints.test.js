@@ -2,11 +2,11 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 
 const required = [
-  'exercise-guide.js?v=9','exercise-visuals.js?v=9','equipment-catalog.js?v=1','equipment-exercise-library.js?v=1','equipment-coverage.js?v=1','local-ai-fallback.js?v=7','coach.js?v=13','equipment-manager.js?v=1','social-auth.js?v=3','cloud-sync.js?v=15','cloud-history-sync.js?v=8','backup-restore.js?v=2','profile-delete.js?v=1','ui-shell.js?v=1','profile-menu.js?v=1','session-cards.js?v=1','onboarding.js?v=1'
+  'exercise-guide.js?v=9','exercise-visuals.js?v=9','equipment-catalog.js?v=1','equipment-exercise-library.js?v=1','equipment-coverage.js?v=1','local-ai-fallback.js?v=7','coach.js?v=13','equipment-manager.js?v=1','social-auth.js?v=3','cloud-sync.js?v=15','cloud-history-sync.js?v=9','backup-restore.js?v=2','profile-delete.js?v=1','ui-shell.js?v=1','profile-menu.js?v=1','session-cards.js?v=1','onboarding.js?v=1','cardio-companion.js?v=1'
 ];
 for (const page of ['index.html','live.html']) {
   const html=fs.readFileSync(page,'utf8');
-  assert(html.includes('core.js?v=17'));assert(html.includes('assets/brand/logo-horizontal.png'),`${page} must carry the brand lockup`);assert(html.includes('assets/brand/icon-32.png'),`${page} must declare a favicon`);assert(html.includes('engine.js?v=16'));assert(html.includes('ui1.js?v=16'));assert(html.includes('ui3.js?v=16'));assert(html.includes('ui2.js?v=16'));
+  assert(html.includes('core.js?v=18'));assert(html.includes('assets/brand/logo-horizontal.png'),`${page} must carry the brand lockup`);assert(html.includes('assets/brand/icon-32.png'),`${page} must declare a favicon`);assert(html.includes('engine.js?v=17'));assert(html.includes('ui1.js?v=17'));assert(html.includes('ui3.js?v=17'));assert(html.includes('ui2.js?v=16'));
   assert(html.indexOf('exercise-media-catalog.js?v=1')<html.indexOf('exercise-media.js?v=2'));
   assert(html.indexOf('exercise-media.js?v=2')<html.indexOf('ui2.js?v=16'));
   let previous=html.indexOf('ui3.js');assert.notEqual(previous,-1);

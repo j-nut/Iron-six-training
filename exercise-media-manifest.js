@@ -1042,8 +1042,7 @@ const media=[
   "width": 960,
   "height": 640,
   "muscles": [
-   "back",
-   "biceps"
+   "back"
   ],
   "cues": [],
   "mistake": "",
@@ -1068,7 +1067,6 @@ const media=[
   "width": 960,
   "height": 400,
   "muscles": [
-   "hamstrings",
    "glutes"
   ],
   "cues": [],
@@ -1232,7 +1230,6 @@ const media=[
   "width": 960,
   "height": 720,
   "muscles": [
-   "hamstrings",
    "glutes"
   ],
   "cues": [],
@@ -1759,7 +1756,6 @@ const media=[
   "width": 960,
   "height": 720,
   "muscles": [
-   "hamstrings",
    "glutes"
   ],
   "cues": [],
@@ -1810,8 +1806,7 @@ const media=[
   "width": 960,
   "height": 720,
   "muscles": [
-   "back",
-   "biceps"
+   "back"
   ],
   "cues": [],
   "mistake": "",
@@ -2205,8 +2200,7 @@ const media=[
   "width": 960,
   "height": 720,
   "muscles": [
-   "back",
-   "biceps"
+   "back"
   ],
   "cues": [],
   "mistake": "",
@@ -2790,7 +2784,6 @@ const media=[
   "width": 960,
   "height": 720,
   "muscles": [
-   "hamstrings",
    "glutes"
   ],
   "cues": [],

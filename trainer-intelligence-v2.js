@@ -6,12 +6,15 @@
   function sessionLoad(session){
     let volume=0,hard=0,sets=0;
     for(const ex of session?.details||[])for(const s of ex.sets||[]){
-      const w=n(s.weight),r=n(s.reps),rir=n(s.rir);sets++;volume+=w*r;if(rir<=1)hard++;
+      const completed=window.IronSixProgressV2?.completedSet?.(s)??(s?.done!==false&&(s?.done===true||(s?.done==null&&(n(s?.reps)>0||n(s?.seconds)>0||n(s?.duration)>0))));
+      if(!completed)continue;
+      const w=n(s.weight),r=n(s.reps),rir=s.rir==null||String(s.rir).trim()===''?null:Number(s.rir);
+      sets++;volume+=w*r;if(rir!=null&&Number.isFinite(rir)&&rir>=0&&rir<=1)hard++;
     }
     return {sets,volume,hard};
   }
   function trainingState(user,now=Date.now()){
-    const history=(user?.history||[]).filter(h=>n(h.ts)>0).sort((a,b)=>n(b.ts)-n(a.ts));
+    const history=(user?.history||[]).filter(h=>n(h.ts)>0&&n(h.ts)<=now&&sessionLoad(h).sets>0).sort((a,b)=>n(b.ts)-n(a.ts));
     const recent=history.filter(h=>now-n(h.ts)<=14*864e5),prior=history.filter(h=>now-n(h.ts)>14*864e5&&now-n(h.ts)<=28*864e5);
     const summarize=list=>list.reduce((a,h)=>{const l=sessionLoad(h);a.sessions++;a.sets+=l.sets;a.volume+=l.volume;a.hard+=l.hard;const e=n(h.readiness?.energy);if(e){a.energy+=e;a.energyN++}return a},{sessions:0,sets:0,volume:0,hard:0,energy:0,energyN:0});
     const r=summarize(recent),p=summarize(prior),feedback=(user?.trainingFeedback||[]).filter(x=>now-n(x.ts)<=14*864e5),hardFeedback=feedback.filter(x=>x.feedback==='hard'||x.feedback==='pain').length,easyFeedback=feedback.filter(x=>x.feedback==='easy').length;
@@ -46,7 +49,7 @@
     if(typeof document==='undefined'||typeof activeUser!=='function')return;const plan=document.getElementById('plan');if(!plan)return;
     let box=document.getElementById('trainingBlockStatus');if(!box){box=document.createElement('div');box.id='trainingBlockStatus';box.className='section';const first=plan.querySelector('.section');if(first)plan.insertBefore(box,first);else plan.appendChild(box)}
     const state=trainingState(activeUser()),pct=state.volumeChange==null?'Not enough history':`${state.volumeChange>=0?'+':''}${state.volumeChange}% vs prior 14 days`;
-    box.innerHTML=`<div class="section-head"><div><h2>How recovered you are</h2><small>Based on your recent sessions and how you have been feeling</small></div></div><div class="note"><strong>${state.phase}</strong><br><br>${state.recommendation}<br><br><strong>How fatigued you are:</strong> ${state.fatigue}/100<br><strong>Recent work:</strong> ${state.recent14.sets} logged sets across ${state.recent14.sessions} sessions<br><strong>Trend:</strong> ${pct}</div>`;
+    box.innerHTML=`<div class="section-head"><div><h2>Estimated training fatigue</h2><small>A guide from logged work and feedback; consider soreness and performance too</small></div></div><div class="note"><strong>${state.phase}</strong><br><br>${state.recommendation}<br><br><strong>Estimated fatigue:</strong> ${state.fatigue}/100<br><strong>Recent work:</strong> ${state.recent14.sets} logged sets across ${state.recent14.sessions} sessions<br><strong>Trend:</strong> ${pct}</div>`;
   }
   const oldRender=window.IronSixInsights?.render;
   if(oldRender)window.IronSixInsights.render=function(){const out=oldRender.apply(this,arguments);renderPlan();return out};

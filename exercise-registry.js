@@ -261,8 +261,7 @@ const exercises=[
    "bands"
   ],
   "muscles": [
-   "back",
-   "biceps"
+   "back"
   ],
   "pattern": "lat_iso",
   "base": "Lat isolation",
@@ -282,7 +281,6 @@ const exercises=[
    "bands"
   ],
   "muscles": [
-   "hamstrings",
    "glutes"
   ],
   "pattern": "hip_thrust",
@@ -419,7 +417,6 @@ const exercises=[
    "bench"
   ],
   "muscles": [
-   "hamstrings",
    "glutes"
   ],
   "pattern": "hip_thrust",
@@ -849,7 +846,6 @@ const exercises=[
    "bench"
   ],
   "muscles": [
-   "hamstrings",
    "glutes"
   ],
   "pattern": "hip_thrust",
@@ -892,8 +888,7 @@ const exercises=[
    "bench"
   ],
   "muscles": [
-   "back",
-   "biceps"
+   "back"
   ],
   "pattern": "lat_iso",
   "base": "Lat isolation",
@@ -1210,8 +1205,7 @@ const exercises=[
   "aliases": [],
   "equipment": [],
   "muscles": [
-   "back",
-   "biceps"
+   "back"
   ],
   "pattern": "lat_iso",
   "base": "Lat isolation",
@@ -1682,7 +1676,6 @@ const exercises=[
   "aliases": [],
   "equipment": [],
   "muscles": [
-   "hamstrings",
    "glutes"
   ],
   "pattern": "hip_thrust",
