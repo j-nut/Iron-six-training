@@ -7,7 +7,7 @@
   // so a relabelled button can never silently turn a reset into a sign-in attempt.
   const MODES=new Set(['login','signup','magic','reset','password']);
   const EMAIL_AUTH_REDIRECT='https://iron-six-training.vercel.app/?auth=email';
-  let submitting=false;
+  let submitting=false,restoring=false,restoreTimer=null;
   const message=text=>{const el=$('accountStatus');if(el)el.textContent=text};
   const clean=value=>String(value||'').replace(/\s+/g,' ').trim().slice(0,300);
   const emailRedirectTo=()=>EMAIL_AUTH_REDIRECT;
@@ -27,6 +27,45 @@
     if(raw.includes('network')||raw.includes('fetch'))return 'Could not reach the sign-in service. Check your connection and try again.';
     if(action==='login')return 'Could not sign in. Check the email/password or use Forgot password?.';
     return clean(error?.message)||'The account request could not be completed. Please try again.';
+  }
+  function restoreUi(active,text){
+    const button=$('ironCloudButton');
+    if(active&&button&&!window.IronSixCloud?.session?.()?.user){button.textContent='Restoring…';button.disabled=true}
+    else if(button)button.disabled=false;
+    if(text)message(text);
+  }
+  async function restorePersistedSession(){
+    if(restoring)return;
+    const expected=(()=>{try{return localStorage.getItem('ironSixAccountScope')}catch(_){return null}})();
+    if(!expected)return;
+    const client=window.IronSixCloud?.client?.();
+    if(!client){clearTimeout(restoreTimer);restoreTimer=setTimeout(restorePersistedSession,150);return}
+    restoring=true;restoreUi(true,'Restoring your signed-in session…');
+    try{
+      let result=await timed(client.auth.getSession(),8000);
+      if(result?.error)throw result.error;
+      if(!result?.data?.session){
+        const refreshed=await timed(client.auth.refreshSession(),8000);
+        if(refreshed?.error)throw refreshed.error;
+        result=refreshed;
+      }
+      if(result?.data?.session?.user){
+        message('Signed in. Loading and syncing your account…');
+      }else{
+        // Only declare a true sign-out after both persisted-session restore and refresh
+        // have completed. Before this change the UI showed "Sign in" immediately on
+        // refresh while Supabase was still restoring the saved session.
+        message('Your previous session has expired. Sign in again to reconnect this device.');
+      }
+    }catch(error){
+      const raw=clean(error?.message).toLowerCase();
+      if(raw.includes('refresh token')||raw.includes('session')||raw.includes('token'))message('Your previous session has expired. Sign in again to reconnect this device.');
+      else message('Could not verify your saved session yet. Your workout remains on this device; check your connection and try again.');
+    }finally{
+      restoring=false;restoreUi(false);
+      const session=window.IronSixCloud?.session?.();
+      if(session?.user){const button=$('ironCloudButton');if(button)button.textContent='Account'}
+    }
   }
   async function submit(event){
     event.preventDefault();event.stopImmediatePropagation();if(submitting)return;
@@ -70,5 +109,6 @@
   if(!install()){
     const observer=new MutationObserver(()=>{if(install())observer.disconnect()});observer.observe(document.documentElement,{childList:true,subtree:true});
   }
-  window.addEventListener('pageshow',install);
+  window.addEventListener('pageshow',()=>{install();restorePersistedSession()});
+  restorePersistedSession();
 })();
