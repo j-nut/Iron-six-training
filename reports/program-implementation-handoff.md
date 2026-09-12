@@ -59,3 +59,17 @@ Publishing next: push exact tested tree to fix/camera-reliability-v6 and check V
 READY for that commit plus GitHub CI. PR37 remains draft; production camera phone gate
 from Claude's handoff remains pending. No physical phone, live authenticated cloud-sync,
 or real-browser visual validation has been performed for this program change.
+
+## Published checkpoint
+
+Feature commit: 8c1be6efe0735a012a7c50c1f18b283748ee0d25.
+Local staged tree and remote tree both 8f5283411fe3a738a774410fdbcff4e2a02e1cb2.
+Vercel deployment dpl_B6UKHMgEw9foYmXEA8mx4VSiX8FG confirmed READY for that
+exact feature commit. Preview URL:
+https://iron-six-training-44bof9pnb-jordman55-3386s-projects.vercel.app/?pose=1
+Branch alias:
+https://iron-six-training-git-fix-camer-667d60-jordman55-3386s-projects.vercel.app/?pose=1
+Preview may require the owner's Vercel sign-in. This is deployment verification, not
+physical-device validation. GitHub Validate Iron Six run34717917389 and Android test
+build run34717917396 were still running at this checkpoint; check their final results
+before merging. No merge or production deployment was performed.
