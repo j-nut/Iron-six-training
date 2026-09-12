@@ -6,8 +6,16 @@ const STORAGE_KEY='ironSixMultiV5';
 const BACKUP_STORAGE_KEY=STORAGE_KEY+'_recovery';
 const PRIOR_STORAGE_KEYS=['ironSixMultiV4','ironSixMultiV3'];
 const LEGACY_KEY='ironSixState';
-const ROTATION=['lower_strength','shoulders_arms','chest','back','lower_hypertrophy','upper_specialization'];
+// A session sequence, never a calendar schedule. Preserve existing users' current key.
+const LEGACY_ROTATION=['chest','shoulders_arms','lower_strength','back','upper_specialization','lower_hypertrophy'];
+const ROTATION=['push_a','lower_a','pull_a','push_b','lower_b','pull_b'];
 const WORKOUT_META={
+  push_a:{name:'Push A · Chest emphasis',short:'Push A',muscles:['chest','shoulders','triceps','core']},
+  lower_a:{name:'Legs A · Squat emphasis',short:'Legs A',muscles:['quads','glutes','hamstrings','calves']},
+  pull_a:{name:'Pull A · Vertical emphasis',short:'Pull A',muscles:['back','biceps','rear delts','core']},
+  push_b:{name:'Push B · Balanced pressing',short:'Push B',muscles:['chest','shoulders','triceps']},
+  lower_b:{name:'Legs B · Hinge emphasis',short:'Legs B',muscles:['quads','glutes','hamstrings','calves']},
+  pull_b:{name:'Pull B · Row emphasis',short:'Pull B',muscles:['back','biceps','rear delts']},
   lower_strength:{name:'Lower strength + core',short:'Lower strength',muscles:['quads','glutes','hamstrings','core']},
   shoulders_arms:{name:'Shoulders + arms',short:'Shoulders + arms',muscles:['shoulders','biceps','triceps']},
   chest:{name:'Chest',short:'Chest',muscles:['chest','triceps','front delts']},
@@ -16,7 +24,7 @@ const WORKOUT_META={
   upper_specialization:{name:'Upper specialization',short:'Upper specialization',muscles:['chest','back','shoulders','arms']}
 };
 function uid(){return 'u_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
-function emptyProgram(){return {currentWorkoutKey:'lower_strength',exposures:{},unlocked:{},variantCursor:{},selectionCache:{},generatedExercises:[],lastAdaptation:null,lastScheduleReason:null,equipmentGeneration:null}}
+function emptyProgram(){return {version:2,currentWorkoutKey:'push_a',exposures:{},unlocked:{},variantCursor:{},selectionCache:{},generatedExercises:[],lastAdaptation:null,lastScheduleReason:null,equipmentGeneration:null}}
 function emptyTrainerMemory(){return {status:'Learning from completed workouts',summary:'Complete a workout with weight, reps, and RIR to build your AI training profile.',adjustments:{},recommendations:[],reviewedAt:null,model:null}}
 function makeUser(name='My profile',weight=180,equipment=DEFAULT_EQUIPMENT){return {id:uid(),name,weight,age:null,heightIn:null,trainingLevel:'unknown',benchBest:'',equipment:{...equipment},customEquipment:[],capacities:{dumbbellMax:30,barbellMax:300},workoutMinutes:60,today:{},history:[],readiness:{energy:4,soreness:1},program:emptyProgram(),trainerMemory:emptyTrainerMemory()}}
 function normalizeUser(u){return {...u,age:u.age||null,heightIn:u.heightIn||null,trainingLevel:u.trainingLevel||'unknown',workoutMinutes:Number(u.workoutMinutes)||60,equipment:{...DEFAULT_EQUIPMENT,...(u.equipment||{})},customEquipment:Array.isArray(u.customEquipment)?u.customEquipment.map(normalizeEquipmentName).filter(Boolean).slice(0,16):[],capacities:{dumbbellMax:Number(u.capacities?.dumbbellMax)||30,barbellMax:Number(u.capacities?.barbellMax)||300},today:u.today||{},history:u.history||[],readiness:u.readiness||{energy:4,soreness:1},program:{...emptyProgram(),...(u.program||{}),exposures:{...(u.program?.exposures||{})},unlocked:{...(u.program?.unlocked||{})},variantCursor:{...(u.program?.variantCursor||{})},selectionCache:{...(u.program?.selectionCache||{})},generatedExercises:Array.isArray(u.program?.generatedExercises)?u.program.generatedExercises.slice(0,80):[]},trainerMemory:{...emptyTrainerMemory(),...(u.trainerMemory||{}),adjustments:{...(u.trainerMemory?.adjustments||{})},recommendations:Array.isArray(u.trainerMemory?.recommendations)?u.trainerMemory.recommendations:[]}}}
@@ -41,7 +49,7 @@ function generatedOptionsForSlot(u,options){const sample=options?.[0],key=u.prog
 function exerciseRecentPenalty(u,o){let penalty=0;(u.history||[]).slice(0,12).forEach((h,sessionIndex)=>{(h.details||[]).forEach(d=>{if(String(d.name).toLowerCase()===o.name.toLowerCase())penalty+=Math.max(8,120-sessionIndex*13);else if(d.base===o.base)penalty+=Math.max(0,12-sessionIndex)})});return penalty}
 function currentSelectionKey(u,base){const key=u.program?.currentWorkoutKey||'lower_strength',exposure=Number(u.program?.exposures?.[key])||0;return `${key}:${exposure}:${base}`}
 function clearCurrentSelectionCache(u){const key=u.program?.currentWorkoutKey||'lower_strength',prefix=`${key}:${Number(u.program?.exposures?.[key])||0}:`;for(const cacheKey of Object.keys(u.program?.selectionCache||{}))if(cacheKey.startsWith(prefix))delete u.program.selectionCache[cacheKey]}
-function choose(u,options){const original=Array.isArray(options)?options:[],pool=[...original,...generatedOptionsForSlot(u,original)].filter((o,index,all)=>o?.name&&exerciseAvailable(u,o)&&all.findIndex(x=>x.name.toLowerCase()===o.name.toLowerCase())===index);if(!pool.length)return original.length?{...original[original.length-1]}:null;const cacheKey=currentSelectionKey(u,pool[0].base),cachedName=u.program?.selectionCache?.[cacheKey],cached=pool.find(x=>x.name===cachedName);const usesEquipment=o=>!!(o.requires?.length||o.requiresCustom?.length),equipped=pool.some(usesEquipment);const ranked=cached||pool.map((o,index)=>({o,score:exerciseRecentPenalty(u,o)+index*1.5+(o.source==='groq'?2:0)+(equipped&&!usesEquipment(o)?24:0),tie:stableNumber(`${cacheKey}:${o.name}`)})).sort((a,b)=>a.score-b.score||a.tie-b.tie)[0].o;u.program.selectionCache=u.program.selectionCache||{};u.program.selectionCache[cacheKey]=ranked.name;const alternatives=pool.filter(x=>x.name!==ranked.name).map(x=>({...x}));return {...ranked,_alternatives:alternatives}}
+function choose(u,options){const original=Array.isArray(options)?options:[],pool=[...original,...generatedOptionsForSlot(u,original)].filter((o,index,all)=>o?.name&&exerciseAvailable(u,o)&&all.findIndex(x=>x.name.toLowerCase()===o.name.toLowerCase())===index);if(!pool.length)return null;const cacheKey=currentSelectionKey(u,pool[0].base),cachedName=u.program?.selectionCache?.[cacheKey],cached=pool.find(x=>x.name===cachedName);const usesEquipment=o=>!!(o.requires?.length||o.requiresCustom?.length),equipped=pool.some(usesEquipment);const ranked=cached||pool.map((o,index)=>({o,score:exerciseRecentPenalty(u,o)+index*1.5+(o.source==='groq'?2:0)+(equipped&&!usesEquipment(o)?24:0),tie:stableNumber(`${cacheKey}:${o.name}`)})).sort((a,b)=>a.score-b.score||a.tie-b.tie)[0].o;u.program.selectionCache=u.program.selectionCache||{};u.program.selectionCache[cacheKey]=ranked.name;const alternatives=pool.filter(x=>x.name!==ranked.name).map(x=>({...x}));return {...ranked,_alternatives:alternatives}}
 function ex(name,requires,prescription,sets,tag,base,seedKey,priority=2){return {name,requires,prescription,sets,tag,base,seedKey:seedKey||base,priority}}
 function slot(u,options){return choose(u,options)}
 function swapOptionsForExercise(u,exercise){const options=[...(exercise?._alternatives||[]),...generatedOptionsForSlot(u,[exercise])].filter((o,index,all)=>o?.name&&o.name!==exercise?.name&&o.base===exercise?.base&&exerciseAvailable(u,o)&&(u.trainingMode!=='circuit'||typeof circuitSuitable!=='function'||circuitSuitable(o))&&all.findIndex(x=>x.name.toLowerCase()===o.name.toLowerCase())===index);return options.sort((a,b)=>exerciseRecentPenalty(u,a)-exerciseRecentPenalty(u,b)||String(a.name).localeCompare(String(b.name))).slice(0,8)}
@@ -55,7 +63,7 @@ function successfulExposure(h){
 }
 function exposureStats(u,key){const sessions=(u.history||[]).filter(h=>h.workoutKey===key);const successful=sessions.filter(successfulExposure);return {total:sessions.length,successful:successful.length,recent:successful.slice(0,4)}}
 function variantUnlocked(u,key){const stats=exposureStats(u,key);const current=Math.max(1,Number(u.program.unlocked?.[key])||1);let unlocked=current;if(stats.successful>=4)unlocked=Math.max(unlocked,2);if(stats.successful>=8)unlocked=Math.max(unlocked,3);u.program.unlocked[key]=Math.min(workoutVariantCount(key),unlocked);return u.program.unlocked[key]}
-function currentVariant(u,key){const unlocked=variantUnlocked(u,key);const exposure=Number(u.program.exposures?.[key])||0;return unlocked<=1?0:exposure%unlocked}
+function currentVariant(u,key){if(ROTATION.includes(key))return Math.floor((Number(u.program.exposures?.[key])||0)/4)%3;const unlocked=variantUnlocked(u,key);const exposure=Number(u.program.exposures?.[key])||0;return unlocked<=1?0:exposure%unlocked}
 const VARIANT_NAMES=['Foundation','Momentum','Apex'];
 function variantLabel(i){return ['A','B','C'][i]||'A'}
 function variantName(i){return VARIANT_NAMES[i]||VARIANT_NAMES[0]}

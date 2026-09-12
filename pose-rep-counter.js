@@ -5,7 +5,22 @@
   const P={LSHOULDER:11,RSHOULDER:12,LELBOW:13,RELBOW:14,LWRIST:15,RWRIST:16,LHIP:23,RHIP:24,LKNEE:25,RKNEE:26,LANKLE:27,RANKLE:28};
   const PART={11:'shoulders',12:'shoulders',13:'elbows',14:'elbows',15:'wrists',16:'wrists',23:'hips',24:'hips',25:'knees',26:'knees',27:'ankles',28:'ankles'};
   const RULES=[
-    {id:'squat',label:'Squat',test:x=>/squat/i.test(x.name||'')||x.base==='squat',joint:[[P.LHIP,P.LKNEE,P.LANKLE],[P.RHIP,P.RKNEE,P.RANKLE]],framing:[P.LHIP,P.RHIP,P.LKNEE,P.RKNEE,P.LANKLE,P.RANKLE,P.LSHOULDER,P.RSHOULDER],top:160,bottom:100,minActiveMs:500,maxActiveMs:15000,setup:'Place the phone around hip height, roughly level and side-on, about 8 feet back with your full body in frame.'},
+    {id:'squat',label:'Squat',test:x=>/squat/i.test(x.name||'')||x.base==='squat',joint:[[P.LHIP,P.LKNEE,P.LANKLE],[P.RHIP,P.RKNEE,P.RANKLE]],framing:[P.LHIP,P.RHIP,P.LKNEE,P.RKNEE,P.LANKLE,P.RANKLE,P.LSHOULDER,P.RSHOULDER],top:160,bottom:100,minActiveMs:500,maxActiveMs:15000,setup:'Place the phone around hip height, roughly level and side-on, about 8 feet back with your full body in frame.',
+     // Not every room has the depth to get ankles in shot. This measures the same movement from
+     // shoulder-hip-knee, which needs only the upper two thirds of the body. It is genuinely
+     // weaker — it cannot see the shin, so it cannot judge depth as precisely — so it is used only
+     // when the ankles really are unavailable, and the UI says so while it is in use.
+     fallback:{
+       // Thigh angle from vertical, measured at the hip. A three-point shoulder-hip-knee angle was
+       // tried first and is unusable: it moves with torso lean as much as with depth, so at a 45
+       // degree lean a standing lifter already reads below the top threshold and no rep ever
+       // starts. This uses only hip and knee, so lean cannot contaminate it. The scale inverts:
+       // standing is near zero degrees, a parallel squat around ninety.
+       joint:[[P.LHIP,P.LKNEE],[P.RHIP,P.RKNEE]],
+       framing:[P.LSHOULDER,P.RSHOULDER,P.LHIP,P.RHIP,P.LKNEE,P.RKNEE],
+       top:30,bottom:75,
+       note:'Ankles are out of frame, so reps are counted from your hips and knees. Depth is approximate and form watch is off.'
+     }},
     {id:'curl',label:'Biceps curl',test:x=>/curl/i.test(x.name||'')&&!/leg|hamstring|nordic/i.test(x.name||''),joint:[[P.LSHOULDER,P.LELBOW,P.LWRIST],[P.RSHOULDER,P.RELBOW,P.RWRIST]],framing:[P.LSHOULDER,P.RSHOULDER,P.LELBOW,P.RELBOW,P.LWRIST,P.RWRIST],top:150,bottom:70,minActiveMs:400,maxActiveMs:12000,setup:'Face the phone from about 6 feet back with both arms in frame.'},
     {id:'pushup',label:'Push-up',test:x=>/push[- ]?up/i.test(x.name||''),joint:[[P.LSHOULDER,P.LELBOW,P.LWRIST],[P.RSHOULDER,P.RELBOW,P.RWRIST]],framing:[P.LSHOULDER,P.RSHOULDER,P.LELBOW,P.RELBOW,P.LWRIST,P.RWRIST],top:155,bottom:100,minActiveMs:400,maxActiveMs:12000,setup:'Lay the phone on the floor side-on, far enough back to keep your whole body in frame.'},
     {id:'press',label:'Overhead press',test:x=>/overhead press|shoulder press|military press/i.test(x.name||''),joint:[[P.LSHOULDER,P.LELBOW,P.LWRIST],[P.RSHOULDER,P.RELBOW,P.RWRIST]],framing:[P.LSHOULDER,P.RSHOULDER,P.LELBOW,P.RELBOW,P.LWRIST,P.RWRIST],top:75,bottom:160,minActiveMs:450,maxActiveMs:12000,setup:'Face the phone from about 8 feet back so your hands stay in frame overhead.'}
@@ -13,23 +28,40 @@
   // 0.60 was too strict for true side profiles: the near-side knee/ankle regularly dipped below it
   // even while MediaPipe and the identity tracker still had a coherent person. Rep geometry remains
   // stricter than identity maintenance, but now matches the form-analysis confidence floor.
-  // LOST_FRAMES/LOCKED_LOST_FRAMES catch a clean dropout. Real occlusion is not clean — it
+  // LOST_MS/LOCKED_LOST_MS catch a clean dropout. Real occlusion is not clean — it
   // flickers, so a consecutive-null counter alone never fires and the machine bridges a gap it
-  // was blind through. QUALITY_WINDOW/MIN_QUALITY judge the recent past as a whole instead.
+  // was blind through. QUALITY_WINDOW_MS/MIN_QUALITY judge the recent past as a whole instead.
   // The window is deliberately longer than the longest permitted contiguous dropout
-  // (LOCKED_LOST_FRAMES), so a gap the identity lock is entitled to ride out cannot trip it,
+  // (LOCKED_LOST_MS), so a gap the identity lock is entitled to ride out cannot trip it,
   // while a sustained flickering blindness — which no single-gap counter ever notices — does.
-  const MIN_VISIBILITY=0.42,SMOOTHING=5,LOST_FRAMES=20,LOCKED_LOST_FRAMES=42,QUALITY_WINDOW=120,MIN_QUALITY=0.5,EDGE=0.02;
+  // These bound TIME, so they are expressed in milliseconds. As frame counts their meaning drifted
+  // with the device: a phone delivering 18fps in dim light silently got 2.3s of occlusion tolerance
+  // where a 30fps phone got 1.4s, and the quality window stretched from 4s to 6.7s.
+  // SMOOTHING stays a frame count because it is a signal filter, not a deadline.
+  const MIN_VISIBILITY=0.42,SMOOTHING=5,LOST_MS=650,LOCKED_LOST_MS=1400,QUALITY_WINDOW_MS=4000,MIN_QUALITY=0.5,EDGE=0.02;
   const CAUTIONS=[
     {when:/back squat|front squat|barbell squat/i,note:'A loaded bar and the rack can hide your hips from a single camera. A level side view around hip height usually tracks best.'},
     {when:/bulgarian|split squat|lunge|single[- ]leg|pistol/i,note:'One leg is behind the other from most angles, so film this one square to your working side.'}
   ];
   function cautionFor(exercise){const name=String(exercise&&exercise.name||'');const hit=CAUTIONS.find(c=>c.when.test(name));return hit?hit.note:null}
+  // A reduced-information variant of a rule, for a camera that cannot see the whole body.
+  function degradedRule(rule){
+    if(!rule||!rule.fallback)return null;
+    return {...rule,...rule.fallback,id:rule.id,label:rule.label,fallback:null,degraded:true};
+  }
+
   function ruleFor(exercise){const x=exercise||{};return RULES.find(r=>{try{return r.test(x)}catch(_){return false}})||null}
   function angle(a,b,c,aspect){if(!a||!b||!c)return null;const scale=Number(aspect)||1,ax=(a.x-b.x)*scale,ay=a.y-b.y,cx=(c.x-b.x)*scale,cy=c.y-b.y,mag=Math.hypot(ax,ay)*Math.hypot(cx,cy);if(!mag)return null;return Math.acos(Math.max(-1,Math.min(1,(ax*cx+ay*cy)/mag)))*180/Math.PI}
   function seen(point,threshold=MIN_VISIBILITY){if(!point||!Number.isFinite(point.x)||!Number.isFinite(point.y))return false;const v=point.visibility===undefined?1:Number(point.visibility),p=point.presence===undefined?1:Number(point.presence);return (Number.isFinite(v)?v:0)>=threshold&&(Number.isFinite(p)?p:0)>=threshold}
   function jointAngle(rule,landmarks,aspect,side=null,minVisibility=MIN_VISIBILITY){
-    if(!landmarks)return null;const chains=side===0||side===1?[rule.joint[side]]:rule.joint,values=chains.map(([a,b,c])=>seen(landmarks[a],minVisibility)&&seen(landmarks[b],minVisibility)&&seen(landmarks[c],minVisibility)?angle(landmarks[a],landmarks[b],landmarks[c],aspect):null).filter(v=>v!==null);if(!values.length)return null;return values.reduce((n,v)=>n+v,0)/values.length;
+    if(!landmarks)return null;const chains=side===0||side===1?[rule.joint[side]]:rule.joint,values=chains.map(chain=>{
+      if(!chain.every(i=>seen(landmarks[i],minVisibility)))return null;
+      // A two-point chain measures that limb's angle from vertical, at its first point, against a
+      // virtual point directly below it. Nothing above that point is involved, so torso lean
+      // cannot contaminate it the way it contaminates a three-point hip angle.
+      if(chain.length===2){const pivot=landmarks[chain[0]];return angle(landmarks[chain[1]],pivot,{x:pivot.x,y:pivot.y+0.2},aspect)}
+      return angle(landmarks[chain[0]],landmarks[chain[1]],landmarks[chain[2]],aspect);
+    }).filter(v=>v!==null);if(!values.length)return null;return values.reduce((n,v)=>n+v,0)/values.length;
   }
   function framing(rule,landmarks,side=null,minVisibility=MIN_VISIBILITY){
     if(!landmarks||!landmarks.length)return {ok:false,missing:[],message:'No one in frame yet.'};
@@ -59,33 +91,45 @@
   }
 
   function createCounter(rule,options){
-    const config={...rule,...(options||{})},inverted=config.top<config.bottom,atTop=v=>inverted?v<=config.top:v>=config.top,atBottom=v=>inverted?v>=config.bottom:v<=config.bottom;let samples=[],reps=[],armed=false,bottomed=false,repStart=0,extreme=null,lost=0,dropped=0,rejected=0,phase='waiting',angleNow=null,message='',recent=[];
-    function reset(){samples=[];reps=[];armed=false;bottomed=false;repStart=0;extreme=null;lost=0;dropped=0;rejected=0;phase='waiting';angleNow=null;message='';recent=[]}
-    function interrupt(){samples=[];armed=false;bottomed=false;repStart=0;extreme=null;lost=0;recent=[];phase='lost';angleNow=null;message='Tracking paused. Start again from the top.'}
+    const config={...rule,...(options||{})},inverted=config.top<config.bottom,atTop=v=>inverted?v<=config.top:v>=config.top,atBottom=v=>inverted?v>=config.bottom:v<=config.bottom;let samples=[],reps=[],armed=false,bottomed=false,repStart=0,extreme=null,lostSince=null,firstAt=null,dropped=0,rejected=0,phase='waiting',angleNow=null,message='',recent=[],lastAt=null,lastUsableAt=null,measurementValid=false;
+    function reset(){samples=[];reps=[];armed=false;bottomed=false;repStart=0;extreme=null;lostSince=null;firstAt=null;dropped=0;rejected=0;phase='waiting';angleNow=null;message='';recent=[];lastAt=null;lastUsableAt=null;measurementValid=false}
+    function interrupt(){samples=[];armed=false;bottomed=false;repStart=0;extreme=null;lostSince=null;recent=[];firstAt=null;lastAt=null;lastUsableAt=null;measurementValid=false;phase='lost';angleNow=null;message='Tracking paused. Start again from the top.'}
     // True once the recent past is more blind than seeing. Judged only on a full window, so a
     // set never starts out "low quality". Independent of the identity lock: a locked person the
     // counter cannot actually see is still a person whose reps it must not invent.
-    function qualityLow(){return recent.length>=QUALITY_WINDOW&&recent.reduce((a,b)=>a+b,0)/recent.length<MIN_QUALITY}
-    function rearm(text){armed=false;bottomed=false;samples=[];phase='lost';message=text}
-    function state(){return {rule:config.id,reps:reps.length,phase,angle:angleNow,tracking:phase!=='lost',dropped,rejected,message,log:reps.slice()}}
+    function qualityLow(t){
+      if(firstAt===null||t-firstAt<QUALITY_WINDOW_MS||recent.length<2)return false;
+      let observed=0,usable=0;
+      for(let i=1;i<recent.length;i++){const dt=recent[i].t-Math.max(t-QUALITY_WINDOW_MS,recent[i-1].t);observed+=dt;if(recent[i-1].ok)usable+=dt}
+      return observed>0&&usable/observed<MIN_QUALITY;
+    }
+    function rearm(text){armed=false;bottomed=false;samples=[];extreme=null;angleNow=null;measurementValid=false;phase='lost';message=text}
+    function state(){return {rule:config.id,reps:reps.length,phase,angle:angleNow,tracking:measurementValid,measurementValid,dropped,rejected,message,log:reps.slice()}}
     function push(frame){
       const landmarks=frame&&frame.landmarks,t=Number(frame&&frame.t)||0,aspect=Number(frame&&frame.aspect)||1,side=frame?.side===0||frame?.side===1?frame.side:null,subjectPresent=!!frame?.subjectPresent,minVisibility=Number.isFinite(Number(frame?.minVisibility))?Number(frame.minVisibility):MIN_VISIBILITY,raw=jointAngle(config,landmarks,aspect,side,minVisibility);
       // `framed` lets the caller veto a frame the lifter is only half inside. Without it the
       // angle still computes and still looks plausible, which is worse than not counting.
-      const usable=raw!==null&&frame?.framed!==false;
-      recent.push(usable?1:0);if(recent.length>QUALITY_WINDOW)recent.shift();
-      if(!usable||qualityLow()){
-        if(!usable){dropped++;lost++}
+      const usable=Number.isFinite(raw)&&frame?.framed!==false;
+      // A stalled camera provides NO null frames. Check elapsed time on the first returning
+      // frame, and never bridge a missing interval just because its endpoints look plausible.
+      if(lastAt!==null&&t<=lastAt)return state();
+      if((lastAt!==null&&t-lastAt>LOST_MS)||(lastUsableAt!==null&&t-lastUsableAt>(subjectPresent?LOCKED_LOST_MS:LOST_MS)))
+        rearm('Camera or joints were unavailable. Start again from the top.');
+      lastAt=t;measurementValid=false;
+      if(firstAt===null)firstAt=t;
+      recent.push({t,ok:usable?1:0});while(recent.length>1&&t-recent[1].t>QUALITY_WINDOW_MS)recent.shift();
+      if(!usable||qualityLow(t)){
+        if(!usable){dropped++;if(lostSince===null)lostSince=t}
         // A brief occlusion mid-rep is survivable, and the identity lock buys more patience for
         // it. A sustained gap — solid or flickering — means the counter no longer knows where in
         // the movement the lifter is, so it re-arms rather than counting across what it missed.
-        const limit=subjectPresent?LOCKED_LOST_FRAMES:LOST_FRAMES;
-        if(lost>=limit)rearm('Lost the working-side joints. Return to the top position.');
-        else if(qualityLow())rearm('Too little of you in frame to count. Move back and re-aim.');
+        const limit=subjectPresent?LOCKED_LOST_MS:LOST_MS;
+        if(lostSince!==null&&t-lostSince>=limit)rearm('Lost the working-side joints. Return to the top position.');
+        else if(qualityLow(t))rearm('Too little of you in frame to count. Move back and re-aim.');
         else if(subjectPresent)message='User lock held · reacquiring the working-side pose.';
         return state();
       }
-      lost=0;samples.push(raw);if(samples.length>SMOOTHING)samples.shift();const value=median(samples);angleNow=Math.round(value);message='';
+      lostSince=null;lastUsableAt=t;measurementValid=true;samples.push({t,value:raw});while(samples.length>SMOOTHING||(samples.length>1&&t-samples[0].t>140))samples.shift();const value=median(samples.map(x=>x.value));angleNow=Math.round(value);message='';
       if(!armed){if(atTop(value)){armed=true;repStart=t;extreme=value;phase='top'}else{phase='waiting';message='Start from the top of the movement.'}return state()}
       extreme=extreme===null?value:(inverted?Math.max(extreme,value):Math.min(extreme,value));
       if(!bottomed){if(atBottom(value)){bottomed=true;phase='bottom'}else{phase=atTop(value)?'top':'descending';if(atTop(value)){repStart=t;extreme=value}}return state()}
@@ -98,6 +142,6 @@
     }
     return {push,reset,interrupt,state,rule:config,inverted};
   }
-  const api={POINTS:P,PART,RULES,CAUTIONS,MIN_VISIBILITY,SMOOTHING,LOST_FRAMES,LOCKED_LOST_FRAMES,ruleFor,cautionFor,angle,jointAngle,framing,createCounter,createTracker};
+  const api={POINTS:P,PART,RULES,CAUTIONS,MIN_VISIBILITY,SMOOTHING,LOST_MS,LOCKED_LOST_MS,QUALITY_WINDOW_MS,ruleFor,cautionFor,degradedRule,angle,jointAngle,framing,createCounter,createTracker};
   if(typeof window!=='undefined')window.IronSixRepCounter=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })();

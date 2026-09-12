@@ -11,7 +11,7 @@ for(const file of ['core.js','workout-lower.js','workout-shoulders.js','workout-
 const result=vm.runInContext(`(()=>{
   const none={dumbbells:false,barbell:false,landmine:false,rack:false,bench:false,pullup:false,bands:false,abwheel:false,medball:false};
   const user=makeUser('Dynamic tester',180,none);
-  user.customEquipment=['Kettlebell'];
+  user.program.currentWorkoutKey='lower_strength';user.customEquipment=['Kettlebell'];
   user.program.generatedExercises=[{name:'Kettlebell Goblet Squat',base:'Primary squat',seedKey:'squat',tag:'Priority',prescription:'4 × 6–10',sets:4,priority:1,workoutKeys:['lower_strength'],requires:[],requiresCustom:['Kettlebell'],equipmentName:'Kettlebell',equipmentId:'custom:kettlebell',source:'groq'}];
   user.history=[{workoutKey:'lower_strength',details:[{name:'Tempo Bodyweight Squat',base:'Primary squat',sets:[]}]}];
   const workout=buildWorkout(user),selected=workout[0],swaps=swapOptionsForExercise(user,selected).map(x=>x.name);

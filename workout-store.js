@@ -106,9 +106,14 @@
     const sessions=replay(u.id),known=new Set((u.history||[]).map(h=>h.sessionId||String(h.ts)));
     for(const s of sessions)if(s.history&&!known.has(s.history.sessionId||String(s.history.ts))){u.history.unshift(copy(s.history));known.add(s.history.sessionId||String(s.history.ts))}
     u.history.sort((a,b)=>b.ts-a.ts);
-    for(const key of ROTATION)u.program.exposures[key]=Math.max(Number(u.program.exposures[key])||0,u.history.filter(h=>h.workoutKey===key).length);
+    for(const key of Object.keys(WORKOUT_META))u.program.exposures[key]=Math.max(Number(u.program.exposures[key])||0,u.history.filter(h=>h.workoutKey===key).length);
     const current=sessions.find(s=>s.id===u.workoutDraft?.id);
-    if(current&&current.status!=='active'){u.workoutDraft=null;u.today={};u.program.currentWorkoutKey=nextWorkoutKey(u)}
+    if(current&&current.status!=='active'){
+      u.workoutDraft=null;u.today={};
+      // An archive is not a completion. Recover a finish from its own key, once,
+      // even if a stale profile snapshot already points at the following workout.
+      if(current.status==='finished')u.program.currentWorkoutKey=nextWorkoutKey({program:{currentWorkoutKey:current.key}});
+    }
     const s=current?.status==='active'?current:[...sessions].reverse().find(s=>s.status==='active'&&s.plan?.length);
     if(!s)return;
     u.workoutDraft={id:s.id,key:s.key,plan:copy(s.plan),heads:copy(s.heads),timer:s.timer};

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-09T22:15:41.342Z",
+  "generatedAt": "2026-09-12T20:41:35.628Z",
   "totals": {
     "canonicalExercises": 85,
     "mediaRecords": 119,
@@ -143,7 +143,13 @@
         "workout-chest.js:chosen:v2",
         "workout-chest.js:slot_option:v0",
         "workout-chest.js:slot_option:v1",
-        "workout-chest.js:slot_option:v2"
+        "workout-chest.js:slot_option:v2",
+        "workout-upper.js:chosen:v0",
+        "workout-upper.js:chosen:v1",
+        "workout-upper.js:chosen:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
       ],
       "equipment": [
         "bands"
@@ -152,7 +158,8 @@
       "seedKey": "fly",
       "priority": 2,
       "workoutKeys": [
-        "chest"
+        "chest",
+        "upper_specialization"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -1657,7 +1664,13 @@
         "workout-chest.js:alternative:v2",
         "workout-chest.js:slot_option:v0",
         "workout-chest.js:slot_option:v1",
-        "workout-chest.js:slot_option:v2"
+        "workout-chest.js:slot_option:v2",
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:alternative:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
       ],
       "equipment": [
         "bench",
@@ -1667,7 +1680,8 @@
       "seedKey": "fly",
       "priority": 2,
       "workoutKeys": [
-        "chest"
+        "chest",
+        "upper_specialization"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -1913,13 +1927,7 @@
         "workout-shoulders.js:alternative:v2",
         "workout-shoulders.js:slot_option:v0",
         "workout-shoulders.js:slot_option:v1",
-        "workout-shoulders.js:slot_option:v2",
-        "workout-upper.js:alternative:v0",
-        "workout-upper.js:alternative:v1",
-        "workout-upper.js:alternative:v2",
-        "workout-upper.js:slot_option:v0",
-        "workout-upper.js:slot_option:v1",
-        "workout-upper.js:slot_option:v2"
+        "workout-shoulders.js:slot_option:v2"
       ],
       "equipment": [
         "dumbbells"
@@ -1928,8 +1936,7 @@
       "seedKey": "overhead_press",
       "priority": 1,
       "workoutKeys": [
-        "shoulders_arms",
-        "upper_specialization"
+        "shoulders_arms"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -2775,13 +2782,7 @@
         "workout-shoulders.js:alternative:v0",
         "workout-shoulders.js:alternative:v2",
         "workout-shoulders.js:slot_option:v0",
-        "workout-shoulders.js:slot_option:v2",
-        "workout-upper.js:chosen:v0",
-        "workout-upper.js:chosen:v1",
-        "workout-upper.js:chosen:v2",
-        "workout-upper.js:slot_option:v0",
-        "workout-upper.js:slot_option:v1",
-        "workout-upper.js:slot_option:v2"
+        "workout-shoulders.js:slot_option:v2"
       ],
       "equipment": [
         "barbell",
@@ -2792,8 +2793,7 @@
       "priority": 1,
       "workoutKeys": [
         "chest",
-        "shoulders_arms",
-        "upper_specialization"
+        "shoulders_arms"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -3638,21 +3638,14 @@
         "workout-shoulders.js:alternative:v2",
         "workout-shoulders.js:slot_option:v0",
         "workout-shoulders.js:slot_option:v1",
-        "workout-shoulders.js:slot_option:v2",
-        "workout-upper.js:alternative:v0",
-        "workout-upper.js:alternative:v1",
-        "workout-upper.js:alternative:v2",
-        "workout-upper.js:slot_option:v0",
-        "workout-upper.js:slot_option:v1",
-        "workout-upper.js:slot_option:v2"
+        "workout-shoulders.js:slot_option:v2"
       ],
       "equipment": [],
       "base": "Vertical press",
       "seedKey": "overhead_press",
       "priority": 1,
       "workoutKeys": [
-        "shoulders_arms",
-        "upper_specialization"
+        "shoulders_arms"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,
@@ -5032,14 +5025,21 @@
         "workout-chest.js:alternative:v2",
         "workout-chest.js:slot_option:v0",
         "workout-chest.js:slot_option:v1",
-        "workout-chest.js:slot_option:v2"
+        "workout-chest.js:slot_option:v2",
+        "workout-upper.js:alternative:v0",
+        "workout-upper.js:alternative:v1",
+        "workout-upper.js:alternative:v2",
+        "workout-upper.js:slot_option:v0",
+        "workout-upper.js:slot_option:v1",
+        "workout-upper.js:slot_option:v2"
       ],
       "equipment": [],
       "base": "Chest isolation",
       "seedKey": "fly",
       "priority": 2,
       "workoutKeys": [
-        "chest"
+        "chest",
+        "upper_specialization"
       ],
       "isSupersetComponent": false,
       "alternativeOnly": false,

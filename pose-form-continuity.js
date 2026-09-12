@@ -25,8 +25,8 @@
       if(frame?.landmarks)softInterrupts=0;
       return push(frame);
     };
-    evaluator.interrupt=logCount=>{
-      if(counterApi.__ironSixForceFormInterrupt){
+    evaluator.interrupt=(logCount,hard=false)=>{
+      if(hard||counterApi.__ironSixForceFormInterrupt){
         counterApi.__ironSixForceFormInterrupt=false;softInterrupts=0;
         return hardInterrupt(logCount);
       }

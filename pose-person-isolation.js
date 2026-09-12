@@ -40,7 +40,7 @@
   }
   function createPersonTracker(options={}){
     const config={acquireMs:260,maxCoastMs:1800,maxLossMs:3200,ambiguityMargin:0.16,maxCost:1.25,minIou:0.10,...options};
-    let track=null,pending=null,needsRelock=false,lastDetectionAt=null;
+    let track=null,pending=null,needsRelock=false,lastDetectionAt=null,ambiguous=false;
     const stats={accepted:0,coasted:0,losses:0,ambiguities:0,poseRefreshes:0};
     const predict=t=>{
       if(!track)return null;const dt=clamp((t-track.lastAt)/1000,0,1.5),cx=clamp(track.cx+track.vx*dt,0,1),cy=clamp(track.cy+track.vy*dt,0,1),w=track.w,h=track.h;
@@ -52,15 +52,16 @@
     };
     function accept(box,t,source='detector'){
       const old=track,dt=old?clamp((t-old.lastAt)/1000,0.02,0.5):0.1,vx=old?(box.cx-old.cx)/dt:0,vy=old?(box.cy-old.cy)/dt:0;
-      track={...box,vx:old?old.vx*0.72+vx*0.28:0,vy:old?old.vy*0.72+vy*0.28:0,lastAt:t,lastSeen:t,source};lastDetectionAt=t;needsRelock=false;stats.accepted++;
+      track={...box,vx:old?old.vx*0.72+vx*0.28:0,vy:old?old.vy*0.72+vy*0.28:0,lastAt:t,lastSeen:t,source};lastDetectionAt=t;needsRelock=false;ambiguous=false;stats.accepted++;
       return snapshot(t,true,source);
     }
     function snapshot(t=0,visible=false,source=track?.source||null){
       const box=predict(t)||track,age=track?Math.max(0,t-track.lastSeen):Infinity,coasting=!!track&&!visible&&age>0;
-      return {locked:!!track,visible,coasting,needsRelock,box,roi:box&&!needsRelock?roiFromBox(box,config):null,source,ageMs:Number.isFinite(age)?Math.round(age):null,message:needsRelock?'User isolation lost. Clear the view, then tap Re-lock user.':visible?'User isolated · person lock active':coasting?'User isolated · holding your last track':'Find one person in the centre to lock.'};
+      return {locked:!!track,visible,coasting,needsRelock,ambiguous,box,roi:box&&!needsRelock?roiFromBox(box,config):null,source,ageMs:Number.isFinite(age)?Math.round(age):null,message:needsRelock?'User isolation lost. Clear the view, then tap Re-lock user.':ambiguous?'Two people overlap your track. Counting paused until the view separates.':visible?'User isolated · person lock active':coasting?'User isolated · holding your last track':'Find one person in the centre to lock.'};
     }
     function push(detections,t){
       const boxes=(detections||[]).map(finishBox).filter(Boolean);
+      if(track&&t-track.lastSeen>=config.maxLossMs)needsRelock=true;
       if(needsRelock)return snapshot(t,false);
       if(!track){
         const centered=boxes.filter(b=>b.cx>0.14&&b.cx<0.86&&b.cy>0.08&&b.cy<0.94&&b.h>0.32).sort((a,b)=>Math.abs(a.cx-0.5)-Math.abs(b.cx-0.5));
@@ -77,19 +78,19 @@
       // predicted box already follows the lifter's motion, so requiring it to overlap at all is cheap.
       const pred=predict(t),scored=boxes.map(b=>({box:b,cost:matchCost(pred,b),overlap:iou(pred,b)})).filter(x=>x.box.h/track.h>0.48&&x.box.h/track.h<2.1&&x.overlap>=config.minIou).sort((a,b)=>a.cost-b.cost);
       if(scored.length&&scored[0].cost<=config.maxCost){
-        if(scored.length>1&&scored[1].cost-scored[0].cost<config.ambiguityMargin){stats.ambiguities++;stats.coasted++;return {...snapshot(t,false),message:'Two people overlap your track. User lock is held while they separate.'}}
+        if(scored.length>1&&scored[1].cost-scored[0].cost<config.ambiguityMargin){ambiguous=true;stats.ambiguities++;stats.coasted++;return {...snapshot(t,false),message:'Two people overlap your track. User lock is held while they separate.'}}
         return accept(scored[0].box,t,'detector');
       }
       const age=t-track.lastSeen;if(age>=config.maxLossMs){needsRelock=true;stats.losses++;return snapshot(t,false)}stats.coasted++;return snapshot(t,false);
     }
     function observePose(points,t){
-      if(!track||needsRelock)return snapshot(t,false);const box=boxFromPose(points,0.14);if(!box)return snapshot(t,false);const pred=predict(t),cost=matchCost(pred,box);
-      if(cost>1.15)return snapshot(t,false);stats.poseRefreshes++;const blended=finishBox({x:track.x*0.65+box.x*0.35,y:track.y*0.65+box.y*0.35,w:track.w*0.72+box.w*0.28,h:track.h*0.72+box.h*0.28,score:box.score});return accept(blended,t,'pose');
+      if(!track||needsRelock||ambiguous)return snapshot(t,false);const box=boxFromPose(points,0.14);if(!box)return snapshot(t,false);const pred=predict(t),cost=matchCost(pred,box);
+      if(cost>1.15||iou(pred,box)<config.minIou)return snapshot(t,false);stats.poseRefreshes++;const blended=finishBox({x:track.x*0.65+box.x*0.35,y:track.y*0.65+box.y*0.35,w:track.w*0.72+box.w*0.28,h:track.h*0.72+box.h*0.28,score:box.score});return accept(blended,t,'pose');
     }
     function sample(t){
       if(!track)return snapshot(t,false);if(!needsRelock&&t-track.lastSeen>=config.maxLossMs){needsRelock=true;stats.losses++}return snapshot(t,false);
     }
-    function reset(){track=null;pending=null;needsRelock=false;lastDetectionAt=null}
+    function reset(){track=null;pending=null;needsRelock=false;lastDetectionAt=null;ambiguous=false}
     function diagnostics(){return {...stats,locked:!!track,needsRelock,lastDetectionAt,box:track?{x:+track.x.toFixed(3),y:+track.y.toFixed(3),w:+track.w.toFixed(3),h:+track.h.toFixed(3)}:null}}
     return {push,observePose,sample,reset,diagnostics};
   }

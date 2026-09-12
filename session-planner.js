@@ -7,7 +7,12 @@ function circuitExercise(u,ex){
   const chosen=pool[0];return chosen?{...ex,...chosen,_alternatives:pool.filter(x=>x.name!==chosen.name)}:null;
 }
 function sessionWarmup(u){return Number(u.workoutMinutes)<=20?120:180}
-function traditionalSetSeconds(ex){return 45+((ex.priority||2)===1?90:60)}
+function traditionalSetSeconds(ex){
+  const both=/each (?:leg|arm|side)|each$|one-arm|single-leg|split squat|lunge/i.test(ex.prescription+' '+ex.name),superset=/superset| \+ /i.test(ex.prescription+' '+ex.name);
+  const work=superset?90:both?90:45;
+  const compound=['bench','chest_press','overhead_press','squat','hinge','split_squat','pullup','row'].includes(ex.seedKey);
+  return work+((ex.priority||2)===1?150:compound?120:60);
+}
 function sessionSeconds(u,plan){
   const base=sessionWarmup(u)+60;
   if(u.trainingMode==='circuit'){
@@ -18,15 +23,21 @@ function sessionSeconds(u,plan){
 }
 function budgetSessionWorkout(u,workout){
   const circuit=u.trainingMode==='circuit',budget=Math.max(600,Math.min(7200,Number(u.workoutMinutes||60)*60));
-  let pool=workout.map(e=>circuit?circuitExercise(u,e):{...e}).filter(Boolean);
+  let pool=workout.filter(e=>e&&exerciseAvailable(u,e)).map(e=>circuit?circuitExercise(u,e):{...e}).filter(Boolean);
   const coverage=muscleCoverage(u),due=new Set(MUSCLE_GROUPS.filter(m=>coverage.last[m]===null||coverage.last[m]>=3));
-  pool=pool.map((e,i)=>({...e,_position:i})).sort((a,b)=>(a.priority||2)-(b.priority||2)||exerciseMuscles(b).filter(m=>due.has(m)).length-exerciseMuscles(a).filter(m=>due.has(m)).length||a._position-b._position);
-  const count=circuit?Math.min(4,pool.length):Math.min(Number(u.workoutMinutes)<=20?3:6,pool.length);
-  let selected=pool.slice(0,count).map(e=>({...e,sets:1,_max:Math.max(1,e.sets)}));
-  // Preserve a slot for neglected muscles when it adds coverage to this session.
+  const count=circuit?Math.min(4,pool.length):Math.min(Number(u.workoutMinutes)<=10?2:Number(u.workoutMinutes)<=20?3:Number(u.workoutMinutes)<=30?4:pool.length,pool.length);
+  const exposure=Number(u.program?.exposures?.[u.program?.currentWorkoutKey])||0;
+  const specificity=e=>e.seedKey==='calves'?['calves']:e.seedKey==='core'?['core']:e.seedKey==='ham_curl'?['hamstrings']:exerciseMuscles(e);
+  const recentDose=e=>(u.history||[]).slice(0,6).reduce((n,h)=>n+(h.details||[]).reduce((v,d)=>v+(d.seedKey===e.seedKey?(d.sets||[]).filter(s=>s.done===true).length:0),0),0);
+  pool=pool.map((e,i)=>({...e,_position:i}));
+  const anchors=pool.filter(e=>e.priority===1),accessories=pool.filter(e=>e.priority!==1);
+  // Short plans retain main work and rotate overdue accessories; long plans see ALL slots.
+  accessories.sort((a,b)=>recentDose(a)-recentDose(b)||Number(specificity(b).some(m=>due.has(m)))-Number(specificity(a).some(m=>due.has(m)))||((a._position+exposure)%Math.max(1,pool.length))-((b._position+exposure)%Math.max(1,pool.length)));
+  let selected=[...anchors,...accessories].slice(0,count).map(e=>({...e,sets:1,_max:Math.max(1,e.sets)}));
   const covered=new Set(selected.flatMap(exerciseMuscles));
-  const neglected=pool.find(e=>!selected.some(x=>x.name===e.name)&&exerciseMuscles(e).some(m=>due.has(m)&&!covered.has(m)));
-  if(neglected&&selected.length>1)selected[selected.length-1]={...neglected,sets:1,_max:Math.max(1,neglected.sets)};
+  const neglected=accessories.find(e=>!selected.some(x=>x.name===e.name)&&specificity(e).some(m=>due.has(m)&&!covered.has(m)));
+  if(neglected&&selected.length>2&&selected[selected.length-1].priority!==1)selected[selected.length-1]={...neglected,sets:1,_max:Math.max(1,neglected.sets)};
+  selected.sort((a,b)=>a._position-b._position);
   while(selected.length>1&&sessionSeconds(u,selected)>budget)selected.pop();
   if(circuit){
     const maxRounds=Number(u.readiness?.energy||4)<=2?4:8;

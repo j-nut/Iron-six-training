@@ -54,7 +54,8 @@ const exercises=[
   "pattern": "fly",
   "base": "Chest isolation",
   "workoutKeys": [
-   "chest"
+   "chest",
+   "upper_specialization"
   ],
   "isSupersetComponent": false,
   "mediaId": "ironsix-band-chest-fly",
@@ -260,8 +261,7 @@ const exercises=[
    "bands"
   ],
   "muscles": [
-   "back",
-   "biceps"
+   "back"
   ],
   "pattern": "lat_iso",
   "base": "Lat isolation",
@@ -281,7 +281,6 @@ const exercises=[
    "bands"
   ],
   "muscles": [
-   "hamstrings",
    "glutes"
   ],
   "pattern": "hip_thrust",
@@ -418,7 +417,6 @@ const exercises=[
    "bench"
   ],
   "muscles": [
-   "hamstrings",
    "glutes"
   ],
   "pattern": "hip_thrust",
@@ -790,7 +788,8 @@ const exercises=[
   "pattern": "fly",
   "base": "Chest isolation",
   "workoutKeys": [
-   "chest"
+   "chest",
+   "upper_specialization"
   ],
   "isSupersetComponent": false,
   "mediaId": "ironsix-dumbbell-fly",
@@ -847,7 +846,6 @@ const exercises=[
    "bench"
   ],
   "muscles": [
-   "hamstrings",
    "glutes"
   ],
   "pattern": "hip_thrust",
@@ -890,8 +888,7 @@ const exercises=[
    "bench"
   ],
   "muscles": [
-   "back",
-   "biceps"
+   "back"
   ],
   "pattern": "lat_iso",
   "base": "Lat isolation",
@@ -979,8 +976,7 @@ const exercises=[
   "pattern": "overhead_press",
   "base": "Vertical press",
   "workoutKeys": [
-   "shoulders_arms",
-   "upper_specialization"
+   "shoulders_arms"
   ],
   "isSupersetComponent": false,
   "mediaId": "ironsix-dumbbell-shoulder-press",
@@ -1209,8 +1205,7 @@ const exercises=[
   "aliases": [],
   "equipment": [],
   "muscles": [
-   "back",
-   "biceps"
+   "back"
   ],
   "pattern": "lat_iso",
   "base": "Lat isolation",
@@ -1261,8 +1256,7 @@ const exercises=[
   "base": "Vertical press",
   "workoutKeys": [
    "chest",
-   "shoulders_arms",
-   "upper_specialization"
+   "shoulders_arms"
   ],
   "isSupersetComponent": false,
   "mediaId": "ironsix-landmine-press",
@@ -1548,8 +1542,7 @@ const exercises=[
   "pattern": "overhead_press",
   "base": "Vertical press",
   "workoutKeys": [
-   "shoulders_arms",
-   "upper_specialization"
+   "shoulders_arms"
   ],
   "isSupersetComponent": false,
   "mediaId": "ironsix-pike-push-up",
@@ -1683,7 +1676,6 @@ const exercises=[
   "aliases": [],
   "equipment": [],
   "muscles": [
-   "hamstrings",
    "glutes"
   ],
   "pattern": "hip_thrust",
@@ -1807,7 +1799,8 @@ const exercises=[
   "pattern": "fly",
   "base": "Chest isolation",
   "workoutKeys": [
-   "chest"
+   "chest",
+   "upper_specialization"
   ],
   "isSupersetComponent": false,
   "mediaId": "ironsix-wide-push-up",
