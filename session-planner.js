@@ -33,13 +33,20 @@ function budgetSessionWorkout(u,workout){
   pool=pool.map((e,i)=>({...e,_position:i}));
   const anchors=pool.filter(e=>e.priority===1),accessories=pool.filter(e=>e.priority!==1);
   // Short and 45-minute plans retain main work plus the most useful accessories.
-  // At 60+ minutes the full menu is available so extra time produces a meaningfully fuller session,
-  // not merely the identical exercise list with more sets.
+  // At 60+ minutes the full menu is available and accessories can earn one extra set,
+  // so extra time becomes real training volume instead of an identical session label.
   accessories.sort((a,b)=>recentDose(a)-recentDose(b)||Number(specificity(b).some(m=>due.has(m)))-Number(specificity(a).some(m=>due.has(m)))||((a._position+exposure)%Math.max(1,pool.length))-((b._position+exposure)%Math.max(1,pool.length)));
-  let selected=[...anchors,...accessories].slice(0,count).map(e=>({...e,sets:1,_max:Math.max(1,e.sets)}));
+  let selected=[...anchors,...accessories].slice(0,count).map(e=>{
+    const baseMax=Math.max(1,e.sets);
+    const volumeBonus=!circuit&&minutes>=60&&e.priority!==1?1:0;
+    return {...e,sets:1,_max:baseMax+volumeBonus};
+  });
   const covered=new Set(selected.flatMap(exerciseMuscles));
   const neglected=accessories.find(e=>!selected.some(x=>x.name===e.name)&&specificity(e).some(m=>due.has(m)&&!covered.has(m)));
-  if(neglected&&selected.length>2&&selected[selected.length-1].priority!==1)selected[selected.length-1]={...neglected,sets:1,_max:Math.max(1,neglected.sets)};
+  if(neglected&&selected.length>2&&selected[selected.length-1].priority!==1){
+    const baseMax=Math.max(1,neglected.sets),volumeBonus=!circuit&&minutes>=60?1:0;
+    selected[selected.length-1]={...neglected,sets:1,_max:baseMax+volumeBonus};
+  }
   selected.sort((a,b)=>a._position-b._position);
   while(selected.length>1&&sessionSeconds(u,selected)>budget)selected.pop();
   if(circuit){
@@ -77,7 +84,6 @@ function circuitClock(steps,stored){
     start(now){if(state.index>=steps.length)return;state.running=true;state.deadline=now+state.remaining},
     pause(now){if(state.running)state.remaining=Math.max(0,state.deadline-now);state.running=false;state.deadline=0},
     advance(now){state.index++;state.remaining=(steps[state.index]?.seconds||0)*1000;state.running=state.running&&state.index<steps.length;state.deadline=state.running?now+state.remaining:0},
-    tick(now){if(!state.running)return false;state.remaining=Math.max(0,state.deadline-now);if(state.remaining===0){this.advance(now);return true}return false
-    }
+    tick(now){if(!state.running)return false;state.remaining=Math.max(0,state.deadline-now);if(state.remaining===0){this.advance(now);return true}return false}
   };
 }
