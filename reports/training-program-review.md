@@ -158,3 +158,62 @@ but is not an exact measurement for an individual.
 fixes are pending implementation. Previous 347 passing tests apply to the earlier rotation
 patch, not to this proposed redesign. No unsupported claim of professional approval,
 physiological validation, or completed implementation should be made.
+
+
+## User clarification — planned variety, whole-body development, optional cardio
+
+These requirements refine the proposed templates above. The template tables describe
+movement slots and an initial workload, NOT six immutable workouts to repeat indefinitely.
+
+- The app must coordinate the entire rolling program. Users should not need repeated
+  manual swaps to correct duplicate exercises or overlapping muscle loads.
+- Provide meaningful A/B exercise differences and planned accessory variety across
+  successive exposures. Evaluate exact exercise identity, movement pattern, direct and
+  indirect muscle involvement, lower-back/grip demands, and recent completed work.
+- Repeated primary lifts are allowed when needed for measurable progression, but avoid
+  redundant exact exercises across adjacent or closely spaced sessions when appropriate,
+  equipment-compatible alternatives exist. Preserve stable benchmarks while rotating
+  accessories/angles/rep emphases deliberately; do not make every movement unfamiliar.
+- Review and evolve the program each week from completed performance, fatigue, available
+  equipment, time and preference. Evolution can mean changed exercise choices, reps,
+  loads, sets or emphasis; it must not automatically mean more volume or a compulsory
+  new exercise. Explain meaningful changes briefly.
+- Weekly planning never regenerates an active unfinished session or moves the saved
+  sequence forward. Missed weeks do not unlock harder workouts by elapsed time alone.
+- Reconcile variety with limited equipment, skill and recovery. Do not invent movements
+  or select unavailable equipment merely to satisfy a novelty quota. When repetition
+  is justified, give a concise training reason instead of requiring the user to fix it.
+- Track adequate coverage and progress across all major muscle groups and movement
+  patterns, including lateral/rear shoulders, calves and core. Track smaller support
+  muscles through relevant compounds and targeted work where appropriate. Do not claim
+  every anatomical muscle is individually trained or guarantee strength gains.
+- Test multiple complete cycles, variable five/six-day attendance, 15–60-minute sessions,
+  equipment restrictions and recovery adjustments. Check exact-exercise repetition,
+  recurring omissions, distribution of direct/indirect sets and benchmark progression.
+  Automatic corrections affect future unstarted sessions, never overwrite performed work.
+
+### Optional cardio
+
+Add a clear opt-in/out preference, available to change at any time. Cardio is a companion
+plan, not a compulsory seventh step in the strength rotation.
+
+When enabled, obtain the user's activity baseline, preferred modes, available equipment,
+time and goals. Suggest appropriate duration/intensity using both existing activity and
+upcoming strength demands. Account for logged walking, cycling, running, swimming or
+classes so recommendations do not silently stack on top of activity already performed.
+Hard intervals or demanding leg cardio must not be the automatic default around heavy
+lower sessions. Increase gradually from baseline; do not impose a full population target
+as an immediate starting prescription.
+
+Completing, skipping or disabling cardio never advances, blocks or resets strength
+workouts; opting out produces no missed-workout penalty. If the user chooses to log
+external cardio while recommendations are off, the logged workload can still inform
+recovery. No activity-tracking integration or automated data collection is implied.
+
+Evidence basis for deliberate variety:
+[Exercise variation systematic review](https://pubmed.ncbi.nlm.nih.gov/35438660/).
+General aerobic health targets should be individualized rather than used as a mandatory
+app quota; see [U.S. Physical Activity Guidelines](https://odphp.health.gov/our-work/nutrition-physical-activity/physical-activity-guidelines/current-guidelines).
+
+Status: recorded requirements for implementation; no cardio feature or new program
+behavior has been shipped by this documentation update.
