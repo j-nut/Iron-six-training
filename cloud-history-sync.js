@@ -22,7 +22,7 @@
   loadRuntimeScript('session-adaptation-v3.js?v=2','session-adaptation-v3','__ironSixSessionAdaptationV3Loaded');
   loadRuntimeScript('media-experience-v2.js?v=1','media-experience-v2','__ironSixMediaExperienceV2Loaded');
   loadRuntimeScript('music-originals.js?v=1','music-originals','__ironSixMusicOriginalsLoaded');
-  loadRuntimeScript('music.js?v=1','music-originals-ui','__ironSixMusicLoaded');
+  loadRuntimeScript('music.js?v=1','music','__ironSixMusicLoaded');
   loadRuntimeScript('session-resume.js?v=1','session-resume','__ironSixSessionResumeLoaded');
   loadRuntimeScript('active-workout-clean.js?v=1','active-workout-clean','__ironSixActiveWorkoutCleanLoaded');
 })();
