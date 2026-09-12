@@ -22,16 +22,19 @@ function sessionSeconds(u,plan){
   return base+plan.reduce((n,e)=>n+45+e.sets*traditionalSetSeconds(e),0);
 }
 function budgetSessionWorkout(u,workout){
-  const circuit=u.trainingMode==='circuit',budget=Math.max(600,Math.min(7200,Number(u.workoutMinutes||60)*60));
+  const circuit=u.trainingMode==='circuit',minutes=Number(u.workoutMinutes||60),budget=Math.max(600,Math.min(7200,minutes*60));
   let pool=workout.filter(e=>e&&exerciseAvailable(u,e)).map(e=>circuit?circuitExercise(u,e):{...e}).filter(Boolean);
   const coverage=muscleCoverage(u),due=new Set(MUSCLE_GROUPS.filter(m=>coverage.last[m]===null||coverage.last[m]>=3));
-  const count=circuit?Math.min(4,pool.length):Math.min(Number(u.workoutMinutes)<=10?2:Number(u.workoutMinutes)<=20?3:Number(u.workoutMinutes)<=30?4:pool.length,pool.length);
+  const traditionalCount=minutes<=10?2:minutes<=20?3:minutes<=30?4:minutes<60?Math.min(4,pool.length):pool.length;
+  const count=circuit?Math.min(4,pool.length):Math.min(traditionalCount,pool.length);
   const exposure=Number(u.program?.exposures?.[u.program?.currentWorkoutKey])||0;
   const specificity=e=>e.seedKey==='calves'?['calves']:e.seedKey==='core'?['core']:e.seedKey==='ham_curl'?['hamstrings']:exerciseMuscles(e);
   const recentDose=e=>(u.history||[]).slice(0,6).reduce((n,h)=>n+(h.details||[]).reduce((v,d)=>v+(d.seedKey===e.seedKey?(d.sets||[]).filter(s=>s.done===true).length:0),0),0);
   pool=pool.map((e,i)=>({...e,_position:i}));
   const anchors=pool.filter(e=>e.priority===1),accessories=pool.filter(e=>e.priority!==1);
-  // Short plans retain main work and rotate overdue accessories; long plans see ALL slots.
+  // Short and 45-minute plans retain main work plus the most useful accessories.
+  // At 60+ minutes the full menu is available so extra time produces a meaningfully fuller session,
+  // not merely the identical exercise list with more sets.
   accessories.sort((a,b)=>recentDose(a)-recentDose(b)||Number(specificity(b).some(m=>due.has(m)))-Number(specificity(a).some(m=>due.has(m)))||((a._position+exposure)%Math.max(1,pool.length))-((b._position+exposure)%Math.max(1,pool.length)));
   let selected=[...anchors,...accessories].slice(0,count).map(e=>({...e,sets:1,_max:Math.max(1,e.sets)}));
   const covered=new Set(selected.flatMap(exerciseMuscles));
@@ -43,7 +46,7 @@ function budgetSessionWorkout(u,workout){
     const maxRounds=Number(u.readiness?.energy||4)<=2?4:8;
     while(selected.length&&selected[0].sets<maxRounds){const next=selected.map(e=>({...e,sets:e.sets+1}));if(sessionSeconds(u,next)>budget)break;selected=next}
     // Use the remaining short-session budget for a final partial round.
-    if(Number(u.workoutMinutes)<=30)for(const e of selected){if(e.sets>=maxRounds)continue;e.sets++;if(sessionSeconds(u,selected)>budget)e.sets--}
+    if(minutes<=30)for(const e of selected){if(e.sets>=maxRounds)continue;e.sets++;if(sessionSeconds(u,selected)>budget)e.sets--}
   }else{
     let grew=true;
     while(grew){grew=false;for(const e of selected){if(e.sets>=e._max)continue;e.sets++;if(sessionSeconds(u,selected)>budget)e.sets--;else grew=true}}
@@ -74,6 +77,7 @@ function circuitClock(steps,stored){
     start(now){if(state.index>=steps.length)return;state.running=true;state.deadline=now+state.remaining},
     pause(now){if(state.running)state.remaining=Math.max(0,state.deadline-now);state.running=false;state.deadline=0},
     advance(now){state.index++;state.remaining=(steps[state.index]?.seconds||0)*1000;state.running=state.running&&state.index<steps.length;state.deadline=state.running?now+state.remaining:0},
-    tick(now){if(!state.running)return false;state.remaining=Math.max(0,state.deadline-now);if(state.remaining===0){this.advance(now);return true}return false}
+    tick(now){if(!state.running)return false;state.remaining=Math.max(0,state.deadline-now);if(state.remaining===0){this.advance(now);return true}return false
+    }
   };
 }
