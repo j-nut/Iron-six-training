@@ -49,7 +49,7 @@ await cp(resolve(root, 'assets/brand'), resolve(out, 'assets/brand'), { recursiv
 
 const html = await readFile(resolve(root, 'index.html'), 'utf8');
 const scripts = [...html.matchAll(/<script src="([^"?]+)(?:\?[^" ]*)?"/g)].map(match => match[1]);
-const runtimeScripts = ['coach-recovery.js','auth-hardening.js','account-polish.js','load-progression-v2.js','bodyweight-load-fix.js','adaptive-insights.js','trainer-intelligence-v2.js','progress-analytics-v2.js','session-adaptation-v3.js','media-experience-v2.js','music-originals.js','music.js','session-resume.js','pose-person-isolation.js'];
+const runtimeScripts = ['coach-recovery.js','auth-hardening.js','account-polish.js','load-progression-v2.js','bodyweight-load-fix.js','adaptive-insights.js','trainer-intelligence-v2.js','progress-analytics-v2.js','session-adaptation-v3.js','media-experience-v2.js','music-originals.js','music.js','session-resume.js','active-workout-clean.js','pose-person-isolation.js'];
 const files = [...new Set(['index.html','live.html','welcome.html','style.css','EXERCISE_MEDIA.md','MUSIC.md',...scripts,...runtimeScripts])];
 for (const file of files) { if (!/^[a-zA-Z0-9_.-]+$/.test(file) || file.includes('..')) throw Error('Unexpected public file'); await cp(resolve(root,file),resolve(out,file)); }
 const checksums = {};
