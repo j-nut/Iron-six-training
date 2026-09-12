@@ -1,6 +1,6 @@
 # Training-program audit — running handoff
 
-Status: audit in progress. User asked to keep notes so work survives credit exhaustion.
+Status: research and independent reviews complete; final report is `reports/training-program-review.md`. Implementation remains pending. User asked to keep notes so work survives credit exhaustion.
 Working branch: `fix/camera-reliability-v6`, draft PR #37. Production `main` must remain
 untouched per camera handoff until physical-phone validation passes. Do not merge this
 branch just to publish a programming change. Starting commit: `1fcfe34`.
@@ -106,3 +106,13 @@ indirect-set accounting is a useful estimate, not a precise per-person measureme
   definitions through any later program migration. Old keys must not silently change
   meaning for historical records.
 - No new program or analytics fixes have been implemented during this audit yet.
+
+## September 12 checkpoint
+
+Consolidated findings and full proposed six-session template are saved in
+`reports/training-program-review.md`, including runtime simulation results, sources,
+known test gaps and a migration/verification sequence. No app behavior was changed by
+this audit. Resume with the report and fix accounting/planner issues before replacing
+the program. The original temporary simulation files were not retained across the
+environment interruption; their observed results are preserved in the report and
+should be reproduced as regression tests during implementation.
