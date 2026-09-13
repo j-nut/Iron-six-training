@@ -59,11 +59,19 @@
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .done{height:50px!important;min-height:50px!important;border-radius:12px!important;font-size:16px!important}
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .done{width:50px!important;min-width:50px!important;padding:0!important}
 
-      /* Feedback always fits the card: label above a compact 2×2 choice grid. */
-      #exerciseList.awc-focus .set-feedback{display:grid!important;grid-template-columns:1fr;gap:5px;grid-column:1/-1;padding:4px 0 6px!important;min-width:0;width:100%}
-      #exerciseList.awc-focus .set-feedback-label{font-size:10px!important;margin:0!important;white-space:normal;color:var(--muted)}
-      #exerciseList.awc-focus .set-feedback-actions{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px!important;overflow:visible!important;min-width:0;width:100%}
-      #exerciseList.awc-focus .set-feedback-btn{padding:6px 5px!important;font-size:10px!important;line-height:1.1!important;white-space:normal;min-width:0!important;min-height:30px!important;width:100%}
+      /* Feedback behaves like a discrete slider: four compact stops in one pill. */
+      #exerciseList.awc-focus .set-feedback{display:flex!important;align-items:center;gap:7px;grid-column:1/-1;padding:2px 0 4px!important;min-width:0;width:100%}
+      #exerciseList.awc-focus .set-feedback-label{font-size:9.5px!important;margin:0!important;white-space:nowrap;color:var(--muted);flex:0 0 auto}
+      #exerciseList.awc-focus .set-feedback-actions{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:0!important;min-width:0;flex:1;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--surface2)}
+      #exerciseList.awc-focus .set-feedback-btn{position:relative;border:0!important;border-right:1px solid var(--line)!important;background:transparent!important;border-radius:0!important;padding:0 4px!important;font-size:0!important;line-height:1!important;white-space:nowrap;min-width:0!important;min-height:30px!important;width:100%}
+      #exerciseList.awc-focus .set-feedback-btn:last-child{border-right:0!important}
+      #exerciseList.awc-focus .set-feedback-btn::after{font-size:9.5px;font-weight:750;color:var(--muted)}
+      #exerciseList.awc-focus .set-feedback-btn[data-set-feedback="easy"]::after{content:'Easy'}
+      #exerciseList.awc-focus .set-feedback-btn[data-set-feedback="right"]::after{content:'Good'}
+      #exerciseList.awc-focus .set-feedback-btn[data-set-feedback="hard"]::after{content:'Hard'}
+      #exerciseList.awc-focus .set-feedback-btn[data-set-feedback="pain"]::after{content:'Pain'}
+      #exerciseList.awc-focus .set-feedback-btn.active{background:rgba(46,229,128,.14)!important;box-shadow:inset 0 0 0 1px var(--accent)!important}
+      #exerciseList.awc-focus .set-feedback-btn.active::after{color:var(--text)}
 
       /* Illustration/form reference remains available but no longer competes with logging. */
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-media,
@@ -75,8 +83,9 @@
       #exerciseList.awc-focus ~ #sessionCardFoot{display:none!important}
 
       @media(max-width:520px){
-        #exerciseList.awc-focus .set-feedback-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
-        #exerciseList.awc-focus .set-feedback-btn{font-size:10.5px!important;padding:6px 7px!important}
+        #exerciseList.awc-focus .set-feedback{gap:5px}
+        #exerciseList.awc-focus .set-feedback-label{font-size:9px!important}
+        #exerciseList.awc-focus .set-feedback-btn::after{font-size:9px}
       }
       @media(max-width:390px){
         #sessionCardNav{gap:5px!important}
@@ -84,7 +93,7 @@
         #scNextBtn{min-width:68px!important;padding:0 8px!important}
         .awc-overview-proxy{min-width:42px;padding:0 7px}
         #exerciseList.awc-focus .exercise:not(.sc-hidden){padding:12px 11px 13px!important}
-        #exerciseList.awc-focus .set-feedback-label{font-size:9.5px!important}
+        #exerciseList.awc-focus .set-feedback-label{display:none!important}
       }
       @media(prefers-reduced-motion:reduce){.awc-overview-proxy:active{transform:none}}
     `;
@@ -196,5 +205,5 @@
 
   scheduleApply();
   addEventListener('load', apply);
-  window.IronSixActiveWorkoutClean = { apply, version: 5, observer: false, layout: 'compact-control-surface' };
+  window.IronSixActiveWorkoutClean = { apply, version: 6, observer: false, layout: 'compact-control-surface' };
 })();
