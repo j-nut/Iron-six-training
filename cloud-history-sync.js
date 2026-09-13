@@ -11,6 +11,13 @@
     script.src=src;script.setAttribute(`data-${datasetKey}`,'true');script.async=false;
     document.body.appendChild(script);
   }
+  function loadRuntimeStyle(href,datasetKey){
+    if(document.querySelector(`link[data-${datasetKey}]`))return;
+    const link=document.createElement('link');
+    link.rel='stylesheet';link.href=href;link.setAttribute(`data-${datasetKey}`,'true');
+    document.head.appendChild(link);
+  }
+  loadRuntimeStyle('premium-ui.css?v=1','premium-ui');
   loadRuntimeScript('coach-recovery.js?v=2','coach-recovery','__ironSixCoachRecoveryLoaded');
   loadRuntimeScript('auth-hardening.js?v=2','auth-hardening','__ironSixAuthHardened');
   loadRuntimeScript('account-polish.js?v=1','account-polish','__ironSixAccountPolish');
