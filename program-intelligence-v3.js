@@ -25,7 +25,6 @@
     lower_b:'Hinge/posterior lower · hinge strength, squat support, direct glutes, hamstrings, calves',
     pull_b:'Mid-back/thickness pull · supported rows, secondary vertical pull, rear delts/scapulae, brachialis/forearms'
   };
-  const n=v=>{const x=Number(v);return Number.isFinite(x)?x:0};
   const completedSets=d=>(d?.sets||[]).filter(s=>s?.done===true).length;
 
   function bucket(detail){
@@ -76,10 +75,11 @@
 
   function upcoming(user,count=3){
     const rotation=Array.isArray(window.ROTATION)?window.ROTATION:(typeof ROTATION!=='undefined'?ROTATION:[]);
+    const metaTable=typeof WORKOUT_META!=='undefined'?WORKOUT_META:{};
     const current=user?.program?.currentWorkoutKey||rotation[0],start=Math.max(0,rotation.indexOf(current));
     const result=[];
     for(let i=0;i<Math.min(count,rotation.length);i++){
-      const key=rotation[(start+i)%rotation.length],meta=(window.WORKOUT_META||globalThis.WORKOUT_META||{})[key]||{};
+      const key=rotation[(start+i)%rotation.length],meta=metaTable[key]||{};
       result.push({key,name:meta.name||meta.short||key,purpose:SESSION_PURPOSE[key]||''});
     }
     return result;
@@ -121,9 +121,10 @@
     const plan=document.getElementById('plan');if(!plan)return;
     let box=document.getElementById('rollingProgramIntelligence');
     if(!box){box=document.createElement('div');box.id='rollingProgramIntelligence';box.className='section';const anchor=document.getElementById('trainingBlockStatus');if(anchor)anchor.after(box);else plan.prepend(box)}
-    const a=analyze(activeUser()),next=a.upcoming.map((x,i)=>`<div style="padding:${i?'9':'0'}px 0 9px;${i?'border-top:1px solid var(--line)':''}"><strong>${i+1}. ${escapeHtml?.(x.name)||x.name}</strong><br><span>${escapeHtml?.(x.purpose)||x.purpose}</span></div>`).join('');
+    const safe=typeof escapeHtml==='function'?escapeHtml:(v=>String(v??''));
+    const a=analyze(activeUser()),next=a.upcoming.map((x,i)=>`<div style="padding:${i?'9':'0'}px 0 9px;${i?'border-top:1px solid var(--line)':''}"><strong>${i+1}. ${safe(x.name)}</strong><br><span>${safe(x.purpose)}</span></div>`).join('');
     const gaps=a.undercovered.length?a.undercovered.slice(0,3).map(x=>x.label).join(' · '):'No major recurring gap detected in the completed-work window.';
-    box.innerHTML=`<div class="section-head"><div><h2>Upcoming training logic</h2><small>Planned from completed work, not the calendar</small></div></div><div class="note">${next}<br><strong>Watch next:</strong> ${gaps}<br><br><span>The planner uses this as a priority signal, not a catch-up mandate. Groq receives the same history context after completed workouts.</span></div>`;
+    box.innerHTML=`<div class="section-head"><div><h2>Upcoming training logic</h2><small>Planned from completed work, not the calendar</small></div></div><div class="note">${next}<br><strong>Watch next:</strong> ${safe(gaps)}<br><br><span>The planner uses this as a priority signal, not a catch-up mandate. Groq receives the same history context after completed workouts.</span></div>`;
   }
 
   document.addEventListener('click',e=>{if(e.target.closest?.('[data-view="plan"]'))setTimeout(render,0)});
