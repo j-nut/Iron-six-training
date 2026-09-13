@@ -21,8 +21,6 @@
   const $ = id => document.getElementById(id);
   const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-  // In-memory on purpose: it survives switching tabs (this is a single page, tabs do not
-  // reload) and dies on a real reload, where the derived position is correct anyway.
   let began = false, focusName = null, showAll = false;
 
   const cards = () => [...document.querySelectorAll('#exerciseList [data-exercise-index]')];
@@ -43,7 +41,6 @@
     return { done, planned, perExercise };
   }
 
-  // The first exercise with a set still to do. Past the end means everything is logged.
   function firstIncomplete(user, workout) {
     for (let ei = 0; ei < workout.length; ei++)
       for (let i = 0; i < workout[ei].sets; i++)
@@ -56,7 +53,7 @@
       const index = workout.findIndex(exercise => exercise.name === focusName);
       if (index >= 0) return index;
       if (focusName === '__review') return workout.length;
-      focusName = null; // the workout changed under us; fall back to the log
+      focusName = null;
     }
     return firstIncomplete(user, workout);
   }
@@ -74,9 +71,10 @@
     style.id = 'sessionCardStyles';
     style.textContent = `
       .sc-hidden{display:none!important}
-      #sessionStart{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:16px;margin:0 0 12px;text-align:center}
-      #sessionStart h3{margin:0 0 5px;font-size:16px}
-      #sessionStart p{margin:0 0 13px;font-size:12.5px;color:var(--muted);line-height:1.45}
+      #sessionStart{border:1px solid rgba(46,229,128,.34);background:linear-gradient(180deg,rgba(46,229,128,.075),var(--surface));border-radius:16px;padding:14px 16px;margin:0 0 12px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+      #sessionStart h3{margin:0 0 3px;font-size:16px}
+      #sessionStart p{margin:0 0 11px;font-size:12.5px;color:var(--muted);line-height:1.4}
+      #sessionStart .btn{width:100%;min-height:50px;font-size:15px;font-weight:850}
       #sessionCardNav{display:flex;align-items:center;gap:9px;margin:0 0 11px}
       #sessionCardNav .sc-step{flex:1;min-width:0;text-align:center}
       #sessionCardNav .sc-step strong{display:block;font-size:12.5px;font-weight:850}
@@ -109,7 +107,9 @@
       const start = document.createElement('div');
       start.id = 'sessionStart';
       start.innerHTML = '<h3 id="sessionStartTitle">Ready when you are</h3><p id="sessionStartText"></p><button class="btn primary" id="sessionBeginBtn" type="button">Begin workout</button>';
-      list.before(start);
+      // Start is the primary action on Today. Put it before the workout-detail section so users
+      // never need to scroll past muscle-group/status/explanation cards just to begin.
+      section.before(start);
       start.querySelector('#sessionBeginBtn').addEventListener('click', () => {
         const user = activeUser(), workout = finalWorkout(user);
         began = true;
@@ -141,7 +141,6 @@
         + '<button class="btn primary" id="scFinish" type="button">Finish workout</button></div>';
       $('sessionCardFoot').after(review);
       review.querySelector('#scBackToExercises').addEventListener('click', () => { const w = finalWorkout(activeUser()); goTo(Math.max(0, w.length - 1), w); });
-      // Finishing is finishWorkout's job, including its own partial-session confirmation.
       review.querySelector('#scFinish').addEventListener('click', () => { if (typeof finishWorkout === 'function') finishWorkout(); });
     }
     return true;
@@ -159,7 +158,6 @@
     const user = activeUser(), workout = finalWorkout(user), all = cards();
     const cta = $('finishBtn')?.closest('.cta') || null;
 
-    // Circuit mode already has a guide; stand down completely.
     if (isCircuit(user) || showAll || !all.length) {
       showEverything();
       $('sessionCardFoot')?.classList.toggle('sc-hidden', isCircuit(user) || !all.length);
@@ -177,7 +175,7 @@
       cta?.classList.add('sc-hidden');
       const { planned } = progress(user, workout);
       const text = $('sessionStartText');
-      if (text) text.textContent = `${workout.length} exercise${workout.length === 1 ? '' : 's'}, ${planned} sets. You can change anything in Session setup first.`;
+      if (text) text.textContent = `${workout.length} exercise${workout.length === 1 ? '' : 's'} · ${planned} sets · setup can be changed above`;
       return;
     }
 
@@ -214,8 +212,6 @@
       const last = index + 1 >= workout.length;
       next.textContent = last ? 'Review ›' : 'Next ›';
       next.setAttribute('aria-label', last ? 'Review and finish workout' : `Next exercise: ${workout[index + 1]?.name || ''}`);
-      // Highlight forward once this exercise is done, rather than moving the screen under someone
-      // who may still be correcting a number.
       next.classList.toggle('ready', current.complete >= current.sets);
     }
   }
