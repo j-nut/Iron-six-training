@@ -28,9 +28,6 @@ await Promise.all(Array.from({length: 6}, async () => {
   }
 }));
 
-// First-party approved illustrations. These are ours rather than a third-party download, but
-// they still ship through a committed checksum manifest so a corrupted or swapped asset fails
-// the build instead of reaching a user's phone.
 let artCount = 0;
 const illustrationDir = 'assets/exercise-illustrations';
 const illustrations = JSON.parse(await readFile(resolve(root, illustrationDir, 'manifest.json'), 'utf8'));
@@ -43,13 +40,11 @@ for (const row of illustrations) {
   artCount++;
 }
 await cp(resolve(root, illustrationDir, 'manifest.json'), resolve(out, illustrationDir, 'manifest.json'));
-
-// Brand assets are small, first-party and hand-authored, so they ship as-is.
 await cp(resolve(root, 'assets/brand'), resolve(out, 'assets/brand'), { recursive: true });
 
 const html = await readFile(resolve(root, 'index.html'), 'utf8');
 const scripts = [...html.matchAll(/<script src="([^"?]+)(?:\?[^" ]*)?"/g)].map(match => match[1]);
-const runtimeScripts = ['coach-recovery.js','auth-hardening.js','account-polish.js','load-progression-v2.js','bodyweight-load-fix.js','adaptive-insights.js','trainer-intelligence-v2.js','program-intelligence-v3.js','progress-analytics-v2.js','session-adaptation-v3.js','media-experience-v2.js','music-originals.js','music.js','session-resume.js','active-workout-clean.js','pose-person-isolation.js'];
+const runtimeScripts = ['coach-recovery.js','auth-hardening.js','account-polish.js','profile-delete.js','load-progression-v2.js','bodyweight-load-fix.js','adaptive-insights.js','trainer-intelligence-v2.js','program-intelligence-v3.js','progress-analytics-v2.js','session-adaptation-v3.js','media-experience-v2.js','music-originals.js','music.js','session-resume.js','active-workout-clean.js','pose-person-isolation.js'];
 const files = [...new Set(['index.html','live.html','welcome.html','style.css','premium-ui.css','EXERCISE_MEDIA.md','MUSIC.md',...scripts,...runtimeScripts])];
 for (const file of files) { if (!/^[a-zA-Z0-9_.-]+$/.test(file) || file.includes('..')) throw Error('Unexpected public file'); await cp(resolve(root,file),resolve(out,file)); }
 const checksums = {};
