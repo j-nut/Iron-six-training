@@ -33,14 +33,12 @@
       .shell-panel:not(.open) .shell-body{display:none}
       .shell-body>.section{border:0;background:none;padding:0;margin:0 0 4px}
       .shell-body>.section:first-child{margin-top:0}
+      #cardioCompanion{padding-top:12px!important;border-top:1px solid var(--line)!important;margin-top:8px!important}
       @media(max-width:390px){.shell-toggle{padding:12px}}
     `;
     document.head.appendChild(style);
   }
 
-  // The coach is the second thing a user wants, not the fourth. Reordering by re-appending in
-  // the desired order leaves any button this app did not create (there are none today) at the
-  // front rather than dropping it.
   function orderNav() {
     const inner = document.querySelector('.bottom-inner');
     if (!inner) return;
@@ -84,9 +82,8 @@
     const setupBody = setup.querySelector('.shell-body');
     const musicBody = music.querySelector('.shell-body');
 
-    // Order: hero, setup, the workout itself, then music.
     if (setup.parentNode !== today || hero.nextElementSibling !== setup) hero.after(setup);
-    for (const node of [$('durationSection'), sectionContaining('readinessNote')])
+    for (const node of [$('durationSection'), sectionContaining('readinessNote'), $('cardioCompanion')])
       if (node && node.parentNode !== setupBody) setupBody.appendChild(node);
     if (workout.previousElementSibling !== setup) setup.after(workout);
     const musicSection = $('workoutMusic');
@@ -107,13 +104,12 @@
     if (!user) return;
     const minutes = Number(user.workoutMinutes) || 60;
     const mode = user.trainingMode === 'circuit' ? 'Guided circuit' : 'Traditional';
-    setSummary('sessionSetup', `${minutes} min · ${mode} · ${describeReadiness(user)}`);
+    const cardio = user?.program?.cardio?.enabled === true ? 'Cardio on' : 'Cardio off';
+    setSummary('sessionSetup', `${minutes} min · ${mode} · ${describeReadiness(user)} · ${cardio}`);
     const music = window.IronSixMusic;
     setSummary('musicPanel', music && music.nowPlaying ? music.nowPlaying() : 'Free radio, Iron Six originals, or your own service');
   }
 
-  // The Plan tab was six essays about how the engine works, above the two cards that say what
-  // it is actually doing. The explanation is worth keeping and worth collapsing.
   function restructurePlan() {
     const plan = $('plan');
     if (!plan || $('planExplainer')) return;
@@ -141,7 +137,7 @@
   const baseRenderAll = window.renderAll;
   if (typeof baseRenderAll === 'function') window.renderAll = function () { baseRenderAll(); apply(); };
   apply();
-  // Music and the circuit player build their sections after first paint; re-run once they have.
   addEventListener('load', apply);
   setTimeout(apply, 1200);
+  window.IronSixUIShell = { apply, refreshSummaries, restructureToday };
 })();
