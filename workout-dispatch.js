@@ -60,14 +60,15 @@ function programSlot(u,id,source,index,sets,priority=2,anchor=false){
   pool=pool.filter((e,i,all)=>e&&exerciseAvailable(u,e)&&all.findIndex(x=>x.name===e.name)===i);
   if(!pool.length)return null;
 
-  // Pull programming changed materially in v3; invalidate only those cached choices so the
-  // new A/B identities appear immediately without reshuffling unrelated push/lower sessions.
-  const cacheVersion=/^pull_/.test(key)?'v3':'v2';
+  // Pull/lower programming changed materially in v3; invalidate only those cached choices so
+  // the new A/B identities appear without reshuffling unrelated push sessions.
+  const cacheVersion=/^(pull_|lower_)/.test(key)?'v3':'v2';
   const token=`${cacheVersion}:${key}:${id}:${anchor?'block'+Math.floor(exposure/4):exposure}`;
   const cached=u.program.selectionCache[token];
   let selected=pool.find(e=>e.name===cached);
   if(!selected){
-    // Avoid duplicating the counterpart session; recent-use scoring supplies planned variety.
+    // Exact recent exercise use is a meaningful cost for accessories. Stable benchmark lifts
+    // remain cached for a block so measurable progression is not sacrificed for novelty.
     const exactPenalty=e=>(u.history||[]).slice(0,12).reduce((n,h,i)=>n+((h.details||[]).some(d=>d.name===e.name)?(12-i)*10:0),0);
     selected=pool.map((e,i)=>({e,score:exactPenalty(e)+i+(!e.requires.length&&pool.some(x=>x.requires.length)?30:0)})).sort((a,b)=>a.score-b.score)[0].e;
     u.program.selectionCache[token]=selected.name;
@@ -77,12 +78,17 @@ function programSlot(u,id,source,index,sets,priority=2,anchor=false){
 }
 function buildBalancedProgram(key,u){
   const specs={
+    // Chest-biased push: horizontal pressing leads, then upper-chest/secondary pressing.
     push_a:[['press','chest',0,3,1,true],['secondary','chest',1,3,2],['lateral','shoulders_arms',1,3,2],['triceps','chest',3,2,2],['core','chest',4,2,2]],
+    // Squat-biased lower: knee-dominant strength plus unilateral work, with a smaller hinge dose.
     lower_a:[['squat','lower_strength',0,3,1,true],['hinge','lower_strength',2,2,1,true],['single','lower_strength',1,3,2],['ham','lower_strength',4,2,2],['calves','lower_strength',5,3,2]],
     // Lat/width day: vertical pull is the benchmark, then direct lat work. The row is secondary.
     pull_a:[['vertical','back',0,3,1,true],['lat_iso','back',3,3,2],['row','back',1,2,2],['curl_long','shoulders_arms',3,3,2],['core','chest',4,2,2]],
+    // Balanced push: a different chest angle plus true overhead work and chest isolation.
     push_b:[['press','chest',1,3,1,true],['overhead','shoulders_arms',0,3,1,true],['fly','chest',2,3,2],['lateral','shoulders_arms',1,2,2],['triceps','shoulders_arms',4,2,2]],
-    lower_b:[['hinge','lower_hypertrophy',1,3,1,true],['squat','lower_hypertrophy',0,3,1,true],['single','lower_hypertrophy',2,3,2],['ham','lower_hypertrophy',4,3,2],['calves','lower_hypertrophy',5,3,2]],
+    // Hinge/posterior-chain lower: hinge leads, then squat support, direct hip extension and curls.
+    // This intentionally does not repeat Lower A's unilateral slot.
+    lower_b:[['hinge','lower_hypertrophy',1,3,1,true],['squat','lower_hypertrophy',0,3,1,true],['glute','lower_hypertrophy',3,3,2],['ham','lower_hypertrophy',4,3,2],['calves','lower_hypertrophy',5,3,2]],
     // Thickness day: supported row is the benchmark; vertical work is secondary, with more
     // scapular/rear-delt volume and hammer curling for brachialis/forearm emphasis.
     pull_b:[['row','back',1,3,1,true],['vertical','back',0,2,2],['rear','back',2,3,2],['hammer','shoulders_arms',5,3,2],['lat_iso_b','back',3,2,3]]
