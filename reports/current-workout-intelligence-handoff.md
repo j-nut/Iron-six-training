@@ -7,7 +7,7 @@ This note captures the latest production workout-programming and UI/auth work so
 ## Production baseline
 - Canonical production URL: `https://iron-six-training.vercel.app`
 - Production aliases are redirected/canonicalized so auth state is not split across Vercel hostnames.
-- Latest confirmed workout-intelligence production line includes the rolling-program work ending at commit `97e608ab669867dc2b70cf2763966c767b06295d` and the immediately preceding planner commit `99785f53fc7478ec651d97bdcd826bf9449f4519`.
+- Latest workout-programming work now includes the v4 dynamic registry variety change in `workout-dispatch.js` (commit `0294e36eb63de0ba3fd05d895e37026bce06909a`). Verify the newest Vercel production deployment before claiming it is live.
 
 ## Current six-session rotation
 `Push A → Lower A → Pull A → Push B → Lower B → Pull B`
@@ -24,8 +24,28 @@ The week does not reset the sequence. Rest days do not advance it. Finished sess
 
 A/B pairs must feel meaningfully different biomechanically, not merely reordered versions of the same exercise menu.
 
+## Dynamic exercise variety v4
+The user specifically said the workouts still felt too repetitive/limited and should feel "dynamic and alive." The key finding was that the approved exercise registry contains more exact-media movements than the legacy workout slot arrays expose.
+
+`workout-dispatch.js` now:
+- keeps the compact legacy workout definitions as the base programming templates,
+- expands eligible slot options from `IronSixExerciseRegistry.exercises` when `base` or canonical movement `pattern` honestly matches,
+- requires `mediaMatch === 'exact'`,
+- converts registry equipment requirements into the existing deterministic `exerciseAvailable` gate,
+- gives registry exercises conservative pattern-specific prescriptions,
+- keeps benchmark/anchor exercises stable for four-exposure blocks,
+- lets accessories refresh every completed exposure,
+- heavily penalizes exact exercises used recently,
+- adds an explicit penalty when the A/B counterpart recently used the same exact exercise,
+- adds a smaller movement-pattern repetition penalty for accessories,
+- preserves intentional session constraints (notably lower-back-friendly rows after lower-body sessions),
+- keeps custom-equipment/Groq-generated allowlisted options in the same pool,
+- exposes the enlarged pool through `_alternatives`, improving Swap choices without requiring the user to constantly repair the plan manually.
+
+Important design rule: **variety is not randomness**. Exercise novelty must lose to session purpose, equipment, media correctness, recovery, and useful benchmark stability.
+
 ## Pull A / Pull B fix
-`workout-dispatch.js` now differentiates the pull sessions deliberately:
+`workout-dispatch.js` differentiates the pull sessions deliberately:
 - Pull A favors Pull-Up / Chin-Up style vertical work, direct lat isolation, lighter unilateral/support row work, and long-head curl options.
 - Pull B favors chest-supported or otherwise lower-back-friendly rows, secondary vertical pulling, more rear-delt/scapular work, and hammer curls.
 - Pull-session selection cache was version-bumped so users see the new A/B identities rather than stale cached choices.
@@ -68,7 +88,7 @@ It also:
 Important rule: deficits are a **priority signal**, not a mandate to force catch-up volume into the next workout.
 
 ## Deterministic planner integration
-`session-planner.js` now uses rolling-program deficits when deciding which accessories survive a shortened session or deserve extra volume.
+`session-planner.js` uses rolling-program deficits when deciding which accessories survive a shortened session or deserve extra volume.
 
 The deterministic planner remains authoritative for:
 - time budget,
@@ -81,9 +101,9 @@ The deterministic planner remains authoritative for:
 Groq augments this logic; it does not replace it.
 
 ## Groq / AI role
-After `Finish workout`, Iron Six already sends the completed session, recent history, and next deterministic workout to `/api/review-workout`.
+After `Finish workout`, Iron Six sends the completed session, recent history, and next deterministic workout to `/api/review-workout`.
 
-That review now also receives rolling-program analysis and is instructed to evaluate:
+That review also receives rolling-program analysis and is instructed to evaluate:
 - exact-exercise repetition,
 - repeated joint/movement stress,
 - neglected muscle/movement categories,
@@ -162,6 +182,8 @@ Extend the current 3-workout lookahead into a persistent **6-session forecast** 
 - too much hinge stress / lower-back stress,
 - poor distribution of direct vs indirect work,
 - accessory omissions caused by repeated short sessions.
+
+Then make the forecast influence future unstarted accessory selection directly. Groq may propose emphasis changes inside deterministic bounds, but the app should compute and enforce the final safe plan.
 
 The forecast should evolve from completed training, readiness, time available, equipment, and performance. It should preserve useful benchmark lifts while deliberately varying accessory angles and exercises.
 
