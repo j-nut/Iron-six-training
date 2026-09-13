@@ -9,6 +9,55 @@ function programOptions(key,variant,u){
   try{WORKOUT_BUILDERS[key](variant,u)}finally{slot=original}
   return captured;
 }
+
+/* The original workout files intentionally stay small and readable, but the approved registry
+   is much larger. Convert registry movements that honestly match a slot into selectable options
+   so accessories are not trapped in a 3-exercise menu. Every registry row has exact first-party
+   media; equipment is still checked by exerciseAvailable before selection. */
+function registryPrescription(entry,sample){
+  const name=String(entry?.name||''),pattern=String(entry?.pattern||sample?.seedKey||'').toLowerCase();
+  if(/isometric/i.test(name))return '3 × 20–30 sec';
+  if(/plank/i.test(name))return '2 × 30–60 sec';
+  if(pattern==='core')return '2 × 8–15';
+  if(pattern==='calves')return '3 × 12–20';
+  if(pattern==='lateral_raise'||pattern==='rear_delt')return '3 × 12–20';
+  if(pattern==='fly'||pattern==='lat_iso'||pattern==='ham_curl')return '3 × 10–15';
+  if(pattern==='curl'||pattern==='hammer_curl'||pattern==='triceps')return '3 × 8–15';
+  if(pattern==='pullup')return '3 × 6–12';
+  if(pattern==='row'||pattern==='chest_press'||pattern==='overhead_press')return '3 × 8–12';
+  if(pattern==='split_squat'||pattern==='hip_thrust')return '3 × 8–15';
+  if(pattern==='squat'||pattern==='hinge'||pattern==='bench')return '3 × 6–12';
+  return sample?.prescription||'3 × 8–12';
+}
+function registryOptionsForSlot(u,sample){
+  const registry=window.IronSixExerciseRegistry?.exercises||[];
+  if(!sample||!registry.length)return [];
+  const wantedBase=String(sample.base||''),wantedSeed=String(sample.seedKey||sample.base||'');
+  return registry.filter(r=>{
+    if(!r||r.mediaMatch!=='exact'||!r.name)return false;
+    // Base is the strongest semantic constraint. Pattern is accepted only when the legacy
+    // sample and registry row use the same canonical movement pattern.
+    return String(r.base||'')===wantedBase||String(r.pattern||'')===wantedSeed;
+  }).map(r=>({
+    name:r.name,
+    requires:Array.isArray(r.equipment)?r.equipment.slice(0,4):[],
+    prescription:registryPrescription(r,sample),
+    sets:sample.sets||3,
+    tag:sample.tag||'Accessory',
+    base:sample.base,
+    seedKey:sample.seedKey,
+    priority:sample.priority||2,
+    source:'registry'
+  })).filter(e=>exerciseAvailable(u,e));
+}
+function counterpartKey(key){return ({push_a:'push_b',push_b:'push_a',lower_a:'lower_b',lower_b:'lower_a',pull_a:'pull_b',pull_b:'pull_a'})[key]||null}
+function counterpartPenalty(u,key,e){
+  const other=counterpartKey(key);if(!other)return 0;
+  return (u.history||[]).slice(0,8).reduce((n,h,i)=>n+(h.workoutKey===other&&(h.details||[]).some(d=>d.name===e.name)?Math.max(12,70-i*8):0),0);
+}
+function patternRecentPenalty(u,e){
+  return (u.history||[]).slice(0,6).reduce((n,h,i)=>n+(h.details||[]).some(d=>d.seedKey===e.seedKey)?Math.max(0,8-i):0,0);
+}
 function programSlot(u,id,source,index,sets,priority=2,anchor=false){
   const key=u.program.currentWorkoutKey,exposure=Number(u.program.exposures[key])||0;
   const variation=anchor?Math.floor(exposure/4)%3:exposure%3;
@@ -56,24 +105,34 @@ function programSlot(u,id,source,index,sets,priority=2,anchor=false){
   if(id==='curl')pool.push(...programOptions('shoulders_arms',0,u)[5]);
   const probe={...u,program:{...u.program,currentWorkoutKey:source}};
   pool.push(...generatedOptionsForSlot(probe,original));
+
+  // Enrich every honest slot with all matching exact-media movements from the approved registry.
+  // Rows stay intentionally constrained after lower-body days to protect the sequence from excess
+  // unsupported lower-back loading; custom cable/machine rows still arrive through generated options.
+  const sample=original[0]||pool[0];
+  if(sample&&id!=='row')pool.push(...registryOptionsForSlot(u,sample));
   if(source==='chest'&&(id==='press'||id==='secondary'))pool=pool.filter(e=>!/Landmine Press/.test(e.name));
   pool=pool.filter((e,i,all)=>e&&exerciseAvailable(u,e)&&all.findIndex(x=>x.name===e.name)===i);
   if(!pool.length)return null;
 
-  // Pull/lower programming changed materially in v3; invalidate only those cached choices so
-  // the new A/B identities appear without reshuffling unrelated push sessions.
-  const cacheVersion=/^(pull_|lower_)/.test(key)?'v3':'v2';
+  // v4 opens the approved registry to the program. Accessory choices refresh every exposure;
+  // anchors remain block-stable so benchmark progression is still measurable.
+  const cacheVersion='v4';
   const token=`${cacheVersion}:${key}:${id}:${anchor?'block'+Math.floor(exposure/4):exposure}`;
   const cached=u.program.selectionCache[token];
   let selected=pool.find(e=>e.name===cached);
   if(!selected){
-    // Exact recent exercise use is a meaningful cost for accessories. Stable benchmark lifts
-    // remain cached for a block so measurable progression is not sacrificed for novelty.
-    const exactPenalty=e=>(u.history||[]).slice(0,12).reduce((n,h,i)=>n+((h.details||[]).some(d=>d.name===e.name)?(12-i)*10:0),0);
-    selected=pool.map((e,i)=>({e,score:exactPenalty(e)+i+(!e.requires.length&&pool.some(x=>x.requires.length)?30:0)})).sort((a,b)=>a.score-b.score)[0].e;
+    const exactPenalty=e=>(u.history||[]).slice(0,12).reduce((n,h,i)=>n+((h.details||[]).some(d=>d.name===e.name)?(12-i)*11:0),0);
+    const equipped=pool.some(e=>e.requires?.length);
+    selected=pool.map((e,i)=>{
+      const legacyBias=i<original.length?0:anchor?8:1;
+      const noEquipmentBias=equipped&&!e.requires?.length?10:0;
+      const patternPenalty=anchor?0:patternRecentPenalty(u,e);
+      return {e,score:exactPenalty(e)+counterpartPenalty(u,key,e)+patternPenalty+legacyBias+noEquipmentBias};
+    }).sort((a,b)=>a.score-b.score||stableNumber(`${token}:${a.e.name}`)-stableNumber(`${token}:${b.e.name}`))[0].e;
     u.program.selectionCache[token]=selected.name;
   }
-  const reason=anchor?'Benchmark lift: repeat to measure progress.':'Accessory choice balances recent exercises and available equipment.';
+  const reason=anchor?'Benchmark lift: repeat within the block to measure progress.':'Accessory selected from the approved movement library to balance recent work, A/B variety, and equipment.';
   return {...selected,sets,priority,prescription:String(selected.prescription).replace(/^.*then \d+ ×\s*/,sets+' × ').replace(/^\d+ ×\s*/,sets+' × '),_programSlot:id,_anchor:anchor,_selectionReason:reason,_alternatives:pool.filter(e=>e.name!==selected.name).map(e=>({...e,sets,priority}))};
 }
 function buildBalancedProgram(key,u){
