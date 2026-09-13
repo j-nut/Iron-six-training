@@ -1,4 +1,4 @@
-/* Optional companion. Its only durable writes are user.program.cardio. */
+/* Optional cardio companion. Durable writes are limited to user.program.cardio. */
 (() => {
   if (window.IronSixCardio) return;
   const modes = ['walk', 'cycle', 'run', 'swim'];
@@ -24,7 +24,7 @@
     const easier = lowerSoon || load.demandingLowerBody || s.baselineWeeklyMinutes < 60;
     const minutes = Math.min(s.minutes, s.baselineWeeklyMinutes<60 ? 10 : s.baselineWeeklyMinutes<120 ? 20 : 30);
     return { enabled:s.enabled, mode: easier && s.mode==='run' ? 'walk' : s.mode, minutes, intensity:easier ? 'easy' : s.intensity, restSuggested:load.last24hMinutes>=30, lowerSoon, recent:load,
-      reason:load.last24hMinutes>=30 ? 'You already logged cardio in the last 24 hours. Rest is a useful option today.' : lowerSoon ? 'A lower-body workout is current or next. Keep cardio easy so your legs are ready.' : load.demandingLowerBody ? 'Recent running or cycling added leg work. Choose easy movement or rest.' : s.baselineWeeklyMinutes<60 ? 'Start with short, easy sessions and build gradually as recovery allows.' : 'Keep this comfortable and fit it around your strength training.' };
+      reason:load.last24hMinutes>=30 ? 'You already logged cardio in the last 24 hours. Rest is a useful option today.' : lowerSoon ? 'A lower-body workout is current or next, so keep cardio easy.' : load.demandingLowerBody ? 'Recent running or cycling added leg work. Choose easy movement or rest.' : s.baselineWeeklyMinutes<60 ? 'Start short and easy, then build gradually.' : 'Keep this comfortable and fit it around your strength work.' };
   }
   function updateSettings(user, patch) {
     const value = settings({program:{cardio:{...settings(user),...patch}}});
@@ -44,34 +44,45 @@
   const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
   const options = (values, selected) => values.map(x=>`<option value="${x}"${x===selected?' selected':''}>${x[0].toUpperCase()+x.slice(1)}</option>`).join('');
   let lastLog=0;
+
+  function hostForPanel(todayHost){
+    const setupBody=document.querySelector('#sessionSetup .shell-body');
+    return setupBody || todayHost;
+  }
+
   function render() {
     if(typeof activeUser!=='function') return;
-    const user=activeUser(), host=document.getElementById('today');
-    if(!user || !host)return;
+    const user=activeUser(), todayHost=document.getElementById('today');
+    if(!user || !todayHost)return;
     const owner=user.id, scope=window.ironSixAccountScope||null;
     const current=()=>typeof activeUser==='function' && activeUser()?.id===owner && (window.ironSixAccountScope||null)===scope && activeUser()===user;
     const s=settings(user), rec=recommend(user,Date.now(),typeof nextWorkoutKey==='function'?nextWorkoutKey(user):undefined);
     let panel=document.getElementById('cardioCompanion');
-    if(!panel){panel=document.createElement('div');panel.id='cardioCompanion';panel.className='section';host.append(panel);}
-    panel.innerHTML=`<h2>Optional cardio</h2>
-      <label style="display:flex;gap:10px;align-items:center"><input id="cardioEnabled" type="checkbox" style="width:auto" ${s.enabled?'checked':''}> Recommend cardio alongside my strength plan</label>
-      <p class="note">Rest or skipping cardio never advances or penalizes your strength plan.</p>
-      <div class="readiness"><div class="select-wrap"><label for="cardioMode">Preferred activity</label><select id="cardioMode">${options(modes,s.mode)}</select></div>
-      <div class="select-wrap"><label for="cardioBaseline">Usual cardio minutes per week</label><input id="cardioBaseline" type="number" min="0" max="1500" value="${s.baselineWeeklyMinutes}"></div>
-      <div class="select-wrap"><label for="cardioTime">Time available</label><select id="cardioTime">${[10,20,30].map(n=>`<option ${n===s.minutes?'selected':''} value="${n}">${n} minutes</option>`).join('')}</select></div>
-      <div class="select-wrap"><label for="cardioIntensity">Preferred intensity</label><select id="cardioIntensity">${options(['easy','moderate'],s.intensity)}</select></div></div>
-      <p class="note">${s.enabled?`<strong>${rec.restSuggested?'Rest, or optionally ':''}${rec.minutes} minutes · ${rec.mode} · ${rec.intensity}</strong><br>${rec.reason}`:'Suggestions are off. You can still log walks, rides, runs, and swims below.'}</p>
-      <p class="note">Easy: relaxed conversation. Moderate: you can talk but not sing. If combining sessions, do strength first when strength is your priority. Build gradually toward the general adult reference of 150 moderate minutes per week; it is not a quota or a requirement to add on top of activity you already do. <a href="https://www.cdc.gov/physical-activity-basics/guidelines/adults.html" target="_blank" rel="noopener noreferrer">Activity guidance</a></p>
-      <p>${rec.recent.minutes} minutes logged in the last 7 days (${rec.recent.moderateMinutes} moderate).</p>
-      <details><summary>Log completed cardio</summary><p class="note">Log only activity you have finished. This also works when suggestions are off.</p>
-      <div class="readiness"><div class="select-wrap"><label for="cardioLogMode">Activity completed</label><select id="cardioLogMode">${options(modes,s.mode)}</select></div>
-      <div class="select-wrap"><label for="cardioLogMinutes">Minutes completed</label><input id="cardioLogMinutes" type="number" min="1" max="300" value="${rec.minutes}"></div>
-      <div class="select-wrap"><label for="cardioLogIntensity">Actual intensity</label><select id="cardioLogIntensity">${options(['easy','moderate'],rec.intensity)}</select></div>
-      <div class="select-wrap"><label for="cardioLogDate">Date completed</label><input id="cardioLogDate" type="date" max="${today()}" value="${today()}"></div></div>
-      <button type="button" class="btn secondary" id="cardioLogSave">Log completed cardio</button><p id="cardioLogStatus" role="status"></p></details>
-      ${rec.recent.entries.length?`<details><summary>Recent cardio</summary>${rec.recent.entries.slice(0,10).map(e=>`<p>${escape(new Date(e.completedAt).toLocaleDateString())} · ${e.minutes}m ${e.mode} · ${e.intensity}</p>`).join('')}</details>`:''}`;
+    if(!panel){panel=document.createElement('div');panel.id='cardioCompanion';panel.className='section cardio-compact';}
+    const target=hostForPanel(todayHost); if(panel.parentNode!==target)target.append(panel);
+    panel.innerHTML=`
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+        <div><h2 style="margin-bottom:3px">Cardio <span style="font-weight:500;color:var(--muted)">(optional)</span></h2><small style="color:var(--muted)">Paired with today’s strength session</small></div>
+        <label style="display:flex;gap:8px;align-items:center;font-size:12px;font-weight:800;white-space:nowrap"><input id="cardioEnabled" type="checkbox" style="width:auto" ${s.enabled?'checked':''}> ${s.enabled?'On':'Off'}</label>
+      </div>
+      <div class="note" style="margin-top:10px">${s.enabled?`<strong>${rec.restSuggested?'Rest, or ':''}${rec.minutes} min ${rec.mode} · ${rec.intensity}</strong><br>${rec.reason}`:'Turn on cardio suggestions if you want Iron Six to pair easy conditioning with your strength plan.'}</div>
+      <details style="margin-top:8px"><summary>Cardio preferences</summary>
+        <div class="readiness" style="margin-top:10px"><div class="select-wrap"><label for="cardioMode">Preferred activity</label><select id="cardioMode">${options(modes,s.mode)}</select></div>
+        <div class="select-wrap"><label for="cardioBaseline">Usual minutes/week</label><input id="cardioBaseline" type="number" min="0" max="1500" value="${s.baselineWeeklyMinutes}"></div>
+        <div class="select-wrap"><label for="cardioTime">Time available</label><select id="cardioTime">${[10,20,30].map(n=>`<option ${n===s.minutes?'selected':''} value="${n}">${n} minutes</option>`).join('')}</select></div>
+        <div class="select-wrap"><label for="cardioIntensity">Preferred intensity</label><select id="cardioIntensity">${options(['easy','moderate'],s.intensity)}</select></div></div>
+        <p class="note">Easy means relaxed conversation. Moderate means you can talk but not sing. Strength comes first when strength is the priority. The general adult reference is 150 moderate minutes per week, but Iron Six does not treat that as a quota.</p>
+      </details>
+      <details><summary>Log completed cardio</summary><p class="note">Logging cardio does not advance or penalize your strength rotation.</p>
+        <div class="readiness"><div class="select-wrap"><label for="cardioLogMode">Activity</label><select id="cardioLogMode">${options(modes,s.mode)}</select></div>
+        <div class="select-wrap"><label for="cardioLogMinutes">Minutes</label><input id="cardioLogMinutes" type="number" min="1" max="300" value="${rec.minutes}"></div>
+        <div class="select-wrap"><label for="cardioLogIntensity">Intensity</label><select id="cardioLogIntensity">${options(['easy','moderate'],rec.intensity)}</select></div>
+        <div class="select-wrap"><label for="cardioLogDate">Date</label><input id="cardioLogDate" type="date" max="${today()}" value="${today()}"></div></div>
+        <button type="button" class="btn secondary" id="cardioLogSave">Log cardio</button><p id="cardioLogStatus" role="status"></p>
+      </details>
+      ${rec.recent.entries.length?`<details><summary>Recent cardio · ${rec.recent.minutes} min this week</summary>${rec.recent.entries.slice(0,10).map(e=>`<p>${escape(new Date(e.completedAt).toLocaleDateString())} · ${e.minutes}m ${e.mode} · ${e.intensity}</p>`).join('')}</details>`:''}`;
     const el=id=>panel.querySelector('#'+id);
-    for(const [id,key] of Object.entries({cardioEnabled:'enabled',cardioMode:'mode',cardioBaseline:'baselineWeeklyMinutes',cardioTime:'minutes',cardioIntensity:'intensity'}))el(id).onchange=event=>{if(!current())return;updateSettings(user,{[key]:key==='enabled'?event.target.checked:event.target.value});if(typeof saveData==='function')saveData();render();};
+    for(const [id,key] of Object.entries({cardioEnabled:'enabled',cardioMode:'mode',cardioBaseline:'baselineWeeklyMinutes',cardioTime:'minutes',cardioIntensity:'intensity'}))el(id).onchange=event=>{if(!current())return;updateSettings(user,{[key]:key==='enabled'?event.target.checked:event.target.value});if(typeof saveData==='function')saveData();render();if(window.IronSixUIShell?.apply)window.IronSixUIShell.apply();};
     const token=window.crypto?.randomUUID?.() || `cardio-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     el('cardioLogSave').onclick=()=>{
       if(!current() || Date.now()-lastLog<1500)return;
@@ -79,7 +90,7 @@
       const completedAt=date===today()?new Date().toISOString():new Date(date+'T12:00:00').toString();
       if(!/^\d{4}-\d{2}-\d{2}$/.test(date) || date>today() || !logSession(user,{id:token,mode:el('cardioLogMode').value,minutes:el('cardioLogMinutes').value,intensity:el('cardioLogIntensity').value,completed:true,completedAt})){el('cardioLogStatus').textContent='Enter a completed date and 1–300 minutes.';return;}
       lastLog=Date.now();const saved=typeof saveData==='function'?saveData():false;
-      render();const status=document.getElementById('cardioLogStatus');if(status){status.closest('details').open=true;status.textContent=saved===false?'Logged in this page, but device storage could not save. Keep this page open.':'Cardio logged. Your strength workout stays in place.';}
+      render();const status=document.getElementById('cardioLogStatus');if(status){status.closest('details').open=true;status.textContent=saved===false?'Logged here, but device storage could not save. Keep this page open.':'Cardio logged. Your strength workout stays in place.';}
     };
   }
   window.IronSixCardio={settings,recommend,recentLoad,updateSettings,logSession,render};
