@@ -15,7 +15,8 @@
   let currentProfile = null, currentTheme = null;
 
   function choiceFor(user) {
-    const key = String(user?.accentTheme || 'green').toLowerCase();
+    const stored = user?.accentTheme || user?.trainerMemory?.appearance?.accentTheme || 'green';
+    const key = String(stored).toLowerCase();
     return PALETTE[key] ? key : 'green';
   }
 
@@ -45,6 +46,7 @@
       .accent-choice{display:flex;align-items:center;gap:9px;min-height:50px;padding:9px;border:1px solid var(--line);border-radius:13px;background:var(--surface2);color:var(--text);cursor:pointer;text-align:left;font-size:11px;font-weight:750}
       .accent-choice.active{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
       .accent-swatch{width:24px;height:24px;border-radius:50%;background:var(--swatch);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);flex:0 0 auto}
+      .pm-accent-dot{width:13px;height:13px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px rgba(var(--accent-rgb),.15);flex:0 0 auto}
       @media(max-width:420px){.accent-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     `;
     document.head.appendChild(style);
@@ -62,6 +64,7 @@
     document.documentElement.dataset.accentTheme = key;
     currentProfile = user?.id || null;
     currentTheme = key;
+    installMenuItem();
     return key;
   }
 
@@ -86,14 +89,17 @@
     grid.innerHTML = Object.entries(PALETTE).map(([key,theme]) => `<button type="button" class="accent-choice ${key===selected?'active':''}" data-accent="${key}"><span class="accent-swatch" style="--swatch:${theme.hex}"></span><span>${theme.label}</span></button>`).join('');
     grid.querySelectorAll('[data-accent]').forEach(button => button.addEventListener('click', () => {
       const profile = typeof activeUser === 'function' ? activeUser() : null;
-      if (!profile || !PALETTE[button.dataset.accent]) return;
-      profile.accentTheme = button.dataset.accent;
+      const key = button.dataset.accent;
+      if (!profile || !PALETTE[key]) return;
+      profile.accentTheme = key;
+      profile.trainerMemory = profile.trainerMemory && typeof profile.trainerMemory === 'object' ? profile.trainerMemory : {};
+      profile.trainerMemory.appearance = {...(profile.trainerMemory.appearance || {}), accentTheme:key};
       profile.localUpdatedAt = Date.now();
       if (typeof saveData === 'function') saveData();
       apply(profile);
       renderChoices();
       window.IronSixCloud?.syncNow?.(false);
-      if (typeof toast === 'function') toast(`${PALETTE[button.dataset.accent].label} selected`);
+      if (typeof toast === 'function') toast(`${PALETTE[key].label} selected`);
     }));
   }
 
@@ -104,13 +110,34 @@
   }
   function close() { const modal = $('accentThemeModal'); if (modal) modal.hidden = true; }
 
+  function installMenuItem() {
+    const menu = $('profileMenu');
+    if (!menu || menu.hidden || menu.querySelector('[data-accent-settings]')) return;
+    const groups = menu.querySelectorAll('.pm-group');
+    const target = groups[1] || groups[0];
+    if (!target) return;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'pm-item';
+    button.dataset.accentSettings = 'true';
+    button.innerHTML = '<span class="pm-accent-dot"></span><b>Appearance</b><small>Accent color</small>';
+    button.addEventListener('click', event => {
+      event.stopPropagation();
+      window.IronSixProfileMenu?.close?.();
+      open();
+    });
+    target.insertBefore(button, target.firstChild);
+  }
+
   injectStyles();
   apply();
   addEventListener('load', () => apply());
+  document.addEventListener('click', event => { if (event.target.closest?.('#profileMenuButton')) setTimeout(installMenuItem, 0); });
   setInterval(() => {
     const user = typeof activeUser === 'function' ? activeUser() : null;
     const key = choiceFor(user);
     if ((user?.id || null) !== currentProfile || key !== currentTheme) apply(user);
+    if ($('profileMenu')?.hidden === false) installMenuItem();
   }, 750);
 
   window.IronSixAccentTheme = { PALETTE, apply, open, close, current: () => currentTheme };
