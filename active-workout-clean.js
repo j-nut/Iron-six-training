@@ -19,8 +19,6 @@
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-help-btn,
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-swap-btn,
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .substitution,
-      #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-media,
-      #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-media-missing,
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .pose-bar{display:none!important}
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion{margin-top:12px;padding:11px 13px;border-radius:13px}
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion strong{font-size:17px;line-height:1.25}
@@ -29,9 +27,11 @@
       #exerciseList.awc-focus .exercise:not(.sc-hidden).awc-details .substitution{display:block!important;margin-top:10px}
       #exerciseList.awc-focus .exercise:not(.sc-hidden).awc-details .suggestion .confidence,
       #exerciseList.awc-focus .exercise:not(.sc-hidden).awc-details .suggestion>div{display:block!important}
-      #exerciseList.awc-focus .exercise:not(.sc-hidden).awc-form .exercise-media,
-      #exerciseList.awc-focus .exercise:not(.sc-hidden).awc-form .exercise-media-missing{display:block!important;margin-top:12px}
-      .awc-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px}
+      #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-media,
+      #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-media-missing{display:block!important;margin:14px 0 4px}
+      #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-media figcaption{font-size:11px;color:var(--muted);text-align:center;margin-top:6px}
+      #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-media .media-credit{opacity:.72}
+      .awc-actions{display:flex;gap:8px;flex-wrap:wrap;margin:11px 0 2px}
       .awc-action{border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:10px;padding:8px 11px;font-size:12px;font-weight:800;cursor:pointer}
       .awc-action.primary-lite{border-color:rgba(46,229,128,.38);color:var(--accent);background:rgba(46,229,128,.08)}
       .awc-action[hidden]{display:none!important}
@@ -82,7 +82,6 @@
     const actions = document.createElement('div');
     actions.className = 'awc-actions';
     actions.innerHTML = `
-      <button type="button" class="awc-action awc-form-btn">Form guide</button>
       <button type="button" class="awc-action primary-lite awc-camera-btn" hidden>Camera</button>
       <button type="button" class="awc-action awc-swap-btn" hidden>Swap</button>
       <button type="button" class="awc-action awc-details-btn">Details</button>
@@ -90,11 +89,6 @@
       <div class="awc-why" role="status"></div>`;
     host.appendChild(actions);
 
-    const form = actions.querySelector('.awc-form-btn');
-    form.addEventListener('click', () => {
-      const open = card.classList.toggle('awc-form');
-      form.textContent = open ? 'Hide form' : 'Form guide';
-    });
     const details = actions.querySelector('.awc-details-btn');
     details.addEventListener('click', () => {
       const open = card.classList.toggle('awc-details');
@@ -123,7 +117,6 @@
 
   function scheduleApply() { setTimeout(apply, 0); }
 
-  // Hook actual Iron Six renders. This replaces the MutationObserver that caused the freeze.
   if (typeof window.renderExercises === 'function' && !window.renderExercises.__awcWrapped) {
     const base = window.renderExercises;
     const wrapped = function(){ const result = base.apply(this, arguments); scheduleApply(); return result; };
@@ -137,8 +130,6 @@
     window.renderAll = wrapped;
   }
 
-  // Session-card navigation changes visibility without rebuilding exercise cards, so update once
-  // after those explicit user actions only. No background DOM/class observation.
   document.addEventListener('click', event => {
     if (event.target.closest?.('#sessionBeginBtn,#sessionCardNav,#sessionCardFoot,.done,.duration-btn,#applyCustomTime,.exercise-swap-btn,.awc-swap-btn,[data-view="today"]')) scheduleApply();
   });
@@ -146,5 +137,5 @@
 
   scheduleApply();
   addEventListener('load', apply);
-  window.IronSixActiveWorkoutClean = { apply, version: 2, observer: false };
+  window.IronSixActiveWorkoutClean = { apply, version: 3, observer: false, illustration: 'visible' };
 })();
