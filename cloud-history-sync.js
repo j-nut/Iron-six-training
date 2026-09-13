@@ -25,6 +25,7 @@
   loadRuntimeScript('bodyweight-load-fix.js?v=1','bodyweight-load-fix','__ironSixBodyweightLoadFix');
   loadRuntimeScript('adaptive-insights.js?v=1','adaptive-insights','__ironSixAdaptiveInsightsLoaded');
   loadRuntimeScript('trainer-intelligence-v2.js?v=3','trainer-intelligence-v2','__ironSixTrainerIntelligenceV2Loaded');
+  loadRuntimeScript('program-intelligence-v3.js?v=1','program-intelligence-v3','__ironSixProgramIntelligenceV3Loaded');
   loadRuntimeScript('progress-analytics-v2.js?v=2','progress-analytics-v2','__ironSixProgressAnalyticsV2Loaded');
   loadRuntimeScript('session-adaptation-v3.js?v=2','session-adaptation-v3','__ironSixSessionAdaptationV3Loaded');
   loadRuntimeScript('media-experience-v2.js?v=1','media-experience-v2','__ironSixMediaExperienceV2Loaded');
