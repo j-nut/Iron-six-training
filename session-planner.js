@@ -30,19 +30,29 @@ function budgetSessionWorkout(u,workout){
   const exposure=Number(u.program?.exposures?.[u.program?.currentWorkoutKey])||0;
   const specificity=e=>e.seedKey==='calves'?['calves']:e.seedKey==='core'?['core']:e.seedKey==='ham_curl'?['hamstrings']:exerciseMuscles(e);
   const recentDose=e=>(u.history||[]).slice(0,6).reduce((n,h)=>n+(h.details||[]).reduce((v,d)=>v+(d.seedKey===e.seedKey?(d.sets||[]).filter(s=>s.done===true).length:0),0),0);
+  const programCategory=e=>{
+    const s=e.seedKey;
+    if(['bench','chest_press','fly'].includes(s))return 'chest_press';
+    if(s==='overhead_press')return 'overhead_press';if(s==='lateral_raise')return 'lateral_delts';if(s==='triceps')return 'triceps';
+    if(s==='pullup')return 'vertical_pull';if(s==='row')return 'row';if(s==='lat_iso')return 'lat_iso';if(s==='rear_delt')return 'rear_delts';if(['curl','hammer_curl'].includes(s))return 'biceps';
+    if(s==='squat')return 'squat';if(s==='hinge')return 'hinge';if(s==='split_squat')return 'unilateral';if(s==='hip_thrust')return 'hip_extension';if(s==='ham_curl')return 'hamstrings';if(s==='calves')return 'calves';if(s==='core')return 'core';
+    return null;
+  };
+  const deficitRows=window.IronSixProgramV3?.deficits?.(u)||[],deficitMap=new Map(deficitRows.map(x=>[x.key,x]));
+  const programNeed=e=>{const row=deficitMap.get(programCategory(e));return row?Math.max(0,Math.min(2,row.deficit/Math.max(1,row.expected))):0};
   pool=pool.map((e,i)=>({...e,_position:i}));
   const anchors=pool.filter(e=>e.priority===1),accessories=pool.filter(e=>e.priority!==1);
-  // Short and 45-minute plans retain main work plus the most useful accessories.
-  // At 60+ minutes the full menu is available and accessories can earn one extra set,
-  // so extra time becomes real training volume instead of an identical session label.
-  accessories.sort((a,b)=>recentDose(a)-recentDose(b)||Number(specificity(b).some(m=>due.has(m)))-Number(specificity(a).some(m=>due.has(m)))||((a._position+exposure)%Math.max(1,pool.length))-((b._position+exposure)%Math.max(1,pool.length)));
+  // Short and 45-minute plans retain main work plus the most useful accessories. Completed
+  // rolling-program history is a priority signal: recurring omissions rise, but we do not add
+  // catch-up volume or displace stable benchmark lifts just to satisfy a quota.
+  accessories.sort((a,b)=>programNeed(b)-programNeed(a)||recentDose(a)-recentDose(b)||Number(specificity(b).some(m=>due.has(m)))-Number(specificity(a).some(m=>due.has(m)))||((a._position+exposure)%Math.max(1,pool.length))-((b._position+exposure)%Math.max(1,pool.length)));
   let selected=[...anchors,...accessories].slice(0,count).map(e=>{
     const baseMax=Math.max(1,e.sets);
     const volumeBonus=!circuit&&minutes>=60&&e.priority!==1?1:0;
     return {...e,sets:1,_max:baseMax+volumeBonus};
   });
   const covered=new Set(selected.flatMap(exerciseMuscles));
-  const neglected=accessories.find(e=>!selected.some(x=>x.name===e.name)&&specificity(e).some(m=>due.has(m)&&!covered.has(m)));
+  const neglected=accessories.find(e=>!selected.some(x=>x.name===e.name)&&(programNeed(e)>.25||specificity(e).some(m=>due.has(m)&&!covered.has(m))));
   if(neglected&&selected.length>2&&selected[selected.length-1].priority!==1){
     const baseMax=Math.max(1,neglected.sets),volumeBonus=!circuit&&minutes>=60?1:0;
     selected[selected.length-1]={...neglected,sets:1,_max:baseMax+volumeBonus};
