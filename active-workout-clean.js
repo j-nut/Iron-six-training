@@ -3,7 +3,7 @@
   if (window.__ironSixActiveWorkoutCleanLoaded) return;
   window.__ironSixActiveWorkoutCleanLoaded = true;
 
-  const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
   const visible = el => !!el && !el.classList.contains('sc-hidden') && getComputedStyle(el).display !== 'none';
   let applying = false;
 
@@ -59,12 +59,11 @@
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .done{height:50px!important;min-height:50px!important;border-radius:12px!important;font-size:16px!important}
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .done{width:50px!important;min-width:50px!important;padding:0!important}
 
-      /* Feedback is one compact horizontal strip beneath the completed set. */
-      #exerciseList.awc-focus .set-feedback{display:flex!important;align-items:center;gap:7px;grid-column:1/-1;padding:3px 0 5px!important;min-width:0}
-      #exerciseList.awc-focus .set-feedback-label{font-size:10px!important;margin:0!important;white-space:nowrap;flex:0 0 auto}
-      #exerciseList.awc-focus .set-feedback-actions{display:flex!important;gap:4px!important;flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;min-width:0}
-      #exerciseList.awc-focus .set-feedback-actions::-webkit-scrollbar{display:none}
-      #exerciseList.awc-focus .set-feedback-btn{padding:5px 8px!important;font-size:10px!important;line-height:1.1!important;white-space:nowrap;min-height:28px!important}
+      /* Feedback always fits the card: label above a compact 2×2 choice grid. */
+      #exerciseList.awc-focus .set-feedback{display:grid!important;grid-template-columns:1fr;gap:5px;grid-column:1/-1;padding:4px 0 6px!important;min-width:0;width:100%}
+      #exerciseList.awc-focus .set-feedback-label{font-size:10px!important;margin:0!important;white-space:normal;color:var(--muted)}
+      #exerciseList.awc-focus .set-feedback-actions{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px!important;overflow:visible!important;min-width:0;width:100%}
+      #exerciseList.awc-focus .set-feedback-btn{padding:6px 5px!important;font-size:10px!important;line-height:1.1!important;white-space:normal;min-width:0!important;min-height:30px!important;width:100%}
 
       /* Illustration/form reference remains available but no longer competes with logging. */
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-media,
@@ -75,15 +74,17 @@
       /* The large footer button is redundant in focus mode; the top bar owns this action. */
       #exerciseList.awc-focus ~ #sessionCardFoot{display:none!important}
 
+      @media(max-width:520px){
+        #exerciseList.awc-focus .set-feedback-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+        #exerciseList.awc-focus .set-feedback-btn{font-size:10.5px!important;padding:6px 7px!important}
+      }
       @media(max-width:390px){
         #sessionCardNav{gap:5px!important}
         #sessionCardNav .sc-arrow{min-width:39px!important;width:39px!important}
         #scNextBtn{min-width:68px!important;padding:0 8px!important}
         .awc-overview-proxy{min-width:42px;padding:0 7px}
         #exerciseList.awc-focus .exercise:not(.sc-hidden){padding:12px 11px 13px!important}
-        #exerciseList.awc-focus .set-feedback-label{display:none!important}
-        #exerciseList.awc-focus .set-feedback-actions{width:100%}
-        #exerciseList.awc-focus .set-feedback-btn{flex:1 0 auto}
+        #exerciseList.awc-focus .set-feedback-label{font-size:9.5px!important}
       }
       @media(prefers-reduced-motion:reduce){.awc-overview-proxy:active{transform:none}}
     `;
@@ -195,5 +196,5 @@
 
   scheduleApply();
   addEventListener('load', apply);
-  window.IronSixActiveWorkoutClean = { apply, version: 4, observer: false, layout: 'compact-control-surface' };
+  window.IronSixActiveWorkoutClean = { apply, version: 5, observer: false, layout: 'compact-control-surface' };
 })();
