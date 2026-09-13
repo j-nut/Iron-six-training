@@ -85,7 +85,17 @@
     if (setup.parentNode !== today || hero.nextElementSibling !== setup) hero.after(setup);
     for (const node of [$('durationSection'), sectionContaining('readinessNote'), $('cardioCompanion')])
       if (node && node.parentNode !== setupBody) setupBody.appendChild(node);
-    if (workout.previousElementSibling !== setup) setup.after(workout);
+
+    // Startup order is deliberate: hero -> setup -> Begin workout -> workout details.
+    // session-cards creates #sessionStart later, so preserve it whenever this shell reapplies.
+    const start = $('sessionStart');
+    if (start && start.parentNode === today) {
+      if (setup.nextElementSibling !== start) setup.after(start);
+      if (start.nextElementSibling !== workout) start.after(workout);
+    } else if (workout.previousElementSibling !== setup) {
+      setup.after(workout);
+    }
+
     const musicSection = $('workoutMusic');
     if (musicSection && musicSection.parentNode !== musicBody) musicBody.appendChild(musicSection);
     if (musicSection && music.parentNode !== today) today.appendChild(music);
