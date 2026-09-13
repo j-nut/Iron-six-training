@@ -1,32 +1,15 @@
-/* Today as a session flow: setup → one exercise at a time → review.
- *
- * This is a presentation shell, deliberately. renderExercises still builds every exercise card
- * exactly as before; this hides all but one and adds navigation around them. Everything fragile
- * hangs off those cards — set inputs, journal capture, swap, media, the next-set suggestion —
- * and none of it is touched. "All exercises" restores the old view in a tap, and circuit mode
- * is left completely alone because its timer panel above the list is already the guide; a
- * second guide would just argue with it.
- *
- * Position is derived, never stored. The workout is not a fixed list — changing duration
- * rebuilds it, readiness trims it, a swap replaces an entry — so a saved index can quietly come
- * to mean a different exercise. The active card is the one holding your first incomplete set,
- * and explicit navigation is remembered by exercise NAME and dropped the moment that name is no
- * longer in the workout. Nothing survives a reload except the log itself, which is the only
- * thing that should.
- */
+/* Today as a session flow: setup → one exercise at a time → review. */
 (() => {
   if (window.__ironSixSessionCardsLoaded) return;
   window.__ironSixSessionCardsLoaded = true;
 
   const $ = id => document.getElementById(id);
   const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-
   let began = false, focusName = null, showAll = false;
 
   const cards = () => [...document.querySelectorAll('#exerciseList [data-exercise-index]')];
   const listSection = () => $('exerciseList')?.closest('.section') || null;
   const isCircuit = user => user?.trainingMode === 'circuit';
-
   const setLogged = set => !!(set && (set.done || String(set.weight || '').trim() || String(set.reps || '').trim() || String(set.rir || '').trim()));
   const anyLogged = user => Object.entries(user?.today || {}).some(([key, set]) => /^\d+-\d+$/.test(key) && setLogged(set));
 
@@ -71,7 +54,22 @@
     style.id = 'sessionCardStyles';
     style.textContent = `
       .sc-hidden{display:none!important}
-      #sessionStart{border:1px solid rgba(46,229,128,.34);background:linear-gradient(180deg,rgba(46,229,128,.075),var(--surface));border-radius:16px;padding:14px 16px;margin:0 0 12px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+
+      /* Pre-workout is a launch screen, not a dashboard. Keep the primary action in one viewport. */
+      #today.session-prestart>.hero{padding:16px 18px;margin-bottom:10px;border-radius:18px}
+      #today.session-prestart>.hero p,
+      #today.session-prestart>.hero .metrics,
+      #today.session-prestart>.hero #equipmentBadges{display:none!important}
+      #today.session-prestart>.hero .eyebrow{margin-bottom:5px;font-size:12px;line-height:1.2}
+      #today.session-prestart>.hero h1{margin:0;font-size:25px;line-height:1.08}
+      #today.session-prestart #sessionSetup{margin-bottom:10px}
+      #today.session-prestart #sessionSetup .shell-toggle{min-height:54px;padding:11px 14px}
+      #today.session-prestart #sessionStart{margin-bottom:12px}
+      #today.session-prestart #sessionStart h3{display:none}
+      #today.session-prestart #sessionStart p{margin:0 0 9px;font-size:12px}
+      #today.session-prestart #sessionStart .btn{min-height:54px;font-size:16px}
+
+      #sessionStart{border:1px solid rgba(46,229,128,.38);background:linear-gradient(180deg,rgba(46,229,128,.10),var(--surface));border-radius:16px;padding:13px 15px;margin:0 0 12px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.14)}
       #sessionStart h3{margin:0 0 3px;font-size:16px}
       #sessionStart p{margin:0 0 11px;font-size:12.5px;color:var(--muted);line-height:1.4}
       #sessionStart .btn{width:100%;min-height:50px;font-size:15px;font-weight:850}
@@ -95,9 +93,25 @@
       .sc-row:last-of-type{border-bottom:0}
       .sc-row span{color:var(--muted);font-size:12px;white-space:nowrap}
       .sc-row span.full{color:var(--accent)}
-      @media(max-width:390px){#scNextBtn{min-width:78px;padding:0 12px}}
+      @media(max-width:390px){
+        #today.session-prestart>.hero{padding:14px 16px}
+        #today.session-prestart>.hero h1{font-size:23px}
+        #scNextBtn{min-width:78px;padding:0 12px}
+      }
     `;
     document.head.appendChild(style);
+  }
+
+  function placeStartBeforeWorkout() {
+    const start = $('sessionStart'), section = listSection(), setup = $('sessionSetup');
+    if (!start || !section) return;
+    // UI shell can re-run after this module. Always reassert the launch hierarchy.
+    if (setup && setup.parentNode === section.parentNode) {
+      if (setup.nextElementSibling !== start) setup.after(start);
+      if (start.nextElementSibling !== section) start.after(section);
+    } else if (section.previousElementSibling !== start) {
+      section.before(start);
+    }
   }
 
   function chrome() {
@@ -107,8 +121,6 @@
       const start = document.createElement('div');
       start.id = 'sessionStart';
       start.innerHTML = '<h3 id="sessionStartTitle">Ready when you are</h3><p id="sessionStartText"></p><button class="btn primary" id="sessionBeginBtn" type="button">Begin workout</button>';
-      // Start is the primary action on Today. Put it before the workout-detail section so users
-      // never need to scroll past muscle-group/status/explanation cards just to begin.
       section.before(start);
       start.querySelector('#sessionBeginBtn').addEventListener('click', () => {
         const user = activeUser(), workout = finalWorkout(user);
@@ -116,6 +128,8 @@
         goTo(firstIncomplete(user, workout), workout);
       });
     }
+    placeStartBeforeWorkout();
+
     if (!$('sessionCardNav')) {
       const nav = document.createElement('div');
       nav.id = 'sessionCardNav';
@@ -155,8 +169,13 @@
     if (typeof activeUser !== 'function' || typeof finalWorkout !== 'function') return;
     injectStyles();
     if (!chrome()) return;
+    placeStartBeforeWorkout();
+
     const user = activeUser(), workout = finalWorkout(user), all = cards();
     const cta = $('finishBtn')?.closest('.cta') || null;
+    const started = began || anyLogged(user);
+    const today = $('today');
+    today?.classList.toggle('session-prestart', !started && !isCircuit(user));
 
     if (isCircuit(user) || showAll || !all.length) {
       showEverything();
@@ -167,7 +186,6 @@
       return;
     }
 
-    const started = began || anyLogged(user);
     if (!started) {
       all.forEach(card => card.classList.add('sc-hidden'));
       $('sessionStart')?.classList.remove('sc-hidden');
@@ -175,7 +193,7 @@
       cta?.classList.add('sc-hidden');
       const { planned } = progress(user, workout);
       const text = $('sessionStartText');
-      if (text) text.textContent = `${workout.length} exercise${workout.length === 1 ? '' : 's'} · ${planned} sets · setup can be changed above`;
+      if (text) text.textContent = `${workout.length} exercises · ${planned} sets · tap setup to adjust`;
       return;
     }
 
