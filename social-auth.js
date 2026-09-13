@@ -2,6 +2,21 @@
 (() => {
   const IRON_SITE='https://iron-six-training.vercel.app';
   const NOMAD_AUTH='https://nemgmavvuoulrahvrdwh.supabase.co';
+
+  // Supabase's persisted browser session is origin-scoped. The same production build is also
+  // reachable through Vercel project/branch aliases, which made those URLs look "signed out"
+  // even while the canonical site still had a valid session. Normalize known production aliases
+  // before cloud-sync initializes so every ordinary web entry point shares one auth store.
+  if(!window.IronSixNative){
+    const host=String(location.hostname||'').toLowerCase();
+    const productionAlias=host==='iron-six-training-jordman55-3386s-projects.vercel.app'
+      ||host==='iron-six-training-git-main-jordman55-3386s-projects.vercel.app';
+    if(productionAlias){
+      location.replace(IRON_SITE+location.pathname+location.search+location.hash);
+      return;
+    }
+  }
+
   const providers=[
     {id:'google',key:'google',name:'Google',icon:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.35 12.2c0-.72-.06-1.24-.2-1.78H12v3.24h5.37a4.6 4.6 0 0 1-1.99 2.93l-.02.11 2.89 2.24.2.02c1.83-1.69 2.9-4.18 2.9-6.76z"/><path fill="#34A853" d="M12 21.7c2.62 0 4.82-.86 6.43-2.34l-3.07-2.38c-.82.55-1.9.94-3.36.94-2.52 0-4.66-1.7-5.42-4.06l-.11.01-3 2.32-.04.1A9.7 9.7 0 0 0 12 21.7z"/><path fill="#FBBC05" d="M6.58 13.86A5.85 5.85 0 0 1 6.26 12c0-.64.11-1.26.31-1.86l-.01-.13-3.05-2.36-.1.05A9.7 9.7 0 0 0 2.3 12c0 1.56.37 3.04 1.13 4.3l3.15-2.44z"/><path fill="#EA4335" d="M12 6.08c1.82 0 3.05.79 3.75 1.44l2.75-2.69C16.8 3.25 14.62 2.3 12 2.3a9.7 9.7 0 0 0-8.57 5.4l3.14 2.44C7.34 7.78 9.48 6.08 12 6.08z"/></svg>'},
     {id:'apple',key:'apple',name:'Apple',icon:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.67 12.72c.03 3.08 2.7 4.1 2.73 4.12-.02.07-.43 1.47-1.4 2.91-.84 1.25-1.72 2.49-3.1 2.52-1.35.03-1.79-.8-3.34-.8-1.55 0-2.04.78-3.32.83-1.33.05-2.35-1.34-3.2-2.59-1.74-2.51-3.07-7.1-1.28-10.21A4.97 4.97 0 0 1 8 6.96c1.3-.03 2.53.87 3.33.87.8 0 2.3-1.08 3.87-.92.66.03 2.52.27 3.71 2.01-.1.06-2.22 1.3-2.24 3.8zM14.17 5.26c.7-.85 1.18-2.03 1.05-3.21-1.02.04-2.25.68-2.98 1.53-.65.75-1.22 1.95-1.07 3.11 1.14.09 2.3-.58 3-1.43z"/></svg>'},
@@ -43,9 +58,6 @@
   }
   async function refresh(){
     if(!api||loading)return;loading=true;settingsError=false;render();
-    // Same-origin first: that is what works on Vercel previews and what the native
-    // bridge rewrites to the app's API origin. Fall back to the production host only
-    // for static deployments (GitHub Pages) that serve no /api routes at all.
     try{
       try{status=await fetchStatus('/api/auth-status')}
       catch(_){status=await fetchStatus(IRON_SITE+'/api/auth-status')}
@@ -61,16 +73,10 @@
     }catch(_){}
   }
 
-  // The diagnosis is worth more than the moment it happens in: a sign-in failure that is only
-  // ever a disappearing message is one the user reports as "it just does nothing".
   const FAILURE_KEY='ironSixGoogleBridgeFailure';
-  function rememberFailure(detail){
-    try{localStorage.setItem(FAILURE_KEY,JSON.stringify({detail,at:new Date().toISOString()}))}catch(_){ }
-  }
-  function clearFailure(){try{localStorage.removeItem(FAILURE_KEY)}catch(_){ }}
-  function lastFailure(){
-    try{const raw=JSON.parse(localStorage.getItem(FAILURE_KEY)||'null');return raw&&raw.detail?raw:null}catch(_){return null}
-  }
+  function rememberFailure(detail){try{localStorage.setItem(FAILURE_KEY,JSON.stringify({detail,at:new Date().toISOString()}))}catch(_){}}
+  function clearFailure(){try{localStorage.removeItem(FAILURE_KEY)}catch(_){}}
+  function lastFailure(){try{const raw=JSON.parse(localStorage.getItem(FAILURE_KEY)||'null');return raw&&raw.detail?raw:null}catch(_){return null}}
   function showRememberedFailure(){
     const failure=lastFailure();
     if(!failure||!api||api.session()?.user)return;
@@ -86,9 +92,6 @@
         body:JSON.stringify({token}),signal:AbortSignal.timeout(15000)
       });
       const body=await response.json().catch(()=>({}));
-      // Each step fails differently and the difference is the whole diagnosis, so say which one
-      // it was. This used to collapse into one message that vanished after 1.9 seconds, which
-      // is how a sign-in could fail repeatedly and look like it had worked.
       if(!response.ok||!body.token_hash){
         const reason=response.status===401||response.status===403
             ? 'Google verified you, but Iron Six would not accept that identity (step: verification, '+response.status+').'
@@ -108,7 +111,6 @@
       const detail=String(error?.message||'Unknown error');
       rememberFailure(detail);
       api.notify('Google sign-in did not complete. '+detail+' Your local workout is unchanged; try again or use email.');
-      // A failure the user cannot see is a failure they will repeat. Put it in front of them.
       try{window.IronSixCloud?.openAccount?.()}catch(_){ }
     }
     finally{bridgeBusy=false;api.setBusy(false);render()}
@@ -120,7 +122,7 @@
     const relay='https://mynomad.pet/iron-six-auth?target='+target;
     const url=NOMAD_AUTH+'/auth/v1/authorize?provider=google&redirect_to='+encodeURIComponent(relay);
     api.notify('Opening Google…');
-    if(window.IronSixNative)await window.IronSixNative.openOAuth(url);else location.assign(url);
+    if(window.IronSixNative)await window.IronSixNative.openOAuth(url);else location.replace(url);
   }
 
   async function start(id){
@@ -132,13 +134,14 @@
       window.IronSixCircuit?.pause('Paused for sign-in');
       if(!api.saveLocal()||window.IronSixJournal?.pending().some(e=>!e._durable))throw {code:'local_save_failed'};
       if(id==='google'&&!direct(provider)){api.setBusy(false);render();await startGoogleBridge();return}
-      const options={redirectTo:window.IronSixNative?.redirectTo||IRON_SITE+'/?auth=oauth'};
-      if(window.IronSixNative)options.skipBrowserRedirect=true;if(provider.scopes)options.scopes=provider.scopes;
+      const options={redirectTo:window.IronSixNative?.redirectTo||IRON_SITE+'/?auth=oauth',skipBrowserRedirect:true};
+      if(provider.scopes)options.scopes=provider.scopes;
       if(id==='google')options.queryParams={prompt:'select_account'};
       api.notify('Opening '+provider.name+'…');
       const result=signed?await api.client.auth.linkIdentity({provider:id,options}):await api.client.auth.signInWithOAuth({provider:id,options});
       if(result.error)throw result.error;if(!result.data?.url)throw {code:'missing_redirect'};
       if(window.IronSixNative){await window.IronSixNative.openOAuth(result.data.url);api.setBusy(false);render()}
+      else location.replace(result.data.url);
     }catch(error){
       const messages={local_save_failed:'Your latest changes could not be saved on this device. Your workout is still here; try again after the save completes.',manual_linking_disabled:'Connecting another provider is not available right now. Your current account is unchanged.',identity_already_exists:'That sign-in method is already connected to another Iron Six account.',provider_disabled:'This sign-in method is not enabled yet.',provider_not_enabled:'This sign-in method is not enabled yet.'};
       api.notify(messages[error?.code]||'Could not open '+provider.name+'. Try again or continue with email.');api.setBusy(false);render();
