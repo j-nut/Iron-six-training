@@ -1,0 +1,159 @@
+/* Iron Six premium polish layer.
+ * Visual only: no workout/auth/state behavior lives here.
+ * Motion is deliberately restrained and disabled for reduced-motion users.
+ */
+:root{
+  --premium-line:rgba(255,255,255,.085);
+  --premium-line-soft:rgba(255,255,255,.045);
+  --premium-highlight:rgba(255,255,255,.045);
+  --premium-accent-soft:rgba(46,229,128,.12);
+  --premium-shadow:0 18px 48px rgba(0,0,0,.28),0 2px 8px rgba(0,0,0,.22);
+  --premium-shadow-soft:0 10px 28px rgba(0,0,0,.20);
+  --premium-ease:cubic-bezier(.22,.8,.22,1);
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:
+    radial-gradient(900px 440px at 50% -130px,rgba(46,229,128,.055),transparent 70%),
+    linear-gradient(180deg,#090b0e 0,#0d0f14 42%,#090b0e 100%);
+}
+
+/* Surfaces: subtle edge light + depth, never glossy. */
+.hero,.exercise,.shell-panel,.modal,.profile-card,.note,#sessionStart,#sessionReview{
+  border-color:var(--premium-line)!important;
+  box-shadow:var(--premium-shadow-soft);
+}
+.hero,.exercise,.shell-panel,#sessionStart,#sessionReview{
+  position:relative;
+  isolation:isolate;
+}
+.hero:before,.exercise:before,.shell-panel:before,#sessionStart:before,#sessionReview:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  border-radius:inherit;
+  background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 22%);
+  z-index:-1;
+}
+
+/* Buttons and tappable controls should feel physical without bouncing around. */
+.btn,.iconbtn,.duration-btn,.navbtn,.sc-arrow,.shell-toggle,.done,.social-provider{
+  transition:
+    transform .14s var(--premium-ease),
+    background-color .18s ease,
+    border-color .18s ease,
+    color .18s ease,
+    box-shadow .18s ease,
+    opacity .18s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:active,.iconbtn:active,.duration-btn:active,.navbtn:active,.sc-arrow:active,.shell-toggle:active,.social-provider:active{
+  transform:scale(.975);
+}
+.btn.primary{
+  box-shadow:0 7px 22px rgba(46,229,128,.14),inset 0 1px 0 rgba(255,255,255,.22);
+}
+.btn.primary:hover,.btn.primary:focus-visible{
+  box-shadow:0 10px 28px rgba(46,229,128,.20),0 0 0 1px rgba(46,229,128,.18),inset 0 1px 0 rgba(255,255,255,.24);
+}
+.btn.secondary:hover,.iconbtn:hover,.duration-btn:hover,.shell-toggle:hover{
+  border-color:rgba(255,255,255,.16);
+  background-color:rgba(255,255,255,.055);
+}
+button:focus-visible,input:focus-visible,select:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 3px rgba(46,229,128,.16);
+}
+
+/* Inputs: calmer borders and a slightly lifted focus state. */
+.field,.setting input,.setting select,.select-wrap select,.custom-time input,.user-switch select{
+  transition:border-color .16s ease,background-color .16s ease,box-shadow .16s ease,transform .16s var(--premium-ease);
+}
+.field:focus,.setting input:focus,.setting select:focus,.select-wrap select:focus,.custom-time input:focus,.user-switch select:focus{
+  border-color:rgba(46,229,128,.72)!important;
+  box-shadow:0 0 0 3px rgba(46,229,128,.10);
+  background-color:rgba(46,229,128,.045);
+}
+
+/* Completed sets get a quiet confirmation rather than a permanent neon block. */
+@keyframes premiumSetComplete{
+  0%{transform:scale(.94);box-shadow:0 0 0 0 rgba(46,229,128,.30)}
+  55%{transform:scale(1.045);box-shadow:0 0 0 8px rgba(46,229,128,0)}
+  100%{transform:scale(1);box-shadow:0 0 0 3px rgba(46,229,128,.12)}
+}
+.done.active{animation:premiumSetComplete .42s var(--premium-ease)}
+
+/* Screen/view change: short enough that navigation still feels instant. */
+@keyframes premiumViewIn{
+  from{opacity:0;transform:translateY(7px)}
+  to{opacity:1;transform:none}
+}
+.view.active{animation:premiumViewIn .24s var(--premium-ease)}
+
+/* Exercise cards entering focus should read as the active object. */
+#exerciseList>.exercise:not(.sc-hidden){animation:premiumViewIn .22s var(--premium-ease)}
+
+/* Bottom nav: quieter glass, active tab gets a small anchored indicator. */
+.bottom-nav{
+  background:rgba(8,10,13,.82)!important;
+  backdrop-filter:blur(22px) saturate(1.15);
+  -webkit-backdrop-filter:blur(22px) saturate(1.15);
+  border-top-color:rgba(255,255,255,.07)!important;
+  box-shadow:0 -12px 32px rgba(0,0,0,.22);
+}
+.navbtn{position:relative}
+.navbtn.active{
+  background:rgba(46,229,128,.075)!important;
+  box-shadow:inset 0 0 0 1px rgba(46,229,128,.06);
+}
+.navbtn.active:after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:5px;
+  width:18px;
+  height:2px;
+  border-radius:999px;
+  background:var(--accent);
+  transform:translateX(-50%);
+  box-shadow:0 0 10px rgba(46,229,128,.35);
+}
+
+/* Shell panels: visually open instead of abruptly appearing. */
+.shell-body{transform-origin:top;animation:premiumPanelIn .20s var(--premium-ease)}
+@keyframes premiumPanelIn{
+  from{opacity:0;transform:translateY(-4px)}
+  to{opacity:1;transform:none}
+}
+.shell-chevron{transition:transform .22s var(--premium-ease)!important}
+
+/* Media should look intentionally framed, not just dropped into the card. */
+.exercise-media{
+  border-color:rgba(255,255,255,.07)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 10px 24px rgba(0,0,0,.16);
+}
+.exercise-media img{transition:filter .2s ease,transform .24s var(--premium-ease)}
+.exercise-media:active img{transform:scale(.995)}
+
+/* Tiny status surfaces feel more deliberate with restrained accent edges. */
+.suggestion{box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+.tag{box-shadow:inset 0 1px 0 rgba(255,255,255,.24),0 4px 12px rgba(46,229,128,.10)}
+.badge{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.075)}
+
+/* Modals rise gently and the backdrop feels softer. */
+.modal-backdrop.show{animation:premiumBackdrop .16s ease-out}
+.modal-backdrop.show .modal{animation:premiumModalIn .24s var(--premium-ease)}
+@keyframes premiumBackdrop{from{opacity:0}to{opacity:1}}
+@keyframes premiumModalIn{from{opacity:0;transform:translateY(18px) scale(.988)}to{opacity:1;transform:none}}
+
+/* Toasts should glide rather than pop. */
+.toast{transition:opacity .2s ease,transform .24s var(--premium-ease)!important;transform:translate(-50%,8px)!important}
+.toast.show{transform:translate(-50%,0)!important}
+
+/* Keep motion respectful and deterministic for accessibility. */
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
