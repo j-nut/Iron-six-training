@@ -34,4 +34,5 @@
   loadRuntimeScript('music.js?v=1','music','__ironSixMusicLoaded');
   loadRuntimeScript('session-resume.js?v=1','session-resume','__ironSixSessionResumeLoaded');
   loadRuntimeScript('active-workout-clean.js?v=1','active-workout-clean','__ironSixActiveWorkoutCleanLoaded');
+  loadRuntimeScript('set-coach-feedback.js?v=1','set-coach-feedback','__ironSixSetCoachFeedbackLoaded');
 })();
