@@ -13,9 +13,7 @@
   }
   function loadRuntimeStyle(href,datasetKey){
     if(document.querySelector(`link[data-${datasetKey}]`))return;
-    const link=document.createElement('link');
-    link.rel='stylesheet';link.href=href;link.setAttribute(`data-${datasetKey}`,'true');
-    document.head.appendChild(link);
+    const link=document.createElement('link');link.rel='stylesheet';link.href=href;link.setAttribute(`data-${datasetKey}`,'true');document.head.appendChild(link);
   }
   loadRuntimeStyle('premium-ui.css?v=1','premium-ui');
   loadRuntimeScript('coach-recovery.js?v=2','coach-recovery','__ironSixCoachRecoveryLoaded');
@@ -33,6 +31,7 @@
   loadRuntimeScript('music-originals.js?v=1','music-originals','__ironSixMusicOriginalsLoaded');
   loadRuntimeScript('music.js?v=1','music','__ironSixMusicLoaded');
   loadRuntimeScript('session-resume.js?v=1','session-resume','__ironSixSessionResumeLoaded');
+  loadRuntimeScript('accent-theme.js?v=1','accent-theme','__ironSixAccentThemeLoaded');
   loadRuntimeScript('active-workout-clean.js?v=1','active-workout-clean','__ironSixActiveWorkoutCleanLoaded');
   loadRuntimeScript('set-coach-feedback.js?v=1','set-coach-feedback','__ironSixSetCoachFeedbackLoaded');
 })();
