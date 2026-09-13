@@ -83,7 +83,11 @@
       #sessionCardNav .sc-step span{display:block;font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       .sc-arrow{flex:0 0 auto;min-width:46px;min-height:46px;border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:13px;font-size:17px;font-weight:800;cursor:pointer}
       .sc-arrow:disabled{opacity:.35;cursor:default}
-      .sc-arrow.ready{border-color:var(--accent);background:rgba(46,229,128,.12);color:var(--accent)}
+      #scNextBtn{min-width:88px;padding:0 16px;border-color:rgba(46,229,128,.45);background:rgba(46,229,128,.09);color:var(--accent);font-size:13px;letter-spacing:.01em;box-shadow:0 0 0 1px rgba(46,229,128,.05),0 4px 14px rgba(0,0,0,.16)}
+      #scNextBtn:hover{background:rgba(46,229,128,.15);border-color:rgba(46,229,128,.72)}
+      @keyframes scReadyPulse{0%,100%{box-shadow:0 0 0 0 rgba(46,229,128,.28),0 4px 16px rgba(0,0,0,.18)}50%{box-shadow:0 0 0 7px rgba(46,229,128,0),0 0 24px rgba(46,229,128,.28)}}
+      #scNextBtn.ready{border-color:var(--accent);background:rgba(46,229,128,.18);color:var(--accent);animation:scReadyPulse 1.6s ease-in-out infinite}
+      @media(prefers-reduced-motion:reduce){#scNextBtn.ready{animation:none;box-shadow:0 0 0 2px rgba(46,229,128,.18),0 0 18px rgba(46,229,128,.18)}}
       #sessionCardFoot{display:flex;gap:9px;margin:11px 0 0}
       #sessionCardFoot button{flex:1;min-height:46px}
       #sessionReview{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:16px;margin:12px 0 0}
@@ -93,6 +97,7 @@
       .sc-row:last-of-type{border-bottom:0}
       .sc-row span{color:var(--muted);font-size:12px;white-space:nowrap}
       .sc-row span.full{color:var(--accent)}
+      @media(max-width:390px){#scNextBtn{min-width:78px;padding:0 12px}}
     `;
     document.head.appendChild(style);
   }
@@ -116,7 +121,7 @@
       nav.id = 'sessionCardNav';
       nav.innerHTML = '<button class="sc-arrow" id="scPrev" type="button" aria-label="Previous exercise">‹</button>'
         + '<div class="sc-step"><strong id="scStep"></strong><span id="scNext"></span></div>'
-        + '<button class="sc-arrow" id="scNextBtn" type="button" aria-label="Next exercise">›</button>';
+        + '<button class="sc-arrow" id="scNextBtn" type="button" aria-label="Next exercise">Next ›</button>';
       list.before(nav);
       nav.querySelector('#scPrev').addEventListener('click', () => { const w = finalWorkout(activeUser()); goTo(Math.max(0, activeIndex(activeUser(), w) - 1), w); });
       nav.querySelector('#scNextBtn').addEventListener('click', () => { const w = finalWorkout(activeUser()); goTo(Math.min(w.length, activeIndex(activeUser(), w) + 1), w); });
@@ -205,9 +210,14 @@
     if (nextLabel) nextLabel.textContent = index + 1 < workout.length ? `Next: ${workout[index + 1].name}` : 'Next: review and finish';
     const prev = $('scPrev'), next = $('scNextBtn');
     if (prev) prev.disabled = index === 0;
-    // Highlight forward once this exercise is done, rather than moving the screen under someone
-    // who may still be correcting a number.
-    if (next) next.classList.toggle('ready', current.complete >= current.sets);
+    if (next) {
+      const last = index + 1 >= workout.length;
+      next.textContent = last ? 'Review ›' : 'Next ›';
+      next.setAttribute('aria-label', last ? 'Review and finish workout' : `Next exercise: ${workout[index + 1]?.name || ''}`);
+      // Highlight forward once this exercise is done, rather than moving the screen under someone
+      // who may still be correcting a number.
+      next.classList.toggle('ready', current.complete >= current.sets);
+    }
   }
 
   const baseRenderExercises = window.renderExercises;
