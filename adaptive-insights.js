@@ -87,7 +87,7 @@
       const recent=history.querySelector('.section');
       const progress=document.createElement('div');progress.className='section';progress.id='progressInsights';progress.innerHTML='<div class="section-head"><div><h2>Progress</h2><small>Calculated from your logged sets</small></div></div><div id="progressInsightBody"></div>';
       const recovery=document.createElement('div');recovery.className='section';recovery.id='recoveryInsights';recovery.innerHTML='<div class="section-head"><div><h2>Training freshness</h2><small>Time and recent-session load, not a medical recovery score</small></div></div><div id="recoveryInsightBody"></div>';
-      if(recent){recent.after(progress,recovery)}else{history.append(progress,recovery)}
+      if(recent){history.insertBefore(progress,recent);history.insertBefore(recovery,recent)}else{history.append(progress,recovery)}
     }
     const readiness=document.getElementById('readinessNote');
     if(readiness&&!document.getElementById('freshnessSummary')){const div=document.createElement('div');div.id='freshnessSummary';div.className='fresh-summary';readiness.insertAdjacentElement('afterend',div)}
