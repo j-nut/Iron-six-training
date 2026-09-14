@@ -17,7 +17,7 @@ create table if not exists public.workout_entries (
   payload jsonb not null check (jsonb_typeof(payload)='object' and octet_length(payload::text) <= 200000),
   client_at timestamptz not null,
   saved_at timestamptz not null default now(),
-  foreign key (user_id,profile_client_id) references public.profiles(user_id,client_id)
+  foreign key (user_id,profile_client_id) references public.profiles(user_id,client_id) on delete cascade
 );
 create index if not exists workout_entries_owner_sequence on public.workout_entries(user_id,sequence);
 create index if not exists workout_entries_session on public.workout_entries(user_id,profile_client_id,session_id,sequence);

@@ -21,8 +21,8 @@
       for(const exercise of session.details||[]){
         for(const set of exercise.sets||[]){
           const weight=num(set.weight),reps=num(set.reps),rir=num(set.rir);
-          if(!set.done&&!weight&&!reps)continue;
-          rows.push({ts:num(session.ts),date:session.date||'',workoutKey:session.workoutKey||'',exercise:exercise.name||'Exercise',base:exercise.base||'',weight,reps,rir,volume:weight*reps,e1rm:estimatedMax(weight,reps,rir)});
+          if(set.done===false || (set.done!==true && !(reps>0 || num(set.seconds)>0 || num(set.duration)>0)))continue;
+          rows.push({ts:num(session.ts),date:session.date||'',workoutKey:session.workoutKey||'',exercise:exercise.name||'Exercise',base:exercise.base||'',weight,reps,rir,volume:Math.max(0,weight)*Math.max(0,reps),e1rm:estimatedMax(weight,reps,rir)});
         }
       }
     }
@@ -41,7 +41,7 @@
     return result;
   }
   function analyze(user,now=Date.now()){
-    const rows=flattenHistory(user),week=rows.filter(r=>now-r.ts<=7*864e5),sessions=(user?.history||[]).filter(h=>now-num(h.ts)<=7*864e5);
+    const rows=flattenHistory(user),week=rows.filter(r=>r.ts>0&&r.ts<=now&&now-r.ts<=7*864e5),sessions=(user?.history||[]).filter(h=>num(h.ts)>0&&num(h.ts)<=now&&now-num(h.ts)<=7*864e5);
     const byExercise={};
     for(const r of rows){
       const bucket=byExercise[r.exercise]||(byExercise[r.exercise]=[]);bucket.push(r);
@@ -87,7 +87,7 @@
       const recent=history.querySelector('.section');
       const progress=document.createElement('div');progress.className='section';progress.id='progressInsights';progress.innerHTML='<div class="section-head"><div><h2>Progress</h2><small>Calculated from your logged sets</small></div></div><div id="progressInsightBody"></div>';
       const recovery=document.createElement('div');recovery.className='section';recovery.id='recoveryInsights';recovery.innerHTML='<div class="section-head"><div><h2>Training freshness</h2><small>Time and recent-session load, not a medical recovery score</small></div></div><div id="recoveryInsightBody"></div>';
-      if(recent){history.insertBefore(recovery,recent);history.insertBefore(progress,recovery)}else{history.append(progress,recovery)}
+      if(recent){recent.after(progress,recovery)}else{history.append(progress,recovery)}
     }
     const readiness=document.getElementById('readinessNote');
     if(readiness&&!document.getElementById('freshnessSummary')){const div=document.createElement('div');div.id='freshnessSummary';div.className='fresh-summary';readiness.insertAdjacentElement('afterend',div)}
@@ -99,6 +99,7 @@
       const trend=a.trends[0];body.innerHTML=`<div class="insight-grid"><div class="insight-card"><strong>${a.sessions7}</strong><span>sessions · 7 days</span></div><div class="insight-card"><strong>${a.sets7}</strong><span>logged sets · 7 days</span></div><div class="insight-card"><strong>${a.volume7.toLocaleString()}</strong><span>logged lb-reps · 7 days</span></div></div>${trend?`<div class="trend-list"><div class="trend-row"><div><strong>${esc(trend.exercise)}</strong><br><span>estimated strength trend</span></div><strong class="${trend.change>=0?'trend-up':''}">${trend.change>=0?'+':''}${trend.change}%</strong></div>${a.trends.slice(1,4).map(t=>`<div class="trend-row"><span>${esc(t.exercise)}</span><strong class="${t.change>=0?'trend-up':''}">${t.change>=0?'+':''}${t.change}%</strong></div>`).join('')}</div>`:'<div class="note" style="margin-top:10px">Log the same exercise in at least two sessions to unlock strength trends.</div>'}`;
     }
     if(recovery){recovery.innerHTML=`<div class="fresh-grid">${MUSCLES.map(m=>{const f=a.freshness[m];return `<div class="fresh-row"><div class="fresh-top"><strong>${esc(m.replace(/\b\w/g,x=>x.toUpperCase()))}</strong><span>${f.label}</span></div><div class="fresh-bar"><i style="--fresh:${f.score}%"></i></div></div>`}).join('')}</div>`}
+    window.IronSixProgressV2?.render();
     const summary=document.getElementById('freshnessSummary');if(summary){const key=user.program?.currentWorkoutKey||'lower_strength',muscles=(typeof WORKOUT_META!=='undefined'&&WORKOUT_META[key]?.muscles)||[],scores=muscles.flatMap(m=>{const k=String(m).toLowerCase().replace('front delts','shoulders').replace('rear delts','shoulders').replace('arms','biceps');return a.freshness[k]?[a.freshness[k].score]:[]});const avg=scores.length?Math.round(scores.reduce((x,y)=>x+y,0)/scores.length):100;summary.textContent=`Training freshness for today’s main muscles: ${avg}% · combined with your energy and soreness check-in.`}
   }
   function feedbackPrompt(row,key,current){

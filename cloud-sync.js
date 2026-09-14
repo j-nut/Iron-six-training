@@ -5,6 +5,20 @@
   const SDK='https://esm.sh/@supabase/supabase-js@2.112.4';
   const DEFAULT_SUPABASE={url:'https://btfrkfbxyowglrdwclei.supabase.co',publishableKey:'sb_publishable_lhLxwVoR5VcpNpOPs1bBVQ_ik42s4wi'};
   const baseSave=window.saveData,ensuring=new Map();
+  let deletingProfile=false;
+  async function withProfileDeletion(action){
+    if(deletingProfile)throw new Error('A profile deletion is already in progress.');
+    if(!own())throw new Error('Sign in again before deleting an account profile.');
+    const version=epoch;
+    deletingProfile=true;clearTimeout(syncTimer);
+    try{
+      if(syncing)await syncing;
+      await journal().flush();
+      await Promise.allSettled([...ensuring.values()]);
+      if(version!==epoch||!own())throw new Error('Account changed. Nothing was deleted from this device.');
+      return await action();
+    }finally{deletingProfile=false;queueSync()}
+  }
   let client=null,session=null,epoch=0,activated,syncing=null,syncTimer,activation=Promise.resolve(),mode='login',busy=false,message='Connecting…';
   const scope=()=>window.ironSixAccountScope||null;
   const own=()=>!!session?.user&&session.user.id===scope();
@@ -38,6 +52,7 @@
     })();ensuring.set(key,work);try{return await work}finally{ensuring.delete(key)}
   }
   async function saveEntry(event){
+    if(deletingProfile)throw new Error('Profile deletion is in progress; saves will resume shortly.');
     if(!own()||event.user_id!==scope())throw new Error('Sign in again to finish backing up this account.');
     const version=epoch,u=data.users.find(u=>u.id===event.profile_client_id);
     if(!u)throw new Error('The training profile must be recovered before this entry can sync.');
@@ -51,6 +66,14 @@
     const result=await client.from('profiles').select('*').eq('user_id',scope()).order('updated_at',{ascending:false});if(result.error)throw result.error;if(version!==epoch)return;
     const rows=result.data||[],blank=data.fresh===true&&!data.users.some(u=>u.history.length||Object.keys(u.today).length);
     if(rows.length&&blank){data.users=rows.map(fromRow);data.activeUserId=data.users[0].id;data.fresh=false;return}
+    // A previously synced parent missing from this account was deleted on another device.
+    // New local profiles have no cloudId and must still be uploaded.
+    const remoteIds=new Set(rows.map(row=>row.client_id));
+    const removed=data.users.filter(u=>u.cloudId&&u.accountOwner===scope()&&!remoteIds.has(u.id));
+    for(const u of removed)journal().forget(u.id);
+    data.users=data.users.filter(u=>!removed.includes(u));
+    if(!data.users.length){const u=makeUser();u.accountOwner=scope();data.users=[u];data.fresh=true}
+    if(!data.users.some(u=>u.id===data.activeUserId))data.activeUserId=data.users[0].id;
     for(const row of rows){const u=data.users.find(u=>u.id===row.client_id);if(!u){data.users.push(fromRow(row));continue}
       if(row.updated_at!==u._cloudVersion){
         if(u._cloudFingerprint&&fingerprint(u)===u._cloudFingerprint)applyRow(u,row);
@@ -81,7 +104,7 @@
     }
   }
   async function syncNow(showToast=false){
-    if(!own())return false;if(syncing)return syncing;
+    if(!own()||deletingProfile)return false;if(syncing)return syncing;
     const version=epoch;
     syncing=(async()=>{try{
       notify('Syncing…');await pullProfiles(version);if(version!==epoch)return false;
@@ -96,7 +119,7 @@
     }catch(error){if(version===epoch){notify('Cloud unavailable: '+(error.message||'please retry')+'. Local workout entries are retained.');if(showToast)toast('Cloud save needs a retry; local records retained.')}return false}
     finally{syncing=null}})();return syncing;
   }
-  function queueSync(){clearTimeout(syncTimer);if(own())syncTimer=setTimeout(()=>syncNow(false),1200)}
+  function queueSync(){clearTimeout(syncTimer);if(own()&&!deletingProfile)syncTimer=setTimeout(()=>syncNow(false),1200)}
   async function activate(next){
     const nextId=next?.user?.id||null;session=next||null;
     if(activated===nextId){renderAccount();return}
@@ -214,7 +237,7 @@
     }catch(error){if(callbackIssue){callbackIssue.clear();notify(callbackIssue.message);openAccount()}else notify('Sign-in unavailable. Local workout logging still works. '+(error.message||''));renderAccount()}
   }
   window.saveData=function(){data.fresh=false;const u=typeof activeUser==='function'?activeUser():null;if(u){u.localUpdatedAt=Date.now();if(own())u.accountOwner=scope()}const saved=baseSave();queueSync();return saved};
-  window.IronSixCloud={saveLocal:baseSave,syncNow,client:()=>client,session:()=>session,openAccount};
+  window.IronSixCloud={withProfileDeletion,saveLocal:baseSave,syncNow,client:()=>client,session:()=>session,openAccount};
   window.addEventListener('online',()=>syncNow(false));
   setInterval(()=>syncNow(false),30000);init();
 })();
