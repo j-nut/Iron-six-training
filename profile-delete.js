@@ -33,42 +33,46 @@
   async function removeFromCloud(user) {
     const cloud = window.IronSixCloud;
     const scope = window.ironSixAccountScope;
-    if (!cloud || !scope || typeof cloud.client !== 'function') return { attempted: false };
-    const client = cloud.client();
-    if (!client) return { attempted: false };
+    if (!scope) return { attempted: false };
+    if (!cloud?.client?.() || cloud.session?.()?.user?.id !== scope)
+      return { attempted: true, ok: false, error: 'Sign in again before deleting an account profile.' };
     try {
-      // Match on client_id so a profile that never received its cloud id is still removed.
-      const result = await client.from('profiles').delete().eq('user_id', scope).eq('client_id', user.id);
-      if (result.error) return { attempted: true, ok: false, error: result.error.message };
+      // The database cascades journal deletion in the same transaction as the parent.
+      const result = await cloud.client().from('profiles').delete()
+        .eq('user_id', scope).eq('client_id', user.id).select('id');
+      if (result.error) throw result.error;
+      if (!Array.isArray(result.data)) throw new Error('The database did not confirm deletion.');
+      if (!result.data.length && user.cloudId)
+        throw new Error('No profile was removed. Sync your account and try again.');
+      return { attempted: true, ok: true };
     } catch (error) {
       return { attempted: true, ok: false, error: error?.message };
     }
-    // Journal rows have no delete policy yet, so this is expected to be refused. It is attempted
-    // anyway so that the day the policy is added, deletion becomes complete on its own — and it
-    // is isolated in its own try, because a failure to tidy optional rows must never undo a
-    // profile deletion that already succeeded.
-    //
-    // It cannot use .catch(): a Postgrest builder is only PromiseLike, so it has then() and no
-    // catch(), and calling it threw a TypeError that surfaced as "could not remove this profile".
-    try {
-      await client.from('workout_entries').delete().eq('user_id', scope).eq('profile_client_id', user.id);
-    } catch (_) { /* optional cleanup */ }
-    return { attempted: true, ok: true };
   }
 
+  let deleting = false;
   async function deleteProfile(id) {
+    if (deleting) { say('A profile deletion is already in progress.'); return false; }
+    deleting = true;
+    try { return await deleteConfirmedProfile(id); }
+    catch (error) { say('Could not remove this profile. ' + (error?.message || 'Please try again.')); return false; }
+    finally { deleting = false; }
+  }
+
+  async function deleteConfirmedProfile(id) {
     const user = data.users.find(x => x.id === id);
     if (!user) return false;
     if (data.users.length <= 1) { say('This is your only profile, so it cannot be deleted.'); return false; }
 
-    const signedIn = !!window.ironSixAccountScope;
+    const accountScope = window.ironSixAccountScope;
+    const signedIn = !!accountScope;
     const first = `Delete “${user.name}” and ${describe(user)}?\n\nThis cannot be undone${signedIn ? ' and removes it from your account on every device' : ''}.`;
     if (!confirm(first)) return false;
 
     const hasTraining = (user.history || []).length || Object.keys(user.today || {}).length;
     if (hasTraining && confirm('Download a backup of everything first?\n\nOK to download, Cancel to delete without one.')) {
-      let exported = true;
-      try { window.IronSixJournal?.exportLog(); } catch (_) { exported = false; }
+      let exported = typeof window.IronSixJournal?.exportLog === 'function';
+      try { if (exported) await window.IronSixJournal.exportLog(); } catch (_) { exported = false; }
       // A blocked download must not trap someone with a duplicate they cannot remove — that is
       // the problem this feature exists to solve. Say the backup failed and let them decide.
       const question = exported
@@ -77,20 +81,32 @@
       if (!confirm(question)) { if (!exported) say('Nothing was deleted.'); return false; }
     }
 
-    const cloud = await removeFromCloud(user);
-    if (cloud.attempted && !cloud.ok) {
-      say('Could not remove this profile from your account, so it was kept. ' + (cloud.error || 'Try again when you are back online.'));
-      return false;
-    }
-
-    window.IronSixJournal?.forget(user.id);
-    data.users = data.users.filter(x => x.id !== user.id);
-    if (data.activeUserId === user.id) data.activeUserId = data.users[0].id;
-    window.IronSixCircuit?.pause('Profile deleted');
-    saveData();
-    if (typeof renderAll === 'function') renderAll();
-    say(`Deleted ${user.name}.`);
-    return true;
+    const commit = async () => {
+      if (accountScope !== window.ironSixAccountScope || !data.users.includes(user))
+        throw new Error('The account or profile changed. Please try again.');
+      if (data.users.length <= 1) { say('This is your only profile, so it cannot be deleted.'); return false; }
+      const cloud = await removeFromCloud(user);
+      if (cloud.attempted && !cloud.ok) {
+        say('Could not remove this profile from your account, so it was kept. ' + (cloud.error || 'Try again when you are back online.'));
+        return false;
+      }
+      // An auth callback may have replaced the whole data object while the request was pending.
+      if (accountScope !== window.ironSixAccountScope || !data.users.includes(user)) {
+        say('Account changed. Sync the original account to see the deletion.');
+        return false;
+      }
+      window.IronSixJournal?.forget(user.id);
+      data.users = data.users.filter(x => x.id !== user.id);
+      if (data.activeUserId === user.id) data.activeUserId = data.users[0].id;
+      if (typeof calibrationRequest !== 'undefined') calibrationRequest++;
+      window.IronSixCircuit?.pause('Profile deleted');
+      const saved = saveData();
+      if (typeof renderAll === 'function') renderAll();
+      say(saved === false ? 'Profile removed, but this device could not save the change. Keep this page open and retry saving.' : `Deleted ${user.name}.`);
+      return saved !== false;
+    };
+    return signedIn && window.IronSixCloud?.withProfileDeletion
+      ? window.IronSixCloud.withProfileDeletion(commit) : commit();
   }
 
   // The Profiles list builds its own delete buttons on every render and wires them to

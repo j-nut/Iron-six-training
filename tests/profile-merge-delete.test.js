@@ -30,7 +30,7 @@ function app({signedIn=false,cloud=null,downloadsBlocked=false}={}){
     w.__cloudDeletes=[];
     w.IronSixCloud={client:()=>cloud||({from:table=>({delete:()=>({eq:function(){return this},then:undefined,error:null,
       catch(){return this}})})}),session:()=>({user:{id:'account-123'}})};
-    run(`window.IronSixCloud={client:()=>({from:function(t){const self=this;return{delete:function(){const q={_t:t,_f:{},eq:function(k,v){this._f[k]=v;return this},then:function(res){window.__cloudDeletes.push({table:this._t,filter:this._f});return Promise.resolve({error:${cloud==='fail'?'{message:"network down"}':'null'}}).then(res)},catch:function(){return this}};return q}}}}),session:()=>({user:{id:'account-123'}})}`);
+    run(`window.IronSixCloud={client:()=>({from:function(t){const self=this;return{delete:function(){const q={_t:t,_f:{},eq:function(k,v){this._f[k]=v;return this},select:function(){return this},then:function(res){window.__cloudDeletes.push({table:this._t,filter:this._f});return Promise.resolve({data:[{id:'cloud-profile'}],error:${cloud==='fail'?'{message:"network down"}':'null'}}).then(res)},catch:function(){return this}};return q}}}}),session:()=>({user:{id:'account-123'}})}`);
   }
   return {
     w,run,errors,
@@ -194,8 +194,8 @@ test('a Postgrest builder with no .catch() does not break deletion',async()=>{
   // it threw a TypeError that surfaced to the user as "could not remove this profile".
   const a=app({signedIn:true});
   try{
-    a.run(`window.__deleted=[];window.IronSixCloud={session:()=>({user:{id:'acct-1'}}),client:()=>({from:function(table){return{delete:function(){const q={_f:{},eq:function(k,v){this._f[k]=v;return this},
-      then:function(res){window.__deleted.push(table);return Promise.resolve({error:null}).then(res)}};return q}}}})}`);
+    a.run(`window.__deleted=[];window.IronSixCloud={session:()=>({user:{id:'account-123'}}),client:()=>({from:function(table){return{delete:function(){const q={_f:{},eq:function(k,v){this._f[k]=v;return this},select:function(){return this},
+      then:function(res){window.__deleted.push(table);return Promise.resolve({data:[{id:'cloud-profile'}],error:null}).then(res)}};return q}}}})}`);
     a.run("data.users.push(normalizeUser({id:'dupe',name:'Duplicate',weight:200,history:[]}));saveData()");
     const ok=await a.w.IronSixProfileDelete.deleteProfile('dupe');
     assert.equal(ok,true,'a builder without catch() must not fail the delete');
@@ -212,5 +212,41 @@ test('a failed cloud delete keeps the profile rather than half-deleting it',asyn
     assert.equal(ok,false,'the delete must report failure');
     assert.equal(a.json("data.users.some(u=>u.id==='dupe')"),true,'the profile must survive a failed cloud delete');
     assert(a.toasts().some(t=>/could not remove/i.test(t)),'the user must be told it was kept');
+  }finally{a.close()}
+});
+
+
+test('signed-in deletion waits for a matching authenticated account',async()=>{
+  const a=app({signedIn:true});
+  try{
+    a.run("data.users.push(normalizeUser({id:'dupe',name:'Duplicate',history:[]}));IronSixCloud.session=()=>null");
+    assert.equal(await a.w.IronSixProfileDelete.deleteProfile('dupe'),false);
+    assert(a.json("data.users.some(u=>u.id==='dupe')"));
+    assert.equal(a.json('__cloudDeletes.length'),0);
+  }finally{a.close()}
+});
+test('a zero-row cloud delete cannot falsely report success for a known cloud profile',async()=>{
+  const a=app({signedIn:true});
+  try{
+    a.run("data.users.push(normalizeUser({id:'dupe',cloudId:'cloud-id',name:'Duplicate',history:[]}));IronSixCloud.client=()=>({from:()=>({delete:()=>({eq(){return this},select(){return Promise.resolve({data:[],error:null})}})})})");
+    assert.equal(await a.w.IronSixProfileDelete.deleteProfile('dupe'),false);
+    assert(a.json("data.users.some(u=>u.id==='dupe')"));
+  }finally{a.close()}
+});
+test('simultaneous delete clicks cannot remove the last remaining profile',async()=>{
+  const a=app();
+  try{
+    a.run("data.users.push(normalizeUser({id:'other',name:'Other',history:[]}))");
+    const id=a.json('activeUser().id');
+    await Promise.all([a.w.IronSixProfileDelete.deleteProfile(id),a.w.IronSixProfileDelete.deleteProfile('other')]);
+    assert.equal(a.json('data.users.length'),1);
+  }finally{a.close()}
+});
+test('account switch during cloud deletion never removes a different account profile',async()=>{
+  const a=app({signedIn:true});
+  try{
+    a.run("data.users.push(normalizeUser({id:'dupe',name:'Duplicate',history:[]}));IronSixCloud.client=()=>({from:()=>({delete:()=>({eq(){return this},select(){window.ironSixAccountScope='other-account';data.users=[normalizeUser({id:'dupe',name:'Other account',history:[]})];return Promise.resolve({data:[{id:'cloud-id'}],error:null})}})})})");
+    assert.equal(await a.w.IronSixProfileDelete.deleteProfile('dupe'),false);
+    assert.equal(a.json('data.users[0].name'),'Other account');
   }finally{a.close()}
 });

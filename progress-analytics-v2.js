@@ -26,17 +26,18 @@
       const newest=Math.max(...items.map(x=>n(x.ts))),latest=items.filter(x=>n(x.ts)===newest),prior=items.filter(x=>n(x.ts)<newest);
       const bestWeight=Math.max(...items.map(x=>n(x.weight))),bestE1rm=Math.max(...items.map(x=>n(x.e1rm))),latestWeight=Math.max(...latest.map(x=>n(x.weight))),latestE1rm=Math.max(...latest.map(x=>n(x.e1rm)));
       const priorWeight=prior.length?Math.max(...prior.map(x=>n(x.weight))):0,priorE1rm=prior.length?Math.max(...prior.map(x=>n(x.e1rm))):0;
-      const latestRepPR=latest.some(x=>{const same=prior.filter(p=>n(p.weight)===n(x.weight));return n(x.weight)>0&&n(x.reps)>0&&(!same.length||n(x.reps)>Math.max(...same.map(p=>n(p.reps))))});
+      const latestRepPR=latest.some(x=>{const same=prior.filter(p=>n(p.weight)===n(x.weight));return n(x.weight)>0&&n(x.reps)>0&&(same.length>0&&n(x.reps)>Math.max(...same.map(p=>n(p.reps))))});
       const types=[];if(prior.length&&latestWeight>priorWeight)types.push('weight');if(prior.length&&latestE1rm>priorE1rm+.5)types.push('strength');if(prior.length&&latestRepPR)types.push('reps');
       if(types.length)out.push({exercise,ts:newest,types,bestWeight,bestE1rm,latestWeight,latestE1rm});
     }
     return out.sort((a,b)=>b.ts-a.ts);
   }
   function consistency(user,now=Date.now()){
-    const dates=[...new Set((user?.history||[]).map(h=>n(h.ts)).filter(Boolean).map(sessionDate))].sort().reverse();
-    const sessions28=(user?.history||[]).filter(h=>now-n(h.ts)<=28*DAY).length;
-    const activeWeeks=new Set((user?.history||[]).filter(h=>now-n(h.ts)<=56*DAY).map(h=>weekStart(n(h.ts)))).size;
-    let streak=0;if(dates.length){const today=new Date(now);today.setHours(0,0,0,0);let cursor=today.getTime();const set=new Set(dates);if(!set.has(sessionDate(cursor)))cursor-=DAY;while(set.has(sessionDate(cursor))){streak++;cursor-=DAY}}
+    const dates=[...new Set((user?.history||[]).map(h=>n(h.ts)).filter(ts=>ts>0&&ts<=now).map(sessionDate))].sort().reverse();
+    const sessions28=(user?.history||[]).filter(h=>n(h.ts)>0&&n(h.ts)<=now&&now-n(h.ts)<=28*DAY).length;
+    const firstWeek=new Date(weekStart(now));firstWeek.setDate(firstWeek.getDate()-49);
+    const activeWeeks=new Set((user?.history||[]).filter(h=>n(h.ts)>=firstWeek.getTime()&&n(h.ts)<=now).map(h=>weekStart(n(h.ts)))).size;
+    let streak=0;if(dates.length){const today=new Date(now);today.setHours(0,0,0,0);let cursor=today.getTime();const set=new Set(dates);if(!set.has(sessionDate(cursor))){const d=new Date(cursor);d.setDate(d.getDate()-1);cursor=d.getTime()}while(set.has(sessionDate(cursor))){streak++;const d=new Date(cursor);d.setDate(d.getDate()-1);cursor=d.getTime()}}
     return {sessions28,activeWeeks8:activeWeeks,dayStreak:streak};
   }
   // These are programming estimates: one direct set or half a set for a

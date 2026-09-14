@@ -180,7 +180,7 @@
   function forget(profileClientId){
     const id=String(profileClientId||'');
     if(!id)return 0;
-    const doomed=[...events.values()].filter(event=>event.profile_client_id===id);
+    const doomed=[...events.values()].filter(event=>event.profile_client_id===id&&event.user_id===owner());
     for(const event of doomed){
       events.delete(event.event_id);
       try{localStorage.removeItem(storageKey(event))}catch(_){}
