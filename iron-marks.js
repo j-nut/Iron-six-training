@@ -18,22 +18,29 @@
   const currentUser = () => (typeof activeUser === 'function' ? activeUser() : null);
   const CELEBRATE_WINDOW_MS = 12 * 36e5;
 
+  // Bold, open silhouettes at avatar size; a double hex die at badge size.
+  // Paths use currentColor and need no assets, font glyphs, SVG IDs or network requests.
   const ICONS = {
-    spark:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.4 2.4M15.3 15.3l2.4 2.4M17.7 6.3l-2.4 2.4M8.7 15.3l-2.4 2.4"/>',
-    hex:'<path d="M12 2.8 20 7.4v9.2l-8 4.6-8-4.6V7.4z"/><path d="M12 7.6 16 9.9v4.2l-4 2.3-4-2.3V9.9z"/>',
-    hammer:'<path d="m13.5 6.5 4 4"/><path d="M11 4h5l3 3-2.5 2.5L13.5 6.5 11 9 9 7z"/><path d="M11.5 8.5 4 16l3 3 7.5-7.5"/>',
-    anvil:'<path d="M3.5 7H15c2.6 0 4.6-1 5.5-2.5V8c0 2.3-2 4-4.6 4H14l1.2 3.5H8.8L10 12H8.1C5.3 12 3.5 9.8 3.5 7z"/><path d="M6.5 19.5h11"/>',
-    crown:'<path d="M3.5 8.5 8 12.3 12 5.5l4 6.8 4.5-3.8-1.8 10H5.3z"/><path d="M5.5 21h13"/>',
-    kettlebell:'<path d="M9 8.2V7a3 3 0 0 1 6 0v1.2"/><path d="M8.2 8.2h7.6l1 2.3a6.2 6.2 0 1 1-9.6 0z"/>',
-    compass:'<circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.1 5.1-5.1 2.1 2.1-5.1z"/>',
-    sunrise:'<path d="M3.5 18.5h17"/><path d="M7 18.5a5 5 0 0 1 10 0"/><path d="M12 4v4M5.3 9.3 7 11M18.7 9.3 17 11"/>',
-    gauge:'<path d="M4 16.5a8 8 0 1 1 16 0"/><path d="m12 16.5 4.2-5.2"/><path d="M7 16.5h.01M17 16.5h.01"/>',
-    sixsix:'<text x="12" y="16.2" text-anchor="middle" font-size="11" font-weight="900" fill="currentColor" stroke="none" font-family="inherit">66</text><path d="M12 2.8 20 7.4v9.2l-8 4.6-8-4.6V7.4z"/>',
-    medal:'<circle cx="12" cy="9" r="5"/><path d="M9.2 13.2 7.5 21l4.5-2.4 4.5 2.4-1.7-7.8"/>',
-    ring:'<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="4"/>'
+    spark:'<path fill="currentColor" stroke="none" d="m13 2-8 12h6l-1 8 9-13h-6z"/>',
+    hex:'<path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z"/><path d="m8 10 4 7 4-7M12 7v3"/>',
+    hammer:'<path fill="currentColor" stroke="none" d="m4 7 5-5 11 6-5 6-4-3-6 10-3-2 6-10z"/>',
+    anvil:'<path fill="currentColor" stroke="none" d="M2 6h13V4h7v5l-4 4h-4v3l4 2v3H6v-3l4-2v-3H8L2 9z"/>',
+    crown:'<path d="m3 7 5 5 4-8 4 8 5-5-2 11H5zM6 21h12"/>',
+    kettlebell:'<path d="M8 9V6a4 4 0 0 1 8 0v3"/><path fill="currentColor" stroke="none" d="M7 8h10l3 6v4l-3 4H7l-3-4v-4z"/>',
+    compass:'<path d="m12 2 9 5v10l-9 5-9-5V7z"/><path fill="currentColor" stroke="none" d="m17 7-3 7-7 3 3-7z"/>',
+    sunrise:'<path d="M3 19h18M6 16a6 6 0 0 1 12 0M12 2v4M3 7l3 3M21 7l-3 3"/>',
+    gauge:'<path d="M4 19a10 10 0 1 1 16 0M12 3v3M4 8l2 2M20 8l-2 2M8 21h8M12 16l4-6"/><circle cx="12" cy="16" r="2" fill="currentColor" stroke="none"/>',
+    sixsix:'<path d="M10 4H6L3 9v10h7v-7H3M21 4h-4l-3 5v10h7v-7h-7"/>',
+    medal:'<path d="m7 3 5 5 5-5M12 7l7 4v8l-7 4-7-4v-8zM9 15l2 2 4-4"/>',
+    ring:'<path d="m12 2 9 5v10l-9 5-9-5V7z"/><circle cx="12" cy="12" r="5"/>',
+    hidden:'<path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z" stroke-dasharray="2 3"/><path d="M10 10a2 2 0 1 1 3 1.7L12 13M12 16h.01"/>'
   };
-  const icon = (id, size = 20) => `<svg class="im-icon" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICONS[id] || ICONS.medal}</svg>`;
-  const markIcon = mark => mark.emblem ? icon(mark.emblem, 22) : icon(mark.ring ? 'ring' : 'medal', 22);
+  const icon = (id, size = 20) => {
+    const detailed = size >= 32;
+    const glyph = ICONS[id] || ICONS.medal;
+    return `<svg class="im-icon" data-im-glyph="${esc(id)}-${size}" viewBox="${detailed ? '0 0 40 40' : '0 0 24 24'}" width="${size}" height="${size}" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${detailed ? `<path d="m20 1 17 9.5v19L20 39 3 29.5v-19z" fill="currentColor" fill-opacity=".07" stroke-opacity=".45"/><path d="m20 4 14 8v16l-14 8-14-8V12z" stroke-opacity=".16"/><g transform="translate(8 8)">${glyph}</g>` : glyph}</svg>`;
+  };
+  const markIcon = mark => icon(mark.emblem || (mark.ring ? 'ring' : 'medal'), 40);
 
   let cache = {sig:null, result:null};
   const signature = u => {
@@ -65,41 +72,47 @@
     const style = document.createElement('style');
     style.id = 'ironMarksStyles';
     style.textContent = `
-      .pm-avatar.im-ringed{box-shadow:0 0 0 2px var(--surface2),0 0 0 4px var(--im-ring)}
-      .pm-avatar .im-icon{display:block}
-      .im-backdrop{position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.68);display:flex;align-items:flex-end;justify-content:center;padding:12px}
+      .im-ringed{position:relative;isolation:isolate;--im-metal:conic-gradient(from 25deg,#3f4855,#9ea8b5 18%,#626c7a 35%,#85909e 55%,#424d5c 75%,#abb5c1 92%,#3f4855)}
+      .im-ringed[data-ring="bronze"]{--im-metal:conic-gradient(from 25deg,#764725,#edbd87 18%,#98603a 36%,#dca36d 58%,#764725 78%,#edbd87)}
+      .im-ringed[data-ring="steel"]{--im-metal:conic-gradient(from 25deg,#6a849e,#eff7ff 20%,#93aac0 39%,#dceafa 60%,#6a849e 80%,#eff7ff)}
+      .im-ringed[data-ring="gold"]{--im-metal:conic-gradient(from 25deg,#977126,#ffe9a0 20%,#c49b3c 39%,#f5d574 60%,#977126 80%,#ffe9a0)}
+      .im-ringed[data-ring="emerald"]{--im-metal:conic-gradient(from 25deg,#12634c,#a6f5d4 16%,#24936e 30%,#6bdfad 45%,#125e49 60%,#60d5a4 78%,#c2ffe7 90%,#12634c)}
+      .im-ringed:before{content:"";position:absolute;inset:-5px;border:2px solid transparent;border-radius:inherit;background:var(--im-metal) border-box;mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);mask-composite:exclude;pointer-events:none}
+      .im-avatar.im-ringed:before{inset:-7px;border-width:3px}
+      .im-ringed[data-ring="emerald"]:after{content:"";position:absolute;top:-7px;left:calc(50% - 3px);width:6px;height:6px;background:#bdf9dd;transform:rotate(45deg);border:1px solid #176c50}
+      .im-icon{display:block;flex-shrink:0}
+      .im-backdrop{position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.76);display:flex;align-items:flex-end;justify-content:center;padding:8px}
       .im-backdrop[hidden]{display:none}
-      .im-modal{width:min(100%,560px);max-height:calc(100dvh - 24px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 22px 64px rgba(0,0,0,.55)}
-      .im-head{display:flex;align-items:center;gap:13px;margin-bottom:14px}
-      .im-head h3{margin:0;font-size:19px}.im-head p{margin:3px 0 0;color:var(--muted);font-size:12px;line-height:1.4}
+      .im-modal{width:min(100%,680px);max-height:calc(100dvh - 16px);overflow:auto;overscroll-behavior:contain;background:linear-gradient(155deg,rgba(255,255,255,.025),transparent 32%),var(--surface);border:1px solid #363b47;border-radius:24px;padding:22px 16px max(20px,env(safe-area-inset-bottom));box-shadow:0 24px 80px #0009;box-sizing:border-box}
+      .im-head{display:flex;align-items:center;gap:16px;margin:4px 4px 24px}
+      .im-head>div:nth-child(2){min-width:0;flex:1}
+      .im-head h3{margin:0;font-size:22px;letter-spacing:-.7px;line-height:1.15}.im-head p{margin:7px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
       .im-head .im-close{margin-left:auto;align-self:flex-start}
-      .im-close{border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:10px;width:38px;height:38px;font-weight:800;cursor:pointer;flex:0 0 auto}
+      .im-close{border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:50%;width:40px;height:40px;font-weight:700;cursor:pointer;flex:0 0 auto}
       .im-avatar{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--accent);color:#0b0c0f;font-weight:900;font-size:18px;flex:0 0 auto}
-      .im-avatar.im-ringed{box-shadow:0 0 0 3px var(--surface),0 0 0 6px var(--im-ring)}
-      .im-section{margin:16px 0 0}
-      .im-section h4{margin:0 0 8px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
-      .im-bar{height:6px;border-radius:99px;background:var(--surface2);overflow:hidden;margin-top:6px}
-      .im-bar i{display:block;height:100%;border-radius:inherit;background:var(--accent)}
-      .im-ringline{font-size:12.5px;color:var(--text)}
-      .im-ringline small{color:var(--muted)}
-      .im-emblems{display:flex;flex-wrap:wrap;gap:7px}
-      .im-emblem{display:flex;align-items:center;gap:6px;min-height:40px;padding:7px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface2);color:var(--text);font:inherit;font-size:11.5px;font-weight:750;cursor:pointer}
-      .im-emblem.active{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
-      .im-emblem:disabled{opacity:.38;cursor:not-allowed}
-      .im-grid{display:grid;grid-template-columns:1fr;gap:7px}
-      .im-card{display:flex;gap:11px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--surface2)}
-      .im-card .im-badge{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;background:var(--surface);color:var(--muted);border:1px solid var(--line)}
-      .im-card.earned .im-badge{background:rgba(var(--accent-rgb,46,229,128),.12);color:var(--accent);border-color:rgba(var(--accent-rgb,46,229,128),.35)}
-      .im-card.locked .im-body{opacity:.78}
-      .im-body{flex:1;min-width:0}
-      .im-body strong{display:block;font-size:13px}
-      .im-body span{display:block;font-size:11.5px;color:var(--muted);line-height:1.4;margin-top:1px}
-      .im-body em{display:block;font-style:normal;font-size:11px;color:var(--accent);margin-top:4px;font-weight:750}
-      .im-count{font-size:11px;color:var(--muted);white-space:nowrap}
-      .im-earned-list{display:grid;gap:8px;margin:4px 0 14px}
-      .im-actions{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}
-      .im-wear{border:1px solid rgba(var(--accent-rgb,46,229,128),.45);background:rgba(var(--accent-rgb,46,229,128),.1);color:var(--accent);border-radius:10px;padding:7px 11px;font:inherit;font-size:11.5px;font-weight:800;cursor:pointer;margin-top:7px}
-      @media(min-width:640px){.im-backdrop{align-items:center}.im-grid{grid-template-columns:1fr 1fr}}
+      .im-section{margin:26px 0 0}.im-section h4{margin:0 0 12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+      .im-bar{height:5px;border-radius:99px;background:#373e4b;overflow:hidden;margin-top:9px}.im-bar i{display:block;height:100%;border-radius:inherit;background:var(--accent)}
+      .im-ringline{padding:14px 16px;border:1px solid var(--line);border-radius:14px;font-size:13px;color:var(--text);background:var(--surface2);line-height:1.6}.im-ringline small{color:var(--muted)}
+      .im-emblems{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+      .im-emblem{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:86px;padding:9px 3px;border:1px solid var(--line);border-radius:13px;background:var(--surface2);color:var(--text);font:inherit;font-size:11px;font-weight:650;cursor:pointer}
+      .im-emblem small{font-size:9px;font-weight:500;color:var(--muted)}
+      .im-emblem.active{border-color:var(--accent);background:rgba(var(--accent-rgb),.09);box-shadow:inset 0 0 0 1px var(--accent)}
+      .im-emblem:disabled{color:var(--muted);background:var(--surface);border-style:dashed;cursor:not-allowed}.im-emblem:disabled .im-icon{opacity:.65}
+      .im-emblem:focus-visible,.im-close:focus-visible,.im-wear:focus-visible{outline:2px solid var(--text);outline-offset:3px}
+      .im-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:9px}
+      .im-card{position:relative;display:flex;gap:12px;align-items:flex-start;padding:15px 12px;border:1px solid var(--line);border-radius:15px;background:var(--surface2)}
+      .im-badge{width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--muted)}
+      .im-card.earned{background:linear-gradient(115deg,rgba(var(--accent-rgb),.055),transparent 75%),var(--surface2);border-color:rgba(var(--accent-rgb),.23)}
+      .im-card.earned .im-badge{color:var(--accent)}.im-card.locked .im-badge{color:#8e98aa}.im-card.hidden{border-style:dashed;background:transparent}
+      .im-body{flex:1;min-width:0}.im-body strong{display:block;font-size:13px;line-height:1.4}.im-body span{display:block;font-size:12px;color:var(--muted);line-height:1.5;margin-top:3px}.im-body em{display:block;font-style:normal;font-size:11px;color:var(--text);margin-top:8px;line-height:1.5;font-weight:600}
+      .im-count{font-size:10px;color:var(--muted);white-space:nowrap;display:block;margin-top:9px;letter-spacing:.03em}
+      .im-earned-list{display:grid;gap:10px;margin:4px 0 20px}.im-actions{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px}
+      .im-wear{border:1px solid rgba(var(--accent-rgb),.45);background:rgba(var(--accent-rgb),.1);color:var(--text);border-radius:10px;min-height:44px;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-top:10px}
+      #ironMarksEarned:not([hidden]) .im-head .im-avatar{animation:im-settle 520ms cubic-bezier(.22,.8,.22,1) both}
+      @keyframes im-settle{from{opacity:0;transform:translateY(8px) scale(.88)}to{opacity:1;transform:translateY(0) scale(1)}}
+      @media(prefers-reduced-motion:reduce){#ironMarksEarned:not([hidden]) .im-head .im-avatar{animation:none}}
+      @media(min-width:640px){.im-backdrop{align-items:center;padding:24px}.im-modal{padding:28px;max-height:calc(100dvh - 48px)}.im-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.im-emblems{grid-template-columns:repeat(6,minmax(0,1fr))}}
+
     `;
     document.head.appendChild(style);
   }
@@ -112,12 +125,16 @@
     if (avatar.ring) el.style.setProperty('--im-ring', avatar.ring.color); else el.style.removeProperty('--im-ring');
     el.dataset.ring = avatar.ring?.id || '';
     el.dataset.emblem = avatar.emblem || '';
-    if (avatar.emblem) el.innerHTML = icon(avatar.emblem, el.classList.contains('im-avatar') ? 26 : 17);
+    if (avatar.emblem) {
+      const art = icon(avatar.emblem, el.classList.contains('im-avatar') ? 32 : 17);
+      const size = el.classList.contains('im-avatar') ? 32 : 17;
+      if (el.firstElementChild?.getAttribute('data-im-glyph') !== `${avatar.emblem}-${size}`) el.innerHTML = art;
+    }
     else if (fallbackText != null) el.textContent = fallbackText;
     el.setAttribute('title', [avatar.ring ? `${avatar.ring.label} ring` : '', avatar.emblem ? `${engine.EMBLEMS[avatar.emblem]} emblem` : ''].filter(Boolean).join(' · '));
   }
   // Called by the profile menu after it writes initials, so the emblem simply replaces them.
-  function decorateAvatar(el, u) { paintAvatar(el, u, null); }
+  function decorateAvatar(el, u) { paintAvatar(el, u, initialsOf(u)); }
 
   function summary(u = currentUser()) {
     const r = evaluate(u);
@@ -143,12 +160,12 @@
   const dateOf = ts => { try { return new Date(ts).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'}); } catch (_) { return ''; } };
 
   function markCard(mark) {
-    if (mark.hidden) return `<div class="im-card locked"><div class="im-badge">${icon('medal', 22)}</div><div class="im-body"><strong>Hidden mark</strong><span>Keep training to reveal it.</span></div></div>`;
-    const pct = Math.round(mark.value / mark.target * 100);
+    if (mark.hidden) return `<div class="im-card hidden"><div class="im-badge">${icon('hidden', 40)}</div><div class="im-body"><strong>Hidden mark</strong><span>Keep training to reveal it.</span></div></div>`;
+    const pct = Math.min(100, Math.max(0, Math.round(mark.value / mark.target * 100)));
     const status = mark.unlocked
       ? `<em>Earned${mark.unlockedAt ? ' ' + esc(dateOf(mark.unlockedAt)) : ''}${mark.emblem ? ` · unlocks the ${esc(engine.EMBLEMS[mark.emblem])} emblem` : ''}${mark.ring ? ' · avatar ring' : ''}</em>`
       : `<div class="im-bar" aria-hidden="true"><i style="width:${pct}%"></i></div>`;
-    return `<div class="im-card ${mark.unlocked ? 'earned' : 'locked'}" data-mark="${esc(mark.id)}"><div class="im-badge">${markIcon(mark)}</div><div class="im-body"><strong>${esc(mark.title)}</strong><span>${esc(mark.text)}</span>${status}</div>${mark.unlocked ? '' : `<span class="im-count">${mark.value} / ${mark.target}</span>`}</div>`;
+    return `<div class="im-card ${mark.unlocked ? 'earned' : 'locked'}" data-mark="${esc(mark.id)}"><div class="im-badge">${markIcon(mark)}</div><div class="im-body"><strong>${esc(mark.title)}</strong><span>${esc(mark.text)}</span>${status}${mark.unlocked ? '' : `<small class="im-count">Locked · ${mark.value} / ${mark.target}</small>`}</div></div>`;
   }
 
   function open() {
@@ -163,11 +180,11 @@
     const emblemButtons = Object.entries(engine.EMBLEMS).map(([id, label]) => {
       const mark = r.marks.find(m => m.emblem === id), owned = r.emblems.includes(id);
       if (!owned && mark?.hidden) return '';
-      return `<button type="button" class="im-emblem ${worn === id ? 'active' : ''}" data-wear="${id}" ${owned ? '' : 'disabled'} title="${esc(owned ? label : `${label}: ${mark?.text || ''}`)}">${icon(id, 17)}<span>${esc(label)}</span></button>`;
+      return `<button type="button" class="im-emblem ${worn === id ? 'active' : ''}" data-wear="${id}" aria-pressed="${worn === id}" ${owned ? '' : 'disabled'} title="${esc(owned ? label : `${label}: ${mark?.text || ''}`)}">${icon(id, 32)}<span>${esc(label)}</span><small>${worn === id ? '✓ Wearing' : owned ? 'Owned' : 'Locked'}</small></button>`;
     }).join('');
     modal.innerHTML = `<div class="im-head"><div class="im-avatar" id="imAvatarPreview"></div><div><h3>Iron Marks</h3><p>${earned} of ${r.marks.length} earned${r.ring ? ` · ${esc(r.ring.label)} ring` : ''}. Earned from finished sessions; missed days never cost a mark.</p></div><button class="im-close" type="button" aria-label="Close">✕</button></div>`
       + `<div class="im-ringline">${ringLine}</div>`
-      + `<div class="im-section"><h4>Profile emblem</h4><div class="im-emblems"><button type="button" class="im-emblem ${worn ? '' : 'active'}" data-wear="">Initials</button>${emblemButtons}</div></div>`
+      + `<div class="im-section"><h4>Profile emblem</h4><div class="im-emblems"><button type="button" class="im-emblem ${worn ? '' : 'active'}" data-wear="" aria-pressed="${!worn}"><span>${esc(initialsOf(u))}</span><span>Initials</span><small>${worn ? 'Available' : '✓ Wearing'}</small></button>${emblemButtons}</div></div>`
       + (closest.length ? `<div class="im-section"><h4>Closest next</h4><div class="im-grid">${closest.map(markCard).join('')}</div></div>` : '')
       + engine.GROUPS.map(g => `<div class="im-section"><h4>${esc(g.title)}</h4><div class="im-grid">${r.marks.filter(m => m.group === g.id).map(markCard).join('')}</div></div>`).join('');
     paintAvatar(modal.querySelector('#imAvatarPreview'), u, initialsOf(u));

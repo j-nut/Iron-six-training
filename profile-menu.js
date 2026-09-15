@@ -97,7 +97,7 @@
     if (!button || !menu || typeof activeUser !== 'function') return;
     const user = activeUser(), account = sessionUser(), signedIn = !!account;
 
-    $('pmAvatar').textContent = initials(user?.name);
+    if (!$('pmAvatar').dataset.emblem || !window.IronSixMarks) $('pmAvatar').textContent = initials(user?.name);
     $('pmAvatar').classList.toggle('guest', !signedIn);
     // Iron Marks may swap the initials for an earned emblem and add a rotation ring.
     try { window.IronSixMarks?.decorateAvatar?.($('pmAvatar'), user); } catch (_) {}

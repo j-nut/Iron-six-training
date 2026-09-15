@@ -199,3 +199,17 @@ test('the post-workout trainer review keeps the synced accent theme and Iron Mar
   for(const f of ['cloud-history-sync.js','scripts/build-web.mjs','scripts/build-android-web.mjs']){const s=fs.readFileSync(f,'utf8');assert(s.includes('iron-marks-engine.js')&&s.includes('iron-marks.js'),f)}
   const loader=fs.readFileSync('cloud-history-sync.js','utf8');assert(loader.indexOf('iron-marks-engine.js')<loader.indexOf("'iron-marks.js"));
 });
+
+test('worn avatar survives profile refreshes and restores initials when removed',()=>{
+  const a=app();
+  try{
+    a.setHistory(cycles(3));a.run("IronSixMarks.wear('hex');IronSixProfileMenu.render()");
+    const avatar=a.w.document.querySelector('#pmAvatar'),glyph=avatar.querySelector('svg');
+    assert(glyph);a.run('IronSixProfileMenu.render();IronSixProfileMenu.render()');
+    assert.equal(avatar.querySelector('svg'),glyph,'refresh preserves the same SVG node');
+    a.run("IronSixMarks.wear(null);IronSixProfileMenu.render()");
+    assert.equal(avatar.querySelector('svg'),null);assert(avatar.textContent.trim());
+    a.run("IronSixMarks.wear('hex')");a.setHistory([]);a.run('IronSixProfileMenu.render()');
+    assert.equal(avatar.querySelector('svg'),null,'unearned emblem is cleared');assert.equal(avatar.dataset.ring,'');
+  }finally{a.close()}
+});
