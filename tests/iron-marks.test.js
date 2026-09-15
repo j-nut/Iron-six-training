@@ -314,3 +314,13 @@ test('logging sets mid-workout does not recompute achievements; a history change
     assert.equal(a.json('window.__evals'),settled+2,'a newly finished session is picked up even before a save');
   }finally{a.close()}
 });
+
+test('on the launch screen the next-mark goal is one line with its full explanation in the accessible name',()=>{
+  const a=app();try{
+    a.setHistory(cycles(1));a.run("activeUser().program.currentWorkoutKey='lower_b';renderAll();IronSixMarks.renderGoal()");
+    const goal=a.w.document.getElementById('ironMarksGoal');assert(goal,'goal rendered');
+    assert.match(goal.getAttribute('aria-label'),/^Your next mark: .+, \d+ of \d+\. .+/);
+    assert.match(a.w.document.getElementById('ironMarksStyles').textContent,/#today\.session-prestart #ironMarksGoal span:last-child\{display:none\}/);
+    assert(a.w.document.getElementById('sessionStart').contains(goal),'the goal sits with Begin workout, not above it');
+  }finally{a.close()}
+});
