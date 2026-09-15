@@ -1,5 +1,17 @@
 # Iron Six Camera Assistant — Handoff for ChatGPT
 
+> **Status update (2026-09-15) — read this first; it supersedes the branch/PR instructions below.**
+> - PR #37 (`fix/camera-reliability-v6`) was **merged into `main` on 2026-09-12** (merge commit `4cc0988`). The view
+>   classifier, vertical-press phase detector, diagnostics v7 and Copy trace are **live in production**
+>   (https://iron-six-training.vercel.app, opt-in with `?pose=1`).
+> - **Physical-phone validation still has not happened.** Treat camera counting as unvalidated except squat.
+> - Do new camera work on a fresh branch from current `main` and open a PR; do not reuse `fix/camera-reliability-v6`.
+> - Next camera steps are unchanged: phone test protocol (OHP face-on/side-on, RDL face-on → "Turn side-on", squat)
+>   with Copy diagnostics + Copy trace, then tune from traces; then the worldLandmarks / lite-vs-full experiment.
+> - Since then `main` also gained the Push/Legs/Pull program, a compact workout screen, accent themes, history explorer
+>   and Iron Marks achievements (PR #39). Read `reports/iron-marks-depth-handoff.md` before touching profile/achievement code.
+
+
 Self-contained handoff. Read this first, then `reports/camera-assistant-handoff-claude.md` (the
 original handoff with the full physical-phone history) before changing anything.
 

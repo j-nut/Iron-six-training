@@ -1,5 +1,11 @@
 # Iron Marks — Visual Upgrade Handoff for ChatGPT
 
+> **Status update (2026-09-15):** this handoff is complete. The visual upgrade and a depth expansion were
+> delivered (`reports/iron-marks-visuals-complete.md`, `reports/iron-marks-depth-handoff.md`), a workout-save
+> performance fix was added, and Iron Marks shipped to production in PR #39 (`8a861fd`). The branch
+> `feature/iron-marks` is merged; start any further Iron Marks work from current `main`.
+
+
 **Your job: upgrade every visual in the Iron Marks achievement system.** The logic is done and
 tested. Do not change how marks are earned. This document is self-contained.
 
