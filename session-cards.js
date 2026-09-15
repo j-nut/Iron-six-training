@@ -55,13 +55,15 @@
     style.textContent = `
       .sc-hidden{display:none!important}
 
-      /* Pre-workout is a launch screen, not a dashboard. Keep the primary action in one viewport. */
-      #today.session-prestart>.hero{padding:16px 18px;margin-bottom:10px;border-radius:18px}
-      #today.session-prestart>.hero p,
-      #today.session-prestart>.hero .metrics,
-      #today.session-prestart>.hero #equipmentBadges{display:none!important}
-      #today.session-prestart>.hero .eyebrow{margin-bottom:5px;font-size:12px;line-height:1.2}
-      #today.session-prestart>.hero h1{margin:0;font-size:25px;line-height:1.08}
+      /* Guided flow: the header names the session and gets out of the way, before and during the workout.
+         Pre-workout is a launch screen, not a dashboard: keep the primary action in one viewport. */
+      #today.session-compact>.hero{padding:16px 18px;margin-bottom:10px;border-radius:18px}
+      #today.session-compact>.hero p,
+      #today.session-compact>.hero .metrics,
+      #today.session-compact>.hero #equipmentBadges{display:none!important}
+      #today.session-compact>.hero .eyebrow{margin-bottom:5px;font-size:12px;line-height:1.2}
+      #today.session-compact>.hero h1{margin:0;font-size:25px;line-height:1.08}
+      #today.session-prestart #progressText{display:none}
       #today.session-prestart #sessionSetup{margin-bottom:10px}
       #today.session-prestart #sessionSetup .shell-toggle{min-height:54px;padding:11px 14px}
       #today.session-prestart #sessionStart{margin-bottom:12px}
@@ -94,8 +96,8 @@
       .sc-row span{color:var(--muted);font-size:12px;white-space:nowrap}
       .sc-row span.full{color:var(--accent)}
       @media(max-width:390px){
-        #today.session-prestart>.hero{padding:14px 16px}
-        #today.session-prestart>.hero h1{font-size:23px}
+        #today.session-compact>.hero{padding:14px 16px}
+        #today.session-compact>.hero h1{font-size:23px}
         #scNextBtn{min-width:78px;padding:0 12px}
       }
     `;
@@ -176,6 +178,8 @@
     const started = began || anyLogged(user);
     const today = $('today');
     today?.classList.toggle('session-prestart', !started && !isCircuit(user));
+    // Circuit mode keeps its full header; its timer panel is the guide there.
+    today?.classList.toggle('session-compact', !isCircuit(user));
 
     if (isCircuit(user) || showAll || !all.length) {
       showEverything();

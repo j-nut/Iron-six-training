@@ -143,6 +143,13 @@
       .im-customize{display:grid;gap:12px}.im-customize label{font-size:12px;color:var(--muted);display:grid;gap:6px}.im-customize select{width:100%;min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);color:var(--text);font:inherit;padding:10px}
       .im-story{padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface2);margin:8px 0;font-size:13px}.im-story p{font-size:12px;color:var(--muted);line-height:1.6}.im-story summary{cursor:pointer;min-height:24px;font-weight:650}.im-block-days{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.im-block-days span{font-size:11px;color:var(--muted);padding:8px;background:var(--surface);border-radius:8px}.im-block-days b{display:block;color:var(--text);margin-top:4px}
       #ironMarksGoal.im-today-goal{display:block;text-align:left;width:100%;padding:12px 0 0;margin-top:12px;border:0;border-top:1px solid var(--line);background:transparent;color:var(--text);font:inherit;cursor:pointer;min-height:44px;box-shadow:none}#ironMarksGoal[hidden]{display:none}#ironMarksGoal span{display:block;font-size:11px;line-height:1.4;color:var(--muted)}#ironMarksGoal strong{display:block;font-size:12px;margin:4px 0}#ironMarksGoal small{color:var(--muted);float:right;font-size:11px}.im-customize select:focus-visible,#ironMarksGoal:focus-visible{outline:2px solid var(--text);outline-offset:3px}
+      /* On the launch screen the goal is a single tappable line, so Begin workout stays the one focus.
+         The full explanation lives in the trophy case and the button's accessible name. */
+      #today.session-prestart #ironMarksGoal.im-today-goal{display:flex;align-items:baseline;gap:8px;padding:9px 0 0;margin-top:10px;min-height:36px}
+      #today.session-prestart #ironMarksGoal span:first-child{flex:0 0 auto;font-size:11px}
+      #today.session-prestart #ironMarksGoal strong{flex:1;min-width:0;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      #today.session-prestart #ironMarksGoal strong small{float:none;margin-left:6px}
+      #today.session-prestart #ironMarksGoal span:last-child{display:none}
       @media(min-width:640px){.im-backdrop{align-items:center;padding:24px}.im-modal{padding:28px;max-height:calc(100dvh - 48px)}.im-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.im-emblems{grid-template-columns:repeat(6,minmax(0,1fr))}}
 
     `;
@@ -243,6 +250,8 @@
     const r=evaluate(u),next=engine.nextGoal(u,r),avatar=engine.avatarFor(u,r);
     const content=`<span>${avatar.title?esc(avatar.title)+' · ':''}Your next mark</span><strong>${esc(next.title)} <small>${next.value} / ${next.target}</small></strong><span>${esc(next.text)}</span>`;
     if(goal.innerHTML!==content)goal.innerHTML=content;
+    const label=`Your next mark: ${next.title}, ${next.value} of ${next.target}. ${next.text}`;
+    if(goal.getAttribute('aria-label')!==label)goal.setAttribute('aria-label',label);
   }
 
   function open() {

@@ -167,3 +167,30 @@ test('hiding a card never hides logged data — the inputs are the same elements
     assert.equal(a.json("Object.keys(activeUser().today).filter(k=>k.startsWith('1-')).length"),2,'and still in the saved log');
   }finally{a.close()}
 });
+
+// The launch screen should name the session once and keep Begin in the first viewport.
+test('the header names the session once and the launch screen does not repeat it',()=>{
+  const a=app();
+  try{
+    const name=a.json("WORKOUT_META[activeUser().program.currentWorkoutKey||'lower_strength'].name"),doc=a.w.document;
+    assert.equal(doc.getElementById('todayTitle').textContent,name,'the headline is the session itself');
+    assert(!doc.getElementById('todayEyebrow').textContent.includes(name),'the eyebrow must not repeat the session name');
+    assert(!doc.getElementById('changeWorkoutBtn').textContent.includes(name),'the change row is an action, not a second label');
+    assert(!/adaptive session/.test(doc.getElementById('todayTitle').textContent));
+    const today=doc.getElementById('today');
+    assert(today.classList.contains('session-prestart'));assert(today.classList.contains('session-compact'));
+    assert.match(doc.getElementById('sessionCardStyles').textContent,/#today\.session-prestart #progressText\{display:none\}/,'the set count is shown once before starting');
+  }finally{a.close()}
+});
+
+test('the header stays compact after Begin, and circuit mode keeps its full header',()=>{
+  const a=app();
+  try{
+    a.begin();
+    const today=a.w.document.getElementById('today');
+    assert.equal(today.classList.contains('session-prestart'),false);
+    assert.equal(today.classList.contains('session-compact'),true,'starting must not bring the dashboard header back');
+    a.run("activeUser().trainingMode='circuit';saveData();renderAll()");
+    assert.equal(today.classList.contains('session-compact'),false);
+  }finally{a.close()}
+});
