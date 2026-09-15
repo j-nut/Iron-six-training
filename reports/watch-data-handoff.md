@@ -15,8 +15,9 @@ Living notes, updated as work progresses. If you are picking this up, read **Cur
 ## Current status
 - **Branch:** `feature/watch-data`, from `main` at `8f8142c`. Nothing is merged; production is
   untouched.
-- **Phase:** implementation in progress, split across three parallel workstreams (below).
-- **Commits:** only this notes file until the workstreams are reviewed and integrated.
+- **Phase:** implemented and open as **PR #42**; CI green, including the Android Gradle build
+  (the manifest merge, minSdk 26 and Kotlin alignment all compile). Not merged.
+- **Blocking merge:** owner review of `privacy.html` (needs a contact address) and device testing.
 
 ## Architecture
 The data flows in this order:
@@ -147,10 +148,13 @@ The data flows in this order:
   workout nav (and only while that nav is visible), finishing a workout attaches
   `startedAt` + `wearable` (avg/max/count/coverage/series/sets), the History tab shows
   "Heart rate avg 141 · max 145 bpm · Polar H10", and a finished session stays ~2 KB.
-- **Not verified:** Gradle/Android compile (CI only), real Health Connect data, real Bluetooth
-  hardware, Apple Health.
+- **CI on PR #42: green** — `Validate Iron Six`, `Android test build` (real Gradle compile of the new
+  plugins, manifest merge and minSdk 26) and the Vercel preview.
+- **Still unverified:** real Health Connect data, real Bluetooth hardware, Apple Health.
 
 ## Progress log
+- 2026-09-15: Opened PR #42. CI passed including the Android APK/AAB build, so the plugin
+  integration, permission removals and Kotlin alignment are confirmed to compile.
 - 2026-09-15: Both remaining agents were cut off by a usage limit; their files were complete and
   syntactically valid. Claude wrote the missing UI test file, replaced an implicit consent side
   effect on file import with an explicit `fileImport` consent, added `privacy.html` to the web build,
