@@ -72,8 +72,14 @@ The data flows in this order:
 - **Bluetooth scanning uses `neverForLocation`.** Location permission is limited to Android ≤ 11
   (API 30).
 - **Health Connect needs a privacy policy URL.** The resource string points at
-  `https://iron-six-training.vercel.app/privacy`. The app had **no privacy policy page**; Claude is
-  drafting `privacy.html`, which **needs owner review** before publishing or Play submission.
+  `https://iron-six-training.vercel.app/privacy`. The app had **no privacy policy page**. Claude drafted
+  `privacy.html` from the code's actual data flows. **Owner must:** add a contact email (search
+  `CONTACT_EMAIL`), confirm the legal entity, and review it before merge or Play submission. It still
+  needs adding to the `files` list in `scripts/build-web.mjs` (deferred until Agent C finishes editing
+  that file).
+- **Health data never goes to the AI provider (Groq).** `ui3.js` posts whole session objects to
+  `/api/review-workout`, so Agent C was told to strip `session.wearable` there and add a test. The
+  coach chat (`coach.js`, explicit fields) and `/api/recalculate` were audited and are safe.
 - **Watch data only adds context.** It never silently changes user-entered data (readiness, sets)
   and is never used for load prescriptions.
 - **Heart-rate zones are not computed.** That would need age or max-HR assumptions; revisit later.
@@ -113,6 +119,8 @@ The data flows in this order:
    - Evaluate an aggregator (Terra, Rook) for brands with no Health Connect path.
 
 ## Progress log
+- 2026-09-15: Drafted `privacy.html`. The privacy audit found the review-workout payload would leak
+  `session.wearable` to Groq; the fix was assigned to Agent C.
 - 2026-09-15: Researched the app structure and chose the plugins after inspecting their packages
   (APIs, licenses, manifests). Created the branch and dispatched three parallel workstreams with
   fixed file ownership and API contracts.
