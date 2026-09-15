@@ -88,7 +88,7 @@ The data flows in this order:
 | Owner | Files | Status |
 |---|---|---|
 | Agent A (core) | `wearable-core.js`, `tests/wearable-core.test.js` | in progress |
-| Agent B (native) | `package.json/lock`, `android/**`, `native/**`, `capacitor.config.json`, `tests/native-wearables.test.js` | in progress |
+| Agent B (native) | `package.json/lock`, `android/**`, `native/**`, `capacitor.config.json`, `tests/native-wearables.test.js` | **done, uncommitted; awaiting review** |
 | Agent C (UI) | `wearables.js`, `tests/wearables.test.js`, small edits: `profile-menu.js`, `ui3.js` (trainer review keeps `trainerMemory.wearables`), `cloud-history-sync.js`, `scripts/build-web.mjs`, `scripts/build-android-web.mjs`, `cardio-companion.js` (accept source 'watch'/'file'), `history-explorer.js` | in progress |
 | Claude | review, integration, `privacy.html`, this document | in progress |
 
@@ -118,7 +118,31 @@ The data flows in this order:
    - FIT file parsing.
    - Evaluate an aggregator (Terra, Rook) for brands with no Health Connect path.
 
+## Native results (Agent B)
+- **Health type names:** `heartRate`, `restingHeartRate`, `heartRateVariability`, `sleep`, `calories`
+  (active), `totalCalories`, and `workouts` (authorization only; data via `queryWorkouts`).
+- **Gradle:** minSdk 26; `kotlin_version` 2.4.10 aligned with the root Kotlin Gradle plugin for both
+  plugins.
+- **Manifest:** keeps 7 health READs and removes 40 other plugin health permissions
+  (`tools:node="remove"`). BLE scan uses `neverForLocation`; location is capped at API 30 via
+  `tools:node="replace"`.
+- **Privacy URL:** `res/values/strings.xml` `health_connect_privacy_policy_url` → `/privacy`.
+- **Bridge behaviour:**
+  - `heartRateBle.isAvailable()` doesn't prompt; permissions are requested on `connect()`.
+  - `onDisconnect` fires only on device-side drops.
+  - Health calls reject any `write`; dates are required ISO strings; limit defaults to 100.
+- **Unverified until CI Gradle runs:** manifest merge output, Kotlin alignment, and the plugin's
+  `kotlinOptions` block. If the merge fails, try `tools:replace="android:maxSdkVersion"` for the
+  location permissions.
+- **iOS follow-ups:**
+  - Info.plist `NSHealthShareUsageDescription` and `NSBluetoothAlwaysUsageDescription`.
+  - The HealthKit capability.
+  - iOS hides read denials, so treat empty results as "no data or not allowed".
+  - Make the Android-worded unavailable messages platform-neutral.
+
 ## Progress log
+- 2026-09-15: Agent B (native) finished. 413 tests pass locally; the Android web bundle builds;
+  Gradle is untested.
 - 2026-09-15: Drafted `privacy.html`. The privacy audit found the review-workout payload would leak
   `session.wearable` to Groq; the fix was assigned to Agent C.
 - 2026-09-15: Researched the app structure and chose the plugins after inspecting their packages
