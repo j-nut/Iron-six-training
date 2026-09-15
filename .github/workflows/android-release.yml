@@ -1,0 +1,88 @@
+name: Android signed release
+
+# Builds an APK (sideload) and an AAB (Play) signed with ONE stable key, so installs update in place
+# instead of forcing an uninstall. Requires these repository secrets:
+#   ANDROID_KEYSTORE_BASE64  - base64 of your .jks keystore
+#   ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+# See ANDROID.md for the one-time key creation and secret setup.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'Version name shown to users (e.g. 1.3.0)'
+        required: false
+        default: ''
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Verify preinstalled Android tools
+        run: |
+          test -x "$JAVA_HOME_21_X64/bin/java"
+          test -f "$ANDROID_HOME/platforms/android-36/android.jar"
+          test -x "$ANDROID_HOME/build-tools/36.0.0/apksigner"
+      - run: npm ci
+      - run: npm test
+      - run: npm run android:sync
+      - name: Restore the signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 is not set. Add the signing secrets (see ANDROID.md) before running this workflow."
+            exit 1
+          fi
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/ironsix-release.jks"
+          test -s "$RUNNER_TEMP/ironsix-release.jks"
+      - name: Choose the version name
+        run: |
+          NAME="${{ inputs.version_name }}"
+          if [ -z "$NAME" ] && [ "${{ github.ref_type }}" = "tag" ]; then NAME="${GITHUB_REF_NAME#v}"; fi
+          echo "IRONSIX_VERSION_NAME=$NAME" >> "$GITHUB_ENV"
+      - name: Build signed APK and bundle
+        working-directory: android
+        env:
+          IRONSIX_KEYSTORE_PATH: ${{ runner.temp }}/ironsix-release.jks
+          IRONSIX_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          IRONSIX_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          IRONSIX_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          # Always higher than the last build, which Android requires for an update.
+          IRONSIX_VERSION_CODE: ${{ 1000 + github.run_number }}
+        run: |
+          export JAVA_HOME="$JAVA_HOME_21_X64"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          ./gradlew --no-daemon assembleRelease bundleRelease
+      - name: Verify the signature and show the key fingerprint
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$APK"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | grep -E "package|sdkVersion"
+          echo "The certificate SHA-256 above must stay the same for every release, or users cannot update in place."
+      - name: Fail if the release is still debug-signed
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          if "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$APK" | grep -qi "CN=Android Debug"; then
+            echo "::error::This build used the debug key. Check the signing secrets."
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: iron-six-android-release
+          retention-days: 90
+          if-no-files-found: error
+          path: |
+            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/bundle/release/app-release.aab
