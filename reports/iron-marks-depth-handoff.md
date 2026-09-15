@@ -26,3 +26,12 @@ Pending: engine extensions; Today goal; customization; block summaries; migratio
 ## Tooling notes for continuation
 Repository is in /workspace/scratch/d2b61b38b09e/Iron-six-training. Normal git push has no credentials; use connected GitHub blob/tree/commit/ref tools (force:false). Fetch works. Match local tree SHA with API-created tree before updating ref.
 Browser: agent-browser unavailable. Playwright at /opt/codex/runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright; extracted Chromium /tmp/iron-chromium; libraries /tmp; launch with LD_LIBRARY_PATH=/tmp and no-sandbox/disable-gpu flags. HTTP server must run in same command/process namespace as browser. Prior /tmp/check-marks.cjs demonstrates setup. Do not add browser packages to app dependencies.
+
+### Implementation checkpoint (local, verification in progress)
+- Added pure performanceOf/blocksOf/depthOf analytics, ten new progress/block marks, 20 emblem evolution marks, six earned profile titles, selectable ring/detail/title preferences.
+- Current total is 54 marks, retaining original 24 IDs and rules. Emblem IDs remain unchanged. Evolution marks use `emblem_<id>_<level>`.
+- Added Today goal beneath Begin workout; current balanced-block grid, completed-block archive, evidence descriptions and cosmetic selectors in trophy case. New milestones include context in the earned dialog.
+- Existing introduced version-1 state migrates quietly to version 2, retaining unknown fields. Save invalidation now refreshes analytics for same-length, same-timestamp history corrections. Avatar node reuse includes detail level.
+- Corrected an edge case found by tests: UTC midnight is not a separate training exposure. Comparable observations require at least 24 hours separation, including baseline/improvement/confirmation.
+- Added targeted tests for confirmation, missing/mismatched data, duplicate/same-day saves, balance, evolution thresholds, goal context, migration and edited-history invalidation.
+- Next: targeted/full tests, mobile visual checks with real runtime, publish code checkpoint/preview and verify READY. No production merge.

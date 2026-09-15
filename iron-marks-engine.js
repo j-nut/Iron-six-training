@@ -100,6 +100,108 @@
     };
   }
 
+  // Progress recognition is deliberately separate from programming and load recommendations.
+  // One best comparable set per exercise/load/RIR/day; repeat an improvement on another day.
+  function performanceOf(sessions) {
+    const records = new Map(), events = [];
+    const norm = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    for (const h of sessions) {
+      if (!qualifies(h)) continue;
+      const day = Math.floor(Number(h.ts) / DAY), best = new Map();
+      for (const d of h.details || []) {
+        const name = norm(d.name);
+        if (!name || /bodyweight|assisted|band\b|plank|carry|walk|run|hold|isometric/.test(name)) continue;
+        for (const set of d.sets || []) {
+          if (set.done === false || set.rir == null || String(set.rir).trim() === '') continue;
+          const load = String(set.weight ?? '').trim().match(/^(\d+(?:\.\d+)?)\s*(lb|lbs|kg)?$/i);
+          const weight = load ? Number(load[1]) : 0, reps = Number(set.reps), rir = Number(set.rir);
+          const unit = norm(load?.[2] || set.unit || d.unit || h.unit || 'lb').replace(/^lbs$/, 'lb');
+          if (!['lb','kg'].includes(unit) || !(weight > 0 && weight <= 1500) || !Number.isInteger(reps) || reps < 3 || reps > 20 || !Number.isFinite(rir) || rir < 1 || rir > 4) continue;
+          const exercise = [name,norm(d.base),norm(d.seedKey)].join('|');
+          const key = [exercise,weight,unit,rir,h.trainingMode || 'traditional'].join('|');
+          if (!best.has(key) || reps > best.get(key).reps) best.set(key, {exercise,name:d.name,weight,unit,rir,reps,day,ts:h.ts});
+        }
+      }
+      for (const [key, point] of best) {
+        const record = records.get(key);
+        if (!record) { records.set(key, {best:point.reps,day,ts:Number(h.ts),pending:null}); continue; }
+        // Two saves on one date cannot supply a baseline and confirmation.
+        if (Number(h.ts) - record.ts < DAY) continue;
+        record.day = day;record.ts = Number(h.ts);
+        if (record.pending && point.reps >= record.pending.reps && Number(h.ts) - Number(record.pending.ts) >= DAY) {
+          // A single session/exercise earns at most one progress event, even with many loads.
+          if (!events.some(e => e.exercise === point.exercise && Number(h.ts)-Number(e.ts)<DAY)) {
+            events.push({...point,from:record.best,to:record.pending.reps,firstImprovedAt:record.pending.ts});
+          }
+          record.best = record.pending.reps;
+          record.pending = null;
+        } else if (point.reps > record.best) {
+          record.pending = point;
+        } else record.pending = null;
+      }
+    }
+    return events;
+  }
+
+  function blocksOf(sessions, improvements) {
+    const completed = [], counts = Object.fromEntries(ROTATION.map(k => [k,0]));
+    let start = null, total = 0;
+    for (const h of sessions) {
+      if (!qualifies(h) || !ROTATION.includes(h.workoutKey)) continue;
+      if (start == null) start = h.ts;
+      counts[h.workoutKey]++; total++;
+      if (ROTATION.every(k => counts[k] >= 4)) {
+        const progress = improvements.filter(e => e.ts >= start && e.ts <= h.ts);
+        completed.push({number:completed.length + 1,start,end:h.ts,sessions:total,counts:{...counts},improvements:progress});
+        ROTATION.forEach(k => { counts[k] = 0; });start = null;total = 0;
+      }
+    }
+    return {completed,current:{number:completed.length+1,start,sessions:total,counts,done:ROTATION.reduce((n,k)=>n+Math.min(4,counts[k]),0),target:24}};
+  }
+
+  const PROGRESS_MARKS = [
+    ...[1,5,12,25].map((n,i)=>({id:`progress_confirmed_${n}`,group:'progress',title:['Progress, Repeated','Building on Better','Lasting Progress','Progress Practice'][i],text:`Confirm ${n} rep improvement${n===1?'':'s'} on another day at the same load and logged RIR.`,target:n,metric:'improvements'})),
+    ...[3,6].map(n=>({id:`progress_variety_${n}`,group:'progress',title:n===3?'Across the Board':'Growing Your Range',text:`Confirm rep improvements in ${n} different exercises.`,target:n,metric:'exercises'})),
+    ...[1,3,6,12].map((n,i)=>({id:`balanced_blocks_${n}`,group:'blocks',title:['Built in Balance','Balance Builder','Seasoned Practice','A Body of Work'][i],text:`Finish ${n} balanced block${n===1?'':'s'}: four successful sessions of each of the six program days per block.`,target:n,metric:'blocks'}))
+  ];
+  const TITLES = [
+    {id:'none',label:'No title',mark:null},
+    {id:'in_motion',label:'In Motion',mark:'full_six'},
+    {id:'steady_hand',label:'Steady Hand',mark:'honest_effort'},
+    {id:'progress_maker',label:'Progress Maker',mark:'progress_confirmed_1'},
+    {id:'balanced_builder',label:'Balanced Builder',mark:'balanced_blocks_1'},
+    {id:'forged',label:'Forged',mark:'full_apex'},
+    {id:'seasoned',label:'Seasoned',mark:'balanced_blocks_6'}
+  ];
+  const EVOLUTIONS = [{level:1,label:'Original',factor:1},{level:2,label:'Etched',factor:2},{level:3,label:'Masterwork',factor:4}];
+
+  function depthOf(sessions) {
+    const improvements = performanceOf(sessions), blocks = blocksOf(sessions, improvements);
+    const unique = [];const names = new Set();
+    for (const e of improvements) if (!names.has(e.exercise)) { names.add(e.exercise);unique.push(e); }
+    const metrics = {improvements,exercises:unique,blocks:blocks.completed.map(b=>({ts:b.end}))};
+    const marks = PROGRESS_MARKS.map(m=>{
+      const list = metrics[m.metric], unlocked = list.length >= m.target;
+      return {...m,value:Math.min(m.target,list.length),unlocked,unlockedAt:unlocked?list[m.target-1].ts:null,emblem:null,ring:null,hidden:false};
+    });
+    return {improvements,blocks,marks};
+  }
+
+  const DAY_NAMES = {push_a:'Push A',lower_a:'Legs A',pull_a:'Pull A',push_b:'Push B',lower_b:'Legs B',pull_b:'Pull B'};
+  function nextGoal(user, result = evaluate(user)) {
+    const key = user?.program?.currentWorkoutKey;
+    const done = result.stats.qualifying;
+    if (!done) return {id:'first_rep',title:'Your first Iron Mark',text:'Finish your planned session at the effort that suits today. First Rep starts your collection.',value:0,target:1};
+    const current = result.depth.blocks.current;
+    if (ROTATION.includes(key) && current.counts[key] < 4) {
+      const value=current.counts[key];
+      return {id:`block_${current.number}_${key}`,title:`Block ${current.number} · ${DAY_NAMES[key]}`,text:`Today's planned session can bring ${DAY_NAMES[key]} to ${value+1} of 4. Every program day contributes to this balanced block.`,value:current.done,target:24};
+    }
+    const next = result.marks.find(m=>m.id==='full_six'&&!m.unlocked) || result.marks.find(m=>m.id==='six_six'&&!m.unlocked);
+    if (next && !next.hidden) return {id:next.id,title:next.title,text:next.text,value:next.value,target:next.target};
+    return {id:'steady',title:'Keep building at your pace',text:'Follow today’s plan. Your completed sessions and repeatable progress keep building your collection.',value:current.done,target:24};
+  }
+
   const MARKS = [
     // The Six
     {id:'first_rep', group:'six', title:'First Rep', text:'Finish your first successful session.', target:1, value:s => s.qualifying, emblem:'spark'},
@@ -130,7 +232,10 @@
     {id:'forge', title:'The Forge'},
     {id:'balance', title:'Balance'},
     {id:'consistency', title:'Showing Up'},
-    {id:'honest', title:'Honest Training'}
+    {id:'honest', title:'Honest Training'},
+    {id:'progress', title:'Personal Progress'},
+    {id:'blocks', title:'Training Blocks'},
+    {id:'evolution', title:'Emblem Evolution'}
   ];
 
   function evaluate(user) {
@@ -152,16 +257,54 @@
     });
     const ring = [...RINGS].reverse().find(r => final.rotations >= r.rotations) || null;
     const nextRing = RINGS.find(r => final.rotations < r.rotations) || null;
-    return {version:1, stats:final, marks, emblems:marks.filter(m => m.unlocked && m.emblem).map(m => m.emblem), ring, nextRing};
+    const depth = depthOf(sessions);
+    const allMarks = [...marks,...depth.marks];
+    const comeback = marks.find(m=>m.id==='back_at_it');
+    const growthAt = (state,list) => ({
+      spark:[state.qualifying,1,'successful sessions'],hex:[state.rotations,1,'full rotations'],
+      hammer:[state.bestExposures,4,'successful sessions of one program day'],anvil:[state.rotations,4,'full rotations'],
+      crown:[state.rotations,8,'full rotations'],kettlebell:[state.legDays,12,'leg sessions'],
+      compass:[state.rotations,1,'full rotations'],
+      // This emblem grows through training after returning, never through more absences.
+      sunrise:[comeback?.unlocked?list.filter(h=>h.ts>=comeback.unlockedAt&&qualifies(h)).length:0,1,'successful sessions after the emblem unlock'],
+      gauge:[state.honest,10,'sessions with every RIR logged'],sixsix:[state.qualifying,66,'successful sessions']
+    });
+    const growth=growthAt(final,sessions);
+    const evolutions = Object.fromEntries(MARKS.filter(m=>m.emblem).map(m=>{
+      const [value,base,unit]=growth[m.emblem],owned=marks.some(x=>x.id===m.id&&x.unlocked);
+      const tiers=EVOLUTIONS.map(t=>({...t,target:base*t.factor,unlocked:owned&&value>=base*t.factor}));
+      return [m.emblem,{value,tiers,level:owned?Math.max(1,tiers.filter(t=>t.unlocked).length):0,requirement:unit}];
+    }));
+    for (const original of MARKS.filter(m=>m.emblem)) {
+      const evolution=evolutions[original.emblem];
+      for(const tier of evolution.tiers.slice(1)) {
+        let ts=null;
+        if(tier.unlocked) {
+          let lo=1,hi=sessions.length;
+          while(lo<hi){const mid=(lo+hi)>>1,st=prefix(mid);if(original.value(st)>=original.target&&growthAt(st,sessions.slice(0,mid))[original.emblem][0]>=tier.target)hi=mid;else lo=mid+1;}
+          ts=sessions[lo-1]?.ts||null;
+        }
+        allMarks.push({id:`emblem_${original.emblem}_${tier.level}`,group:'evolution',title:`${EMBLEMS[original.emblem]} · ${tier.label}`,text:`Earn the ${EMBLEMS[original.emblem]} emblem, then reach ${tier.target} ${evolution.requirement}.`,target:tier.target,value:Math.min(evolution.value,tier.target),unlocked:tier.unlocked,unlockedAt:ts,emblem:null,evolvedEmblem:original.emblem,detail:tier.level,ring:null,hidden:original.hidden&&!marks.find(m=>m.id===original.id).unlocked});
+      }
+    }
+    return {version:2, stats:final, marks:allMarks, depth, evolutions, titles:TITLES.map(t=>({...t,unlocked:!t.mark||allMarks.some(m=>m.id===t.mark&&m.unlocked)})), emblems:marks.filter(m => m.unlocked && m.emblem).map(m => m.emblem), ring, nextRing};
   }
 
   // The worn emblem is honoured only while it is still earned (history can be deleted).
   function avatarFor(user, result = evaluate(user)) {
     const chosen = user?.trainerMemory?.achievements?.emblem || null;
-    return {ring:result.ring, emblem:chosen && result.emblems.includes(chosen) ? chosen : null};
+    const state=user?.trainerMemory?.achievements || {};
+    const requested=RINGS.find(r=>r.id===state.ring);
+    const ring=state.ring==='none'?null:requested&&result.stats.rotations>=requested.rotations?requested:result.ring;
+    const emblem=chosen&&result.emblems.includes(chosen)?chosen:null;
+    const earnedLevel=emblem?result.evolutions[emblem].level:0;
+    const selectedLevel=Number(state.detail)||earnedLevel;
+    const detail=Math.min(earnedLevel,Math.max(1,selectedLevel));
+    const title=result.titles.find(t=>t.id===state.title&&t.unlocked)?.label;
+    return {ring,emblem,detail:emblem?detail:0,title:state.title==='none'?null:title||null};
   }
 
-  const api = {ROTATION, RINGS, EMBLEMS, MARKS, GROUPS, qualifies, evaluate, avatarFor};
+  const api = {ROTATION, RINGS, EMBLEMS, MARKS, GROUPS, qualifies, evaluate, avatarFor, performanceOf, blocksOf, nextGoal, DAY_NAMES, EVOLUTIONS, TITLES};
   if (typeof window !== 'undefined') window.IronSixMarksEngine = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })();

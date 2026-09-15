@@ -35,12 +35,12 @@
     ring:'<path d="m12 2 9 5v10l-9 5-9-5V7z"/><circle cx="12" cy="12" r="5"/>',
     hidden:'<path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z" stroke-dasharray="2 3"/><path d="M10 10a2 2 0 1 1 3 1.7L12 13M12 16h.01"/>'
   };
-  const icon = (id, size = 20) => {
+  const icon = (id, size = 20, detail = 1) => {
     const detailed = size >= 32;
-    const glyph = ICONS[id] || ICONS.medal;
-    return `<svg class="im-icon" data-im-glyph="${esc(id)}-${size}" viewBox="${detailed ? '0 0 40 40' : '0 0 24 24'}" width="${size}" height="${size}" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${detailed ? `<path d="m20 1 17 9.5v19L20 39 3 29.5v-19z" fill="currentColor" fill-opacity=".07" stroke-opacity=".45"/><path d="m20 4 14 8v16l-14 8-14-8V12z" stroke-opacity=".16"/><g transform="translate(8 8)">${glyph}</g>` : glyph}</svg>`;
+    const glyph = (ICONS[id] || ICONS.medal) + (detail>=2?'<path d="M2 3v3M22 18v3" stroke-width="1.4"/>':'') + (detail>=3?'<path d="m3 21 3-1M18 4l3-1" stroke-width="1.4"/>':'');
+    return `<svg class="im-icon" data-im-glyph="${esc(id)}-${size}-${detail}" viewBox="${detailed ? '0 0 40 40' : '0 0 24 24'}" width="${size}" height="${size}" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${detailed ? `<path d="m20 1 17 9.5v19L20 39 3 29.5v-19z" fill="currentColor" fill-opacity=".07" stroke-opacity=".45"/><path d="m20 4 14 8v16l-14 8-14-8V12z" stroke-opacity=".16"/><g transform="translate(8 8)">${glyph}</g>` : glyph}</svg>`;
   };
-  const markIcon = mark => icon(mark.emblem || (mark.ring ? 'ring' : 'medal'), 40);
+  const markIcon = mark => icon(mark.emblem || mark.evolvedEmblem || (mark.ring ? 'ring' : 'medal'), 40, mark.detail || 1);
 
   let cache = {sig:null, result:null};
   const signature = u => {
@@ -50,18 +50,21 @@
   function evaluate(u = currentUser()) {
     if (!u) return null;
     const sig = signature(u);
-    if (sig !== cache.sig) cache = {sig, result:engine.evaluate(u)};
+    if (sig !== cache.sig || cache.history !== u.history) cache = {sig, history:u.history, result:engine.evaluate(u)};
     return cache.result;
   }
 
   function readState(u) {
     const s = u?.trainerMemory?.achievements;
-    return {emblem:s?.emblem || null, seen:Array.isArray(s?.seen) ? s.seen : [], introduced:!!s?.introduced};
+    return {...(s||{}), emblem:s?.emblem || null, seen:Array.isArray(s?.seen) ? s.seen : [], introduced:!!s?.introduced};
   }
   function writeState(u, patch) {
     if (!u) return;
     u.trainerMemory = u.trainerMemory && typeof u.trainerMemory === 'object' ? u.trainerMemory : {};
-    u.trainerMemory.achievements = {...readState(u), ...patch, version:1};
+    const before=readState(u);
+    const next={...before,...patch,version:2};
+    if(before.introduced&&before.version!==2)next.seen=[...new Set([...next.seen,...evaluate(u).marks.filter(m=>m.unlocked).map(m=>m.id)])];
+    u.trainerMemory.achievements = next;
     u.localUpdatedAt = Date.now();
     if (typeof saveData === 'function') saveData();
     window.IronSixCloud?.syncNow?.(false);
@@ -111,6 +114,11 @@
       #ironMarksEarned:not([hidden]) .im-head .im-avatar{animation:im-settle 520ms cubic-bezier(.22,.8,.22,1) both}
       @keyframes im-settle{from{opacity:0;transform:translateY(8px) scale(.88)}to{opacity:1;transform:translateY(0) scale(1)}}
       @media(prefers-reduced-motion:reduce){#ironMarksEarned:not([hidden]) .im-head .im-avatar{animation:none}}
+
+      .im-help{font-size:12px;color:var(--muted);line-height:1.5;margin:8px 0 12px}
+      .im-customize{display:grid;gap:12px}.im-customize label{font-size:12px;color:var(--muted);display:grid;gap:6px}.im-customize select{width:100%;min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);color:var(--text);font:inherit;padding:10px}
+      .im-story{padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface2);margin:8px 0;font-size:13px}.im-story p{font-size:12px;color:var(--muted);line-height:1.6}.im-story summary{cursor:pointer;min-height:24px;font-weight:650}.im-block-days{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.im-block-days span{font-size:11px;color:var(--muted);padding:8px;background:var(--surface);border-radius:8px}.im-block-days b{display:block;color:var(--text);margin-top:4px}
+      #ironMarksGoal.im-today-goal{display:block;text-align:left;width:100%;padding:12px 0 0;margin-top:12px;border:0;border-top:1px solid var(--line);background:transparent;color:var(--text);font:inherit;cursor:pointer;min-height:44px;box-shadow:none}#ironMarksGoal[hidden]{display:none}#ironMarksGoal span{display:block;font-size:11px;line-height:1.4;color:var(--muted)}#ironMarksGoal strong{display:block;font-size:12px;margin:4px 0}#ironMarksGoal small{color:var(--muted);float:right;font-size:11px}.im-customize select:focus-visible,#ironMarksGoal:focus-visible{outline:2px solid var(--text);outline-offset:3px}
       @media(min-width:640px){.im-backdrop{align-items:center;padding:24px}.im-modal{padding:28px;max-height:calc(100dvh - 48px)}.im-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.im-emblems{grid-template-columns:repeat(6,minmax(0,1fr))}}
 
     `;
@@ -126,12 +134,12 @@
     el.dataset.ring = avatar.ring?.id || '';
     el.dataset.emblem = avatar.emblem || '';
     if (avatar.emblem) {
-      const art = icon(avatar.emblem, el.classList.contains('im-avatar') ? 32 : 17);
+      const art = icon(avatar.emblem, el.classList.contains('im-avatar') ? 32 : 17, avatar.detail);
       const size = el.classList.contains('im-avatar') ? 32 : 17;
-      if (el.firstElementChild?.getAttribute('data-im-glyph') !== `${avatar.emblem}-${size}`) el.innerHTML = art;
+      if (el.firstElementChild?.getAttribute('data-im-glyph') !== `${avatar.emblem}-${size}-${avatar.detail}`) el.innerHTML = art;
     }
     else if (fallbackText != null) el.textContent = fallbackText;
-    el.setAttribute('title', [avatar.ring ? `${avatar.ring.label} ring` : '', avatar.emblem ? `${engine.EMBLEMS[avatar.emblem]} emblem` : ''].filter(Boolean).join(' · '));
+    el.setAttribute('title', [avatar.ring ? `${avatar.ring.label} ring` : '', avatar.emblem ? `${engine.EMBLEMS[avatar.emblem]} · ${engine.EVOLUTIONS[avatar.detail-1].label}` : '', avatar.title || ''].filter(Boolean).join(' · '));
   }
   // Called by the profile menu after it writes initials, so the emblem simply replaces them.
   function decorateAvatar(el, u) { paintAvatar(el, u, initialsOf(u)); }
@@ -168,6 +176,51 @@
     return `<div class="im-card ${mark.unlocked ? 'earned' : 'locked'}" data-mark="${esc(mark.id)}"><div class="im-badge">${markIcon(mark)}</div><div class="im-body"><strong>${esc(mark.title)}</strong><span>${esc(mark.text)}</span>${status}${mark.unlocked ? '' : `<small class="im-count">Locked · ${mark.value} / ${mark.target}</small>`}</div></div>`;
   }
 
+  function evidence(event) {
+    if(!event)return 'Confirmed from your completed training logs.';
+    return `${event.name}: ${event.from} → ${event.to} reps at ${event.weight} ${event.unit}, RIR ${event.rir}. Repeated ${dateOf(event.ts)}.`;
+  }
+  function customization(u, r) {
+    const state=readState(u),avatar=engine.avatarFor(u,r),evo=avatar.emblem?r.evolutions[avatar.emblem]:null;
+    const options=(items,value)=>items.map(o=>`<option value="${esc(o.id)}" ${o.id===value?'selected':''} ${o.unlocked===false?'disabled':''}>${esc(o.label)}${o.unlocked===false?' · Locked':''}</option>`).join('');
+    const ringOptions=[{id:'auto',label:'Highest earned ring'},{id:'none',label:'No ring'},...engine.RINGS.map(t=>({id:t.id,label:`${t.label} · ${t.rotations} rotations`,unlocked:r.stats.rotations>=t.rotations}))];
+    const detailOptions=[{id:'auto',label:'Auto · highest earned'},...engine.EVOLUTIONS.map(t=>({id:String(t.level),label:t.label,unlocked:!!evo&&evo.level>=t.level}))];
+    const titles=r.titles.map(t=>({...t,label:t.label+(t.mark?' · '+r.marks.find(m=>m.id===t.mark)?.title:'')}));
+    return `<div class="im-section"><h4>Make it yours</h4><p class="im-help">Your favorites stay yours. Choose any earned ring and detail level.</p><div class="im-customize">
+      <label>Avatar ring<select data-custom="ring">${options(ringOptions,state.ring||'auto')}</select></label>
+      <label>Emblem detail<select data-custom="detail" ${evo?'':'disabled'}>${options(detailOptions,state.detail||'auto')}</select></label>
+      <label>Profile title<select data-custom="title">${options(titles,state.title||'none')}</select></label></div>
+      ${evo?`<p class="im-help">${esc(engine.EMBLEMS[avatar.emblem])} · ${engine.EVOLUTIONS[avatar.detail-1].label}. ${evo.level<3?`Next: ${engine.EVOLUTIONS[evo.level].label} at ${evo.tiers[evo.level].target} ${esc(evo.requirement)} (${evo.value} so far).`:'Every detail level earned.'}</p>`:'<p class="im-help">Wear an emblem to see its evolution path.</p>'}</div>`;
+  }
+  function depthPanel(r) {
+    const current=r.depth.blocks.current,latest=r.depth.blocks.completed.at(-1),events=r.depth.improvements.slice().reverse();
+    return `<div class="im-section"><h4>Your training story</h4><div class="im-story"><strong>Balanced block ${current.number}</strong><p>Four successful sessions of each program day. No deadline; recovery days do not reset your progress.</p><div class="im-block-days">${engine.ROTATION.map(k=>`<span>${esc(engine.DAY_NAMES[k])}<b>${Math.min(current.counts[k],4)} / 4</b></span>`).join('')}</div><div class="im-bar" aria-label="${current.done} of 24 block sessions"><i style="width:${current.done/24*100}%"></i></div></div>
+      ${latest?`<details class="im-story"><summary>Block ${latest.number} complete · ${dateOf(latest.end)}</summary><p>${latest.sessions} successful sessions across all six program days. ${latest.improvements.length} confirmed rep improvement${latest.improvements.length===1?'':'s'} recorded during this block.</p>${latest.improvements.slice(-3).map(e=>`<p>${esc(evidence(e))}</p>`).join('')}${!latest.improvements.length?'<p>Comparable performance data was not available or no repeatable rep increase was recorded. Completing the block is an achievement of its own.</p>':''}</details>`:''}
+      ${r.depth.blocks.completed.length>1?`<details class="im-story"><summary>Earlier balanced blocks (${r.depth.blocks.completed.length-1})</summary>${r.depth.blocks.completed.slice(0,-1).reverse().map(b=>`<p><strong>Block ${b.number} · ${dateOf(b.end)}</strong><br>${b.sessions} successful sessions · ${b.improvements.length} confirmed improvements.</p>`).join('')}</details>`:''}
+      <details class="im-story"><summary>Personal progress · ${r.depth.improvements.length} confirmed</summary><p>Extra reps count after you repeat them at least 24 hours later at the same exercise, load and logged RIR. This recognizes your logs, not a form assessment or a new weight target.</p>${events.slice(0,3).map(e=>`<p>${esc(evidence(e))}</p>`).join('')}${events.length>3?`<details><summary>Earlier improvements (${events.length-3})</summary>${events.slice(3).map(e=>`<p>${esc(evidence(e))}</p>`).join('')}</details>`:''}${!events.length?'<p>Keep logging reps and RIR as you follow your plan. Missing effort data, assisted and bodyweight movements are not compared.</p>':''}</details></div>`;
+  }
+  function customize(key,value) {
+    const u=currentUser(),r=evaluate(u);if(!u||!r)return false;
+    const avatar=engine.avatarFor(u,r);
+    const allowed=key==='ring'?(value==='auto'||value==='none'||engine.RINGS.some(t=>t.id===value&&r.stats.rotations>=t.rotations))
+      :key==='detail'?(value==='auto'||(avatar.emblem&&['1','2','3'].includes(value)&&Number(value)<=r.evolutions[avatar.emblem].level))
+      :key==='title'?r.titles.some(t=>t.id===value&&t.unlocked):false;
+    if(!allowed)return false;
+    writeState(u,{[key]:value});window.IronSixProfileMenu?.render?.();open();return true;
+  }
+  function renderGoal() {
+    const u=currentUser(),host=u?.trainingMode==='circuit'?document.querySelector('#today > .hero'):$('sessionStart');
+    let goal=$('ironMarksGoal');
+    if(!u||!host){if(goal)goal.hidden=true;return;}
+    if(!goal){goal=document.createElement('button');goal.type='button';goal.id='ironMarksGoal';goal.className='im-today-goal';goal.addEventListener('click',open);}
+    if(goal.parentNode!==host)host.append(goal);
+    goal.hidden=midWorkout(u);
+    if(goal.hidden)return;
+    const r=evaluate(u),next=engine.nextGoal(u,r),avatar=engine.avatarFor(u,r);
+    const content=`<span>${avatar.title?esc(avatar.title)+' · ':''}Your next mark</span><strong>${esc(next.title)} <small>${next.value} / ${next.target}</small></strong><span>${esc(next.text)}</span>`;
+    if(goal.innerHTML!==content)goal.innerHTML=content;
+  }
+
   function open() {
     const u = currentUser(), r = evaluate(u);
     if (!u || !r) return;
@@ -180,16 +233,19 @@
     const emblemButtons = Object.entries(engine.EMBLEMS).map(([id, label]) => {
       const mark = r.marks.find(m => m.emblem === id), owned = r.emblems.includes(id);
       if (!owned && mark?.hidden) return '';
-      return `<button type="button" class="im-emblem ${worn === id ? 'active' : ''}" data-wear="${id}" aria-pressed="${worn === id}" ${owned ? '' : 'disabled'} title="${esc(owned ? label : `${label}: ${mark?.text || ''}`)}">${icon(id, 32)}<span>${esc(label)}</span><small>${worn === id ? '✓ Wearing' : owned ? 'Owned' : 'Locked'}</small></button>`;
+      return `<button type="button" class="im-emblem ${worn === id ? 'active' : ''}" data-wear="${id}" aria-pressed="${worn === id}" ${owned ? '' : 'disabled'} title="${esc(owned ? label : `${label}: ${mark?.text || ''}`)}">${icon(id, 32, r.evolutions[id]?.level || 1)}<span>${esc(label)}</span><small>${worn === id ? '✓ Wearing' : owned ? 'Owned' : 'Locked'}</small></button>`;
     }).join('');
     modal.innerHTML = `<div class="im-head"><div class="im-avatar" id="imAvatarPreview"></div><div><h3>Iron Marks</h3><p>${earned} of ${r.marks.length} earned${r.ring ? ` · ${esc(r.ring.label)} ring` : ''}. Earned from finished sessions; missed days never cost a mark.</p></div><button class="im-close" type="button" aria-label="Close">✕</button></div>`
       + `<div class="im-ringline">${ringLine}</div>`
       + `<div class="im-section"><h4>Profile emblem</h4><div class="im-emblems"><button type="button" class="im-emblem ${worn ? '' : 'active'}" data-wear="" aria-pressed="${!worn}"><span>${esc(initialsOf(u))}</span><span>Initials</span><small>${worn ? 'Available' : '✓ Wearing'}</small></button>${emblemButtons}</div></div>`
+      + customization(u,r) + depthPanel(r)
       + (closest.length ? `<div class="im-section"><h4>Closest next</h4><div class="im-grid">${closest.map(markCard).join('')}</div></div>` : '')
       + engine.GROUPS.map(g => `<div class="im-section"><h4>${esc(g.title)}</h4><div class="im-grid">${r.marks.filter(m => m.group === g.id).map(markCard).join('')}</div></div>`).join('');
     paintAvatar(modal.querySelector('#imAvatarPreview'), u, initialsOf(u));
     modal.querySelector('.im-close').addEventListener('click', () => { backdrop.hidden = true; });
     modal.querySelectorAll('[data-wear]').forEach(button => button.addEventListener('click', () => wear(button.dataset.wear || null, true)));
+    modal.querySelectorAll('[data-custom]').forEach(select=>select.addEventListener('change',()=>customize(select.dataset.custom,select.value)));
+    const wornTitle=engine.avatarFor(u,r).title;if(wornTitle)modal.querySelector('.im-head p').insertAdjacentHTML('afterbegin',`<strong>${esc(wornTitle)}</strong><br>`);
     backdrop.hidden = false;
     if (state.introduced === false) writeState(u, {introduced:true, seen:r.marks.filter(m => m.unlocked).map(m => m.id)});
   }
@@ -209,7 +265,7 @@
     const backdrop = ensureModal('ironMarksEarned', 'Iron Mark earned'), modal = backdrop.querySelector('.im-modal');
     const worn = engine.avatarFor(u, evaluate(u)).emblem;
     modal.innerHTML = `<div class="im-head"><div class="im-avatar" id="imEarnedAvatar"></div><div><h3>${marks.length === 1 ? 'Iron Mark earned' : `${marks.length} Iron Marks earned`}</h3><p>From the session you just finished.</p></div><button class="im-close" type="button" aria-label="Close">✕</button></div>`
-      + `<div class="im-earned-list">${marks.map(m => `<div class="im-card earned"><div class="im-badge">${markIcon(m)}</div><div class="im-body"><strong>${esc(m.title)}</strong><span>${esc(m.text)}</span>${m.ring ? `<em>Your avatar now wears the ${esc(m.title.replace(/ Ring$/, ''))} ring.</em>` : ''}${m.emblem && m.emblem !== worn ? `<button type="button" class="im-wear" data-wear="${m.emblem}">Wear the ${esc(engine.EMBLEMS[m.emblem])} emblem</button>` : ''}</div></div>`).join('')}</div>`
+      + `<div class="im-earned-list">${marks.map(m => `<div class="im-card earned"><div class="im-badge">${markIcon(m)}</div><div class="im-body"><strong>${esc(m.title)}</strong><span>${esc(m.text)}</span>${m.evolvedEmblem ? `<em>A new detail level for your ${esc(engine.EMBLEMS[m.evolvedEmblem])} emblem. Choose it in your collection.</em>` : ''}${m.group==='progress' ? `<em>${esc(evidence(evaluate(u).depth.improvements.filter(e=>e.ts<=m.unlockedAt).at(-1)))}</em>` : ''}${m.group==='blocks' ? `<em>${evaluate(u).depth.blocks.completed.find(b=>b.end===m.unlockedAt)?.sessions || 24} successful sessions across all six days.</em>` : ''}${m.ring ? `<em>Unlocked the ${esc(m.title.replace(/ Ring$/, ''))} ring. Choose it in your collection.</em>` : ''}${m.emblem && m.emblem !== worn ? `<button type="button" class="im-wear" data-wear="${m.emblem}">Wear the ${esc(engine.EMBLEMS[m.emblem])} emblem</button>` : ''}</div></div>`).join('')}</div>`
       + `<div class="im-actions"><button type="button" class="btn secondary" data-all>See all marks</button><button type="button" class="btn primary" data-done>Nice</button></div>`;
     paintAvatar(modal.querySelector('#imEarnedAvatar'), u, initialsOf(u));
     const done = () => { backdrop.hidden = true; };
@@ -232,6 +288,10 @@
     if (!u || (typeof document !== 'undefined' && document.hidden) || midWorkout(u)) return null;
     if ($('ironMarksEarned') && !$('ironMarksEarned').hidden) return null;
     const r = evaluate(u), state = readState(u), unlocked = r.marks.filter(m => m.unlocked);
+    if (state.introduced && state.version !== 2) {
+      writeState(u,{seen:[...new Set([...state.seen,...unlocked.map(m=>m.id)])]});
+      return {upgraded:true};
+    }
     if (!state.introduced) {
       writeState(u, {introduced:true, seen:unlocked.map(m => m.id)});
       if (unlocked.length && typeof toast === 'function') toast(`Iron Marks are here: you have already earned ${unlocked.length}. Find them in your profile menu.`);
@@ -247,8 +307,14 @@
   }
 
   injectStyles();
-  setInterval(() => { try { check(); } catch (error) { console.error('[Iron Six] marks check failed', error); } }, 1500);
+  setInterval(() => { try { check(); renderGoal(); } catch (error) { console.error('[Iron Six] marks check failed', error); } }, 1500);
   addEventListener('load', () => window.IronSixProfileMenu?.render?.());
-  window.IronSixMarks = {open, check, wear, summary, evaluate, decorateAvatar, readState};
+  window.IronSixMarks = {open, check, wear, summary, evaluate, decorateAvatar, readState, customize, renderGoal};
+  // History edits/restore may keep identical endpoint timestamps; saves invalidate analytics.
+  const baseSave=window.saveData;
+  if(typeof baseSave==='function')window.saveData=function(){cache.sig=null;return baseSave.apply(this,arguments);};
+  const baseRender=window.renderAll;
+  if(typeof baseRender==='function')window.renderAll=function(){const result=baseRender.apply(this,arguments);renderGoal();return result;};
   window.IronSixProfileMenu?.render?.();
+  renderGoal();
 })();

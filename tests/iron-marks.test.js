@@ -213,3 +213,62 @@ test('worn avatar survives profile refreshes and restores initials when removed'
     assert.equal(avatar.querySelector('svg'),null,'unearned emblem is cleared');assert.equal(avatar.dataset.ring,'');
   }finally{a.close()}
 });
+
+// Personal progress needs a baseline, an improvement and a confirmation on a later day.
+const repHistory=(reps,options={})=>reps.map((r,i)=>({...session('push_a',i*2),trainingMode:'traditional',details:[{name:'Dumbbell Bench Press',base:'Horizontal push',seedKey:'bench',sets:Array.from({length:10},()=>({weight:'40',reps:String(r),rir:'2',done:true,...options}))}]}));
+test('rep progress requires repeated improvement at the same load and RIR',()=>{
+  assert.equal(engine.evaluate(user(repHistory([8,9]))).depth.improvements.length,0);
+  const r=engine.evaluate(user(repHistory([8,9,9])));
+  assert.equal(r.depth.improvements.length,1);assert.equal(mark(r,'progress_confirmed_1').unlocked,true);
+  assert.deepEqual([r.depth.improvements[0].from,r.depth.improvements[0].to],[8,9]);
+  assert.equal(engine.evaluate(user(repHistory([8,9,8,9]))).depth.improvements.length,0,'a failed repeat breaks confirmation');
+  assert.equal(engine.evaluate(user(repHistory([8,9,9,9,10,10]))).depth.improvements.length,2);
+});
+test('progress rejects missing effort, ambiguous loads, assisted work and mismatched comparisons',()=>{
+  for(const options of [{rir:''},{rir:' '},{rir:'0'},{rir:'5'},{weight:'BW'},{weight:'40+10'},{weight:'-40'},{done:false}])assert.equal(engine.evaluate(user(repHistory([8,9,9],options))).depth.improvements.length,0);
+  for(const change of [h=>h.details[0].name='Assisted Pull-up',h=>h.details[0].sets.forEach(s=>s.rir='3'),h=>h.details[0].sets.forEach(s=>s.weight='40 kg'),h=>h.trainingMode='circuit']){
+    const h=repHistory([8,9,9]);change(h[2]);assert.equal(engine.evaluate(user(h)).depth.improvements.length,0);
+  }
+});
+test('duplicate saves, multiple sets and same-day sessions cannot manufacture confirmation',()=>{
+  const h=repHistory([8,9,9]);h[2].ts=h[1].ts+3600000;
+  assert.equal(engine.evaluate(user(h)).depth.improvements.length,0);
+  const original=repHistory([8,9,9]);assert.equal(engine.evaluate(user([...original,...original])).depth.improvements.length,1);
+  assert.equal(engine.evaluate(user(repHistory([8,9,9]))).depth.improvements.length,1,'ten sets produce one event');
+});
+test('balanced blocks require every program day and reset only after completion',()=>{
+  let r=engine.evaluate(user(cycles(4)));assert.equal(r.depth.blocks.completed.length,1);assert.equal(r.depth.blocks.current.done,0);
+  assert.equal(r.depth.blocks.completed[0].sessions,24);assert.equal(mark(r,'balanced_blocks_1').unlocked,true);
+  r=engine.evaluate(user(cycles(4).filter(h=>h.workoutKey!=='pull_b')));assert.equal(r.depth.blocks.completed.length,0);assert.equal(r.depth.blocks.current.done,20);
+  r=engine.evaluate(user(cycles(8)));assert.equal(r.depth.blocks.completed.length,2);
+});
+test('evolving emblems retain identity and cosmetic choices cannot bypass unlocks',()=>{
+  const u=user(cycles(4));u.trainerMemory={achievements:{emblem:'hex',ring:'emerald',detail:'3',title:'seasoned'}};
+  let r=engine.evaluate(u),avatar=engine.avatarFor(u,r);assert.equal(avatar.emblem,'hex');assert.equal(avatar.detail,3);assert.equal(avatar.ring.id,'iron');assert.equal(avatar.title,null);
+  assert.equal(mark(r,'emblem_hex_3').unlocked,true);
+  u.trainerMemory.achievements.ring='none';u.trainerMemory.achievements.detail='1';u.trainerMemory.achievements.title='balanced_builder';avatar=engine.avatarFor(u,r);
+  assert.equal(avatar.ring,null);assert.equal(avatar.detail,1);assert.equal(avatar.title,'Balanced Builder');
+  assert.equal(engine.evaluate(user(cycles(16))).evolutions.anvil.level,3,'bounded key counts do not strand evolution');
+});
+test('Today goal follows planned program day without prescribing heavier weights',()=>{
+  const u=user(cycles(1));u.program={currentWorkoutKey:'lower_b'};let goal=engine.nextGoal(u);
+  assert.match(goal.title,/Legs B/);assert.match(goal.text,/2 of 4/);assert.equal(goal.value,6);
+  u.history=[];assert.equal(engine.nextGoal(u).id,'first_rep');
+});
+test('existing profiles migrate quietly and retain customization and unknown preference fields',()=>{
+  const a=app();try{
+    a.setHistory(cycles(4));a.run("activeUser().trainerMemory.achievements={introduced:true,version:1,emblem:'hex',seen:['first_rep'],futurePreference:'keep'}");
+    assert.equal(a.json('IronSixMarks.check()').upgraded,true);assert.equal(a.w.document.getElementById('ironMarksEarned'),null);
+    assert.equal(a.json('IronSixMarks.customize("ring","gold")'),false);
+    assert.equal(a.json('IronSixMarks.customize("detail","2")'),true);
+    assert.equal(a.json('activeUser().trainerMemory.achievements.futurePreference'),'keep');
+    assert.equal(a.json('activeUser().trainerMemory.achievements.version'),2);
+  }finally{a.close()}
+});
+test('saved history corrections invalidate analytics even when timestamps and length are unchanged',()=>{
+  const a=app();try{
+    a.setHistory(repHistory([8,9,9]));assert.equal(a.json('IronSixMarks.evaluate().depth.improvements.length'),1);
+    a.run("activeUser().history[0].details[0].sets.forEach(s=>s.rir='');saveData()");
+    assert.equal(a.json('IronSixMarks.evaluate().depth.improvements.length'),0);
+  }finally{a.close()}
+});
