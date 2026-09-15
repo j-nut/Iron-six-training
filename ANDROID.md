@@ -13,7 +13,7 @@ npm run android:sync
 npm run android:open
 ```
 
-In Android Studio, select a connected Android device or emulator and Run. For an installable test APK run `npm run android:apk`; the output is `android/app/build/outputs/apk/debug/app-debug.apk`. The minimum Android version is 7.0 (API 24). A modern Android System WebView is required.
+In Android Studio, select a connected Android device or emulator and Run. For an installable test APK run `npm run android:apk`; the output is `android/app/build/outputs/apk/debug/app-debug.apk`. The minimum Android version is 8.0 (API 26), raised from 7.0 because Health Connect requires it. A modern Android System WebView is required.
 
 The **Android test build** GitHub Actions workflow also builds a test APK and unsigned release bundle using GitHub's preinstalled JDK 21 and Android SDK 36. Its downloadable `iron-six-android-test` artifact is retained for 30 days. It does not publish to Google Play or use a release signing key. Each CI debug build may have a different test signing key; use a stable private release key before distributing updates to users.
 

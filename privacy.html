@@ -1,0 +1,121 @@
+<!doctype html>
+<!--
+  DRAFT privacy policy written from the app's current code (2026-09-15).
+  OWNER REVIEW REQUIRED before merging/publishing or submitting to Google Play / Apple:
+  - add the contact email (search for CONTACT_EMAIL)
+  - confirm the legal entity name, jurisdiction and any age requirement
+  - have it checked against Google Play User Data / Health Connect and Apple HealthKit requirements
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#0b0c0f" />
+<title>Privacy Policy — Iron Six</title>
+<link rel="icon" href="assets/brand/icon-32.png" />
+<style>
+  :root{--bg:#0b0c0f;--surface:#12141a;--line:#292d38;--text:#f7f8fa;--muted:#a4aab8;--accent:#2ee580}
+  body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+  main{max-width:760px;margin:0 auto;padding:32px 20px 64px}
+  h1{font-size:28px;line-height:1.2;margin:0 0 6px}
+  h2{font-size:18px;margin:32px 0 8px}
+  h3{font-size:15px;margin:20px 0 6px}
+  p,li{color:#d9dce3}
+  .muted{color:var(--muted);font-size:13px}
+  ul{padding-left:20px}
+  a{color:var(--accent)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:14px 0}
+</style>
+</head>
+<body>
+<main>
+  <h1>Privacy Policy</h1>
+  <p class="muted">Iron Six Training · Last updated September 15, 2026</p>
+
+  <p>Iron Six is a strength-training app that plans your workouts and helps you log them. This policy explains what information the app uses, why, where it is stored, and the choices you have.</p>
+
+  <div class="card">
+    <strong>In short</strong>
+    <ul>
+      <li>Your training data is stored on your device. It is copied to our database only if you create an account and sign in.</li>
+      <li>Camera analysis runs on your device. Video is never uploaded.</li>
+      <li>Health and watch data is optional, read-only, and never sold, used for advertising, or sent to our AI provider.</li>
+      <li>You can delete your data at any time.</li>
+    </ul>
+  </div>
+
+  <h2>Information the app uses</h2>
+  <h3>Profile and training information</h3>
+  <p>The name you give a profile, and optional details you enter: body weight, age, height, training level, available equipment, workout length and recovery check-ins. It also includes your workout logs (exercises, weights, reps, effort ratings, completed sessions), app settings such as accent colour, and achievements.</p>
+
+  <h3>Account information</h3>
+  <p>If you create an account, we receive your email address and a sign-in identifier from the method you choose, such as email or a supported social sign-in provider. We use it only to sign you in and keep your profiles in sync across devices.</p>
+
+  <h3>Camera (optional)</h3>
+  <p>The camera workout assistant is off unless you turn it on. When used, video frames are analysed on your device to estimate body position and count reps. Frames are not recorded or uploaded. To run this analysis, the app downloads a pose-detection model from Google's model storage and a public code CDN; those downloads do not include your images.</p>
+
+  <h3>Voice commands (optional)</h3>
+  <p>If you enable voice logging, speech is converted to text by your device's speech recognition service. On Android the app requests on-device recognition where available. In some web browsers, the browser's speech service may process audio under that provider's own privacy terms. The app keeps only the recognised text needed to fill in your workout.</p>
+
+  <h3>Coach and workout review</h3>
+  <p>When you use the Coach, or when a finished workout is reviewed to plan your next session, relevant training information is sent to our AI provider, Groq, to generate a response. That includes your message, recent workouts, the planned workout, and profile details such as training level and equipment. <strong>Health and watch data is not included.</strong></p>
+
+  <h3>Music (optional)</h3>
+  <p>If you play workout radio, the app requests music streams from public music services such as Audius and ccMixter. Links to other music services open that service.</p>
+
+  <h2>Health and smartwatch data</h2>
+  <p>You can choose to connect a heart-rate device, Health Connect on Android, Apple Health on iPhone when available, or import a workout file from your watch app. This is entirely optional.</p>
+
+  <h3>What we read</h3>
+  <ul>
+    <li>Heart rate during your workouts</li>
+    <li>Resting heart rate and heart rate variability</li>
+    <li>Sleep duration</li>
+    <li>Workouts recorded by your watch, and calories burned during them</li>
+  </ul>
+  <p>The app only <strong>reads</strong> this data. It never writes to or changes Health Connect or Apple Health.</p>
+
+  <h3>How we use it</h3>
+  <ul>
+    <li>To show your heart rate during a workout and attach a heart-rate summary to that workout.</li>
+    <li>To show sleep, resting heart rate and HRV next to your recovery check-in, compared with your own usual values. It never changes your answers.</li>
+    <li>To let you add workouts recorded by your watch to your cardio log.</li>
+  </ul>
+  <p>Health data is not used for medical diagnosis, and the app does not give medical advice.</p>
+
+  <h3>What we never do with health data</h3>
+  <ul>
+    <li>We do not sell it.</li>
+    <li>We do not use it for advertising or marketing.</li>
+    <li>We do not send it to our AI provider, and we do not use it to train AI models.</li>
+    <li>We do not share it with third parties, except the infrastructure providers below that store your synced account data on our behalf.</li>
+  </ul>
+  <p>Our use of information received from Health Connect and Apple HealthKit complies with the Health Connect Permissions policy and Apple's HealthKit guidelines, including their limited-use requirements.</p>
+
+  <h3>Your controls</h3>
+  <p>You can disconnect and delete watch data from <em>Profile menu → Watch &amp; heart rate</em>. Health Connect and Apple Health permissions can be revoked at any time in those apps' settings. Heart-rate summaries already attached to finished workouts stay with those workouts until you delete them or your profile.</p>
+
+  <h2>Where information is stored</h2>
+  <ul>
+    <li><strong>On your device:</strong> the app stores your profiles and workouts in your browser's or the app's local storage.</li>
+    <li><strong>Our database (only if you sign in):</strong> profiles, workouts and settings, including any watch summaries attached to them, sync to our database hosted by Supabase so you can use more than one device.</li>
+    <li><strong>Hosting:</strong> the website and app services are hosted by Vercel, which processes standard request information such as IP address and browser type to deliver the service.</li>
+  </ul>
+
+  <h2>Sharing</h2>
+  <p>We do not sell personal information. We share information only with the service providers named in this policy, to operate the features you use, or when required by law.</p>
+
+  <h2>Retention and deletion</h2>
+  <p>Data stays on your device until you delete it or uninstall the app. Synced data is kept while your account exists. You can delete a profile in the app; for a signed-in account this also removes that profile's synced workout records from our database. To delete your whole account, contact us using the address below.</p>
+
+  <h2>Children</h2>
+  <p>Iron Six is not directed to children under 13, and profiles cannot record an age under 13.</p>
+
+  <h2>Changes</h2>
+  <p>We will update this page when our practices change, and revise the date above.</p>
+
+  <h2>Contact</h2>
+  <p>Questions or requests: <!-- CONTACT_EMAIL: owner must add a real contact address before publishing --><strong>[contact email to be added]</strong></p>
+</main>
+</body>
+</html>

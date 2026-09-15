@@ -44,8 +44,8 @@ await cp(resolve(root, 'assets/brand'), resolve(out, 'assets/brand'), { recursiv
 
 const html = await readFile(resolve(root, 'index.html'), 'utf8');
 const scripts = [...html.matchAll(/<script src="([^"?]+)(?:\?[^" ]*)?"/g)].map(match => match[1]);
-const runtimeScripts = ['coach-recovery.js','auth-hardening.js','account-polish.js','profile-delete.js','load-progression-v2.js','bodyweight-load-fix.js','adaptive-insights.js','trainer-intelligence-v2.js','program-intelligence-v3.js','progress-analytics-v2.js','session-adaptation-v3.js','media-experience-v2.js','music-originals.js','music.js','session-resume.js','accent-theme.js','active-workout-clean.js','set-coach-feedback.js','iron-marks-engine.js','iron-marks.js','pose-person-isolation.js'];
-const files = [...new Set(['index.html','live.html','welcome.html','style.css','premium-ui.css','EXERCISE_MEDIA.md','MUSIC.md',...scripts,...runtimeScripts])];
+const runtimeScripts = ['coach-recovery.js','auth-hardening.js','account-polish.js','profile-delete.js','load-progression-v2.js','bodyweight-load-fix.js','adaptive-insights.js','trainer-intelligence-v2.js','program-intelligence-v3.js','progress-analytics-v2.js','session-adaptation-v3.js','media-experience-v2.js','music-originals.js','music.js','session-resume.js','accent-theme.js','active-workout-clean.js','set-coach-feedback.js','iron-marks-engine.js','iron-marks.js','wearable-core.js','wearables.js','pose-person-isolation.js'];
+const files = [...new Set(['index.html','live.html','welcome.html','privacy.html','style.css','premium-ui.css','EXERCISE_MEDIA.md','MUSIC.md',...scripts,...runtimeScripts])];
 for (const file of files) { if (!/^[a-zA-Z0-9_.-]+$/.test(file) || file.includes('..')) throw Error('Unexpected public file'); await cp(resolve(root,file),resolve(out,file)); }
 const checksums = {};
 for (const file of files) checksums[file] = createHash('sha256').update(await readFile(resolve(out,file))).digest('hex');

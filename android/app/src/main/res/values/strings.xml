@@ -4,4 +4,5 @@
     <string name="title_activity_main">Iron Six</string>
     <string name="package_name">com.ironsix.training</string>
     <string name="custom_url_scheme">com.ironsix.training</string>
+    <string name="health_connect_privacy_policy_url">https://iron-six-training.vercel.app/privacy</string>
 </resources>

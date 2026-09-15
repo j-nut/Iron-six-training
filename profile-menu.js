@@ -111,6 +111,7 @@
       + `<button type="button" role="menuitem" class="pm-item" data-action="add"><b>Add a profile</b></button></div>`
       + `<div class="pm-group">`
       + (window.IronSixMarks ? `<button type="button" role="menuitem" class="pm-item" data-action="marks"><b>Iron Marks</b><small>${esc(window.IronSixMarks.summary(user))}</small></button>` : '')
+      + (window.IronSixWearables ? `<button type="button" role="menuitem" class="pm-item" data-action="wearables"><b>Watch & heart rate</b><small>${esc(window.IronSixWearables.status?.(user) || '')}</small></button>` : '')
       + `<button type="button" role="menuitem" class="pm-item" data-action="equipment"><b>Manage equipment</b></button>`
       + `<button type="button" role="menuitem" class="pm-item" data-action="account"><b>${signedIn ? 'Account & backup' : 'Sign in or create account'}</b></button>`
       + (signedIn ? `<button type="button" role="menuitem" class="pm-item" data-action="sync"><b>Sync now</b></button>` : '')
@@ -130,6 +131,7 @@
       if (action === 'account') cloud()?.openAccount?.();
       if (action === 'sync') cloud()?.syncNow?.(true);
       if (action === 'marks') window.IronSixMarks?.open?.();
+      if (action === 'wearables') window.IronSixWearables?.open?.();
       if (action === 'signout') { cloud()?.openAccount?.(); $('accountSignOut')?.click(); }
       if (action === 'equipment') {
         if (typeof showView === 'function') showView('profiles');

@@ -38,7 +38,7 @@
     const logs=Array.isArray(user?.program?.cardio?.logs) ? user.program.cardio.logs : [];
     if(logs.some(x=>x.id===entry.id))return false;
     user.program=user.program || {};
-    user.program.cardio={...(user.program.cardio||{}),logs:[{id:entry.id,mode:entry.mode,minutes,intensity:entry.intensity,completed:true,completedAt:new Date(at).toISOString(),source:'manual'},...logs]};
+    user.program.cardio={...(user.program.cardio||{}),logs:[{id:entry.id,mode:entry.mode,minutes,intensity:entry.intensity,completed:true,completedAt:new Date(at).toISOString(),source:['watch','file'].includes(entry.source)?entry.source:'manual'},...logs]};
     return true;
   }
   const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };

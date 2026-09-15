@@ -36,4 +36,6 @@
   loadRuntimeScript('set-coach-feedback.js?v=1','set-coach-feedback','__ironSixSetCoachFeedbackLoaded');
   loadRuntimeScript('iron-marks-engine.js?v=1','iron-marks-engine','IronSixMarksEngine');
   loadRuntimeScript('iron-marks.js?v=1','iron-marks','__ironSixMarksLoaded');
+  loadRuntimeScript('wearable-core.js?v=1','wearable-core','IronSixWearableCore');
+  loadRuntimeScript('wearables.js?v=1','wearables','__ironSixWearablesLoaded');
 })();
