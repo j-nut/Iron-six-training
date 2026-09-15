@@ -57,7 +57,8 @@ function workoutVariantCount(key){return 3}
 function successfulExposure(h){
   if(!h||!h.details?.length)return false;
   const planned=Number(h.plannedSets)||Number(h.sets)||1, completed=Number(h.sets)||0, completion=completed/Math.max(1,planned);
-  const rirs=[];h.details.forEach(d=>(d.sets||[]).forEach(s=>{const r=Number(s.rir);if(Number.isFinite(r))rirs.push(r)}));
+  // A blank RIR means not logged. Number('') is 0, which used to read every unlogged set as a set to failure.
+  const rirs=[];h.details.forEach(d=>(d.sets||[]).forEach(s=>{if(s.rir===''||s.rir==null)return;const r=Number(s.rir);if(Number.isFinite(r))rirs.push(r)}));
   const avgRir=rirs.length?rirs.reduce((a,b)=>a+b,0)/rirs.length:2;
   return completion>=0.72 && avgRir>=0.25 && avgRir<=3.75;
 }

@@ -60,18 +60,21 @@ test('the Forge follows the program ladder: 4 successful exposures is Momentum, 
   assert.equal(mark(r,'full_apex').unlocked,true);assert(r.emblems.includes('crown'));assert(r.emblems.includes('anvil'));
 });
 
-test('Forge marks never run ahead of the app, while blank-RIR loggers still earn consistency marks',()=>{
-  // core.js reads a blank RIR as 0, so these sessions never advance a workout's level in the app.
+test('a blank RIR is not logged effort: people who skip the RIR field still earn every non-RIR mark',()=>{
   const r=engine.evaluate(user(cycles(8,{rir:''})));
-  assert.equal(mark(r,'momentum').unlocked,false,'the mark must not claim Momentum the program has not granted');
-  assert.equal(mark(r,'first_rep').unlocked,true);assert.equal(mark(r,'full_six').unlocked,true);assert.equal(r.ring.id,'bronze');
+  assert.equal(mark(r,'momentum').unlocked,true);assert.equal(mark(r,'full_apex').unlocked,true);
+  assert.equal(mark(r,'first_rep').unlocked,true);assert.equal(r.ring.id,'bronze');
+  assert.equal(mark(r,'honest_effort').unlocked,false,'Honest Effort still needs RIR logged');
+  // Genuinely logged failure on every set remains outside the effort range, as in the program.
+  assert.equal(engine.evaluate(user(cycles(4,{rir:'0'}))).stats.qualifying,0);
 });
 
-test('the Forge success rule is exactly core.js successfulExposure',()=>{
+test('the marks success rule is exactly core.js successfulExposure, which treats a blank RIR as unlogged',()=>{
   const source=fs.readFileSync('core.js','utf8'),start=source.indexOf('function successfulExposure('),end=source.indexOf('\n}',start)+2;
   const core=vm.runInNewContext(`(${source.slice(start,end)})`);
   const fixtures=[session('push_a',0),session('push_a',0,{rir:''}),session('push_a',0,{rir:'5'}),session('push_a',0,{rir:'0'}),session('push_a',0,{sets:7,planned:10}),session('push_a',0,{sets:8,planned:10}),{ts:1,details:[]},null,{ts:1,sets:3,details:[{sets:[{rir:'1'},{rir:''},{rir:'4'}]}]}];
-  for(const h of fixtures)assert.equal(engine.successful(h),core(h),JSON.stringify(h)?.slice(0,80));
+  for(const h of fixtures)assert.equal(engine.qualifies(h),core(h),JSON.stringify(h)?.slice(0,80));
+  assert.equal(core(session('push_a',0,{rir:''})),true,'unlogged RIR must not fail a complete session');
 });
 
 test('Never Skip Leg Day counts leg sessions across both programs',()=>{

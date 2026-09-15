@@ -2,9 +2,10 @@
  *
  * Nothing here is a stored counter. Every mark is recomputed from the profile's history, so marks
  * survive sync, restore and reinstall, and a duplicated or replayed session cannot inflate them.
- * A session only counts if it passes the same successful-exposure test the program uses to move
- * a workout from Foundation to Momentum to Apex, so logging one set and pressing Finish earns
- * nothing. Consistency is counted in totals, never in streaks: missing a day never costs a mark.
+ * A session only counts if it passes the program's successful-exposure test (core.js
+ * successfulExposure): most planned sets done at a sensible average effort, with a blank RIR
+ * treated as not logged. Logging one set and pressing Finish earns nothing. Consistency is
+ * counted in totals, never in streaks: missing a day never costs a mark.
  *
  * Pure logic: no DOM, storage or network. Loaded in the browser and required by Node tests.
  */
@@ -28,20 +29,15 @@
     kettlebell:'Kettlebell', compass:'Compass', sunrise:'Sunrise', gauge:'Gauge', sixsix:'Sixty-Six'
   };
 
-  function exposureTest(h, blankIsUnlogged) {
+  // Same rule as core.js successfulExposure (a parity test holds them together).
+  function qualifies(h) {
     if (!h || !Array.isArray(h.details) || !h.details.length) return false;
     const planned = Number(h.plannedSets) || Number(h.sets) || 1, completed = Number(h.sets) || 0, completion = completed / Math.max(1, planned);
     const rirs = [];
-    h.details.forEach(d => (d.sets || []).forEach(s => { const r = Number(s.rir); if (blankIsUnlogged && (s.rir === '' || s.rir == null)) return; if (Number.isFinite(r)) rirs.push(r); }));
+    h.details.forEach(d => (d.sets || []).forEach(s => { if (s.rir === '' || s.rir == null) return; const r = Number(s.rir); if (Number.isFinite(r)) rirs.push(r); }));
     const avgRir = rirs.length ? rirs.reduce((a, b) => a + b, 0) / rirs.length : 2;
     return completion >= 0.72 && avgRir >= 0.25 && avgRir <= 3.75;
   }
-  // Exactly core.js successfulExposure, including its reading of a blank RIR as 0. The Forge marks
-  // mirror the program's Foundation -> Momentum -> Apex ladder, so they must never run ahead of it.
-  const successful = h => exposureTest(h, false);
-  // Everything else counts a session on the same completion and effort thresholds, but treats a
-  // blank RIR as "not logged" so people who skip the RIR field can still earn consistency marks.
-  const qualifies = h => exposureTest(h, true);
 
   function sessionsOf(user) {
     const seen = new Set(), out = [];
@@ -62,12 +58,14 @@
   function weekKey(ts) { const d = new Date(ts); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d.getTime(); }
   const count = (list, key) => list.filter(h => h.workoutKey === key).length;
   const minOver = (list, keys) => Math.min(...keys.map(k => count(list, k)));
-  // Workout level uses the program's own ladder: 4 successful exposures -> Momentum, 8 -> Apex.
+  // Forge levels: 4 successful sessions of a workout -> Momentum, 8 -> Apex. The current program
+  // cycles its Foundation/Momentum/Apex blocks every 4 finished sessions; marks require successful
+  // ones, so a mark can trail the app's block label but never claim more than was trained.
   const level = n => n >= 8 ? 3 : n >= 4 ? 2 : 1;
 
   // Every mark reads one stats snapshot. value is progress toward target; unlocked when value >= target.
   function stats(sessions) {
-    const good = sessions.filter(qualifies), forged = sessions.filter(successful);
+    const good = sessions.filter(qualifies), forged = good;
     const perKey = Object.fromEntries(ROTATION.map(k => [k, count(good, k)]));
     const levels = ROTATION.map(k => level(count(forged, k)));
     let orderedRun = 0, bestRun = 0, prevKey = null, runKeys = new Set();
@@ -163,7 +161,7 @@
     return {ring:result.ring, emblem:chosen && result.emblems.includes(chosen) ? chosen : null};
   }
 
-  const api = {ROTATION, RINGS, EMBLEMS, MARKS, GROUPS, qualifies, successful, evaluate, avatarFor};
+  const api = {ROTATION, RINGS, EMBLEMS, MARKS, GROUPS, qualifies, evaluate, avatarFor};
   if (typeof window !== 'undefined') window.IronSixMarksEngine = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })();
