@@ -87,10 +87,10 @@ The data flows in this order:
 ## Workstreams (in progress)
 | Owner | Files | Status |
 |---|---|---|
-| Agent A (core) | `wearable-core.js`, `tests/wearable-core.test.js` | in progress |
+| Agent A (core) | `wearable-core.js`, `tests/wearable-core.test.js` | **done** (interrupted by a usage limit after finishing the code + 55 tests) |
 | Agent B (native) | `package.json/lock`, `android/**`, `native/**`, `capacitor.config.json`, `tests/native-wearables.test.js` | **done, uncommitted; awaiting review** |
-| Agent C (UI) | `wearables.js`, `tests/wearables.test.js`, small edits: `profile-menu.js`, `ui3.js` (trainer review keeps `trainerMemory.wearables`), `cloud-history-sync.js`, `scripts/build-web.mjs`, `scripts/build-android-web.mjs`, `cardio-companion.js` (accept source 'watch'/'file'), `history-explorer.js` | in progress |
-| Claude | review, integration, `privacy.html`, this document | in progress |
+| Agent C (UI) | **done except tests, which Claude wrote** — `wearables.js`, `tests/wearables.test.js`, small edits: `profile-menu.js`, `ui3.js` (trainer review keeps `trainerMemory.wearables`), `cloud-history-sync.js`, `scripts/build-web.mjs`, `scripts/build-android-web.mjs`, `cardio-companion.js` (accept source 'watch'/'file'), `history-explorer.js` | in progress |
+| Claude | review, integration, `tests/wearables.test.js`, `privacy.html`, this document | **done for this phase** |
 
 ## Constraints (from earlier incidents; must keep)
 - No MutationObserver or per-frame work on the workout screen: an observer froze real phones.
@@ -140,7 +140,21 @@ The data flows in this order:
   - iOS hides read denials, so treat empty results as "no data or not allowed".
   - Make the Android-worded unavailable messages platform-neutral.
 
+## Verified so far
+- **Tests: 478 pass** (407 before this feature + 55 core + 6 native + 10 UI). Both builds ship
+  `wearable-core.js`, `wearables.js` and `privacy.html`.
+- **Live browser run at 375x812** with a fake Bluetooth sensor: connect works, the chip appears in the
+  workout nav (and only while that nav is visible), finishing a workout attaches
+  `startedAt` + `wearable` (avg/max/count/coverage/series/sets), the History tab shows
+  "Heart rate avg 141 · max 145 bpm · Polar H10", and a finished session stays ~2 KB.
+- **Not verified:** Gradle/Android compile (CI only), real Health Connect data, real Bluetooth
+  hardware, Apple Health.
+
 ## Progress log
+- 2026-09-15: Both remaining agents were cut off by a usage limit; their files were complete and
+  syntactically valid. Claude wrote the missing UI test file, replaced an implicit consent side
+  effect on file import with an explicit `fileImport` consent, added `privacy.html` to the web build,
+  and verified the whole flow in a browser.
 - 2026-09-15: Agent B (native) finished. 413 tests pass locally; the Android web bundle builds;
   Gradle is untested.
 - 2026-09-15: Drafted `privacy.html`. The privacy audit found the review-workout payload would leak

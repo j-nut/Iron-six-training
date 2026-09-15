@@ -53,6 +53,8 @@
     ]));
     return out.map(row=>row.map(cell).join(',')).join('\r\n');
   }
+  // Heart rate from a watch, when the Watch & heart rate runtime has it for this session. Display only.
+  const heartRate = h => { try { const line = window.IronSixWearables?.historyLine?.(h); return line ? '<span class="history-hr">'+esc(line)+'</span>' : ''; } catch (_) { return ''; } };
   let owner = '', options = {query:'',days:'',mode:'',exercise:''}, limit = 20;
   function style() {
     if (document.getElementById('historyExplorerStyle')) return;
@@ -106,7 +108,7 @@
     host.innerHTML=list.slice(0,limit).map(h=>{
       const keyValue=key(h),actual=number(h.elapsedMinutes),planned=number(h.duration);
       const time=actual>0?actual+' min recorded':planned>0?planned+' min planned':'';
-      return '<details class="history-session" data-history-key="'+esc(keyValue)+'" '+(opened.has(keyValue)?'open':'')+'><summary><strong>'+esc(h.name||'Workout')+'</strong><span>'+esc(date(h))+' · '+count(h)+(number(h.plannedSets)>0?' / '+Number(h.plannedSets):'')+' sets'+(time?' · '+time:'')+' · '+esc(h.trainingMode||'traditional')+'</span></summary>'+
+      return '<details class="history-session" data-history-key="'+esc(keyValue)+'" '+(opened.has(keyValue)?'open':'')+'><summary><strong>'+esc(h.name||'Workout')+'</strong><span>'+esc(date(h))+' · '+count(h)+(number(h.plannedSets)>0?' / '+Number(h.plannedSets):'')+' sets'+(time?' · '+time:'')+' · '+esc(h.trainingMode||'traditional')+'</span>'+heartRate(h)+'</summary>'+
         (details(h).map(e=>{
           const earlier=exerciseSessions(user,e.name).find(t=>stamp(t.session)>0&&stamp(t.session)<stamp(h));
           return '<div class="history-exercise"><h3>'+esc(e.name)+'</h3><button type="button" class="btn secondary" data-history-exercise="'+esc(e.name)+'">View exercise progress</button>'+
