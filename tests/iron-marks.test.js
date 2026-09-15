@@ -296,3 +296,21 @@ test('new progress marks celebrate once with evidence, and goals hide during log
     assert.equal(a.w.document.querySelector('#ironMarksGoal').hidden,true);
   }finally{a.close()}
 });
+
+// Saves fire on every set input during a workout. They must not re-run the whole achievement engine
+// (the avatar repaints every 1.5 s and would redo it each time), while real history edits still refresh.
+test('logging sets mid-workout does not recompute achievements; a history change does',()=>{
+  const a=app();try{
+    a.setHistory(cycles(6));
+    a.run("window.__evals=0;const base=IronSixMarksEngine.evaluate;IronSixMarksEngine.evaluate=function(){window.__evals++;return base.apply(this,arguments)}");
+    a.run('IronSixMarks.evaluate();IronSixProfileMenu.render()');const settled=a.json('window.__evals');
+    for(let i=0;i<20;i++)a.run(`activeUser().today['0-${i%3}']={weight:'100',reps:'${8+i%3}',rir:'2',done:${i%2===0}};saveData();IronSixProfileMenu.render();IronSixMarks.renderGoal();IronSixMarks.check()`);
+    assert.equal(a.json('window.__evals'),settled,'draft-only saves and repaints reuse the cached result');
+    a.run("activeUser().history[0].details[0].sets[0].reps='12';saveData();IronSixMarks.evaluate()");
+    assert.equal(a.json('window.__evals'),settled,'mid-workout, even the fingerprint check waits for the workout to end');
+    a.run("activeUser().today={};IronSixMarks.evaluate()");
+    assert.equal(a.json('window.__evals'),settled+1,'an in-place history correction is picked up after save');
+    a.run("activeUser().history.unshift({...activeUser().history[0],ts:Date.now(),sessionId:'new'});IronSixMarks.evaluate()");
+    assert.equal(a.json('window.__evals'),settled+2,'a newly finished session is picked up even before a save');
+  }finally{a.close()}
+});

@@ -42,15 +42,38 @@
   };
   const markIcon = mark => icon(mark.emblem || mark.evolvedEmblem || (mark.ring ? 'ring' : 'medal'), 40, mark.detail || 1);
 
-  let cache = {sig:null, result:null};
-  const signature = u => {
+  // Results are cached against a fingerprint of everything in finished history that a mark reads.
+  // Saves happen on every set input during a workout, but those only touch today's draft. Rebuilding
+  // all achievements on each of them made the 1.5 s avatar repaint re-run the whole engine while
+  // someone was logging sets — periodic main-thread work of the kind that froze phones before.
+  // The fingerprint pass itself is only taken after a save or when the cheap shape of history
+  // (profile, length, endpoint timestamps, array identity) changes; idle polls cost nothing.
+  let cache = {fp:null, sig:null, history:null, result:null}, dirty = true;
+  const HASH_MOD = 2147483647;
+  const mix = (x, value) => { const str = String(value ?? ''); for (let i = 0; i < str.length; i++) x = (x * 31 + str.charCodeAt(i)) % HASH_MOD; return (x * 31 + 7) % HASH_MOD; };
+  function fingerprint(u) {
     const h = Array.isArray(u?.history) ? u.history : [];
-    return u ? `${u.id}|${h.length}|${h[0]?.ts || 0}|${h[h.length - 1]?.ts || 0}` : '';
-  };
+    let x = mix(17, u?.id);
+    for (const s of h) {
+      x = mix(x, s?.sessionId || s?.ts); x = mix(x, s?.workoutKey); x = mix(x, s?.sets); x = mix(x, s?.plannedSets); x = mix(x, s?.trainingMode);
+      x = mix(x, s?.readiness?.energy); x = mix(x, s?.readiness?.soreness); x = mix(x, s?.unit);
+      for (const d of s?.details || []) {
+        x = mix(x, d?.name); x = mix(x, d?.base); x = mix(x, d?.seedKey); x = mix(x, d?.unit);
+        for (const set of d?.sets || []) { x = mix(x, set?.weight); x = mix(x, set?.reps); x = mix(x, set?.rir); x = mix(x, set?.done); x = mix(x, set?.unit); }
+      }
+    }
+    return `${u?.id}|${h.length}|${x}`;
+  }
+  const signature = u => { const h = Array.isArray(u?.history) ? u.history : []; return `${u?.id}|${h.length}|${h[0]?.ts || 0}|${h[h.length - 1]?.ts || 0}`; };
   function evaluate(u = currentUser()) {
     if (!u) return null;
     const sig = signature(u);
-    if (sig !== cache.sig || cache.history !== u.history) cache = {sig, history:u.history, result:engine.evaluate(u)};
+    // Mid-workout saves only touch today's draft; defer the fingerprint until the workout ends.
+    if (cache.result && sig === cache.sig && cache.history === u.history && (!dirty || midWorkout(u))) return cache.result;
+    dirty = false;
+    const fp = fingerprint(u);
+    if (fp !== cache.fp || !cache.result) cache = {fp, sig, history:u.history, result:engine.evaluate(u)};
+    else { cache.sig = sig; cache.history = u.history; }
     return cache.result;
   }
 
@@ -311,10 +334,11 @@
   injectStyles();
   setInterval(() => { try { check(); renderGoal(); } catch (error) { console.error('[Iron Six] marks check failed', error); } }, 1500);
   addEventListener('load', () => window.IronSixProfileMenu?.render?.());
-  window.IronSixMarks = {open, check, wear, summary, evaluate, decorateAvatar, readState, customize, renderGoal};
-  // History edits/restore may keep identical endpoint timestamps; saves invalidate analytics.
+  window.IronSixMarks = {open, check, wear, summary, evaluate, decorateAvatar, readState, customize, renderGoal, fingerprint};
+  // A save may have corrected history in place (same length and timestamps), so it re-checks the
+  // fingerprint once; saves that only touched today's draft leave the fingerprint, and results, alone.
   const baseSave=window.saveData;
-  if(typeof baseSave==='function')window.saveData=function(){cache.sig=null;return baseSave.apply(this,arguments);};
+  if(typeof baseSave==='function')window.saveData=function(){dirty=true;return baseSave.apply(this,arguments);};
   const baseRender=window.renderAll;
   if(typeof baseRender==='function')window.renderAll=function(){const result=baseRender.apply(this,arguments);renderGoal();return result;};
   window.IronSixProfileMenu?.render?.();
