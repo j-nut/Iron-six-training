@@ -272,3 +272,27 @@ test('saved history corrections invalidate analytics even when timestamps and le
     assert.equal(a.json('IronSixMarks.evaluate().depth.improvements.length'),0);
   }finally{a.close()}
 });
+
+test('customization before the first upgrade check also migrates retroactive rewards silently',()=>{
+  const a=app();try{
+    const now=Date.now();a.setHistory(cycles(4).map((h,i)=>({...h,ts:now-(24-i)*60000})));
+    a.run("activeUser().trainerMemory.achievements={introduced:true,version:1,emblem:'hex',seen:['first_rep']}");
+    a.run("IronSixMarks.customize('ring','none')");assert.equal(a.json('IronSixMarks.check()'),null);assert.equal(a.w.document.getElementById('ironMarksEarned'),null);
+  }finally{a.close()}
+});
+test('malformed synced detail preferences fall back to an earned level',()=>{
+  const u=user(cycles(3));u.trainerMemory={achievements:{emblem:'hex',detail:'2.5'}};assert.equal(engine.avatarFor(u).detail,2);
+});
+test('new progress marks celebrate once with evidence, and goals hide during logged workouts',()=>{
+  const a=app();try{
+    const h=repHistory([8,9,9]),now=Date.now();h.forEach((s,i)=>s.ts=now-(3-i)*2*DAY);h[2].ts=now-60000;
+    a.setHistory(h.slice(0,2));a.run('IronSixMarks.check()');a.setHistory(h);
+    const out=a.json('IronSixMarks.check()');assert(out.celebrated.includes('progress_confirmed_1'));
+    assert.match(a.w.document.querySelector('#ironMarksEarned').textContent,/8 → 9 reps at 40 lb, RIR 2/);
+    a.w.document.querySelector('#ironMarksEarned [data-done]').click();assert.equal(a.json('IronSixMarks.check()'),null);
+    a.run("const host=document.createElement('div');host.id='sessionStart';document.body.append(host);IronSixMarks.renderGoal()");
+    assert.equal(a.w.document.querySelector('#ironMarksGoal').hidden,false);
+    a.run("activeUser().today={'0-0':{weight:'40',reps:'8',done:true}};IronSixMarks.renderGoal()");
+    assert.equal(a.w.document.querySelector('#ironMarksGoal').hidden,true);
+  }finally{a.close()}
+});

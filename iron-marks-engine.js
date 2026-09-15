@@ -298,7 +298,7 @@
     const ring=state.ring==='none'?null:requested&&result.stats.rotations>=requested.rotations?requested:result.ring;
     const emblem=chosen&&result.emblems.includes(chosen)?chosen:null;
     const earnedLevel=emblem?result.evolutions[emblem].level:0;
-    const selectedLevel=Number(state.detail)||earnedLevel;
+    const selectedLevel=['1','2','3'].includes(String(state.detail))?Number(state.detail):earnedLevel;
     const detail=Math.min(earnedLevel,Math.max(1,selectedLevel));
     const title=result.titles.find(t=>t.id===state.title&&t.unlocked)?.label;
     return {ring,emblem,detail:emblem?detail:0,title:state.title==='none'?null:title||null};
