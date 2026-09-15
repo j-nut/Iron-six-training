@@ -34,4 +34,6 @@
   loadRuntimeScript('accent-theme.js?v=1','accent-theme','__ironSixAccentThemeLoaded');
   loadRuntimeScript('active-workout-clean.js?v=1','active-workout-clean','__ironSixActiveWorkoutCleanLoaded');
   loadRuntimeScript('set-coach-feedback.js?v=1','set-coach-feedback','__ironSixSetCoachFeedbackLoaded');
+  loadRuntimeScript('iron-marks-engine.js?v=1','iron-marks-engine','IronSixMarksEngine');
+  loadRuntimeScript('iron-marks.js?v=1','iron-marks','__ironSixMarksLoaded');
 })();

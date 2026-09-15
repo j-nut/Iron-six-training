@@ -31,6 +31,8 @@ const sharedRuntimeScripts=[
   'accent-theme.js',
   'active-workout-clean.js',
   'set-coach-feedback.js',
+  'iron-marks-engine.js',
+  'iron-marks.js',
   'pose-person-isolation.js'
 ];
 const androidRuntimeScripts=['pose-form-coach.js','workout-voice.js'];
