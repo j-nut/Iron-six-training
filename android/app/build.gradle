@@ -1,5 +1,24 @@
 apply plugin: 'com.android.application'
 
+// Release signing. Android only installs an update over an app signed with the SAME key, so every
+// build that users install must use one stable key; otherwise they have to uninstall first and lose
+// anything stored only on the device. The key never lives in this repository: provide it as
+// android/keystore.properties (git-ignored) locally, or as IRONSIX_KEYSTORE_* environment variables,
+// which is what the release workflow does from repository secrets.
+def ironSixKeystoreProps = new Properties()
+def ironSixKeystoreFile = rootProject.file('keystore.properties')
+if (ironSixKeystoreFile.exists()) ironSixKeystoreFile.withInputStream { ironSixKeystoreProps.load(it) }
+def ironSixStorePath = System.getenv('IRONSIX_KEYSTORE_PATH') ?: ironSixKeystoreProps.getProperty('storeFile')
+def ironSixStorePassword = System.getenv('IRONSIX_KEYSTORE_PASSWORD') ?: ironSixKeystoreProps.getProperty('storePassword')
+def ironSixKeyAlias = System.getenv('IRONSIX_KEY_ALIAS') ?: ironSixKeystoreProps.getProperty('keyAlias')
+def ironSixKeyPassword = System.getenv('IRONSIX_KEY_PASSWORD') ?: ironSixKeystoreProps.getProperty('keyPassword')
+def ironSixStoreResolved = ironSixStorePath ? (new File(ironSixStorePath).isAbsolute() ? new File(ironSixStorePath) : rootProject.file(ironSixStorePath)) : null
+def ironSixSigningReady = ironSixStoreResolved != null && ironSixStoreResolved.exists() && ironSixStorePassword && ironSixKeyAlias && ironSixKeyPassword
+// Every published build needs a higher version code than the one before it, or Android treats it as
+// a downgrade and refuses to install. The release workflow passes a run-based number.
+def ironSixVersionCode = (System.getenv('IRONSIX_VERSION_CODE') ?: project.findProperty('ironSixVersionCode') ?: '5') as int
+def ironSixVersionName = System.getenv('IRONSIX_VERSION_NAME') ?: project.findProperty('ironSixVersionName') ?: '1.3.0-beta1'
+
 android {
     namespace = "com.ironsix.training"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +26,8 @@ android {
         applicationId "com.ironsix.training"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 5
-        versionName "1.3.0-beta1"
+        versionCode ironSixVersionCode
+        versionName ironSixVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +35,22 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (ironSixSigningReady) {
+            release {
+                storeFile ironSixStoreResolved
+                storePassword ironSixStorePassword
+                keyAlias ironSixKeyAlias
+                keyPassword ironSixKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // Without a configured key this stays an unsigned release build, exactly as before.
+            if (ironSixSigningReady) signingConfig signingConfigs.release
         }
     }
 }
