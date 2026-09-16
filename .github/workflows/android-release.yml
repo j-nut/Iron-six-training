@@ -49,7 +49,8 @@ jobs:
           test -s "$RUNNER_TEMP/ironsix-release.jks"
       - name: Choose the version name
         run: |
-          NAME="${{ inputs.version_name }}"
+          # github.event.inputs (not inputs) so the file also validates for tag pushes.
+          NAME="${{ github.event.inputs.version_name }}"
           if [ -z "$NAME" ] && [ "${{ github.ref_type }}" = "tag" ]; then NAME="${GITHUB_REF_NAME#v}"; fi
           echo "IRONSIX_VERSION_NAME=$NAME" >> "$GITHUB_ENV"
       - name: Build signed APK and bundle
