@@ -47,12 +47,15 @@ jobs:
           fi
           printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/ironsix-release.jks"
           test -s "$RUNNER_TEMP/ironsix-release.jks"
-      - name: Choose the version name
+      - name: Choose the version name and code
         run: |
-          # github.event.inputs (not inputs) so the file also validates for tag pushes.
+          # github.event.inputs (not inputs) so the file also validates for tag pushes, and the
+          # arithmetic happens here: GitHub expressions have no + operator.
           NAME="${{ github.event.inputs.version_name }}"
           if [ -z "$NAME" ] && [ "${{ github.ref_type }}" = "tag" ]; then NAME="${GITHUB_REF_NAME#v}"; fi
           echo "IRONSIX_VERSION_NAME=$NAME" >> "$GITHUB_ENV"
+          # Always higher than the last build, which Android requires to install an update.
+          echo "IRONSIX_VERSION_CODE=$((1000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
       - name: Build signed APK and bundle
         working-directory: android
         env:
@@ -60,8 +63,6 @@ jobs:
           IRONSIX_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           IRONSIX_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           IRONSIX_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          # Always higher than the last build, which Android requires for an update.
-          IRONSIX_VERSION_CODE: ${{ 1000 + github.run_number }}
         run: |
           export JAVA_HOME="$JAVA_HOME_21_X64"
           export PATH="$JAVA_HOME/bin:$PATH"

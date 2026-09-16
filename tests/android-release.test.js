@@ -21,7 +21,9 @@ for (const secret of ['ANDROID_KEYSTORE_BASE64', 'ANDROID_KEYSTORE_PASSWORD', 'A
 assert(workflow.includes('assembleRelease') && workflow.includes('bundleRelease'), 'release workflow builds APK and AAB');
 assert(workflow.includes('apksigner') && workflow.includes('--print-certs'), 'the signature and its fingerprint are verified');
 assert(/CN=Android Debug/.test(workflow), 'a debug-signed release must fail the build');
-assert(/IRONSIX_VERSION_CODE: \$\{\{ 1000 \+ github\.run_number \}\}/.test(workflow), 'version code must always increase');
+// GitHub expressions have no arithmetic, so the version code is computed in the shell.
+assert(workflow.includes('IRONSIX_VERSION_CODE=$((1000 + GITHUB_RUN_NUMBER))'), 'version code must always increase');
+assert(!/\$\{\{[^}]*[0-9]\s*\+/.test(workflow), 'no arithmetic inside a GitHub expression');
 assert(workflow.includes('npm test'), 'a release runs the test suite first');
 
 const docs = fs.readFileSync('ANDROID.md', 'utf8');
