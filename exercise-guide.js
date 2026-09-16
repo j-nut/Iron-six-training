@@ -224,19 +224,12 @@
     const exercise=workout[Number(index)];
     if(!exercise)return;
     window.__ironSixSelectedExercise={...exercise,index:Number(index)};
-    const prompt=`Teach me how to do ${exercise.name}. Explain setup, execution, form cues, common mistakes, and give me a video demonstration.`;
     if(typeof showView==='function')showView('coach');
-    const submit=()=>{
-      const input=document.getElementById('coachInput'),form=document.getElementById('coachForm');
-      if(!input||!form)return false;
-      input.value=prompt;
-      // Asked on the user's behalf, so do not steal focus and open the keyboard.
-      window.__ironSixAutoAsk=true;
-      form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
-      return true;
-    };
-    if(!submit()){
-      let tries=0;const timer=setInterval(()=>{tries++;if(submit()||tries>30)clearInterval(timer)},100);
+    // Local guide, no request: the card is complete on arrival, so the view never jumps a second
+    // time and the model is not asked to repeat what is already on screen.
+    const deliver=()=>window.IronSixCoach?.showExerciseGuide?.(exercise)===true;
+    if(!deliver()){
+      let tries=0;const timer=setInterval(()=>{tries++;if(deliver()||tries>30)clearInterval(timer)},100);
     }
   }
 

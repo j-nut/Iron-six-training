@@ -117,7 +117,10 @@ assert(superset.includes(curl)&&superset.includes(pushUp),'each half of a supers
 
 assert(window.IronSixMediaView.gallery({name:'Tempo Push-Up'}).includes('prescribed pause or tempo'));
 assert(!window.IronSixMediaView.gallery({name:'<img src=x onerror=alert(1)>'}).includes('<img src=x'));
-const img=window.IronSixVisualDebug.renderPanel({name:'Push-Up'}).querySelector('img');
+// The card is built detached and placed by the coach, so attach it before testing the broken-image path.
+const brokenCard=window.IronSixVisualDebug.renderPanel({name:'Push-Up'});
+window.document.body.appendChild(brokenCard);
+const img=brokenCard.querySelector('img');
 img.dispatchEvent(new window.Event('error'));
 assert(window.document.querySelector('.media-load-error'));
 dom.window.close();

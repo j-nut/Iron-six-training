@@ -15,7 +15,12 @@ for (const page of ['index.html','live.html']) {
 }
 const ui=fs.readFileSync('ui3.js','utf8');assert(!ui.includes('loadIronSixScript'));assert(ui.includes('function chooseWorkout(key)'));assert(ui.includes('u.program.currentWorkoutKey=key'));assert(ui.includes('u.today={}'));assert(ui.includes('Finish all sets of one exercise before moving to the next'));
 const visuals=fs.readFileSync('exercise-visuals.js','utf8'),guide=fs.readFileSync('exercise-guide.js','utf8'),coach=fs.readFileSync('coach.js','utf8');
-assert(visuals.includes('window.__ironSixGuideFocus=true'));assert(!visuals.includes("key==='hinge'||key==='row'||key==='rear_delt'||key==='lat_iso'"));assert(guide.indexOf("b==='arms'")<guide.indexOf("b==='curl'"));assert(coach.includes("guide.scrollIntoView({behavior:'smooth',block:'start'})"));
+// Tapping an exercise name delivers the movement card into the chat itself: one scroll, to the
+// bottom, with no model request restating what the card already shows.
+assert(visuals.includes('window.IronSixExerciseCard={build:renderPanel}'));
+assert(!/__ironSixGuideFocus/.test(visuals)&&!/__ironSixGuideFocus/.test(coach),'no panel-focus scrolling remains');
+assert(coach.includes('function showExerciseGuide'));
+assert(fs.readFileSync('exercise-guide.js','utf8').includes("window.IronSixCoach?.showExerciseGuide"));assert(!visuals.includes("key==='hinge'||key==='row'||key==='rear_delt'||key==='lat_iso'"));assert(guide.indexOf("b==='arms'")<guide.indexOf("b==='curl'"));assert(coach.includes("chat.lastElementChild?.scrollIntoView({behavior:'smooth',block:'end'})"),'the chat scrolls to its newest message, nowhere else');
 for(const page of ['index.html','live.html']){const html=fs.readFileSync(page,'utf8');assert(html.indexOf('session-planner.js')>html.indexOf('engine.js'));assert(html.indexOf('workout-store.js')<html.indexOf('ui2.js'));assert(html.indexOf('circuit-player.js')>html.indexOf('ui3.js'))}
 const runtimes=['coach-recovery.js','auth-hardening.js','adaptive-insights.js','trainer-intelligence-v2.js','progress-analytics-v2.js','session-adaptation-v3.js','media-experience-v2.js','music-originals.js','music.js','session-resume.js'];
 const cloudHistory=fs.readFileSync('cloud-history-sync.js','utf8');for(const runtime of runtimes)assert(cloudHistory.includes(runtime),`runtime loader must request ${runtime}`);
