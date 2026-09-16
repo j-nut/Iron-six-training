@@ -167,13 +167,17 @@
     if(!arr.length){chat.innerHTML='<div class="coach-msg assistant">I can see today’s workout and your profile. Ask me to explain a suggested weight, swap an exercise, build warm-up sets, check your progress, or find a demo video.</div>';return;}
     chat.innerHTML='';
     arr.slice(-20).forEach(m=>chat.appendChild(renderMessage(m)));
-    const guide=document.getElementById('exerciseGuidePanel');
-    if(window.__ironSixGuideFocus&&guide)guide.scrollIntoView({behavior:'smooth',block:'start'});
-    else chat.lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'});
+    // One destination, always the newest message. Tapping an exercise used to land on a panel above
+    // the chat and then jump to the bottom when a reply arrived.
+    chat.lastElementChild?.scrollIntoView({behavior:'smooth',block:'end'});
   }
 
   function renderMessage(m){
-    const box=document.createElement('div');box.className=`coach-msg ${m.role==='user'?'user':'assistant'}`;
+    const box=document.createElement('div');box.className=`coach-msg ${m.role==='user'?'user':'assistant'}${m.kind==='guide'?' guide':''}`;
+    // The movement guide carries its own diagram, so the card is complete without asking the model.
+    if(m.kind==='guide'&&m.exercise){
+      try{const card=window.IronSixExerciseCard?.build?.(m.exercise);if(card){card.classList.add('coach-guide-media');box.appendChild(card)}}catch(_){}
+    }
     (m.videos||[]).forEach(v=>box.appendChild(renderVideo(v)));
     const text=document.createElement('div');text.textContent=m.text||'';box.appendChild(text);
     (m.actions||[]).forEach(a=>{const wrap=document.createElement('div');wrap.className='coach-action';const p=document.createElement('p');p.textContent=a.reason||actionLabel(a);const btn=document.createElement('button');btn.type='button';btn.className='btn secondary';btn.textContent=`Apply: ${actionLabel(a)}`;btn.addEventListener('click',()=>applyAction(a,btn));wrap.append(p,btn);box.appendChild(wrap)});
@@ -209,7 +213,7 @@
       if(!contentType.includes('application/json'))throw new Error('Coach returned an invalid response');
       const out=await r.json();if(!r.ok)throw new Error(out.error||'Coach request failed');
       arr.push({role:'assistant',text:out.reply||'No response.',actions:out.actions||[],videos:out.videos||[],followUps:out.followUps||[],model:out.model,ts:Date.now()});uTrim(arr);saveData();renderMessages();
-      if(window.__ironSixGuideFocus){requestAnimationFrame(()=>document.getElementById('exerciseGuidePanel')?.scrollIntoView({behavior:'smooth',block:'start'}));window.__ironSixGuideFocus=false}
+
       if(out.followUps?.length)renderFollowUps(out.followUps);
       status.textContent='';
     }catch(err){arr.push({role:'assistant',text:`Coach is unavailable: ${err.message}. Please try again.`,ts:Date.now()});uTrim(arr);saveData();renderMessages();status.textContent='';}
@@ -217,6 +221,29 @@
   }
 
   function uTrim(arr){while(arr.length>30)arr.shift()}
+
+  // Tapping an exercise name shows everything the app already knows locally: diagram, setup, steps,
+  // cues, mistakes and a demo link. No request is sent, so nothing arrives late to move the screen,
+  // and the coach only offers to answer what the card does not cover.
+  function showExerciseGuide(exercise){
+    const api=window.IronSixExerciseGuide;
+    if(!api||!exercise||!document.getElementById('coachChat')||typeof activeUser!=='function')return false;
+    const guide=api.guideFor(exercise),arr=messages();
+    const info={name:exercise.name,prescription:exercise.prescription||'',base:exercise.base||null,seedKey:exercise.seedKey||null};
+    const message={role:'assistant',kind:'guide',exercise:info,
+      text:`${api.format(exercise)}
+
+Anything else you want to know about ${guide.name}? Ask about load, warm-up sets, swaps or joint-friendly options.`,
+      videos:[{title:`Find a clear ${guide.name} video demonstration`,url:guide.videoUrl,source:'YouTube'}],
+      followUps:[`What weight should I use for ${guide.name}?`,`How many warm-up sets for ${guide.name}?`,`Can you swap ${guide.name} for something easier on my joints?`],
+      model:'Iron Six movement guide',ts:Date.now()};
+    const last=arr[arr.length-1];
+    // Reopening the same movement refreshes its card instead of stacking copies.
+    if(last&&last.kind==='guide'&&last.exercise?.name===info.name)arr[arr.length-1]=message;else arr.push(message);
+    uTrim(arr);saveData();renderMessages();renderFollowUps(message.followUps);
+    return true;
+  }
+  window.IronSixCoach={showExerciseGuide,renderMessages};
   function renderFollowUps(items){const quick=document.getElementById('coachQuick');quick.innerHTML='';items.slice(0,3).forEach(text=>{const b=document.createElement('button');b.type='button';b.className='coach-chip';b.textContent=text;b.addEventListener('click',()=>askCoach(text));quick.appendChild(b)})}
 
   document.getElementById('coachForm').addEventListener('submit',e=>{e.preventDefault();askCoach()});
