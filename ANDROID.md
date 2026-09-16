@@ -77,6 +77,14 @@ Uploading the `.aab` to an internal testing track lets testers install from Play
 
 The existing install was signed with a different key (a debug APK, or a key created before this setup). It must be uninstalled once. **Before doing that, sign in and sync, or export a backup** — profiles and workouts live only on the device otherwise. After that first install of a signed release, future releases update in place.
 
+## API host
+
+The app calls the public production domain `https://iron-six-training.vercel.app` for `/api/*`
+(`native/runtime.mjs` `API_ORIGIN`). Do not point it at a project-scoped host such as
+`iron-six-training-<team>.vercel.app`: those are covered by Vercel deployment protection, which
+answers with an SSO redirect or 401, and the Coach, equipment generation, load recalculation, the
+post-workout review and sign-in status then fail inside the app while the website keeps working.
+
 ## Sign-in setup
 
 Email/password sign-in uses the same Supabase accounts as the website. The app uses PKCE and opens social sign-in in the system browser. It accepts authorization codes only at this exact callback:

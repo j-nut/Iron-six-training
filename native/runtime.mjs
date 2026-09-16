@@ -1,4 +1,7 @@
-export const API_ORIGIN='https://iron-six-training-jordman55-3386s-projects.vercel.app';
+// The canonical public domain. The project-scoped *-jordman55-3386s-projects.vercel.app host sits
+// behind Vercel deployment protection, which answers app requests with an SSO redirect or 401 and
+// silently breaks Coach, equipment generation, recalculation, the workout review and sign-in status.
+export const API_ORIGIN='https://iron-six-training.vercel.app';
 export const AUTH_REDIRECT='com.ironsix.training://auth/callback';
 const API_PATHS=new Set(['/api/config','/api/coach','/api/equipment-exercises','/api/recalculate','/api/review-workout','/api/auth-status','/api/music']);
 

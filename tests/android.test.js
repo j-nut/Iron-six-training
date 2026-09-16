@@ -50,7 +50,7 @@ test('native callbacks handle PKCE, bridged Google, cancellation, safe areas and
   assert(messages.at(-1).includes('cancelled'));assert(!messages.at(-1).includes('script'));
   events.appStateChange({isActive:false});events.appStateChange({isActive:true});
   for(const action of ['pause','save','stop','start','sync'])assert(calls.some(c=>c[0]===action));
-  await win.fetch('/api/coach',{method:'POST',body:'test'});assert(calls.at(-1)[1].startsWith('https://iron-six-training-'));assert.equal(calls.at(-1)[2].body,'test');
+  await win.fetch('/api/coach',{method:'POST',body:'test'});assert.equal(calls.at(-1)[1],'https://iron-six-training.vercel.app/api/coach');assert.equal(calls.at(-1)[2].body,'test');
   const backup=JSON.stringify({exportedAt:new Date().toISOString(),profiles:{users:[]},entries:[]});
   await native.exportBackup(backup);assert.equal(calls.at(-1)[0],'export');assert.equal(calls.at(-1)[1],backup);
   await assert.rejects(native.exportBackup('{}'),/empty or invalid/);
@@ -81,4 +81,13 @@ test('Android configuration packages direct and dynamic runtime assets with limi
   const backupPlugin=fs.readFileSync('android/app/src/main/java/com/ironsix/training/WorkoutBackupPlugin.java','utf8');
   assert(backupPlugin.includes('payload.has("entries")'));assert(!backupPlugin.includes('call.getString("json", "{}")'));
   for(const record of require('../exercise-media-catalog.js').records)for(const path of record.frames)assert(fs.existsSync('www/'+path),path);
+});
+
+// The app's API host must be the public production domain. Project-scoped Vercel hosts are covered
+// by deployment protection, which answers every API call with an SSO redirect or 401 - the Coach,
+// equipment generation, recalculation, the workout review and sign-in status all fail silently.
+test('the Android app calls the public production domain, not a protected Vercel host',async()=>{
+  const {API_ORIGIN}=await import('../native/runtime.mjs');
+  assert.equal(API_ORIGIN,'https://iron-six-training.vercel.app');
+  assert(!/-[a-z0-9-]+-projects\.vercel\.app/.test(API_ORIGIN),'no project-scoped or preview host');
 });
