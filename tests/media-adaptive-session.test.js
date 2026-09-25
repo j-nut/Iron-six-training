@@ -30,3 +30,15 @@ test('media experience exposes exact two-position motion demo and preserves miss
   const html=window.IronSixMediaView.gallery({name:'Bench Press'},{compact:true});assert(html.includes('data-motion-demo'));assert(html.includes('Start'));assert(html.includes('Finish'));assert(html.includes('a.png')&&html.includes('b.png'));
   assert.equal(window.IronSixMediaView.gallery({name:'Unknown Move'},{compact:true}),'missing:Unknown Move');
 });
+
+test('pain replacements preserve circuit restrictions and the allocated time budget',()=>{
+  const context={window:{},document:{getElementById(){return null},addEventListener(){}},setTimeout(){},exerciseMuscles:()=>['chest'],exerciseAvailable:()=>true,circuitSuitable:ex=>!ex.name.includes('Barbell'),traditionalSetSeconds:ex=>ex.seconds||100};context.window=context;
+  vm.createContext(context);vm.runInContext(fs.readFileSync('session-adaptation-v3.js','utf8'),context);
+  const u={trainingMode:'circuit',trainingFeedback:[{ts:Date.now(),feedback:'pain',exercise:'Dumbbell Press'}]};
+  const exercise={name:'Dumbbell Press',sets:3,seconds:100,_alternatives:[{name:'Barbell Press',seconds:100},{name:'Single-arm Press',seconds:180},{name:'Band Press',seconds:90}]};
+  const adapt=context.IronSixAdaptiveSessionV3.adaptPlan;
+  assert.equal(adapt(u,[exercise])[0].name,'Single-arm Press','circuit must reject technical barbell replacement');
+  u.trainingMode='traditional';
+  exercise._alternatives.shift();
+  assert.equal(adapt(u,[exercise])[0].name,'Band Press','post-budget replacement must fit already allocated time');
+});

@@ -86,3 +86,46 @@ user.today = {'0-0': {weight: '100', reps: '5', rir: '0', done: true}};
 assert.equal(recommend(user, squat, 0).load, 95, 'clear failure evidence should still reduce the load by a real discrete step');
 
 console.log('load progression v2 regression checks passed');
+
+// Manual performance must outrank an older heavy median even when the newest set
+// earns a hold recommendation, and imported history need not arrive sorted.
+user.today = {};
+user.history = [
+  {ts: 100, details: [{...squat, sets: Array.from({length: 5}, () => ({weight: '200', reps: '7', rir: '2', done: true}))}]},
+  {ts: 200, details: [{...squat, sets: [{weight: '100', reps: '7', rir: '2', done: true}]}]},
+];
+assert.equal(baseline(user, squat).load, 100, 'latest on-target manual reduction must persist next session');
+user.history[1].details[0].sets[0].rir = '';
+assert.equal(baseline(user, squat).load, 100, 'missing RIR must not erase actual latest load');
+
+const dumbbell = {name: 'Dumbbell Bench Press', base: 'Horizontal press', seedKey: 'bench', prescription: '3 × 8–12'};
+user.benchBest = '225 x 8';
+user.history = [{ts: 300, details: [{name: 'Barbell Bench Press', base: 'Horizontal press', sets: [{weight: '225', reps: '8', rir: '2', done: true}]}]}];
+const prior = vm.runInContext('priorPerformance', context);
+assert.equal(prior(user, dumbbell).sets.length, 0, 'barbell total must never become a per-hand dumbbell target');
+assert.equal(baseline(user, dumbbell).confidence, 'Conservative starting estimate', 'bench reference is specific to barbell bench');
+assert(baseline(user, dumbbell).load < 100);
+
+const structured = {...squat, prescription: '1 top set × 4–6, then 3 × 6–8'};
+user.history = [{ts: 400, details: [{...structured, sets: [
+  {setIndex: 0, weight: '200', reps: '5', rir: '2', done: true},
+  {setIndex: 1, weight: '180', reps: '7', rir: '2', done: true},
+  {setIndex: 2, weight: '180', reps: '7', rir: '2', done: true},
+]}]}];
+assert.equal(baseline(user, structured).load, 200, 'a historical backoff must not replace next session top load');
+user.history[0].details[0].sets.shift();
+assert.equal(prior(user, structured).sets.length, 0, 'a skipped top set must not relabel a completed backoff as top');
+
+const reps = vm.runInContext('repRange', context);
+assert.deepEqual(Array.from(reps({prescription: '3 × 5'})), [5, 5], 'fixed prescriptions must not silently turn into 8–12 reps');
+assert.deepEqual(Array.from(reps({prescription: '3 × 30 seconds'})), [8, 12], 'hold seconds must not become repetitions');
+
+const applyMemory = vm.runInContext('applyTrainerMemory', context);
+const fractional = {load: 7.5, target: 10, text: '7.5 lb × 10'};
+user.trainerMemory = {reviewedAt: Date.now(), verifiedForWorkoutKey: user.program.currentWorkoutKey, verifiedPlan: [{name: dumbbell.name, base: dumbbell.base, verifiedLoad: 7.5, verifiedReps: 10}]};
+assert.equal(applyMemory(user, dumbbell, fractional).load, 7.5, 'rounding AI verification must not increase a fractional load by 33%');
+user.trainerMemory = {adjustments: {[dumbbell.base]: {factor: 1.03, updatedAt: Date.now()}}};
+assert.equal(applyMemory(user, dumbbell, fractional).load, 7.5, 'rounding a 3% AI factor must stay within the actual 3% bound');
+const calibrateSuggestion = vm.runInContext('calibratedSuggestion', context);
+user.sessionCalibration = {factor: 1.06};
+assert.equal(calibrateSuggestion(user, dumbbell, 0, fractional).load, 7.5, 'cross-session calibration must respect its 6% limit after rounding');

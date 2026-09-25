@@ -79,14 +79,14 @@
     const current=user?.program?.currentWorkoutKey||rotation[0],start=Math.max(0,rotation.indexOf(current));
     const result=[];
     for(let i=0;i<Math.min(count,rotation.length);i++){
-      const key=rotation[(start+i)%rotation.length],meta=metaTable[key]||{};
+      const key=typeof routineForecast==='function'?routineForecast(user,count)[i]:rotation[(start+i)%rotation.length],meta=metaTable[key]||{};
       result.push({key,name:meta.name||meta.short||key,purpose:SESSION_PURPOSE[key]||''});
     }
     return result;
   }
 
   function analyze(user){
-    const {sessions,dose}=recentDose(user,6),gaps=deficits(user),repeats=repetition(user),next=upcoming(user,3);
+    const {sessions,dose}=recentDose(user,6),gaps=deficits(user),repeats=repetition(user),next=upcoming(user,6);
     return {
       completedSessionsReviewed:sessions.length,
       directMovementDose:dose,

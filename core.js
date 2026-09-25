@@ -69,3 +69,79 @@ const VARIANT_NAMES=['Foundation','Momentum','Apex'];
 function variantLabel(i){return ['A','B','C'][i]||'A'}
 function variantName(i){return VARIANT_NAMES[i]||VARIANT_NAMES[0]}
 function variantDisplay(value){if(typeof value==='number')return variantName(value);const i=['A','B','C'].indexOf(String(value||'').trim().toUpperCase());return i>=0?VARIANT_NAMES[i]:String(value||'')}
+
+// A pending sequence preserves sessions displaced by a manual choice. Reading a
+// forecast is pure: only choosing or explicitly finishing a workout changes it.
+function routineQueue(u){
+  const current=u.program?.currentWorkoutKey||ROTATION[0];
+  const saved=u.program?.pendingWorkouts;
+  if(Array.isArray(saved)&&saved.length===ROTATION.length&&new Set(saved).size===ROTATION.length&&saved.every(k=>ROTATION.includes(k)))return [...saved];
+  const start=Math.max(0,ROTATION.indexOf(current));
+  return ROTATION.map((_,i)=>ROTATION[(start+i)%ROTATION.length]);
+}
+function routineSuccessor(key){const index=ROTATION.indexOf(key);return index>=0?ROTATION[(index+1)%ROTATION.length]:({chest:'lower_a',shoulders_arms:'lower_b',lower_strength:'pull_a',back:'push_b',upper_specialization:'lower_b',lower_hypertrophy:'pull_b'})[key]||ROTATION[0]}
+function routineFamily(key){if(/^push_/.test(key)||key==='chest'||key==='shoulders_arms')return 'push';if(/^pull_/.test(key)||key==='back')return 'pull';if(/^lower_/.test(key))return 'lower';return null}
+function routineDose(session){
+  const dose={push:0,pull:0,lower:0};
+  for(const d of session?.details||[]){
+    const sets=(d.sets||[]).filter(s=>s.done===true).length;if(!sets)continue;
+    const seed=String(d.seedKey||'').toLowerCase(),name=String(d.name||'').toLowerCase();
+    const families={push:['bench','chest_press','fly','overhead_press','lateral_raise','triceps'],pull:['pullup','row','lat_iso','rear_delt','curl','hammer_curl'],lower:['squat','hinge','split_squat','hip_thrust','ham_curl','calves']};
+    const exact=Object.keys(families).find(f=>families[f].includes(seed));
+    if(exact)dose[exact]+=sets;
+    else if(/squat|deadlift|lunge|calf|calves|hip thrust|hamstring|leg press|leg curl|leg extension/.test(name))dose.lower+=sets;
+    else if(/press|push.up|fly|tricep/.test(name))dose.push+=sets;
+    else if(/pull.up|chin.up|row|pulldown|bicep|curl/.test(name))dose.pull+=sets;
+  }
+  return dose;
+}
+function routineAfter(u,session){
+  const current=session?.workoutKey||u.program?.currentWorkoutKey||ROTATION[0];
+  let queue=routineQueue(u);
+  if(!ROTATION.includes(current)){
+    const next=routineSuccessor(current),start=ROTATION.indexOf(next);
+    queue=ROTATION.map((_,i)=>ROTATION[(start+i)%ROTATION.length]);
+  }else queue=[...queue.filter(k=>k!==current),current];
+  const dose=routineDose(session);
+  for(const interrupted of u.program?.interruptedWork||[]){if(Date.now()-Number(interrupted.ts)>48*60*60*1000)continue;const extra=routineDose(interrupted);for(const family of Object.keys(dose))dose[family]+=extra[family]}
+  const trained=Object.keys(dose).filter(k=>dose[k]>=2);
+  // Avoid loading a family again immediately when the actual logged exercises
+  // differ from the nominal routine. Keep every displaced session pending.
+  if(trained.includes(routineFamily(queue[0]))){const i=queue.findIndex(k=>!trained.includes(routineFamily(k)));if(i>0)queue=[queue[i],...queue.filter((_,j)=>j!==i)]}
+  return queue;
+}
+function invalidateRoutineReview(u){if(u.trainerMemory){u.trainerMemory.verifiedPlan=[];u.trainerMemory.verifiedForWorkoutKey=null;u.trainerMemory.recommendations=[];u.trainerMemory.status='Plan updated';u.trainerMemory.summary='Recommendations will use your updated routine and completed work.'}}
+function prepareManualWorkout(u,key){
+  invalidateRoutineReview(u);
+  const queue=routineQueue(u);
+  u.program.pendingWorkouts=ROTATION.includes(key)?[key,...queue.filter(k=>k!==key)]:queue;
+  u.program.lastScheduleReason='Your manual choice is scheduled now; displaced sessions remain in the upcoming sequence.';
+  // Previewed accessories must be reconsidered after an actual schedule change.
+  u.program.selectionCache=Object.fromEntries(Object.entries(u.program.selectionCache||{}).filter(([k])=>k.includes(':block')));
+}
+function completeRoutine(u,session){
+  const token=session?.sessionId||String(session?.ts||'');
+  if(token&&u.program.lastRoutineSession===token)return u.program.currentWorkoutKey;
+  const queue=Array.isArray(session?.routineAfter)&&session.routineAfter.length===ROTATION.length?session.routineAfter:routineAfter(u,session);
+  u.program.pendingWorkouts=[...queue];u.program.lastRoutineSession=token;u.program.interruptedWork=[];
+  u.program.currentWorkoutKey=queue[0];
+  invalidateRoutineReview(u);
+  u.program.selectionCache=Object.fromEntries(Object.entries(u.program.selectionCache||{}).filter(([k])=>k.includes(':block')));
+  return queue[0];
+}
+function routineForecast(u,count=6){
+  const current=u.program?.currentWorkoutKey||ROTATION[0],plan=u.workoutDraft?.plan||[];
+  const details=plan.map((d,ei)=>({...d,sets:Array.from({length:d.sets},(_,i)=>u.today?.[`${ei}-${i}`]).filter(Boolean)}));
+  // Before any sets are logged, forecast the selected focus. Once work exists,
+  // use that work instead; completion always uses the actual session details.
+  if(!details.some(d=>d.sets.some(s=>s.done===true))){const seed=({push:'bench',pull:'row',lower:'squat'})[routineFamily(current)];if(seed)details.push({seedKey:seed,sets:[{done:true},{done:true}]})}
+  const queue=routineAfter(u,{workoutKey:current,details});
+  return [current,...queue.filter(k=>k!==current)].slice(0,count);
+}
+
+function recordInterruptedRoutine(u,plan,sessionId){
+  const details=(plan||[]).map((d,ei)=>({...d,sets:Array.from({length:d.sets},(_,i)=>u.today?.[`${ei}-${i}`]).filter(s=>s?.done===true)})).filter(d=>d.sets.length);
+  if(!details.length)return;
+  const pending=(u.program.interruptedWork||[]).filter(s=>s.sessionId!==sessionId);
+  u.program.interruptedWork=[...pending,{ts:Date.now(),sessionId,details}].slice(-6);
+}

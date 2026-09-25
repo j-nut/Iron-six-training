@@ -195,7 +195,7 @@ test('marks are not celebrated mid-workout, and old unlocks arriving by sync are
 
 test('the post-workout trainer review keeps the synced accent theme and Iron Marks state',()=>{
   const source=fs.readFileSync('ui3.js','utf8');
-  assert(source.includes('target.trainerMemory={appearance:target.trainerMemory?.appearance,achievements:target.trainerMemory?.achievements,'));
+  assert(source.includes('target.trainerMemory={...(target.trainerMemory||{}),'));
   for(const f of ['cloud-history-sync.js','scripts/build-web.mjs','scripts/build-android-web.mjs']){const s=fs.readFileSync(f,'utf8');assert(s.includes('iron-marks-engine.js')&&s.includes('iron-marks.js'),f)}
   const loader=fs.readFileSync('cloud-history-sync.js','utf8');assert(loader.indexOf('iron-marks-engine.js')<loader.indexOf("'iron-marks.js"));
 });

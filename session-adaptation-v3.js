@@ -21,7 +21,7 @@
       let chosen={...ex};
       const score=readinessScore(u,chosen),pain=recentPain(u,chosen.name);
       if(pain&&Array.isArray(chosen._alternatives)){
-        const alt=chosen._alternatives.find(a=>!recentPain(u,a.name)&&(!window.exerciseAvailable||exerciseAvailable(u,a)));
+        const alt=chosen._alternatives.find(a=>!recentPain(u,a.name)&&(typeof exerciseAvailable!=='function'||exerciseAvailable(u,a))&&(u.trainingMode!=='circuit'||typeof circuitSuitable!=='function'||circuitSuitable(a))&&(u.trainingMode==='circuit'||typeof traditionalSetSeconds!=='function'||traditionalSetSeconds(a)<=traditionalSetSeconds(chosen)));
         if(alt)chosen={...chosen,...alt,sets:chosen.sets,_alternatives:[ex,...chosen._alternatives].filter(x=>x.name!==alt.name),_adaptReason:'Recent pain feedback: swapped to a saved alternative.'};
       }
       let factor=overallFactor;
