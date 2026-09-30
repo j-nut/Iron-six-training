@@ -145,3 +145,5 @@ function recordInterruptedRoutine(u,plan,sessionId){
   const pending=(u.program.interruptedWork||[]).filter(s=>s.sessionId!==sessionId);
   u.program.interruptedWork=[...pending,{ts:Date.now(),sessionId,details}].slice(-6);
 }
+
+function clearSessionRecommendations(u){u.coachOverrides=null;u.sessionCalibration=null;invalidateRoutineReview(u);clearCurrentSelectionCache(u)}

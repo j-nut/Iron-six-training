@@ -194,3 +194,23 @@ test('the header stays compact after Begin, and circuit mode keeps its full head
     assert.equal(today.classList.contains('session-compact'),false);
   }finally{a.close()}
 });
+
+test('real Done clicks update the guide without replacing inputs or auto advancing',()=>{
+ const a=app();try{a.begin();const card=a.w.document.querySelector('[data-exercise-index="0"]');const input=card.querySelector('.weight');const count=card.querySelectorAll('.done').length;card.querySelectorAll('.done').forEach(b=>b.click());assert.match(a.step(),new RegExp(`${count}/${count} sets`));assert(a.w.document.getElementById('scNextBtn').classList.contains('ready'));assert.equal(a.w.document.querySelector('[data-exercise-index="0"] .weight'),input);assert.deepEqual(a.visible(),[0]);}finally{a.close()}
+});
+test('reset, routine change and profile change return an empty session to Begin',()=>{
+ for(const action of ["resetWorkout()","chooseWorkout('lower_strength')","const other=makeUser('Other');data.users.push(other);switchUser(other.id)"]){const a=app();try{a.begin();a.run('IronSixSessionCards.goTo(finalWorkout(activeUser()).length,finalWorkout(activeUser()))');a.run(action);assert.equal(a.hidden('sessionStart'),false,action);assert.deepEqual(a.visible(),[],action);}finally{a.close()}}
+});
+test('finishing from review clears navigation state for the next workout',()=>{
+ const a=app();try{a.begin();a.logSets(0,1);a.run('IronSixSessionCards.goTo(finalWorkout(activeUser()).length,finalWorkout(activeUser()))');a.w.document.getElementById('scFinish').click();assert.equal(a.hidden('sessionStart'),false);assert.equal(a.hidden('sessionReview'),true);}finally{a.close()}
+});
+test('one-exercise overview keeps its return control and circuit is never focus mode',()=>{
+ const a=app();try{a.run(fs.readFileSync('active-workout-clean.js','utf8'));a.run('finalWorkout=()=>[{name:"Single exercise",sets:1,prescription:"1 × 8–12",base:"Horizontal press",tag:"Test"}];renderAll()');a.begin();a.w.IronSixActiveWorkoutClean.apply();assert(a.w.document.getElementById('exerciseList').classList.contains('awc-focus'));a.w.document.getElementById('scOverview').click();a.w.IronSixActiveWorkoutClean.apply();assert.equal(a.w.document.getElementById('exerciseList').classList.contains('awc-focus'),false);a.run("activeUser().trainingMode='circuit';renderAll()");a.w.IronSixActiveWorkoutClean.apply();assert.equal(a.w.document.getElementById('exerciseList').classList.contains('awc-focus'),false);}finally{a.close()}
+});
+
+test('duration rebuild clears review while cancelling a rebuild preserves the active set',()=>{
+ const a=app();try{a.begin();const row=a.w.document.querySelector('.set-row');row.querySelector('.done').click();const before=a.json('activeUser().today');a.w.confirm=()=>false;a.run('setWorkoutMinutes(15)');assert.deepEqual(a.json('activeUser().today'),before);assert.deepEqual(a.visible(),[0]);a.w.confirm=()=>true;a.run('IronSixSessionCards.goTo(finalWorkout(activeUser()).length,finalWorkout(activeUser()));setWorkoutMinutes(15)');assert.equal(a.hidden('sessionStart'),false);assert.equal(a.hidden('sessionReview'),true);assert(a.json("IronSixJournal.replay(activeUser().id).some(s=>s.status==='archived'&&s.today['0-0']?.done)"));}finally{a.close()}
+});
+test('switching to circuit and back resets the traditional guide after preserving logged work',()=>{
+ const a=app();try{a.begin();a.w.document.querySelector('.done').click();a.w.document.querySelector('[data-training-mode="circuit"]').click();assert.equal(a.hidden('sessionCardNav'),true);a.w.document.querySelector('[data-training-mode="traditional"]').click();assert.equal(a.hidden('sessionStart'),false);assert.deepEqual(a.visible(),[]);assert(a.json("IronSixJournal.replay(activeUser().id).some(s=>s.status==='archived'&&s.today['0-0']?.done)"));}finally{a.close()}
+});

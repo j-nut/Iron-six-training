@@ -53,3 +53,14 @@ test('cloud responses cannot recalibrate a replacement session or override newer
 });
 
 test('visible prescription matches reduced working-set count',()=>{const a=app();assert.equal(a.run("visiblePrescription({prescription:'4 × 8–12',sets:2})"),'2 × 8–12');a.close()});
+
+test('invalid set inputs remain saved drafts and cannot count as completed work',()=>{
+ const a=app();try{const row=a.w.document.querySelector('.set-row'),w=row.querySelector('.weight'),r=row.querySelector('.reps'),done=row.querySelector('.done');
+ for(const [weight,reps] of [['-50','10'],['abc','10'],['Infinity','10'],['50',''],['50','0'],['50','-3'],['50','2.5']]){w.value=weight;w.dispatchEvent(new a.w.Event('input'));r.value=reps;r.dispatchEvent(new a.w.Event('input'));done.click();assert.equal(a.run("activeUser().today['0-0'].done"),false,`${weight}/${reps}`);assert.equal(a.run("activeUser().today['0-0'].reps"),reps);}
+ w.value='0';w.dispatchEvent(new a.w.Event('input'));r.value='12';r.dispatchEvent(new a.w.Event('input'));done.click();assert.equal(a.run("activeUser().today['0-0'].done"),true);assert.equal(done.getAttribute('aria-pressed'),'true');
+ r.value='';r.dispatchEvent(new a.w.Event('input'));assert.equal(a.run("activeUser().today['0-0'].done"),false);assert.equal(done.getAttribute('aria-pressed'),'false');assert.equal(a.run("IronSixJournal.all().filter(e=>e.kind==='set').at(-1).completed"),false);
+ }finally{a.close()}
+});
+test('Done can be undone without losing the entered set or its feedback',()=>{
+ const a=app();try{const row=a.w.document.querySelector('.set-row');row.querySelector('.done').click();a.run("activeUser().today['0-0'].feedback='right'");const weight=row.querySelector('.weight').value;row.querySelector('.done').click();assert.equal(a.run("activeUser().today['0-0'].done"),false);assert.equal(a.run("activeUser().today['0-0'].weight"),weight);assert.equal(a.run("activeUser().today['0-0'].feedback"),'right');}finally{a.close()}
+});
