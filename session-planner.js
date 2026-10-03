@@ -2,9 +2,9 @@
 const CIRCUIT_PACES={steady:{work:30,rest:30,label:'Steady · 30s / 30s'},balanced:{work:40,rest:20,label:'Strong · 40s / 20s'},intense:{work:45,rest:20,label:'Intense · 45s / 20s'}};
 function circuitPace(u){return (Number(u.readiness?.energy||4)<=2)?CIRCUIT_PACES.steady:(CIRCUIT_PACES[u.circuitPace]||CIRCUIT_PACES.balanced)}
 function circuitSuitable(ex){return !/barbell|deadlift|good morning|meadows|ab wheel|ab roller|superset/i.test(ex.name)}
-function circuitExercise(u,ex){
-  const pool=[ex,...(ex._alternatives||[])].filter(x=>exerciseAvailable(u,x)&&circuitSuitable(x));
-  const chosen=pool[0];return chosen?{...ex,...chosen,_alternatives:pool.filter(x=>x.name!==chosen.name)}:null;
+function circuitExercise(u,ex,used=new Set()){
+  const pool=[ex,...(ex._alternatives||[])].filter(x=>exerciseAvailable(u,x)&&circuitSuitable(x)&&!used.has(String(x.name).toLowerCase()));
+  const chosen=pool[0];return chosen?{...ex,...chosen,sets:ex.sets,priority:ex.priority,_programSlot:ex._programSlot,_anchor:ex._anchor,_alternatives:pool.filter(x=>x.name!==chosen.name)}:null;
 }
 function sessionWarmup(u){return Number(u.workoutMinutes)<=20?120:180}
 function traditionalSetSeconds(ex){
@@ -23,7 +23,8 @@ function sessionSeconds(u,plan){
 }
 function budgetSessionWorkout(u,workout){
   const circuit=u.trainingMode==='circuit',minutes=Number(u.workoutMinutes||60),budget=Math.max(600,Math.min(7200,minutes*60));
-  let pool=workout.filter(e=>e&&exerciseAvailable(u,e)).map(e=>circuit?circuitExercise(u,e):{...e}).filter(Boolean);
+  const used=new Set();
+  let pool=workout.filter(e=>e&&exerciseAvailable(u,e)).map(e=>{const selected=circuit?circuitExercise(u,e,used):{...e};if(selected)used.add(String(selected.name).toLowerCase());return selected}).filter(Boolean);
   const coverage=muscleCoverage(u),due=new Set(MUSCLE_GROUPS.filter(m=>coverage.last[m]===null||coverage.last[m]>=3));
   const traditionalCount=minutes<=10?2:minutes<=20?3:minutes<=30?4:minutes<60?Math.min(4,pool.length):pool.length;
   const count=circuit?Math.min(4,pool.length):Math.min(traditionalCount,pool.length);

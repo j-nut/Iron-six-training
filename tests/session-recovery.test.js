@@ -185,3 +185,34 @@ test('cardio preferences and completed activity survive reload without changing 
  assert.equal(b.run('IronSixCardio.recentLoad(activeUser()).minutes'),23);
  assert.equal(b.run('activeUser().program.currentWorkoutKey'),key);assert.deepEqual(b.errors,[]);b.close();
 });
+
+test('manual workout completion preserves displaced days through journal recovery and reload',async()=>{
+  const a=app();await a.w.IronSixJournal.hydrated;
+  a.run("chooseWorkout('pull_a');");
+  a.w.document.querySelector('.done').click();
+  const sessionId=a.run('activeUser().workoutDraft.id');
+  a.run('finishWorkout()');
+  assert.equal(a.run('activeUser().program.currentWorkoutKey'),'push_a');
+  assert.equal(a.run('activeUser().history[0].routineAfter[0]'),'push_a');
+  // Simulate recovery from a stale snapshot pointing at the finished draft.
+  a.run(`activeUser().workoutDraft={id:${JSON.stringify(sessionId)}};IronSixJournal.restore(activeUser());saveData()`);
+  assert.equal(a.run('activeUser().program.currentWorkoutKey'),'push_a');
+  const saved=a.storage();a.close();
+  const b=app(saved);await b.w.IronSixJournal.hydrated;
+  assert.equal(b.run('activeUser().program.currentWorkoutKey'),'push_a');
+  assert.equal(b.run("activeUser().program.pendingWorkouts.includes('lower_a')"),true);
+  b.close();
+});
+
+test('changing away from partial legs preserves its real work for scheduling after push',async()=>{
+  const a=app();await a.w.IronSixJournal.hydrated;
+  a.run("chooseWorkout('lower_a')");
+  const rows=a.w.document.querySelectorAll('.exercise:first-child .done');rows[0].click();rows[1].click();
+  a.run("chooseWorkout('push_a')");
+  assert.equal(a.run('activeUser().program.interruptedWork.length'),1);
+  a.w.document.querySelector('.done').click();a.run('finishWorkout()');
+  assert.equal(a.run('activeUser().program.currentWorkoutKey'),'pull_a');
+  assert.equal(a.run('activeUser().program.pendingWorkouts[1]'),'lower_a');
+  assert.equal(a.run('activeUser().program.interruptedWork.length'),0);
+  a.close();
+});

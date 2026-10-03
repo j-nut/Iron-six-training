@@ -5,7 +5,18 @@
 
   const $ = id => document.getElementById(id);
   const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  let began = false, focusName = null, showAll = false;
+  let began = false, focusName = null, showAll = false, sessionContext = null;
+
+  function syncSession(user) {
+    const next = { userId: user.id, scope: window.ironSixAccountScope, today: user.today,
+      key: user.program?.currentWorkoutKey, draftId: user.workoutDraft?.id };
+    if (sessionContext && (sessionContext.userId !== next.userId || sessionContext.scope !== next.scope ||
+        sessionContext.today !== next.today || sessionContext.key !== next.key ||
+        (sessionContext.draftId && sessionContext.draftId !== next.draftId))) {
+      began = false; focusName = null; showAll = false;
+    }
+    sessionContext = next;
+  }
 
   const cards = () => [...document.querySelectorAll('#exerciseList [data-exercise-index]')];
   const listSection = () => $('exerciseList')?.closest('.section') || null;
@@ -174,6 +185,7 @@
     placeStartBeforeWorkout();
 
     const user = activeUser(), workout = finalWorkout(user), all = cards();
+    syncSession(user);
     const cta = $('finishBtn')?.closest('.cta') || null;
     const started = began || anyLogged(user);
     const today = $('today');
@@ -242,6 +254,13 @@
   if (typeof baseRenderExercises === 'function') window.renderExercises = function () { baseRenderExercises(); apply(); };
   const baseRenderAll = window.renderAll;
   if (typeof baseRenderAll === 'function') window.renderAll = function () { baseRenderAll(); apply(); };
+  // Set logging updates progress without rebuilding the focused input elements.
+  const baseUpdateProgress = window.updateProgress;
+  if (typeof baseUpdateProgress === 'function') window.updateProgress = function () {
+    const result = baseUpdateProgress.apply(this, arguments);
+    apply();
+    return result;
+  };
   apply();
   addEventListener('load', apply);
 

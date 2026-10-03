@@ -46,6 +46,7 @@
     if(!u.workoutDraft&&!Object.keys(u.today||{}).length)return true;
     ensure(u);const event=append(u,'archive','session',{...snapshot(u),reason});
     if(!event._durable){toast('Cannot safely reset yet. Export your log or restore device storage.');return false}
+    recordInterruptedRoutine(u,u.workoutDraft.plan,u.workoutDraft.id);
     u.workoutDraft=null;return true;
   }
   function finish(u,session){
@@ -112,7 +113,7 @@
       u.workoutDraft=null;u.today={};
       // An archive is not a completion. Recover a finish from its own key, once,
       // even if a stale profile snapshot already points at the following workout.
-      if(current.status==='finished')u.program.currentWorkoutKey=nextWorkoutKey({program:{currentWorkoutKey:current.key}});
+      if(current.status==='finished')completeRoutine(u,current.history||{workoutKey:current.key,sessionId:current.id});
     }
     const s=current?.status==='active'?current:[...sessions].reverse().find(s=>s.status==='active'&&s.plan?.length);
     if(!s)return;

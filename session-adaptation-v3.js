@@ -17,18 +17,24 @@
     const state=window.IronSixTrainerV2?.trainingState?.(u)||{phase:'Build',fatigue:0};
     const energy=Number(u?.readiness?.energy||4),soreness=Number(u?.readiness?.soreness||0);
     const overallFactor=state.phase==='Deload suggested'?.65:state.phase==='Manage fatigue'?.82:energy<=2?.85:1;
+    const occupied=new Set((plan||[]).map(ex=>String(ex.name).toLowerCase()));
     return (plan||[]).map(ex=>{
       let chosen={...ex};
-      const score=readinessScore(u,chosen),pain=recentPain(u,chosen.name);
+      const pain=recentPain(u,chosen.name);
       if(pain&&Array.isArray(chosen._alternatives)){
-        const alt=chosen._alternatives.find(a=>!recentPain(u,a.name)&&(!window.exerciseAvailable||exerciseAvailable(u,a)));
-        if(alt)chosen={...chosen,...alt,sets:chosen.sets,_alternatives:[ex,...chosen._alternatives].filter(x=>x.name!==alt.name),_adaptReason:'Recent pain feedback: swapped to a saved alternative.'};
+        const alt=chosen._alternatives.find(a=>!occupied.has(String(a.name).toLowerCase())&&!recentPain(u,a.name)&&(typeof exerciseAvailable!=='function'||exerciseAvailable(u,a))&&(u.trainingMode!=='circuit'||typeof circuitSuitable!=='function'||circuitSuitable(a))&&(u.trainingMode==='circuit'||typeof traditionalSetSeconds!=='function'||traditionalSetSeconds({...chosen,...a,priority:chosen.priority})<=traditionalSetSeconds(chosen)));
+        if(alt){occupied.delete(String(ex.name).toLowerCase());occupied.add(String(alt.name).toLowerCase());chosen={...chosen,...alt,sets:ex.sets,priority:ex.priority,_programSlot:ex._programSlot,_anchor:ex._anchor,_alternatives:[ex,...chosen._alternatives].filter(x=>x.name!==alt.name),_adaptReason:'Recent pain feedback: swapped to a saved alternative.'};}
       }
+      const score=readinessScore(u,chosen);
       let factor=overallFactor;
       if(score<25)factor=Math.min(factor,.65);else if(score<45)factor=Math.min(factor,.8);
       if(soreness>=4)factor=Math.min(factor,.75);
       const oldSets=Math.max(1,n(chosen.sets)||1),sets=Math.max(1,Math.min(oldSets,Math.ceil(oldSets*factor)));
       if(sets<oldSets){chosen.sets=sets;chosen._adaptReason=chosen._adaptReason||`${state.phase==='Build'?'Readiness':'How recovered you are'} adjusted volume (${oldSets}→${sets} sets).`;chosen.prescription=String(chosen.prescription||'').replace(/^\d+\s*×/,sets+' ×')}
+      // Alternatives carry template prescriptions; the cards must describe the
+      // actual budgeted sets and the same timed rounds used by the circuit player.
+      if(u.trainingMode==='circuit'){const work=typeof circuitPace==='function'?circuitPace(u).work:parseInt(ex.prescription,10);if(Number.isFinite(work))chosen.prescription=work+'s controlled work · '+chosen.sets+' rounds'}
+      else chosen.prescription=String(chosen.prescription||'').replace(/^\d+\s*×/,chosen.sets+' ×');
       chosen._readinessScore=score;
       return chosen;
     });

@@ -16,7 +16,7 @@
     if (!name) return false;
     // Explicitly weighted/loaded variants are allowed to keep an external-load field.
     if (/\b(weighted|loaded|dumbbell|barbell|landmine|machine|cable|band)\b/i.test(name)) return false;
-    return BODYWEIGHT_NAME.test(name);
+    return BODYWEIGHT_NAME.test(name) || (typeof exerciseLoadEquipment === 'function' && exerciseLoadEquipment(exercise) === 'bodyweight');
   }
 
   function bodyweightRecommendation(exercise, completedSet = null) {
@@ -102,12 +102,12 @@
         if (!input) return;
         input.value = 'bodyweight';
         input.setAttribute('value', 'bodyweight');
-        const marker = document.createElement('div');
+        const marker = row.querySelector('.bodyweight-load') || document.createElement('div');
         marker.className = 'field bodyweight-load';
         marker.textContent = 'Bodyweight';
         marker.setAttribute('aria-label', `${exercise.name} set ${setIndex + 1} load: bodyweight`);
         input.style.display = 'none';
-        input.insertAdjacentElement('afterend', marker);
+        if (!marker.parentElement) input.insertAdjacentElement('afterend', marker);
       });
     });
   }

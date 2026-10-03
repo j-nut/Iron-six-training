@@ -17,10 +17,36 @@
     return { reply: raw || 'I could not generate a local coaching response.', actions: [], videos: [], followUps: [] };
   }
 
+  function nextExercise(context){
+    const workout=Array.isArray(context.workout)?context.workout:[],today=Array.isArray(context.today)?context.today:[];
+    return workout.find((ex,index)=>{
+      const count=Number(ex.sets)||Number(String(ex.prescription||'').match(/^(\d+)\s*[×x]/)?.[1])||1;
+      const completed=new Set(today.filter(set=>set.done===true).map(set=>{
+        const parts=String(set.key||'').split('-').map(Number);
+        const ei=Number.isInteger(set.exerciseIndex)?set.exerciseIndex:parts[0],si=Number.isInteger(set.setIndex)?set.setIndex:parts[1];
+        return ei===(Number.isInteger(ex.index)?ex.index:index)&&Number.isInteger(si)&&si>=0&&si<count?si:null;
+      }).filter(i=>i!==null));
+      return completed.size<count;
+    })||null;
+  }
+
   function exerciseMatch(payload) {
-    const g=window.IronSixExerciseGuide;
-    if(!g)return null;
-    return g.findInContext(payload?.message||'',payload?.context||{}) || window.__ironSixSelectedExercise || null;
+    const context=payload?.context||{},workout=Array.isArray(context.workout)?context.workout:[];
+    const message=String(payload?.message||'').toLowerCase();
+    const named=workout.find(ex=>ex.name&&message.includes(ex.name.toLowerCase()));
+    if(named)return named;
+    const ordinal=message.match(/\b(first|second|third|fourth|fifth|sixth|seventh|eighth|last)\s+exercise\b/);
+    if(ordinal){const index=ordinal[1]==='last'?workout.length-1:['first','second','third','fourth','fifth','sixth','seventh','eighth'].indexOf(ordinal[1]);return workout[index]||null}
+    const numbered=message.match(/\bexercise\s*#?\s*(\d+)\b/);
+    if(numbered)return workout[Number(numbered[1])-1]||null;
+    if(/\bnext exercise\b/.test(message))return nextExercise(context);
+    // A guide opened in a previous workout/profile is not an implicit selection for
+    // an unrelated question. Pronouns may reuse only a movement still in this plan.
+    if(/\b(this|that|it|selected|current)\b/.test(message)){
+      const selected=context.selectedExercise;
+      return workout.find(ex=>ex.name===selected?.name)||null;
+    }
+    return null;
   }
 
   function wantsExerciseTeaching(payload) {
@@ -34,7 +60,6 @@
     const workout = Array.isArray(c.workout) ? c.workout : [];
     const today = Array.isArray(c.today) ? c.today : [];
     const first = workout[0];
-    const completed = today.filter(s => s.done).length;
     const match=exerciseMatch(payload);
 
     if(match && wantsExerciseTeaching(payload) && window.IronSixExerciseGuide){
@@ -42,11 +67,12 @@
     }
     if (/warm.?up/.test(message) && (match||first)) {
       const target=match||first;
-      const s = target.suggested?.weight || target.suggested?.display || '';
+      const s = target.suggested?.text || target.suggested?.weight || target.suggested?.display || '';
       return { reply: `For ${target.name}, ramp up gradually before your work sets. Start with an easy technique set, then use roughly 50%, 70%, and 85% of the planned working load with progressively fewer reps. Your current working suggestion is ${s || 'shown in the workout'}. Warm-ups should prepare you, not fatigue you.`, actions: [], videos: [], followUps: [`Teach me ${target.name}`] };
     }
     if (/what should i do next|what next|next exercise/.test(message) && first) {
-      const current = workout[Math.min(workout.length - 1, Math.floor(completed / Math.max(1, Number(first.sets || 1))))] || first;
+      const current=nextExercise(c);
+      if(!current)return {reply:'All prescribed sets are complete. Review your logged work and finish the workout when ready.',actions:[],videos:[],followUps:[]};
       return { reply: `Continue with ${current.name}: ${current.prescription || 'use the prescribed sets and reps'}. Keep the target RIR from today’s plan and log the actual weight, reps, and RIR so Iron Six can adjust your next recommendation.`, actions: [], videos: [], followUps: [`Teach me ${current.name}`,'Are my suggested weights right?'] };
     }
     if (/deload|too tired|fatigue/.test(message)) {
@@ -104,7 +130,7 @@
   async function supabaseCoach(payload){
     const cloud=window.IronSixCloud,client=cloud?.client?.(),session=cloud?.session?.();
     if(!client||!session?.user)return null;
-    const enriched={...payload,context:{...(payload.context||{}),selectedExercise:window.__ironSixSelectedExercise||payload?.context?.selectedExercise||null}};
+    const enriched={...payload,context:{...(payload.context||{}),selectedExercise:payload?.context?.selectedExercise||null}};
     try{
       const result=await withTimeout(client.functions.invoke('coach',{body:enriched}),CLOUD_TIMEOUT_MS,'Supabase Coach');
       if(result?.error||!result?.data)return null;
@@ -137,7 +163,8 @@
 
     let payload = {};
     try { payload = JSON.parse(init?.body || '{}'); } catch (_) {}
-    payload.context={...(payload.context||{}),selectedExercise:window.__ironSixSelectedExercise||payload?.context?.selectedExercise||null};
+    const selected=payload?.context?.selectedExercise||window.__ironSixSelectedExercise;
+    payload.context={...(payload.context||{}),selectedExercise:(payload?.context?.workout||[]).find(ex=>ex.name===selected?.name)||null};
 
     if(wantsExerciseTeaching(payload) && window.IronSixExerciseGuide){
       const output=window.IronSixExerciseGuide.teachingResponse(exerciseMatch(payload));

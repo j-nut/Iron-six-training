@@ -3,7 +3,7 @@
   if (window.__ironSixActiveWorkoutCleanLoaded) return;
   window.__ironSixActiveWorkoutCleanLoaded = true;
 
-  const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
+  const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const visible = el => !!el && !el.classList.contains('sc-hidden') && getComputedStyle(el).display !== 'none';
   let applying = false;
 
@@ -178,8 +178,11 @@
       const cards = [...list.querySelectorAll('[data-exercise-index]')];
       cards.forEach(addActions);
       const shown = cards.filter(visible);
-      list.classList.toggle('awc-focus', shown.length === 1);
-      if (shown.length === 1) addOverviewShortcut();
+      const state = window.IronSixSessionCards?.state();
+      const circuit = typeof activeUser === 'function' && activeUser()?.trainingMode === 'circuit';
+      const focused = shown.length === 1 && !circuit && !state?.showAll && visible(document.getElementById('sessionCardNav'));
+      list.classList.toggle('awc-focus', focused);
+      if (focused) addOverviewShortcut();
     } finally { applying = false; }
   }
 

@@ -150,7 +150,7 @@
       profile:{ name:u.name, bodyWeight:u.weight, age:u.age, heightIn:u.heightIn, trainingLevel:u.trainingLevel, equipment:[...EQUIPMENT.filter(([k])=>has(u,k)).map(([,label])=>label),...(u.customEquipment||[])], capacities:u.capacities, workoutMinutes:u.workoutMinutes },
       equipmentCoverage:equipmentCoverage(u),
       readiness:u.readiness,
-      workout:workout.map((e,i)=>({ index:i, name:e.name, prescription:e.prescription, base:e.base, suggested:suggestedLoadObject(u,e,i) })),
+      workout:workout.map((e,i)=>({ index:i, name:e.name, sets:e.sets, prescription:e.prescription, base:e.base, suggested:suggestedLoadObject(u,e,i) })),
       today,
       history:(u.history||[]).slice(0,8).map(h=>({ name:h.name, date:h.date, sets:h.sets, plannedSets:h.plannedSets, duration:h.duration, variant:h.variant, details:h.details })),
       allowedSwaps,
@@ -162,14 +162,22 @@
     const u=activeUser();u.coachMessages=u.coachMessages||[];return u.coachMessages;
   }
 
+  const pendingRequests=new Map();
+  function requestKey(u){return `${window.ironSixAccountScope||'guest'}:${u.id}`}
+  function actionContext(u){return JSON.stringify({id:u.id,key:u.program?.currentWorkoutKey,exposures:u.program?.exposures,session:u.workoutDraft?.sessionId||u.workoutDraft?.id,minutes:u.workoutMinutes,mode:u.trainingMode,workout:finalWorkout(u).map(e=>({name:e.name,base:e.base,sets:e.sets,prescription:e.prescription}))})}
   function renderMessages() {
     const chat=document.getElementById('coachChat'), arr=messages();
+    const pending=pendingRequests.has(requestKey(activeUser()));
+    document.querySelector('.coach-send').disabled=pending;
+    document.getElementById('coachStatus').textContent=pending?'Coach is thinking…':'';
+    const latest=[...arr].reverse().find(m=>Array.isArray(m.followUps)&&m.followUps.length);
+    renderFollowUps(latest?.followUps||['Explain my suggested weights','Help me plan my next workout']);
     if(!arr.length){chat.innerHTML='<div class="coach-msg assistant">I can see today’s workout and your profile. Ask me to explain a suggested weight, swap an exercise, build warm-up sets, check your progress, or find a demo video.</div>';return;}
     chat.innerHTML='';
     arr.slice(-20).forEach(m=>chat.appendChild(renderMessage(m)));
     // One destination, always the newest message. Tapping an exercise used to land on a panel above
     // the chat and then jump to the bottom when a reply arrived.
-    chat.lastElementChild?.scrollIntoView({behavior:'smooth',block:'end'});
+    if(document.getElementById('coach')?.classList.contains('active'))chat.lastElementChild?.scrollIntoView({behavior:'smooth',block:'end'});
   }
 
   function renderMessage(m){
@@ -180,17 +188,18 @@
     }
     (m.videos||[]).forEach(v=>box.appendChild(renderVideo(v)));
     const text=document.createElement('div');text.textContent=m.text||'';box.appendChild(text);
-    (m.actions||[]).forEach(a=>{const wrap=document.createElement('div');wrap.className='coach-action';const p=document.createElement('p');p.textContent=a.reason||actionLabel(a);const btn=document.createElement('button');btn.type='button';btn.className='btn secondary';btn.textContent=`Apply: ${actionLabel(a)}`;btn.addEventListener('click',()=>applyAction(a,btn));wrap.append(p,btn);box.appendChild(wrap)});
+    (m.actions||[]).forEach(a=>{const wrap=document.createElement('div');wrap.className='coach-action';const p=document.createElement('p');p.textContent=a.reason||actionLabel(a);const btn=document.createElement('button');btn.type='button';btn.className='btn secondary';btn.textContent=`Apply: ${actionLabel(a)}`;btn.addEventListener('click',()=>applyAction(a,btn,m.actionContext));wrap.append(p,btn);box.appendChild(wrap)});
     if(m.model){const meta=document.createElement('span');meta.className='meta';meta.textContent=m.model;box.appendChild(meta)}
     return box;
   }
 
   function actionLabel(a){if(a.type==='set_duration')return `${a.minutes} minute workout`;if(a.type==='swap_exercise')return `swap to ${a.replacementName}`;return 'coach change'}
 
-  function applyAction(a,btn){
+  function applyAction(a,btn,context){
     const u=activeUser();
+    if(!context||context!==actionContext(u)){toast('This suggestion belongs to an earlier workout. Ask Coach for an updated recommendation.');return;}
     if(a.type==='set_duration'){
-      const n=Math.max(10,Math.min(120,Number(a.minutes)||0));if(!n)return;setWorkoutMinutes(n);btn.disabled=true;btn.textContent='Applied';return;
+      const n=Number(a.minutes);if(!Number.isFinite(n)||n<10||n>120)return;setWorkoutMinutes(n);if(u.workoutMinutes===Math.round(n)){btn.disabled=true;btn.textContent='Applied'}return;
     }
     if(a.type==='swap_exercise'){
       const workout=finalWorkout(u),idx=Number(a.targetIndex),target=workout[idx];if(!target){toast('That exercise is no longer in this workout');return;}
@@ -204,20 +213,28 @@
   function renderVideo(v){const wrap=document.createElement('div');wrap.className='coach-video';const embed=youtubeEmbed(v.url);if(embed){const f=document.createElement('iframe');f.src=embed;f.loading='lazy';f.title=v.title||'Exercise demonstration';f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';f.allowFullscreen=true;wrap.appendChild(f)}const a=document.createElement('a');a.className='coach-video-link';a.href=v.url;a.target='_blank';a.rel='noopener noreferrer';a.textContent=v.title||'Open exercise demo';wrap.appendChild(a);return wrap}
 
   async function askCoach(prompt){
-    const input=document.getElementById('coachInput'),status=document.getElementById('coachStatus'),send=document.querySelector('.coach-send');
+    const input=document.getElementById('coachInput'),status=document.getElementById('coachStatus');
     const message=String(prompt||input.value||'').trim();if(!message)return;
-    const arr=messages();arr.push({role:'user',text:message,ts:Date.now()});uTrim(arr);saveData();renderMessages();input.value='';send.disabled=true;status.textContent='Coach is thinking…';
+    const user=activeUser(),scope=window.ironSixAccountScope,key=requestKey(user);
+    if(pendingRequests.has(key))return;
+    const request={},context=coachContext(),fingerprint=actionContext(user),arr=messages();
+    pendingRequests.set(key,request);
+    const valid=()=>window.ironSixAccountScope===scope&&data.users.includes(user)&&user.coachMessages===arr;
+    const visible=()=>valid()&&activeUser()===user;
+    arr.push({role:'user',text:message,ts:Date.now()});uTrim(arr);saveData();renderMessages();input.value='';
+    const controller=new AbortController();let timeout;
     try{
-      const r=await fetch('/api/coach',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,context:coachContext()})});
-      const contentType=r.headers.get('content-type')||'';
-      if(!contentType.includes('application/json'))throw new Error('Coach returned an invalid response');
-      const out=await r.json();if(!r.ok)throw new Error(out.error||'Coach request failed');
-      arr.push({role:'assistant',text:out.reply||'No response.',actions:out.actions||[],videos:out.videos||[],followUps:out.followUps||[],model:out.model,ts:Date.now()});uTrim(arr);saveData();renderMessages();
-
-      if(out.followUps?.length)renderFollowUps(out.followUps);
-      status.textContent='';
-    }catch(err){arr.push({role:'assistant',text:`Coach is unavailable: ${err.message}. Please try again.`,ts:Date.now()});uTrim(arr);saveData();renderMessages();status.textContent='';}
-    finally{send.disabled=false;if(!window.__ironSixAutoAsk)input.focus();window.__ironSixAutoAsk=false}
+      const out=await Promise.race([
+        (async()=>{const r=await fetch('/api/coach',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({message,context})});
+          const contentType=r.headers.get('content-type')||'';
+          if(!contentType.includes('application/json'))throw new Error('Coach returned an invalid response');
+          const out=await r.json();if(!r.ok)throw new Error(out.error||'Coach request failed');return out;})(),
+        new Promise((_,reject)=>{timeout=setTimeout(()=>{controller.abort();reject(new Error('Coach request timed out'))},30000)})
+      ]);
+      if(!valid())return;
+      arr.push({role:'assistant',text:out.reply||'No response.',actions:Array.isArray(out.actions)?out.actions:[],actionContext:fingerprint,videos:Array.isArray(out.videos)?out.videos:[],followUps:Array.isArray(out.followUps)?out.followUps:[],model:out.model,ts:Date.now()});uTrim(arr);saveData();
+    }catch(err){if(valid()){arr.push({role:'assistant',text:`Coach is unavailable: ${err.message}. Please try again.`,ts:Date.now()});uTrim(arr);saveData()}}
+    finally{clearTimeout(timeout);if(pendingRequests.get(key)===request)pendingRequests.delete(key);if(visible()){renderMessages();status.textContent='';if(!window.__ironSixAutoAsk&&document.getElementById('coach')?.classList.contains('active'))input.focus()}window.__ironSixAutoAsk=false}
   }
 
   function uTrim(arr){while(arr.length>30)arr.shift()}
@@ -344,29 +361,37 @@ Anything else you want to know about ${guide.name}? Ask about load, warm-up sets
 
   window.applyExerciseSwap=function applyExerciseSwap(index,option){
     const u=activeUser(),workout=finalWorkout(u),target=workout[index];
-    if(!target||!option||option.base!==target.base||!exerciseAvailable(u,option))return false;
+    if(!target||!option||option.base!==target.base||!exerciseAvailable(u,option)||(u.trainingMode==='circuit'&&typeof circuitSuitable==='function'&&!circuitSuitable(option)))return false;
     const prefix=`${index}-`,logged=Object.entries(u.today||{}).filter(([key,set])=>key.startsWith(prefix)&&set&&(set.done||String(set.weight||'').trim()||String(set.reps||'').trim()||String(set.rir||'').trim()));
     if(logged.length&&!confirm(`Swap ${target.name} and clear only its ${logged.length} entered set${logged.length===1?'':'s'}?`))return false;
+    window.IronSixJournal?.ensure(u,workout);
+    if(logged.some(([,set])=>set.done===true)&&typeof recordInterruptedRoutine==='function'){
+      recordInterruptedRoutine({...u,today:Object.fromEntries(logged)},workout,`${u.workoutDraft?.id||'local'}:swap:${index}:${Date.now()}`);
+    }
     for(const key of Object.keys(u.today||{}))if(key.startsWith(prefix))delete u.today[key];
     const key=u.program?.currentWorkoutKey||'lower_strength',exposure=Number(u.program?.exposures?.[key])||0;
     if(!u.coachOverrides||u.coachOverrides.workoutKey!==key||Number(u.coachOverrides.exposure)!==exposure)u.coachOverrides={workoutKey:key,exposure,byIndex:{},byBase:{}};
     u.coachOverrides.byIndex=u.coachOverrides.byIndex||{};
-    const {_alternatives,...replacement}=option;
-    u.coachOverrides.byIndex[index]=replacement;
+    const {_alternatives,...chosen}=option;
+    const replacement={...chosen,sets:target.sets,priority:target.priority,_programSlot:target._programSlot,
+      prescription:u.trainingMode==='circuit'?target.prescription:String(chosen.prescription||'').replace(/^\d+\s*×/,target.sets+' ×')};
+    u.coachOverrides.byIndex[index]={...replacement,_targetName:target.name};
     window.IronSixCircuit?.pause('Exercise swapped');calibrationRequest++;
     window.IronSixJournal?.changePlan(u,index,{...replacement,sets:target.sets,_alternatives:[target,...swapOptionsForExercise(u,target)].filter(x=>x.name!==replacement.name)});
     u.sessionCalibration=null;
     saveData();renderExercises();renderTodayHeader();window.IronSixCircuit?.rebuild();toast(`${target.name} → ${option.name}`);return true;
   };
 
+  function workoutIdentity(u){return {id:u.workoutDraft?.id,key:u.program?.currentWorkoutKey,exposures:u.program?.exposures,plan:finalWorkout(u).map(e=>[e.name,e.sets,e.prescription])}}
   window.openExerciseSwap=function openExerciseSwap(index){
     const u=activeUser(),exercise=finalWorkout(u)[index],modal=document.getElementById('exerciseSwapModal');
     if(!exercise||!modal)return;
+    const scope=window.ironSixAccountScope,signature=JSON.stringify(workoutIdentity(u));
     const options=swapOptionsForExercise(u,exercise),title=modal.querySelector('#exerciseSwapTitle'),summary=modal.querySelector('#exerciseSwapSummary'),list=modal.querySelector('#exerciseSwapList');
     title.textContent=`Swap ${exercise.name}`;
     summary.textContent=`Choose another ${exercise.base.toLowerCase()} movement. The muscle target and programming role stay the same.`;
     list.innerHTML=options.length?options.map((option,optionIndex)=>`<button type="button" class="exercise-swap-option" data-swap-option="${optionIndex}"><span><strong>${escapeHtml(option.name)}</strong><small>${escapeHtml(option.prescription)}${option.equipmentName?` • ${escapeHtml(option.equipmentName)}`:''}</small></span>${option.source==='groq'?'<b>AI option</b>':'<b>Swap</b>'}</button>`).join(''):'<div class="note">No equivalent movement is available with this profile’s equipment.</div>';
-    list.querySelectorAll('[data-swap-option]').forEach(button=>button.addEventListener('click',()=>{const option=options[Number(button.dataset.swapOption)];if(applyExerciseSwap(index,option))modal.classList.remove('show')}));
+    list.querySelectorAll('[data-swap-option]').forEach(button=>button.addEventListener('click',()=>{const option=options[Number(button.dataset.swapOption)];if(scope!==window.ironSixAccountScope||u!==activeUser()||signature!==JSON.stringify(workoutIdentity(u))){modal.classList.remove('show');toast('Workout changed. Reopen Swap for the current exercise.');return}if(applyExerciseSwap(index,option))modal.classList.remove('show')}));
     modal.classList.add('show');
   };
 

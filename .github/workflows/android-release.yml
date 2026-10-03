@@ -14,7 +14,19 @@ on:
         required: false
         default: ''
   push:
+    branches: [main]
     tags: ['v*']
+    paths:
+      - '.github/workflows/android-release.yml'
+      - 'android/**'
+      - 'native/**'
+      - 'scripts/build-android-web.mjs'
+      - 'capacitor.config.json'
+      - '*.js'
+      - '*.html'
+      - '*.css'
+      - 'assets/**'
+      - 'package*.json'
 
 permissions:
   contents: read

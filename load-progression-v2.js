@@ -126,9 +126,10 @@
       const rec = recommendationFromSet(user, exercise, latest);
       if (!rec || !rec.load) return base;
       const currentLoad = Number(base?.load) || 0;
-      const shouldReplaceLoad = !currentLoad || (rec.direction === 'up' && rec.load > currentLoad) || (rec.direction === 'down' && rec.load < currentLoad);
-      const load = shouldReplaceLoad ? rec.load : currentLoad;
-      const target = rec.load === load && rec.reps ? rec.reps : base.target;
+      // The newest completed performance outranks older medians, including a manual
+      // load reduction that was on target. Otherwise an old heavy set silently wins.
+      const load = rec.load;
+      const target = rec.reps || base.target;
       if (load === currentLoad && target === base.target) return base;
       return {
         ...base,

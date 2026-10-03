@@ -110,3 +110,7 @@ Google, Apple, Microsoft and GitHub are not activated merely by building an APK.
 The JavaScript tests cover native routing, callback validation, duplicate callbacks, background pause, safe export and packaged asset completeness. Also build with Android Studio and test on a physical device: sign-in and return, cold-start callback, set logging followed by force-stop/reopen, offline edits followed by sync, a complete circuit with sound and app switching, Back behavior and backup export. Test upgrades with the intended signing key. A successful JavaScript test run alone does not verify the Android binary.
 
 Local APK compilation was blocked because this environment only has JDK 17 and automatic approval review failed on the JDK 21 download. GitHub Actions uses its preinstalled Android toolchain instead; see the Android test build run for compilation, signature verification and artifacts. Physical-device verification and release signing remain separate steps. Source pushes succeeded, but manual Vercel production deployment was blocked by automatic approval review.
+
+### Automatic signed updates
+
+Changes to app code on `main` now run the signed Android release workflow automatically. It runs the tests, packages the current web app, signs with the existing repository signing key, verifies the signature, and publishes APK/AAB build artifacts for 90 days. Manual dispatch and version-tag builds remain available. The workflow does not publish to Google Play or install the app on a device.
