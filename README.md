@@ -48,3 +48,7 @@ An off-by-default spike counts reps from the front camera using on-device pose e
 This repository is the source of truth for the Iron Six web app. The static build is deployable through GitHub Pages and can also be deployed to Vercel. Supabase schema/migrations are kept in the repository for cloud persistence.
 
 No secrets or private API keys should ever be committed to this repository.
+
+## Contributor and agent entry points
+
+Start with [CONTRIBUTING.md](CONTRIBUTING.md) and the [Claude project handoff](reports/claude-project-handoff.md) for the shipped repair, verification limits, GitHub workflow and next priorities. Report reproducible defects through the issue forms; signed Android downloads are published under Releases after successful release builds. Owner-only Project/protection setup is tracked in [.github/OWNER_SETUP.md](.github/OWNER_SETUP.md).

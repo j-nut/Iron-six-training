@@ -1,0 +1,77 @@
+# Iron Six — Claude project handoff
+
+Updated October 2, 2026, America/Los_Angeles (October 3 UTC). This is the entry point for the next agent. Read the current remote main and open PRs before editing; this document describes verified work and explicitly separates pending checks.
+
+## Project and release state
+
+- Repository: https://github.com/j-nut/Iron-six-training
+- Production: https://iron-six-training.vercel.app/
+- App repair merged in PR #47: https://github.com/j-nut/Iron-six-training/pull/47
+- App repair main commit: `4ced98dc358c29be2c691634662ce25972b19ce5`, tree `a0ec07a6eb1fdfc9f69fe116d333f51419e2d4de`.
+- Production Vercel deployment `dpl_BZmJ6LJrarLx5FKAzD9VsEBNe9aq` was READY and the production alias resolved to the merged app commit.
+- Signed Android build passed at https://github.com/j-nut/Iron-six-training/actions/runs/37098369429. Existing stable signing secrets were used; signature verification and debug-key rejection passed. This historical build is an Actions artifact; new release automation below publishes permanent downloads.
+- Other sessions' open PRs #46 (landmine illustrations), #42 (watch integration) and #11 (exercise library) were not merged, rewritten or closed by this work. Open issue #28 concerns e1RM calibration. Assess current diffs before treating these proposals as implemented.
+
+## App repairs already shipped
+
+Read `reports/adaptive-workout-flow-handoff.md` for detailed behavior and `git show 4ced98d` for the complete patch. Main modules: `session-planner.js`, `workout-store.js`, `engine.js`, session UI files, `coach.js`, `local-ai-fallback.js`, `circuit-player.js` and their tests.
+
+Manual routine changes preserve displaced sessions in a durable pending sequence. Completion advances the selected session once; rest does not advance it. The forecast uses the same scheduler. Actual completed movement families, including recent archived partial work, can defer immediate repetition. This is a bounded heuristic, not a complete physiological recovery model, and it cannot account for unlogged exercise.
+
+History matches exact exercises before compatible load families, distinguishing barbell totals from dumbbell per-hand loads. Top sets/backoffs stay separate, deliberate load reductions survive, and equipment caps/bodyweight exercises prevent invented or excessive loads. Completed-row edits recalculate remaining targets and survive rerender/reload. Invalid reps/loads cannot remain marked done; numeric zero and unloaded work remain supported.
+
+Late Coach/recalibration responses cannot apply to replacement sessions, changed accounts or newer edits. Swaps preserve role, volume and time constraints and retain performed work in the journal. Duration/mode/readiness/equipment changes invalidate stale plans. Coach requests have a body-inclusive deadline, duplicates are blocked, and exercise demo shortcuts resolve against the current workout. Circuit prescriptions agree with timeline rounds; skip does not log completion.
+
+Do not collapse immutable performed history into the current exercise prescription. Do not reuse another exercise's historical load just because it shares a movement pattern. Preserve account isolation, durable saves, RLS and the stable Android signing key.
+
+## Verification and limits
+
+- App repair suite: 470 tests passed with zero failures; planner matrix covered 672 combinations of routines, equipment, durations and modes. Repository onboarding adds one behavioral regression test (471 total expected).
+- Web and Android web bundle builds passed. Native debug APK and release AAB build passed CI; subsequent stable-key signed APK/AAB passed CI.
+- Live guest UI checked Done/undo counters, invalid completed edits, reload persistence, first-exercise demos, manual routine changes/archive/forecast, duration/mode rebuilds and circuit start/skip/pause.
+- Production cloud Coach returned a successful `openai/gpt-oss-20b` response and recalibration HTTP 200. Preview lacked cloud configuration, so fallback was checked there.
+- Physical Android execution/update install, narrow phone viewport/browser matrix and a real authenticated cross-device workout flow remain unverified. Account tests use simulated services. No production user's workout records were modified.
+- A green suite is regression evidence, not a claim that every bug or device scenario has been eliminated. Track new defects with exact reproduction evidence.
+
+## GitHub workflow implemented in this change
+
+| Feature | Files / behavior | How to use |
+| --- | --- | --- |
+| Bug and feature intake | `.github/ISSUE_TEMPLATE/*.yml` | New Issue collects reproducible behavior, environment, account mode and acceptance criteria. Avoid private records/secrets. |
+| PR review and ownership | PR template, `.github/CODEOWNERS`, `CONTRIBUTING.md` | Link issues; record tests, UI checks, data/release effects and unverified cases. Ownership enforcement still requires owner protection setup. |
+| Labels, milestones, backlog | `repository-setup.yml`, `scripts/github/repository-setup.cjs` | Runs after merge on setup-file changes or manually from Actions. Creates missing metadata and four verification/setup issues. Reruns preserve custom labels, existing milestones and completed issues. |
+| Issue triage | `issue-triage.yml` | Open/reopened issues without an existing `status:*` get `status:triage`. Maintainers set priority, area, readiness and milestone. |
+| Dependency maintenance | `.github/dependabot.yml` | Weekly npm, Actions and Gradle upgrade PRs; Capacitor grouped. Review and test before merging. No automatic merge. |
+| Security scans | `codeql.yml`, `SECURITY.md` | JavaScript/TypeScript and Actions scans on PRs, main and weekly. Investigate findings in Security; keep private vulnerability reports private. |
+| Permanent Android releases | `android-release.yml` publish job | After tests/signing checks pass, publishes `android-build-<versionCode>` containing `iron-six.apk`, `iron-six.aab`, SHA256SUMS and source/build evidence. Existing tags/assets are preserved on rerun. |
+| Owner-only configuration | `.github/OWNER_SETUP.md` | Actual account Project, main ruleset, private reporting/secret scanning and security settings require owner access. Prepared; not applied by the managed connector. |
+
+Labels: `priority:P0` data/account/core failure, P1 major regression, P2 normal, P3 optional. `area:*` selects UI/trainer/routines/Coach/accounts/Android/GitHub. Choose one `status:*` label (`triage`, `ready`, `blocked`, `verification`) rather than accumulating contradictory statuses. Milestones are **Reliability and release readiness** and **Future enhancements**, without speculative deadlines.
+
+The bootstrap adds real issues for physical-device updates, authenticated sync, mobile/accessibility verification and owner setup. Existing issue #28 and watch/library work are placed in Future enhancements only if no milestone already exists. Other PR descriptions/diffs remain unchanged.
+
+## Running and releasing changes
+
+1. Fetch remote main, inspect `git status`, open PRs and latest Actions. Create an isolated branch; never overwrite other sessions' uncommitted changes.
+2. `npm ci --ignore-scripts`; `npm test`. Node 22 is the CI baseline. `node scripts/build-web.mjs` builds the web bundle; `npm run android:sync` builds the native web bundle and syncs Capacitor.
+3. Verify the actual changed user flow, including console/network errors, reload, offline/account transitions and following-day plans when relevant. Add targeted regressions for reproduced failures.
+4. Open a PR with issue links and evidence. `validate` tests/syntax/Edge typechecks; CodeQL scans. Native `apk` is path filtered; do not make it a blanket required check.
+5. Merge only after relevant checks pass. App/workflow changes on main trigger signed Android builds using existing repository secrets. The publisher has `contents:write`; the signing build retains read-only contents permission. No personal token is needed for releases.
+6. Download APK from Releases to install; AAB is for Play. Verify SHA256SUMS. Never rotate signing key casually or reset version codes (`1000 + GITHUB_RUN_NUMBER`). Rerunning an old release preserves existing assets. Do not delete/recreate its workflow to reset numbering.
+7. Check Vercel production separately; a successful GitHub workflow is not proof that the production alias has deployed the same commit.
+
+## Remaining owner setup
+
+At the initial GitHub audit, main was unprotected, repository rulesets were empty and Releases were empty. Account Projects could not be managed by this connector, and the browser was not signed in. Do not claim these admin settings have been enabled without fresh evidence.
+
+Follow `.github/OWNER_SETUP.md` to create/link **Iron Six delivery**, enable its Status and auto-add workflows, require `validate` (and exact CodeQL names after they succeed), block force pushes/deletion, and enable available security settings. Avoid requiring the sole owner to approve their own PR. Record the Project URL, ruleset ID and a demonstrated failing-PR merge block here before closing the setup issue.
+
+## Recommended next work
+
+Prioritize the three verification issues before adding more Coach complexity. Reproduce and fix specific failures found on real accounts/devices, then capture each as a regression. Add durable end-to-end browser coverage for manual routine changes → interrupted logging → reload → next-day forecast. Expand offline conflict and profile-switch coverage with dedicated test accounts. Establish an accessibility and device matrix.
+
+For features, assess issue #28 e1RM calibration (optional max testing and transparent estimates), the watch integration PR's permissions/offline/battery behavior, and equipment-aware library expansion. Show why a recommendation changed and let the user correct recorded work; do not promise the app can infer unlogged activity. Consider explicit training-dose explanations and user-controlled schedule constraints before replacing the current bounded scheduler with more complex recovery logic.
+
+## Latest delivery evidence
+
+This section must be updated after the GitHub workflow PR passes and is merged, with its PR/merge SHA, actual bootstrap run/created issue numbers, CodeQL results and signed Release URL. Owner-only configuration remains pending until independently verified.

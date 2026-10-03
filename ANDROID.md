@@ -114,3 +114,12 @@ Local APK compilation was blocked because this environment only has JDK 17 and a
 ### Automatic signed updates
 
 Changes to app code on `main` now run the signed Android release workflow automatically. It runs the tests, packages the current web app, signs with the existing repository signing key, verifies the signature, and publishes APK/AAB build artifacts for 90 days. Manual dispatch and version-tag builds remain available. The workflow does not publish to Google Play or install the app on a device.
+
+### Permanent release downloads
+
+After a signed build passes, the workflow publishes a GitHub Release tagged
+`android-build-<versionCode>`. Download `iron-six.apk` for installation;
+`iron-six.aab` is the Play bundle. `SHA256SUMS.txt` verifies both files.
+Release notes identify the exact source commit and Actions run. A rerun preserves
+an existing release's original assets. Repository write permission is confined
+to the publishing job; signing secrets remain in the build job.
