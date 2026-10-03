@@ -319,8 +319,87 @@ test('on the launch screen the next-mark goal is one line with its full explanat
   const a=app();try{
     a.setHistory(cycles(1));a.run("activeUser().program.currentWorkoutKey='lower_b';renderAll();IronSixMarks.renderGoal()");
     const goal=a.w.document.getElementById('ironMarksGoal');assert(goal,'goal rendered');
-    assert.match(goal.getAttribute('aria-label'),/^Your next mark: .+, \d+ of \d+\. .+/);
+    assert.match(goal.getAttribute('aria-label'),/^Current block: .+, \d+ of \d+\. .+/);
     assert.match(a.w.document.getElementById('ironMarksStyles').textContent,/#today\.session-prestart #ironMarksGoal span:last-child\{display:none\}/);
     assert(a.w.document.getElementById('sessionStart').contains(goal),'the goal sits with Begin workout, not above it');
   }finally{a.close()}
+});
+
+
+test('reward views separate the collection and style controls and filter marks accurately',()=>{
+ const a=app();try{
+  a.setHistory(cycles(1));a.run('IronSixMarks.open()');
+  const modal=a.w.document.getElementById('ironMarksModal');
+  assert.equal(modal.querySelector('#im-panel-overview').hidden,false);
+  assert.equal(modal.querySelector('#im-panel-collection').hidden,true);
+  modal.querySelector('[data-panel="collection"]').click();
+  assert.equal(modal.querySelector('#im-panel-overview').hidden,true);
+  const filter=modal.querySelector('#imFilter');filter.value='earned';filter.dispatchEvent(new a.w.Event('change'));
+  const visible=[...modal.querySelectorAll('#imCollectionPanel .im-card')].filter(c=>!c.hidden);
+  assert.equal(visible.length,a.json('IronSixMarks.evaluate().marks.filter(m=>m.unlocked).length'));
+  assert(visible.every(c=>c.classList.contains('earned')));
+  filter.value='progress';filter.dispatchEvent(new a.w.Event('change'));
+  assert([...modal.querySelectorAll('#imCollectionPanel .im-card')].filter(c=>!c.hidden).every(c=>c.classList.contains('locked')));
+  assert([...modal.querySelectorAll('#imCollectionPanel .im-card.hidden')].every(c=>c.hidden),'secret marks not promoted as in-progress targets');
+  assert.deepEqual(a.errors,[]);
+ }finally{a.close()}
+});
+
+test('a new collection has a useful earned empty state without revealing hidden marks',()=>{
+ const a=app();try{
+  a.setHistory([]);a.run("IronSixMarks.open('collection')");
+  const modal=a.w.document.getElementById('ironMarksModal'),filter=modal.querySelector('#imFilter');
+  filter.value='earned';filter.dispatchEvent(new a.w.Event('change'));
+  assert.equal(modal.querySelector('#imEmpty').hidden,false);assert.match(modal.querySelector('#imEmpty').textContent,/first successful session/);
+  assert.equal(modal.querySelector('#imCollectionPanel [data-mark="six_six"]'),null);
+ }finally{a.close()}
+});
+
+test('stale collection callbacks cannot change a different profile even if it owns the same cosmetics',()=>{
+ const a=app();try{
+  a.setHistory(cycles(3));a.run("IronSixMarks.open('style')");
+  const modal=a.w.document.getElementById('ironMarksModal'),wear=modal.querySelector('[data-wear="hex"]'),ring=modal.querySelector('[data-custom="ring"]');
+  a.run("const second=JSON.parse(JSON.stringify(activeUser()));second.id='second';second.trainerMemory.achievements={emblem:null,ring:'auto'};data.users.push(second);data.activeUserId='second'");
+  wear.click();ring.value='none';ring.dispatchEvent(new a.w.Event('change'));
+  assert.equal(a.json('activeUser().trainerMemory.achievements.emblem'),null);
+  assert.equal(a.json('activeUser().trainerMemory.achievements.ring'),'auto');assert.equal(modal.hidden,true);
+  assert.equal(a.w.document.getElementById('app').hasAttribute('inert'),false);
+ }finally{a.close()}
+});
+
+test('stale celebration actions are rejected after an account scope change',()=>{
+ const a=app();try{
+  a.setHistory([]);a.run('IronSixMarks.check()');const now=a.json('Date.now()');
+  a.setHistory([{...session('push_a',0),ts:now-1000}]);a.run('IronSixMarks.check()');
+  const modal=a.w.document.getElementById('ironMarksEarned'),wear=modal.querySelector('[data-wear="spark"]');
+  a.run("window.ironSixAccountScope='another-account'");wear.click();
+  assert.equal(a.json('activeUser().trainerMemory.achievements.emblem'),null);assert.equal(modal.hidden,true);
+ }finally{a.close()}
+});
+
+test('reward dialogs trap keyboard focus, isolate the background and restore the opener',()=>{
+ const a=app();try{
+  const opener=a.w.document.getElementById('profileMenuButton');opener.focus();a.run('IronSixMarks.open()');
+  const modal=a.w.document.getElementById('ironMarksModal'),close=modal.querySelector('.im-close');
+  assert.equal(a.w.document.activeElement,close);assert(a.w.document.getElementById('app').hasAttribute('inert'));
+  close.dispatchEvent(new a.w.KeyboardEvent('keydown',{key:'Tab',shiftKey:true,bubbles:true,cancelable:true}));
+  assert(modal.contains(a.w.document.activeElement));assert.notEqual(a.w.document.activeElement,close);
+  a.w.document.activeElement.dispatchEvent(new a.w.KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true}));
+  assert.equal(a.w.document.activeElement,close);
+  const overview=modal.querySelector('[data-panel="overview"]');overview.focus();overview.dispatchEvent(new a.w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true,cancelable:true}));
+  assert.equal(modal.querySelector('[data-panel="collection"]').getAttribute('aria-selected'),'true');
+  a.w.document.activeElement.dispatchEvent(new a.w.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));
+  assert.equal(modal.hidden,true);assert.equal(a.w.document.activeElement,opener);assert.equal(a.w.document.getElementById('app').hasAttribute('inert'),false);
+ }finally{a.close()}
+});
+
+test('changing earned style keeps its panel and keyboard focus after rerender and saves the preference',()=>{
+ const a=app();try{
+  a.setHistory(cycles(3));a.run("IronSixMarks.open('style')");
+  const modal=a.w.document.getElementById('ironMarksModal'),select=modal.querySelector('[data-custom="ring"]');select.focus();select.value='none';select.dispatchEvent(new a.w.Event('change'));
+  assert.equal(modal.querySelector('#im-panel-style').hidden,false);
+  assert.equal(a.w.document.activeElement,modal.querySelector('[data-custom="ring"]'));
+  assert.equal(a.json('activeUser().trainerMemory.achievements.ring'),'none');
+  modal.querySelector('.im-close').click();a.run("IronSixMarks.open('style')");assert.equal(modal.querySelector('[data-custom="ring"]').value,'none');
+ }finally{a.close()}
 });

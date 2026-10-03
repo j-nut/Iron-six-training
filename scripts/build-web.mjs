@@ -51,3 +51,9 @@ const checksums = {};
 for (const file of files) checksums[file] = createHash('sha256').update(await readFile(resolve(out,file))).digest('hex');
 await writeFile(resolve(out,'release.json'), JSON.stringify({files:checksums,images:manifest.files},null,2)+'\n');
 console.log(`Web release ready: ${files.length} public files (${runtimeScripts.length} runtime-loaded), ${Object.keys(manifest.files).length} verified exercise images, ${artCount} verified Iron Six illustrations.`);
+
+// Real iframe viewport widths for browser review; never included in production or Android.
+if (process.env.VERCEL_ENV === 'preview') {
+  await mkdir(resolve(out, '__qa'), {recursive:true});
+  await cp(resolve(root, 'scripts/qa-preview.html'), resolve(out, '__qa/frame.html'));
+}

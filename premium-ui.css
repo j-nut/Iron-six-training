@@ -1,159 +1,176 @@
-/* Iron Six premium polish layer.
- * Visual only: no workout/auth/state behavior lives here.
- * Motion is deliberately restrained and disabled for reduced-motion users.
- */
+/* Iron Six design system. Presentation only; training and account state stay in their modules. */
 :root{
-  --premium-line:rgba(255,255,255,.085);
-  --premium-line-soft:rgba(255,255,255,.045);
-  --premium-highlight:rgba(255,255,255,.045);
-  --premium-accent-soft:rgba(46,229,128,.12);
-  --premium-shadow:0 18px 48px rgba(0,0,0,.28),0 2px 8px rgba(0,0,0,.22);
-  --premium-shadow-soft:0 10px 28px rgba(0,0,0,.20);
+  --bg:#101214;--surface:#191c20;--surface2:#22262b;--line:#363d45;
+  --text:#f4f5f3;--muted:#b0b8c2;--radius:16px;
+  --premium-line:var(--line);--premium-shadow-soft:0 8px 22px #0002;
   --premium-ease:cubic-bezier(.22,.8,.22,1);
 }
-
-html{scroll-behavior:smooth}
-body{
-  background:
-    radial-gradient(900px 440px at 50% -130px,rgba(46,229,128,.055),transparent 70%),
-    linear-gradient(180deg,#090b0e 0,#0d0f14 42%,#090b0e 100%);
+html{font-size:16px;scroll-behavior:smooth;scroll-padding-bottom:120px}
+body{background:var(--bg);line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}button:disabled{cursor:default}
+.app{max-width:800px;padding:24px 24px calc(116px + env(safe-area-inset-bottom,0px))}
+.app .topbar{margin-bottom:24px;min-height:44px}
+.app .brand img{height:28px}
+.app .hero{background:var(--surface)!important;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:16px;padding:24px;box-shadow:none}
+.app .hero:before,.app .exercise:before,.app .shell-panel:before{display:none}
+.app .hero h1{font-size:clamp(1.7rem,4vw,2.1rem);line-height:1.15;letter-spacing:-.035em;font-weight:750;margin:8px 0 12px}
+.app .hero p{font-size:1rem;line-height:1.6;-webkit-line-clamp:unset;display:block;overflow:visible}
+.app .eyebrow{font-size:.75rem;line-height:1.5;letter-spacing:.13em;font-weight:700}
+.app #today.session-compact>.hero{padding:20px 22px;border-radius:16px;margin-bottom:14px}
+.app #today.session-compact>.hero h1{font-size:clamp(1.5rem,3.8vw,1.9rem);line-height:1.2;font-weight:750}
+.app #today.session-compact>.hero .eyebrow{font-size:.75rem;line-height:1.5;margin-bottom:7px}
+.app .metrics{gap:16px;margin-top:24px}
+.app .metric{padding:0;background:none;border:0;border-radius:0}
+.app .metric+.metric{border-left:1px solid var(--line);padding-left:16px}
+.app .metric strong{font-size:1.5rem;font-weight:650;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
+.app .metric span{font-size:.8rem;margin-top:4px}
+.app .section{margin-top:28px}
+.app .section h2{font-size:1.2rem;font-weight:700;letter-spacing:-.025em;line-height:1.3}
+.app .section-head{margin-bottom:16px;align-items:center}
+.app .section small,.app .helper,.app .time-summary{font-size:.875rem;line-height:1.55}
+.app .section-head small{display:block;margin-top:5px}
+.app .shell-panel{background:var(--surface);border-color:var(--line);border-radius:14px;box-shadow:none;margin-bottom:14px}
+.app .shell-toggle{padding:16px;min-height:64px}
+.app .shell-toggle-text strong{font-size:.9375rem;font-weight:650}
+.app .shell-toggle-text span{font-size:.8125rem;line-height:1.4;margin-top:4px}
+.app #today.session-prestart #sessionSetup .shell-toggle{padding:14px 16px;min-height:64px}
+.app #sessionStart{padding:16px;background:var(--surface);border:1px solid var(--line);box-shadow:none;border-radius:16px}
+.app #today.session-prestart #sessionStart p{font-size:.875rem;line-height:1.5;margin-bottom:12px}
+.app .btn{font-size:.9375rem;font-weight:700;border-radius:12px;min-height:48px;letter-spacing:-.01em;padding:13px 18px;box-shadow:none}
+.app .btn.primary{background:var(--accent);color:#101214;box-shadow:none}
+.app .btn.secondary{background:var(--surface2);border-color:var(--line)}
+.app .btn:hover{filter:brightness(1.08)}
+.app .btn:active{transform:translateY(1px)}
+.app .exercise{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:none}
+.app .exercise-head{padding:20px;gap:16px}
+.app .exercise-name-link{font-size:1.2rem!important;font-weight:700;line-height:1.3}
+.app .exercise-title>span{font-size:.875rem;line-height:1.5}
+.app .sets{padding:16px 18px 20px}
+.app .field{background:var(--surface2);border:1px solid var(--line);font-size:1.0625rem;font-weight:650;min-height:52px;border-radius:10px;font-variant-numeric:tabular-nums}
+.app .set-num{font-size:.9375rem;font-weight:650}
+.app .field-labels{font-size:.75rem;line-height:1.4;letter-spacing:.04em;opacity:1;color:var(--muted)}
+.app .set-row:has(.done.active){opacity:.72}
+.app .set-row:has(.done.active):focus-within{opacity:1}
+.app .done{border-radius:10px;border-width:1px;font-weight:700;animation:none;box-shadow:none}
+.app .done.active{box-shadow:none!important}
+.app .suggestion{border-radius:10px;box-shadow:none}
+.app .suggestion strong{font-weight:650;letter-spacing:-.01em}
+.app .note{font-size:.9375rem;line-height:1.6;padding:16px;border-radius:12px;background:var(--surface);box-shadow:none}
+.app .tag,.app .badge{font-size:.75rem;font-weight:600;box-shadow:none}
+.app .duration-btn{font-size:.9375rem;font-weight:650;border-radius:10px}
+.app .setting{padding:18px 0}
+.app .setting label,.app .select-wrap label{font-size:.875rem;line-height:1.5}
+.app .profile-card{padding:18px;border-radius:14px;box-shadow:none}
+.app .profile-card span{font-size:.875rem;line-height:1.5}
+.app .profile-actions{flex-wrap:wrap}
+.app .history-item{padding:18px 0}
+.app .history-item span{font-size:.875rem;line-height:1.5}
+.app .coach-msg{padding:18px;font-size:1rem;line-height:1.65;border-radius:14px}
+.app .coach-msg .meta{font-size:.75rem}
+.app .coach-chat{gap:16px}
+.app .coach-compose textarea{border-radius:12px;background:var(--surface);line-height:1.5}
+.app .coach-status,.app .coach-action p{font-size:.875rem;line-height:1.55}
+.app .coach-disclaimer{font-size:.8125rem;line-height:1.55}
+/* Override compact runtime rules deliberately, keeping logging controls comfortably readable. */
+.app #sessionCardNav{gap:8px!important;padding:10px 0!important;margin-bottom:14px!important;background:var(--bg)}
+.app #sessionCardNav .sc-step strong{font-size:.875rem!important;line-height:1.4!important;font-weight:650}
+.app #sessionCardNav .sc-step span{font-size:.75rem!important;line-height:1.4}
+.app #sessionCardNav .sc-arrow{min-height:46px!important;height:46px!important;border-radius:10px!important}
+.app #scNextBtn{font-size:.875rem;box-shadow:none!important;animation:none}
+.app .awc-overview-proxy{font-size:.8125rem;min-height:46px;border-radius:10px;font-weight:650}
+.app #exerciseList.awc-focus .exercise:not(.sc-hidden){padding:18px!important;border-radius:16px!important}
+.app #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-title strong:first-child{font-size:1.25rem!important;line-height:1.3!important;font-weight:700}
+.app #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-title>span{font-size:.875rem;margin-top:4px}
+.app #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion{padding:9px 12px!important;border-radius:10px!important;margin-top:12px!important}
+.app #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion strong{font-size:1rem!important;line-height:1.4!important}
+.app .awc-actions{gap:8px;margin-top:12px}
+.app .awc-action{font-size:.8125rem;min-height:44px;padding:10px 14px;font-weight:650;border-radius:10px}
+.app #exerciseList.awc-focus .exercise:not(.sc-hidden) .field-labels{font-size:.75rem!important;line-height:1.5!important;letter-spacing:.025em}
+.app #exerciseList.awc-focus .exercise:not(.sc-hidden) .rows{gap:9px!important}
+.app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row{gap:7px!important;min-height:54px!important}
+.app #exerciseList.awc-focus .set-feedback{flex-wrap:wrap;padding:6px 0 8px!important;gap:8px}
+.app #exerciseList.awc-focus .set-feedback-label{font-size:.75rem!important;display:block!important;width:100%;white-space:normal}
+.app #exerciseList.awc-focus .set-feedback-actions{flex-basis:100%;border-radius:10px}
+.app #exerciseList.awc-focus .set-feedback-btn{min-height:44px!important}
+.app #exerciseList.awc-focus .set-feedback-btn::after{font-size:.8125rem}
+.app .exercise-media{border:1px solid var(--line);box-shadow:none;border-radius:12px}
+.app .exercise-media .media-credit{font-size:.75rem;opacity:1!important}
+.app #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-media figcaption{font-size:.75rem;line-height:1.5}
+/* Navigation uses a clear active state, without animated glow or extra content. */
+body .bottom-nav{background:rgba(16,18,20,.97)!important;border-top:1px solid var(--line)!important;padding-top:8px;box-shadow:none;backdrop-filter:blur(12px)}
+.bottom-nav .bottom-inner{max-width:800px;gap:4px}
+.bottom-nav .navbtn{font-size:.8125rem;font-weight:600;min-height:54px;border-radius:10px;padding:10px 5px;letter-spacing:0}
+.bottom-nav .navbtn.active{background:rgba(var(--accent-rgb,46,229,128),.1)!important;box-shadow:none;font-weight:700}
+.bottom-nav .navbtn.active:after{content:'';position:absolute;bottom:4px;left:calc(50% - 9px);width:18px;height:2px;background:var(--accent);border-radius:2px;box-shadow:none;transform:none}
+body .modal,body .accent-modal{border-radius:18px;background:var(--surface);padding:24px;border-color:var(--line)}
+body .modal h3,body .accent-modal h3{font-size:1.35rem;line-height:1.3;font-weight:700}
+body .modal p,body .accent-modal p{font-size:.9375rem;line-height:1.6}
+body .pm-button{min-height:44px}
+body :is(button,input,select,textarea,a,summary):focus-visible{outline:2px solid var(--accent);outline-offset:3px;box-shadow:none}
+body input:focus,body select:focus,body textarea:focus{border-color:var(--accent)!important}
+body .toast{font-size:.875rem;max-width:calc(100% - 32px);line-height:1.5;border-radius:12px;white-space:normal;text-align:center}
+/* Reward surfaces use the same material, spacing and typography as the training flow. */
+body .im-backdrop{background:#080a0dcc;padding:12px}
+body .im-modal{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;max-height:calc(100dvh - 24px)}
+body .im-head{margin:0 0 24px;gap:18px;align-items:flex-start}
+body .im-head h3{font-size:1.6rem;letter-spacing:-.035em;font-weight:700}
+body .im-head p{font-size:.875rem;line-height:1.55}
+body .im-close{width:44px;height:44px;background:transparent}
+body .im-section h4{font-size:.8rem;letter-spacing:.08em;margin-bottom:14px}
+body .im-card{padding:18px 16px;gap:14px;border-radius:14px;background:var(--surface2)}
+body .im-body strong{font-size:.9375rem;font-weight:650}
+body .im-body span{font-size:.875rem;line-height:1.55}
+body .im-body em{font-size:.8125rem;line-height:1.5;font-weight:500}
+body .im-count{font-size:.75rem;white-space:normal}
+body .im-emblem{font-size:.8125rem;min-height:100px;border-radius:12px;gap:8px}
+body .im-emblem small{font-size:.75rem}
+body .im-customize label,body .im-help{font-size:.875rem;line-height:1.55}
+body .im-story{padding:18px;border-radius:14px}
+body .im-story p{font-size:.875rem;line-height:1.6}
+body .im-mark-group summary{font-size:.9375rem;min-height:44px;line-height:1.5}
+body .im-mark-group summary small{font-size:.75rem;float:none;display:block;margin-top:4px}
+body .im-block-days span{font-size:.8125rem;padding:12px;border:1px solid var(--line)}
+body .im-overview-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:24px 0}
+body .im-overview-stats>div{padding-right:8px;min-width:0}
+body .im-overview-stats strong{display:block;font-size:1.8rem;letter-spacing:-.035em;line-height:1.2;font-weight:650;font-variant-numeric:tabular-nums}
+body .im-overview-stats span{display:block;font-size:.8125rem;color:var(--muted);margin-top:6px;line-height:1.4}
+body .im-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;background:var(--bg);border:1px solid var(--line);border-radius:12px;margin:24px 0 20px}
+body .im-tabs button{font:inherit;font-size:.875rem;font-weight:600;min-height:44px;border:0;border-radius:8px;color:var(--muted);background:transparent}
+body .im-tabs button[aria-selected=true]{color:var(--text);background:var(--surface2)}
+body .im-panel[hidden],body .im-card[hidden],body .im-mark-group[hidden]{display:none!important}
+body .im-filter{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 20px;flex-wrap:wrap}
+body .im-filter label{font-size:.875rem;color:var(--muted)}
+body .im-filter select{font:inherit;font-size:.875rem;padding:10px 12px;min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);color:var(--text);max-width:100%}
+body .im-empty{padding:24px 16px;text-align:center;border:1px dashed var(--line);border-radius:14px;color:var(--muted);font-size:.9375rem;line-height:1.6}
+body .im-goal-label{font-size:.75rem;color:var(--accent);font-weight:650;text-transform:uppercase;letter-spacing:.08em}
+body .im-ringline{padding:18px;font-size:.9375rem;line-height:1.5;background:var(--surface2)}
+.app #ironMarksGoal span,.app #ironMarksGoal strong{font-size:.8125rem}
+.app #ironMarksGoal small{font-size:.75rem}
+@media(min-width:640px){body .im-backdrop{padding:24px}body .im-modal{padding:32px;max-height:calc(100dvh - 48px)}}
+@media(max-width:520px){
+  .app{padding:16px 16px calc(112px + env(safe-area-inset-bottom,0px))}
+  .app .topbar{margin-bottom:18px}.app .brand img{height:25px}
+  .app .hero{padding:20px}.app #today.session-compact>.hero{padding:18px}
+  .app .section{margin-top:24px}.app .exercise-head{padding:16px}
+  .app #exerciseList.awc-focus .exercise:not(.sc-hidden){padding:14px!important}
+  .app #sessionCardNav{gap:6px!important}.app #sessionCardNav .sc-step strong{font-size:.8125rem!important}
+  .app #sessionCardNav .sc-step span{font-size:.75rem!important}
+  .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row{gap:6px!important}
+  .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .field-labels{font-size:.75rem!important}
+  .app .profile-card{flex-wrap:wrap}.app .profile-actions{width:100%}
+  body .im-modal{padding:20px 16px}body .im-head{gap:12px}body .im-head h3{font-size:1.4rem}
+  body .im-overview-stats{gap:10px}body .im-overview-stats strong{font-size:1.5rem}
+  body .im-emblems{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
-
-/* Surfaces: subtle edge light + depth, never glossy. */
-.hero,.exercise,.shell-panel,.modal,.profile-card,.note,#sessionStart,#sessionReview{
-  border-color:var(--premium-line)!important;
-  box-shadow:var(--premium-shadow-soft);
+@media(max-width:370px){
+  .app{padding-left:12px;padding-right:12px}.app #sessionCardNav .sc-step span{display:none}
+  .bottom-nav .navbtn{font-size:.75rem}.app #exerciseList.awc-focus .exercise:not(.sc-hidden){padding:12px!important}
+  .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .done{width:44px!important;min-width:44px!important}
+  body .im-overview-stats{grid-template-columns:1fr 1fr}body .im-overview-stats>div:last-child{grid-column:1/-1}
 }
-.hero,.exercise,.shell-panel,#sessionStart,#sessionReview{
-  position:relative;
-  isolation:isolate;
-}
-.hero:before,.exercise:before,.shell-panel:before,#sessionStart:before,#sessionReview:before{
-  content:"";
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  border-radius:inherit;
-  background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 22%);
-  z-index:-1;
-}
-
-/* Buttons and tappable controls should feel physical without bouncing around. */
-.btn,.iconbtn,.duration-btn,.navbtn,.sc-arrow,.shell-toggle,.done,.social-provider{
-  transition:
-    transform .14s var(--premium-ease),
-    background-color .18s ease,
-    border-color .18s ease,
-    color .18s ease,
-    box-shadow .18s ease,
-    opacity .18s ease;
-  -webkit-tap-highlight-color:transparent;
-}
-.btn:active,.iconbtn:active,.duration-btn:active,.navbtn:active,.sc-arrow:active,.shell-toggle:active,.social-provider:active{
-  transform:scale(.975);
-}
-.btn.primary{
-  box-shadow:0 7px 22px rgba(46,229,128,.14),inset 0 1px 0 rgba(255,255,255,.22);
-}
-.btn.primary:hover,.btn.primary:focus-visible{
-  box-shadow:0 10px 28px rgba(46,229,128,.20),0 0 0 1px rgba(46,229,128,.18),inset 0 1px 0 rgba(255,255,255,.24);
-}
-.btn.secondary:hover,.iconbtn:hover,.duration-btn:hover,.shell-toggle:hover{
-  border-color:rgba(255,255,255,.16);
-  background-color:rgba(255,255,255,.055);
-}
-button:focus-visible,input:focus-visible,select:focus-visible{
-  outline:none;
-  box-shadow:0 0 0 3px rgba(46,229,128,.16);
-}
-
-/* Inputs: calmer borders and a slightly lifted focus state. */
-.field,.setting input,.setting select,.select-wrap select,.custom-time input,.user-switch select{
-  transition:border-color .16s ease,background-color .16s ease,box-shadow .16s ease,transform .16s var(--premium-ease);
-}
-.field:focus,.setting input:focus,.setting select:focus,.select-wrap select:focus,.custom-time input:focus,.user-switch select:focus{
-  border-color:rgba(46,229,128,.72)!important;
-  box-shadow:0 0 0 3px rgba(46,229,128,.10);
-  background-color:rgba(46,229,128,.045);
-}
-
-/* Completed sets get a quiet confirmation rather than a permanent neon block. */
-@keyframes premiumSetComplete{
-  0%{transform:scale(.94);box-shadow:0 0 0 0 rgba(46,229,128,.30)}
-  55%{transform:scale(1.045);box-shadow:0 0 0 8px rgba(46,229,128,0)}
-  100%{transform:scale(1);box-shadow:0 0 0 3px rgba(46,229,128,.12)}
-}
-.done.active{animation:premiumSetComplete .42s var(--premium-ease)}
-
-/* Screen/view change: short enough that navigation still feels instant. */
-@keyframes premiumViewIn{
-  from{opacity:0;transform:translateY(7px)}
-  to{opacity:1;transform:none}
-}
-.view.active{animation:premiumViewIn .24s var(--premium-ease)}
-
-/* Exercise cards entering focus should read as the active object. */
-#exerciseList>.exercise:not(.sc-hidden){animation:premiumViewIn .22s var(--premium-ease)}
-
-/* Bottom nav: quieter glass, active tab gets a small anchored indicator. */
-.bottom-nav{
-  background:rgba(8,10,13,.82)!important;
-  backdrop-filter:blur(22px) saturate(1.15);
-  -webkit-backdrop-filter:blur(22px) saturate(1.15);
-  border-top-color:rgba(255,255,255,.07)!important;
-  box-shadow:0 -12px 32px rgba(0,0,0,.22);
-}
-.navbtn{position:relative}
-.navbtn.active{
-  background:rgba(46,229,128,.075)!important;
-  box-shadow:inset 0 0 0 1px rgba(46,229,128,.06);
-}
-.navbtn.active:after{
-  content:"";
-  position:absolute;
-  left:50%;
-  bottom:5px;
-  width:18px;
-  height:2px;
-  border-radius:999px;
-  background:var(--accent);
-  transform:translateX(-50%);
-  box-shadow:0 0 10px rgba(46,229,128,.35);
-}
-
-/* Shell panels: visually open instead of abruptly appearing. */
-.shell-body{transform-origin:top;animation:premiumPanelIn .20s var(--premium-ease)}
-@keyframes premiumPanelIn{
-  from{opacity:0;transform:translateY(-4px)}
-  to{opacity:1;transform:none}
-}
-.shell-chevron{transition:transform .22s var(--premium-ease)!important}
-
-/* Media should look intentionally framed, not just dropped into the card. */
-.exercise-media{
-  border-color:rgba(255,255,255,.07)!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 10px 24px rgba(0,0,0,.16);
-}
-.exercise-media img{transition:filter .2s ease,transform .24s var(--premium-ease)}
-.exercise-media:active img{transform:scale(.995)}
-
-/* Tiny status surfaces feel more deliberate with restrained accent edges. */
-.suggestion{box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
-.tag{box-shadow:inset 0 1px 0 rgba(255,255,255,.24),0 4px 12px rgba(46,229,128,.10)}
-.badge{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.075)}
-
-/* Modals rise gently and the backdrop feels softer. */
-.modal-backdrop.show{animation:premiumBackdrop .16s ease-out}
-.modal-backdrop.show .modal{animation:premiumModalIn .24s var(--premium-ease)}
-@keyframes premiumBackdrop{from{opacity:0}to{opacity:1}}
-@keyframes premiumModalIn{from{opacity:0;transform:translateY(18px) scale(.988)}to{opacity:1;transform:none}}
-
-/* Toasts should glide rather than pop. */
-.toast{transition:opacity .2s ease,transform .24s var(--premium-ease)!important;transform:translate(-50%,8px)!important}
-.toast.show{transform:translate(-50%,0)!important}
-
-/* Keep motion respectful and deterministic for accessibility. */
 @media(prefers-reduced-motion:reduce){
-  html{scroll-behavior:auto}
-  *,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+  html{scroll-behavior:auto}*,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
 }
+
+body:has(.im-backdrop:not([hidden])){overflow:hidden}

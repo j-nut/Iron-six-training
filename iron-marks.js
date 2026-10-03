@@ -180,6 +180,39 @@
     return r ? `${r.marks.filter(m => m.unlocked).length} / ${r.marks.length}` : '';
   }
 
+  let activeDialog = null;
+  const accountScope = () => window.ironSixAccountScope ?? null;
+  const ownsDialog = backdrop => !backdrop || (backdrop._owner?.id === currentUser()?.id && backdrop._owner?.scope === accountScope());
+  function closeModal(backdrop, restore = true) {
+    if (!backdrop || backdrop.hidden) return;
+    backdrop.hidden = true;
+    for (const [el, wasInert] of backdrop._background || []) {
+      if (!wasInert) el.removeAttribute('inert');
+    }
+    backdrop._background = [];
+    if (activeDialog === backdrop) activeDialog = null;
+    if (restore && backdrop._opener?.isConnected) backdrop._opener.focus();
+  }
+  function reconcileDialogs() {
+    if (activeDialog && !ownsDialog(activeDialog)) closeModal(activeDialog, false);
+  }
+  function dialogAction(backdrop, action) {
+    if (!ownsDialog(backdrop)) { closeModal(backdrop, false); return false; }
+    return action();
+  }
+  function showModal(backdrop, u) {
+    const alreadyOpen = activeDialog === backdrop && !backdrop.hidden;
+    if (activeDialog && activeDialog !== backdrop) closeModal(activeDialog, false);
+    if (!alreadyOpen) {
+      backdrop._opener = document.activeElement;
+      backdrop._background = [...document.body.children].filter(el => el !== backdrop && !['SCRIPT','STYLE','LINK'].includes(el.tagName)).map(el => [el, el.hasAttribute('inert')]);
+      for (const [el] of backdrop._background) el.setAttribute('inert', '');
+    }
+    backdrop._owner = {id:u.id, scope:accountScope()};
+    backdrop.hidden = false;
+    activeDialog = backdrop;
+    backdrop.querySelector('.im-close')?.focus();
+  }
   function ensureModal(id, label) {
     injectStyles();
     let backdrop = $(id);
@@ -188,9 +221,19 @@
     backdrop.id = id;
     backdrop.className = 'im-backdrop';
     backdrop.hidden = true;
-    backdrop.innerHTML = `<div class="im-modal" role="dialog" aria-modal="true" aria-label="${esc(label)}"></div>`;
-    backdrop.addEventListener('click', event => { if (event.target === backdrop) backdrop.hidden = true; });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') backdrop.hidden = true; });
+    backdrop.innerHTML = `<div class="im-modal" role="dialog" aria-modal="true" aria-label="${esc(label)}" tabindex="-1"></div>`;
+    backdrop.addEventListener('click', event => { if (event.target === backdrop) closeModal(backdrop); });
+    backdrop.addEventListener('keydown', event => {
+      if (backdrop.hidden) return;
+      if (event.key === 'Escape') { event.preventDefault(); closeModal(backdrop); return; }
+      if (event.key !== 'Tab') return;
+      const controls = [...backdrop.querySelectorAll('button:not(:disabled),select:not(:disabled),summary,[tabindex="0"]')].filter(el => el.getAttribute('tabindex') !== '-1' && !el.closest('[hidden]') && !el.closest('details:not([open]) :not(summary)'));
+      const first = controls[0], last = controls.at(-1);
+      if (!first) { event.preventDefault(); backdrop.querySelector('.im-modal').focus(); return; }
+      if (event.shiftKey && (document.activeElement === first || !controls.includes(document.activeElement))) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && (document.activeElement === last || !controls.includes(document.activeElement))) { event.preventDefault(); first.focus(); }
+    });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && activeDialog === backdrop) closeModal(backdrop); });
     document.body.appendChild(backdrop);
     return backdrop;
   }
@@ -230,16 +273,23 @@
       ${r.depth.blocks.completed.length>1?`<details class="im-story"><summary>Earlier balanced blocks (${r.depth.blocks.completed.length-1})</summary>${r.depth.blocks.completed.slice(0,-1).reverse().map(b=>`<p><strong>Block ${b.number} · ${dateOf(b.end)}</strong><br>${b.sessions} successful sessions · ${b.improvements.length} confirmed improvements.</p>`).join('')}</details>`:''}
       <details class="im-story"><summary>Personal progress · ${r.depth.improvements.length} confirmed</summary><p>Extra reps count after you repeat them at least 24 hours later at the same exercise, load and logged RIR. This recognizes your logs, not a form assessment or a new weight target.</p>${events.slice(0,3).map(e=>`<p>${esc(evidence(e))}</p>`).join('')}${events.length>3?`<details><summary>Earlier improvements (${events.length-3})</summary>${events.slice(3).map(e=>`<p>${esc(evidence(e))}</p>`).join('')}</details>`:''}${!events.length?'<p>Keep logging reps and RIR as you follow your plan. Missing effort data, assisted and bodyweight movements are not compared.</p>':''}</details></div>`;
   }
-  function customize(key,value) {
+  function customize(key,value,backdrop = null) {
+    if (backdrop && !ownsDialog(backdrop)) { closeModal(backdrop, false); return false; }
     const u=currentUser(),r=evaluate(u);if(!u||!r)return false;
     const avatar=engine.avatarFor(u,r);
     const allowed=key==='ring'?(value==='auto'||value==='none'||engine.RINGS.some(t=>t.id===value&&r.stats.rotations>=t.rotations))
       :key==='detail'?(value==='auto'||(avatar.emblem&&['1','2','3'].includes(value)&&Number(value)<=r.evolutions[avatar.emblem].level))
       :key==='title'?r.titles.some(t=>t.id===value&&t.unlocked):false;
     if(!allowed)return false;
-    writeState(u,{[key]:value});window.IronSixProfileMenu?.render?.();open();return true;
+    writeState(u,{[key]:value});window.IronSixProfileMenu?.render?.();
+    if ($('ironMarksModal') && !$('ironMarksModal').hidden) {
+      open('style');
+      $('ironMarksModal').querySelector(`[data-custom="${key}"]`)?.focus();
+    }
+    return true;
   }
   function renderGoal() {
+    reconcileDialogs();
     const u=currentUser(),host=u?.trainingMode==='circuit'?document.querySelector('#today > .hero'):$('sessionStart');
     let goal=$('ironMarksGoal');
     if(!u||!host){if(goal)goal.hidden=true;return;}
@@ -248,40 +298,72 @@
     goal.hidden=midWorkout(u);
     if(goal.hidden)return;
     const r=evaluate(u),next=engine.nextGoal(u,r),avatar=engine.avatarFor(u,r);
-    const content=`<span>${avatar.title?esc(avatar.title)+' · ':''}Your next mark</span><strong>${esc(next.title)} <small>${next.value} / ${next.target}</small></strong><span>${esc(next.text)}</span>`;
+    const content=`<span>${avatar.title?esc(avatar.title)+' · ':''}${esc(next.label)}</span><strong>${esc(next.title)} <small>${next.value} / ${next.target}</small></strong><span>${esc(next.text)}</span>`;
     if(goal.innerHTML!==content)goal.innerHTML=content;
-    const label=`Your next mark: ${next.title}, ${next.value} of ${next.target}. ${next.text}`;
+    const label=`${next.label}: ${next.title}, ${next.value} of ${next.target}. ${next.text}`;
     if(goal.getAttribute('aria-label')!==label)goal.setAttribute('aria-label',label);
   }
 
-  function open() {
+  function open(view = 'overview') {
     const u = currentUser(), r = evaluate(u);
     if (!u || !r) return;
+    if (!['overview','collection','style'].includes(view)) view = 'overview';
+    reconcileDialogs();
     const backdrop = ensureModal('ironMarksModal', 'Iron Marks'), modal = backdrop.querySelector('.im-modal'), state = readState(u);
-    const earned = r.marks.filter(m => m.unlocked).length, worn = engine.avatarFor(u, r).emblem;
-    const closest = r.marks.filter(m => !m.unlocked && !m.hidden).sort((a, b) => b.value / b.target - a.value / a.target).slice(0, 3);
+    const earned = r.marks.filter(m => m.unlocked).length, avatar = engine.avatarFor(u, r), worn = avatar.emblem;
+    const closest = engine.closestMarks(r), goal = engine.nextGoal(u, r);
     const ringLine = r.nextRing
-      ? `${r.stats.rotations} full rotation${r.stats.rotations === 1 ? '' : 's'} <small>· ${esc(r.nextRing.label)} ring at ${r.nextRing.rotations}</small><div class="im-bar"><i style="width:${Math.round(r.stats.rotations / r.nextRing.rotations * 100)}%"></i></div>`
-      : `${r.stats.rotations} full rotations <small>· every ring earned</small>`;
+      ? `<strong>${r.stats.rotations} full rotation${r.stats.rotations === 1 ? '' : 's'}</strong><small> · ${esc(r.nextRing.label)} ring at ${r.nextRing.rotations}</small><div class="im-bar" role="progressbar" aria-label="Progress to ${esc(r.nextRing.label)} ring" aria-valuemin="0" aria-valuemax="${r.nextRing.rotations}" aria-valuenow="${r.stats.rotations}"><i style="width:${Math.round(r.stats.rotations / r.nextRing.rotations * 100)}%"></i></div>`
+      : `<strong>${r.stats.rotations} full rotations</strong><small> · every ring earned</small>`;
     const emblemButtons = Object.entries(engine.EMBLEMS).map(([id, label]) => {
       const mark = r.marks.find(m => m.emblem === id), owned = r.emblems.includes(id);
       if (!owned && mark?.hidden) return '';
-      return `<button type="button" class="im-emblem ${worn === id ? 'active' : ''}" data-wear="${id}" aria-pressed="${worn === id}" ${owned ? '' : 'disabled'} title="${esc(owned ? label : `${label}: ${mark?.text || ''}`)}">${icon(id, 32, worn===id ? engine.avatarFor(u,r).detail : r.evolutions[id]?.level || 1)}<span>${esc(label)}</span><small>${worn === id ? '✓ Wearing' : owned ? 'Owned' : 'Locked'}</small></button>`;
+      return `<button type="button" class="im-emblem ${worn === id ? 'active' : ''}" data-wear="${id}" aria-pressed="${worn === id}" ${owned ? '' : 'disabled'} title="${esc(owned ? label : `${label}: ${mark?.text || ''}`)}">${icon(id, 32, worn===id ? avatar.detail : r.evolutions[id]?.level || 1)}<span>${esc(label)}</span><small>${worn === id ? 'Wearing' : owned ? 'Available' : 'Locked'}</small></button>`;
     }).join('');
-    modal.innerHTML = `<div class="im-head"><div class="im-avatar" id="imAvatarPreview"></div><div><h3>Iron Marks</h3><p>${earned} of ${r.marks.length} earned${r.ring ? ` · ${esc(r.ring.label)} ring earned` : ''}. Earned from finished sessions; missed days never cost a mark.</p></div><button class="im-close" type="button" aria-label="Close">✕</button></div>`
-      + `<div class="im-ringline">${ringLine}</div><nav class="im-jump" aria-label="Iron Marks sections"><button type="button" data-jump="imCollectionPanel">Marks</button><button type="button" data-jump="imProgressPanel">Progress</button><button type="button" data-jump="imStylePanel">Style</button></nav>`
-      + `<div class="im-section"><h4>Profile emblem</h4><div class="im-emblems"><button type="button" class="im-emblem ${worn ? '' : 'active'}" data-wear="" aria-pressed="${!worn}"><span>${esc(initialsOf(u))}</span><span>Initials</span><small>${worn ? 'Available' : '✓ Wearing'}</small></button>${emblemButtons}</div></div>`
-      + customization(u,r) + depthPanel(r)
-      + (closest.length ? `<div class="im-section"><h4>Closest next</h4><div class="im-grid">${closest.map(markCard).join('')}</div></div>` : '')
-      + `<div id="imCollectionPanel">${engine.GROUPS.map(g => {const group=r.marks.filter(m=>m.group===g.id);return `<details class="im-section im-mark-group" ${g.id==='six'?'open':''}><summary>${esc(g.title)} <small>${group.filter(m=>m.unlocked).length} / ${group.length} earned</small></summary><div class="im-grid">${group.map(markCard).join('')}</div></details>`;}).join('')}</div>`;
+    const recent = r.marks.filter(m => m.unlocked).sort((a,b) => (b.unlockedAt || 0) - (a.unlockedAt || 0)).slice(0, 2);
+    modal.innerHTML = `<div class="im-head"><div class="im-avatar" id="imAvatarPreview"></div><div><h3>Iron Marks</h3><p>${avatar.title ? esc(avatar.title)+' · ' : ''}Your training, recognized.<br>Rest days never reset your progress.</p></div><button class="im-close" type="button" aria-label="Close Iron Marks">✕</button></div>`
+      + `<nav class="im-tabs" role="tablist" aria-label="Iron Marks views">${[['overview','Overview'],['collection','Collection'],['style','Style']].map(([id,label]) => `<button type="button" role="tab" id="im-tab-${id}" aria-controls="im-panel-${id}" aria-selected="${view===id}" tabindex="${view===id?'0':'-1'}" data-panel="${id}">${label}</button>`).join('')}</nav>`
+      + `<section class="im-panel" role="tabpanel" id="im-panel-overview" aria-labelledby="im-tab-overview" ${view==='overview'?'':'hidden'}><div class="im-overview-stats"><div><strong>${earned}</strong><span>Marks earned</span></div><div><strong>${r.stats.qualifying}</strong><span>Successful sessions</span></div><div><strong>${r.depth.improvements.length}</strong><span>Confirmed improvements</span></div></div>`
+      + `<div class="im-story"><span class="im-goal-label">${esc(goal.label)}</span><p><strong>${esc(goal.title)}</strong><br>${esc(goal.text)}</p><div class="im-bar" role="progressbar" aria-label="${esc(goal.title)}" aria-valuemin="0" aria-valuemax="${goal.target}" aria-valuenow="${goal.value}"><i style="width:${Math.min(100,goal.value/goal.target*100)}%"></i></div><p>${goal.value} / ${goal.target}</p></div>`
+      + (closest.length ? `<div class="im-section"><h4>Within reach</h4><div class="im-grid">${closest.map(markCard).join('')}</div></div>` : '')
+      + (recent.length ? `<div class="im-section"><h4>Recently earned</h4><div class="im-grid">${recent.map(markCard).join('')}</div></div>` : '<p class="im-help">Your first successful session begins your collection. Follow the workout at the effort that suits today.</p>')
+      + `<div class="im-section"><h4>Your next ring</h4><div class="im-ringline">${ringLine}</div></div>` + depthPanel(r) + '</section>'
+      + `<section class="im-panel" role="tabpanel" id="im-panel-collection" aria-labelledby="im-tab-collection" ${view==='collection'?'':'hidden'}><div class="im-filter"><label for="imFilter">${earned} of ${r.marks.length} earned</label><select id="imFilter"><option value="all">All marks</option><option value="earned">Earned</option><option value="progress">In progress</option></select></div><div class="im-empty" id="imEmpty" hidden></div><div id="imCollectionPanel">${engine.GROUPS.map(g => {const group=r.marks.filter(m=>m.group===g.id);return `<details class="im-section im-mark-group" ${g.id==='six'?'open':''}><summary>${esc(g.title)} <small>${group.filter(m=>m.unlocked).length} / ${group.length} earned</small></summary><div class="im-grid">${group.map(markCard).join('')}</div></details>`;}).join('')}</div></section>`
+      + `<section class="im-panel" role="tabpanel" id="im-panel-style" aria-labelledby="im-tab-style" ${view==='style'?'':'hidden'}><div class="im-section"><h4>Profile emblem</h4><div class="im-emblems"><button type="button" class="im-emblem ${worn ? '' : 'active'}" data-wear="" aria-pressed="${!worn}"><span>${esc(initialsOf(u))}</span><span>Initials</span><small>${worn ? 'Available' : 'Wearing'}</small></button>${emblemButtons}</div></div>${customization(u,r)}</section>`;
     paintAvatar(modal.querySelector('#imAvatarPreview'), u, initialsOf(u));
-    modal.querySelector('.im-close').addEventListener('click', () => { backdrop.hidden = true; });
-    modal.querySelectorAll('[data-wear]').forEach(button => button.addEventListener('click', () => wear(button.dataset.wear || null, true)));
-    modal.querySelectorAll('[data-jump]').forEach(button=>button.addEventListener('click',()=>modal.querySelector('#'+button.dataset.jump)?.scrollIntoView({block:'start',behavior:'instant'})));
-    modal.querySelectorAll('[data-custom]').forEach(select=>select.addEventListener('change',()=>customize(select.dataset.custom,select.value)));
-    const wornTitle=engine.avatarFor(u,r).title;if(wornTitle)modal.querySelector('.im-head p').insertAdjacentHTML('afterbegin',`<strong>${esc(wornTitle)}</strong><br>`);
-    backdrop.hidden = false;
-    if (state.introduced === false) writeState(u, {introduced:true, seen:r.marks.filter(m => m.unlocked).map(m => m.id)});
+    modal.querySelector('.im-close').addEventListener('click', () => closeModal(backdrop));
+    modal.querySelectorAll('[data-wear]').forEach(button => button.addEventListener('click', () => dialogAction(backdrop, () => wear(button.dataset.wear || null, true))));
+    const choosePanel = (name, focus = false) => {
+      for (const button of modal.querySelectorAll('[data-panel]')) {
+        const selected = button.dataset.panel === name;
+        button.setAttribute('aria-selected', String(selected));button.tabIndex = selected ? 0 : -1;
+        modal.querySelector('#im-panel-'+button.dataset.panel).hidden = !selected;
+        if (selected && focus) button.focus();
+      }
+    };
+    modal.querySelectorAll('[data-panel]').forEach(button => {
+      button.addEventListener('click', () => dialogAction(backdrop, () => choosePanel(button.dataset.panel)));
+      button.addEventListener('keydown', event => {
+        const tabs = [...modal.querySelectorAll('[data-panel]')], index = tabs.indexOf(button);
+        const next = event.key==='ArrowRight' ? (index+1)%tabs.length : event.key==='ArrowLeft' ? (index+tabs.length-1)%tabs.length : event.key==='Home' ? 0 : event.key==='End' ? tabs.length-1 : null;
+        if(next!==null){event.preventDefault();dialogAction(backdrop,()=>choosePanel(tabs[next].dataset.panel,true));}
+      });
+    });
+    modal.querySelector('#imFilter').addEventListener('change', event => dialogAction(backdrop, () => {
+      const mode=event.target.value;let visible=0;
+      for (const group of modal.querySelectorAll('#imCollectionPanel .im-mark-group')) {
+        let groupVisible=0;
+        for (const card of group.querySelectorAll('.im-card')) {
+          const show=mode==='all'||(mode==='earned'&&card.classList.contains('earned'))||(mode==='progress'&&card.classList.contains('locked'));
+          card.hidden=!show;if(show){visible++;groupVisible++;}
+        }
+        group.hidden=!groupVisible;if(mode!=='all')group.open=true;
+      }
+      const empty=modal.querySelector('#imEmpty');empty.hidden=visible>0;empty.textContent=mode==='earned'?'Your collection starts with your first successful session. Every earned mark will appear here.':'Every available mark is earned. Keep training at your own pace.';
+    }));
+    modal.querySelectorAll('[data-custom]').forEach(select=>select.addEventListener('change',()=>customize(select.dataset.custom,select.value,backdrop)));
+    showModal(backdrop, u);
+    if (!state.introduced) writeState(u, {introduced:true, seen:r.marks.filter(m => m.unlocked).map(m => m.id)});
   }
 
   function wear(emblem, reopen) {
@@ -289,7 +371,7 @@
     if (!u || !r || (emblem && !r.emblems.includes(emblem))) return false;
     writeState(u, {emblem:emblem || null});
     window.IronSixProfileMenu?.render?.();
-    if (reopen && $('ironMarksModal') && !$('ironMarksModal').hidden) open();
+    if (reopen && $('ironMarksModal') && !$('ironMarksModal').hidden) { open('style'); $('ironMarksModal').querySelector(`[data-wear="${emblem || ''}"]`)?.focus(); }
     if (typeof toast === 'function') toast(emblem ? `${engine.EMBLEMS[emblem]} emblem on` : 'Showing your initials');
     return true;
   }
@@ -302,14 +384,14 @@
       + `<div class="im-earned-list">${marks.map(m => `<div class="im-card earned"><div class="im-badge">${markIcon(m)}</div><div class="im-body"><strong>${esc(m.title)}</strong><span>${esc(m.text)}</span>${m.evolvedEmblem ? `<em>A new detail level for your ${esc(engine.EMBLEMS[m.evolvedEmblem])} emblem. Choose it in your collection.</em>` : ''}${m.group==='progress' ? `<em>${esc(evidence(evaluate(u).depth.improvements.filter(e=>e.ts<=m.unlockedAt).at(-1)))}</em>` : ''}${m.group==='blocks' ? `<em>${evaluate(u).depth.blocks.completed.find(b=>b.end===m.unlockedAt)?.sessions || 24} successful sessions across all six days.</em>` : ''}${m.ring ? `<em>Unlocked the ${esc(m.title.replace(/ Ring$/, ''))} ring. Choose it in your collection.</em>` : ''}${m.emblem && m.emblem !== worn ? `<button type="button" class="im-wear" data-wear="${m.emblem}">Wear the ${esc(engine.EMBLEMS[m.emblem])} emblem</button>` : ''}</div></div>`).join('')}</div>`
       + `<div class="im-actions"><button type="button" class="btn secondary" data-all>See all marks</button><button type="button" class="btn primary" data-done>Nice</button></div>`;
     paintAvatar(modal.querySelector('#imEarnedAvatar'), u, initialsOf(u));
-    const done = () => { backdrop.hidden = true; };
+    const done = () => { closeModal(backdrop); };
     modal.querySelector('.im-close').addEventListener('click', done);
     modal.querySelector('[data-done]').addEventListener('click', done);
-    modal.querySelector('[data-all]').addEventListener('click', () => { done(); open(); });
+    modal.querySelector('[data-all]').addEventListener('click', () => dialogAction(backdrop, () => { const opener=backdrop._opener; done(); open('collection'); $('ironMarksModal')._opener=opener; }));
     modal.querySelectorAll('[data-wear]').forEach(button => button.addEventListener('click', () => {
-      if (wear(button.dataset.wear, false)) { button.textContent = 'Wearing it'; button.disabled = true; paintAvatar(modal.querySelector('#imEarnedAvatar'), currentUser(), initialsOf(currentUser())); }
+      if (dialogAction(backdrop, () => wear(button.dataset.wear, false))) { button.textContent = 'Wearing it'; button.disabled = true; paintAvatar(modal.querySelector('#imEarnedAvatar'), currentUser(), initialsOf(currentUser())); }
     }));
-    backdrop.hidden = false;
+    showModal(backdrop, u);
   }
 
   const midWorkout = u => Object.entries(u?.today || {}).some(([key, set]) => /^\d+-\d+$/.test(key) && set && (set.done || String(set.weight || '').trim() || String(set.reps || '').trim()));
@@ -318,6 +400,7 @@
   // already earned without a fanfare; marks that arrive through sync or a restore (not unlocked
   // recently) are recorded quietly too, so nobody is congratulated twice for the same session.
   function check(now = Date.now()) {
+    reconcileDialogs();
     const u = currentUser();
     if (!u || (typeof document !== 'undefined' && document.hidden) || midWorkout(u)) return null;
     if ($('ironMarksEarned') && !$('ironMarksEarned').hidden) return null;

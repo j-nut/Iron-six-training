@@ -83,3 +83,9 @@ For features, assess issue #28 e1RM calibration (optional max testing and transp
 - Owner authentication was offered securely. The first Google step remained on the identifier screen after manual takeover. A user-requested retry reached the password step, but Google reported “Wrong password.” No signed-in GitHub owner state was verified; a manual sign-in continuation was offered. Actual Project creation, main protection and security toggles remain blocked in issue #52. Do not claim full GitHub setup is complete.
 
 Next agent: inspect the merged follow-up PR, newest main Actions and repository issue metadata. Continue owner setup only after a positive signed-in signal; never request secrets in chat. If owner setup is completed later, append the Project URL, ruleset ID, enabled security settings and demonstrated failing-PR merge block here before closing #52.
+
+## Follow-up: visual and reward refinement
+
+The user subsequently requested a more polished app and refined rewards. Read `reports/ui-reward-refinement-handoff.md` for its design changes, profile-safe reward controls, targeted tests and delivery evidence. Existing reward IDs and earning rules are retained; this is not a new point economy or a training-load change.
+
+GitHub permission correction PR #60 merged as `144b49e6966ad1aa6c9eeaaca850fb89100f337f`. Bootstrap run https://github.com/j-nut/Iron-six-training/actions/runs/37100493387 succeeded: PR #46 has area/UI triage labels, and #42/#11 have triage labels and Future enhancements milestones. Issue #52 remains the explicit owner-access blocker.

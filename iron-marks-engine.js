@@ -188,18 +188,30 @@
   }
 
   const DAY_NAMES = {push_a:'Push A',lower_a:'Legs A',pull_a:'Pull A',push_b:'Push B',lower_b:'Legs B',pull_b:'Pull B'};
+  // Recommendations are presentation only: every mark remains in the full collection.
+  // Do not encourage rigid ordering or training through fatigue to earn a cosmetic.
+  function closestMarks(result, limit = 3) {
+    const marks = Array.isArray(result?.marks) ? result.marks : [];
+    const count = Number.isFinite(Number(limit)) ? Math.max(0, Math.floor(Number(limit))) : 3;
+    return marks.filter(mark => {
+      if (mark.unlocked || mark.hidden || ['no_detours','listened'].includes(mark.id)) return false;
+      if (mark.evolvedEmblem && !marks.some(parent => parent.emblem === mark.evolvedEmblem && parent.unlocked)) return false;
+      return Number(mark.target) > 0 && Number.isFinite(Number(mark.value));
+    }).sort((a,b) => b.value / b.target - a.value / a.target).slice(0,count);
+  }
+
   function nextGoal(user, result = evaluate(user)) {
     const key = user?.program?.currentWorkoutKey;
     const done = result.stats.qualifying;
-    if (!done) return {id:'first_rep',title:'Your first Iron Mark',text:'Finish your planned session at the effort that suits today. First Rep starts your collection.',value:0,target:1};
+    if (!done) return {kind:'unlock',label:'Next unlock',id:'first_rep',title:'Your first Iron Mark',text:'Finish your planned session at the effort that suits today. First Rep starts your collection.',value:0,target:1};
     const current = result.depth.blocks.current;
     if (ROTATION.includes(key) && current.counts[key] < 4) {
       const value=current.counts[key];
-      return {id:`block_${current.number}_${key}`,title:`Block ${current.number} · ${DAY_NAMES[key]}`,text:`Today's planned session can bring ${DAY_NAMES[key]} to ${value+1} of 4. Every program day contributes to this balanced block.`,value:current.done,target:24};
+      return {kind:'block',label:'Current block',id:`block_${current.number}_${key}`,title:`Block ${current.number} · ${DAY_NAMES[key]}`,text:`Today's planned session can bring ${DAY_NAMES[key]} to ${value+1} of 4. Every program day contributes to this balanced block.`,value:current.done,target:24};
     }
     const next = result.marks.find(m=>m.id==='full_six'&&!m.unlocked) || result.marks.find(m=>m.id==='six_six'&&!m.unlocked);
-    if (next && !next.hidden) return {id:next.id,title:next.title,text:next.text,value:next.value,target:next.target};
-    return {id:'steady',title:'Keep building at your pace',text:'Follow today’s plan. Your completed sessions and repeatable progress keep building your collection.',value:current.done,target:24};
+    if (next && !next.hidden) return {kind:'unlock',label:'Next unlock',id:next.id,title:next.title,text:next.text,value:next.value,target:next.target};
+    return {kind:'progress',label:'Your progress',id:'steady',title:'Keep building at your pace',text:'Follow today’s plan. Your completed sessions and repeatable progress keep building your collection.',value:current.done,target:24};
   }
 
   const MARKS = [
@@ -304,7 +316,7 @@
     return {ring,emblem,detail:emblem?detail:0,title:state.title==='none'?null:title||null};
   }
 
-  const api = {ROTATION, RINGS, EMBLEMS, MARKS, GROUPS, qualifies, evaluate, avatarFor, performanceOf, blocksOf, nextGoal, DAY_NAMES, EVOLUTIONS, TITLES};
+  const api = {ROTATION, RINGS, EMBLEMS, MARKS, GROUPS, qualifies, evaluate, avatarFor, performanceOf, blocksOf, nextGoal, closestMarks, DAY_NAMES, EVOLUTIONS, TITLES};
   if (typeof window !== 'undefined') window.IronSixMarksEngine = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })();
