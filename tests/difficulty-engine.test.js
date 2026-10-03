@@ -105,3 +105,10 @@ test('Light anchors preserve decimal per-hand input units through the canonical 
   const run=app(true,true);const out=run(`const u=makeUser();u.today={'0-0':{weight:'22.5 lb each',reps:'10',rir:'4',done:true}};const ex={name:'Dumbbell Curl',requires:['dumbbells'],base:'Elbow flexion',seedKey:'curl',prescription:'3 × 8–12',sets:3};const plan=IronSixDifficulty.replanRemaining(u,'light',[ex]);return {plan,parsed:parseLoad(u.today['0-0'].weight),next:nextSetRecommendation(u,plan[0],0),today:u.today};`);
   assert.equal(out.parsed,22.5);assert.equal(out.plan[0]._difficultyAnchorLoad,22.5);assert(out.next.load<=22.5*.8+2.5);assert.equal(out.today['0-0'].weight,'22.5 lb each');
 });
+test('long imported prescriptions cannot cause numeric-range backtracking during difficulty suggestions',()=>{
+  const run=app(),started=Date.now();
+  const out=run(`const u=makeUser();u.workoutDifficulty='light';const digits='9'.repeat(100000),base={load:25,target:10,text:'25 lb',detail:''},ex={name:'Band Row',requires:['bands']};return {plain:IronSixDifficulty.adjustSuggestion(u,{...ex,prescription:digits+'!'},base),timed:IronSixDifficulty.adjustSuggestion(u,{...ex,prescription:digits+' seconds'},base)};`);
+  const elapsed=Date.now()-started;
+  assert.equal(out.plain.load,20,'non-time text still uses the lighter working load');assert.equal(out.timed.load,null,'time units still suppress invented pound targets');
+  assert(elapsed<2000,`two long imported prescriptions took ${elapsed}ms; detection should scan text directly`);
+});

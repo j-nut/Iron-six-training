@@ -104,7 +104,10 @@
       return load<Number(base.load)?{...base,load,text:`${load} lb × about ${base.target||base.reps}`,detail:'Kept within your configured equipment limit. '+String(base.detail||'')}:base;
     }
     if(level!=='light'||!base||base._difficultyAdjusted)return base;
-    const timed=/(?:\d+\s*[–-]\s*)?\d+\s*(?:sec\b|seconds?\b)|^\d+s controlled work/i.test(ex?.prescription||''),kind=equipmentKind(ex);
+    const prescription=String(ex?.prescription||'');
+    // Detect the time-unit marker directly. Parsing overlapping numeric ranges here
+    // caused quadratic backtracking on long imported exercise prescriptions.
+    const timed=/\b(?:sec|seconds?)\b/i.test(prescription)||prescription.toLowerCase().includes('s controlled work'),kind=equipmentKind(ex);
     if(timed||kind==='bodyweight'||kind==='challenging-bodyweight')return {...base,load:null,_difficultyAdjusted:true,text:timed?'Timed controlled work · comfortable effort':`Bodyweight × about ${base.target||base.reps}`,confidence:'Light effort',detail:'Light effort: keep movement controlled and leave about 4 reps in reserve. '+String(base.detail||'')};
     if(!(Number(base.load)>0))return {...base,_difficultyAdjusted:true,detail:'Light effort: choose a comfortable resistance with about 4 reps in reserve. '+String(base.detail||'')};
     const reserveFactor=Number(u?.readiness?.energy)<=2||Number(u?.readiness?.soreness)>=4?.75:.8;

@@ -39,5 +39,5 @@ assert(manager.includes('refreshEquipmentExercises'),'the picker must trigger ex
 assert(manager.includes('Finish or reset the current workout before changing equipment'),'the picker must keep the mid-workout guard');
 assert(fs.readFileSync('coach.js','utf8').includes('equipmentCoverage'),'the coach must receive measured equipment coverage');
 
-for(const page of ['index.html','live.html']){const html=fs.readFileSync(page,'utf8');assert(html.indexOf('workout-difficulty.js?v=1')>html.indexOf('core.js?v=19'));assert(html.indexOf('workout-difficulty.js?v=1')<html.indexOf('engine.js?v=18'));assert(html.includes('session-planner.js?v=3'));assert(html.includes('circuit-player.js?v=3'));}
+for(const page of ['index.html','live.html']){const html=fs.readFileSync(page,'utf8');assert(html.indexOf('workout-difficulty.js?v=2')>html.indexOf('core.js?v=19'));assert(html.indexOf('workout-difficulty.js?v=2')<html.indexOf('engine.js?v=18'));assert(html.includes('session-planner.js?v=3'));assert(html.includes('circuit-player.js?v=3'));}
 assert(cloudHistory.indexOf('workout-difficulty-ui.js')>cloudHistory.indexOf('bodyweight-load-fix.js'),'difficulty load adjustment installs after runtime load wrappers');
