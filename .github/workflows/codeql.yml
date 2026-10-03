@@ -44,4 +44,15 @@ jobs:
                               'file': physical.get('artifactLocation', {}).get('uri'),
                               'line': physical.get('region', {}).get('startLine')
                           }))
+                      if result.get('ruleId') == 'js/clear-text-storage-of-sensitive-data':
+                          for flow in result.get('codeFlows', []):
+                              for thread in flow.get('threadFlows', []):
+                                  locations = []
+                                  for item in thread.get('locations', []):
+                                      physical = item.get('location', {}).get('physicalLocation', {})
+                                      locations.append({
+                                          'file': physical.get('artifactLocation', {}).get('uri'),
+                                          'line': physical.get('region', {}).get('startLine')
+                                      })
+                                  print(json.dumps({'ruleFlow': result.get('ruleId'), 'locations': locations}))
           PY

@@ -2,11 +2,11 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 
 const required = [
-  'exercise-guide.js?v=9','exercise-visuals.js?v=9','equipment-catalog.js?v=1','equipment-exercise-library.js?v=1','equipment-coverage.js?v=1','local-ai-fallback.js?v=8','coach.js?v=15','equipment-manager.js?v=1','social-auth.js?v=3','cloud-sync.js?v=17','cloud-history-sync.js?v=13','backup-restore.js?v=2','profile-delete.js?v=3','ui-shell.js?v=2','profile-menu.js?v=1','session-cards.js?v=1','onboarding.js?v=1','cardio-companion.js?v=1'
+  'exercise-guide.js?v=9','exercise-visuals.js?v=9','equipment-catalog.js?v=1','equipment-exercise-library.js?v=1','equipment-coverage.js?v=1','local-ai-fallback.js?v=8','coach.js?v=15','equipment-manager.js?v=1','social-auth.js?v=3','cloud-sync.js?v=18','cloud-history-sync.js?v=13','backup-restore.js?v=2','profile-delete.js?v=3','ui-shell.js?v=2','profile-menu.js?v=1','session-cards.js?v=1','onboarding.js?v=1','cardio-companion.js?v=1'
 ];
 for (const page of ['index.html','live.html']) {
   const html=fs.readFileSync(page,'utf8');
-  assert(html.includes('core.js?v=19'));assert(html.includes('assets/brand/logo-horizontal.png'),`${page} must carry the brand lockup`);assert(html.includes('assets/brand/icon-32.png'),`${page} must declare a favicon`);assert(html.includes('engine.js?v=18'));assert(html.includes('ui1.js?v=18'));assert(html.includes('ui3.js?v=18'));assert(html.includes('ui2.js?v=17'));
+  assert(html.includes('core.js?v=20'));assert(html.includes('assets/brand/logo-horizontal.png'),`${page} must carry the brand lockup`);assert(html.includes('assets/brand/icon-32.png'),`${page} must declare a favicon`);assert(html.includes('engine.js?v=18'));assert(html.includes('ui1.js?v=18'));assert(html.includes('ui3.js?v=18'));assert(html.includes('ui2.js?v=17'));
   assert(html.indexOf('history-explorer.js')>html.indexOf('ui2.js') && html.indexOf('history-explorer.js')<html.indexOf('ui3.js'));
   assert(html.indexOf('exercise-media-catalog.js?v=1')<html.indexOf('exercise-media.js?v=2'));
   assert(html.indexOf('exercise-media.js?v=2')<html.indexOf('ui2.js?v=17'));
@@ -39,5 +39,5 @@ assert(manager.includes('refreshEquipmentExercises'),'the picker must trigger ex
 assert(manager.includes('Finish or reset the current workout before changing equipment'),'the picker must keep the mid-workout guard');
 assert(fs.readFileSync('coach.js','utf8').includes('equipmentCoverage'),'the coach must receive measured equipment coverage');
 
-for(const page of ['index.html','live.html']){const html=fs.readFileSync(page,'utf8');assert(html.indexOf('workout-difficulty.js?v=2')>html.indexOf('core.js?v=19'));assert(html.indexOf('workout-difficulty.js?v=2')<html.indexOf('engine.js?v=18'));assert(html.includes('session-planner.js?v=3'));assert(html.includes('circuit-player.js?v=3'));}
+for(const page of ['index.html','live.html']){const html=fs.readFileSync(page,'utf8');assert(html.indexOf('workout-difficulty.js?v=3')>html.indexOf('core.js?v=20'));assert(html.indexOf('workout-difficulty.js?v=3')<html.indexOf('engine.js?v=18'));assert(html.includes('session-planner.js?v=3'));assert(html.includes('circuit-player.js?v=3'));}
 assert(cloudHistory.indexOf('workout-difficulty-ui.js')>cloudHistory.indexOf('bodyweight-load-fix.js'),'difficulty load adjustment installs after runtime load wrappers');

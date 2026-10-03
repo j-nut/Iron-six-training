@@ -21,7 +21,7 @@
     return a._order-b._order||a.event_id.localeCompare(b.event_id);
   })}
   function pending(scope=owner()){return all(scope).filter(event=>!event.sequence)}
-  function snapshot(u,plan){return {key:u.program.currentWorkoutKey,plan:copy(plan||u.workoutDraft?.plan||finalWorkout(u)),today:copy(u.today||{}),exposure:Number(u.program.exposures?.[u.program.currentWorkoutKey])||0,workoutMinutes:u.workoutMinutes,readiness:copy(u.readiness||{}),trainingMode:u.trainingMode||'traditional',circuitPace:u.circuitPace||'balanced',difficulty:window.IronSixDifficulty?.effectiveFor(u)||u.workoutDifficulty||'balanced',sessionDifficulty:copy(u.sessionDifficulty||null),timer:u.workoutDraft?.timer||null}}
+  function snapshot(u,plan){return {key:u.program.currentWorkoutKey,plan:copy(plan||u.workoutDraft?.plan||finalWorkout(u)),today:copy(u.today||{}),exposure:Number(u.program.exposures?.[u.program.currentWorkoutKey])||0,workoutMinutes:u.workoutMinutes,readiness:copy(u.readiness||{}),trainingMode:u.trainingMode||'traditional',circuitPace:u.circuitPace||'balanced',difficulty:window.IronSixDifficulty?.effectiveFor(u)||u.workoutDifficulty||'balanced',sessionDifficulty:normalizedWorkoutDifficultyOverride(u.sessionDifficulty),timer:u.workoutDraft?.timer||null}}
   function append(u,kind,rowKey,payload,fields={}){
     const draft=u.workoutDraft;
     const order=pending().reduce((n,e)=>Math.max(n,(e._order||0)+1),Date.now());
@@ -66,7 +66,7 @@
     const draft=u.workoutDraft,previousHead=draft.heads?.session;
     const selected=fields.difficulty||draft.difficulty||'balanced';
     const difficulty=window.IronSixDifficulty?.normalize(selected)||selected;
-    const payload={...snapshot(u,plan),difficulty,sessionDifficulty:copy(Object.hasOwn(fields,'sessionDifficulty')?fields.sessionDifficulty:u.sessionDifficulty||null)};
+    const payload={...snapshot(u,plan),difficulty,sessionDifficulty:normalizedWorkoutDifficultyOverride(Object.hasOwn(fields,'sessionDifficulty')?fields.sessionDifficulty:u.sessionDifficulty)};
     const event=append(u,'plan','session',payload);
     if(!event._durable){
       // Reject a plan revision that cannot be recovered; keep every original set intact.
@@ -77,7 +77,7 @@
       status();return false;
     }
     draft.plan=copy(plan);draft.difficulty=difficulty;
-    if(Object.hasOwn(fields,'sessionDifficulty'))u.sessionDifficulty=copy(fields.sessionDifficulty);
+    if(Object.hasOwn(fields,'sessionDifficulty'))u.sessionDifficulty=normalizedWorkoutDifficultyOverride(fields.sessionDifficulty);
     if(Object.hasOwn(fields,'workoutDifficulty'))u.workoutDifficulty=window.IronSixDifficulty?.normalize(fields.workoutDifficulty)||fields.workoutDifficulty;
     return true;
   }
@@ -112,7 +112,7 @@
       s.heads[event.row_key]=event.event_id;s.lastAt=event.client_at;
       if(event.payload.timerOnly){s.timer=event.payload.timer;continue}
       if(event.kind==='set')s.today[event.row_key]=copy(event.payload);
-      else {Object.assign(s,{key:event.payload.key,plan:event.payload.plan,exposure:event.payload.exposure,workoutMinutes:event.payload.workoutMinutes,readiness:event.payload.readiness,difficulty:event.payload.difficulty||'balanced',sessionDifficulty:event.payload.sessionDifficulty||null});
+      else {Object.assign(s,{key:event.payload.key,plan:event.payload.plan,exposure:event.payload.exposure,workoutMinutes:event.payload.workoutMinutes,readiness:event.payload.readiness,difficulty:event.payload.difficulty||'balanced',sessionDifficulty:normalizedWorkoutDifficultyOverride(event.payload.sessionDifficulty)});
         // Plan changes may clear the replaced movement, but the old records remain in this journal.
         if(event.kind==='plan'&&Number.isInteger(event.payload.changedIndex)){for(const key of Object.keys(s.today))if(key.startsWith(event.payload.changedIndex+'-'))delete s.today[key]}
         else s.today=copy(event.payload.today||s.today);
@@ -138,7 +138,7 @@
     const s=current?.status==='active'?current:[...sessions].reverse().find(s=>s.status==='active'&&s.plan?.length);
     if(!s)return;
     u.workoutDraft={id:s.id,key:s.key,plan:copy(s.plan),heads:copy(s.heads),timer:s.timer,difficulty:s.difficulty};
-    u.sessionDifficulty=copy(s.sessionDifficulty||null);
+    u.sessionDifficulty=normalizedWorkoutDifficultyOverride(s.sessionDifficulty);
     u.trainingMode=s.trainingMode||'traditional';u.circuitPace=s.circuitPace||'balanced';
     u.program.currentWorkoutKey=s.key;u.workoutMinutes=s.workoutMinutes||60;u.today=copy(s.today);
     u.draftWorkoutKey=s.key;

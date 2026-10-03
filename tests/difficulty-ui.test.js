@@ -252,3 +252,25 @@ test('a durable session change cannot falsely claim an unsaved global default',(
     assert.equal(a.w.IronSixJournal.all().filter(x=>x.kind==='archive').length,0);
   }finally{a.close()}
 });
+
+
+test('difficulty metadata excludes unrelated credential-shaped fields from normalized profiles and journal records',()=>{
+  const a=app();try{
+    const normalized=a.json(`normalizeUser({...activeUser(),sessionDifficulty:{level:'light',workoutKey:'push_a',exposure:'0',access_token:'foreign-access-sentinel',refresh_token:'foreign-refresh-sentinel',unrelated:{password:'foreign-nested-sentinel'}}}).sessionDifficulty`);
+    assert.deepEqual(normalized,{level:'light',workoutKey:'push_a',exposure:0});
+    for(const invalid of [
+      {level:'light',workoutKey:'not-a-workout',exposure:0},
+      {level:'light',workoutKey:'push_a',exposure:-1},
+      {level:'light',workoutKey:'push_a',exposure:1.5},
+      {level:'light',workoutKey:'push_a',exposure:9007199254740992}
+    ])assert.equal(a.run(`normalizeUser({...activeUser(),sessionDifficulty:${JSON.stringify(invalid)}}).sessionDifficulty`),null);
+    a.run(`activeUser().sessionDifficulty={level:'light',workoutKey:'push_a',exposure:0,access_token:'foreign-access-sentinel',refresh_token:'foreign-refresh-sentinel',unrelated:{password:'foreign-nested-sentinel'}};IronSixJournal.ensure(activeUser(),finalWorkout(activeUser()))`);
+    assert.deepEqual(JSON.parse(JSON.stringify(a.w.IronSixJournal.all().at(-1).payload.sessionDifficulty)),normalized);
+    a.run(`IronSixJournal.replacePlan(activeUser(),finalWorkout(activeUser()),{difficulty:'light',sessionDifficulty:{level:'light',workoutKey:'push_a',exposure:0,access_token:'replacement-access-sentinel',refresh_token:'replacement-refresh-sentinel'}})`);
+    const replay=a.w.IronSixJournal.replay(a.run('activeUser().id'));
+    assert.deepEqual(JSON.parse(JSON.stringify(replay.at(-1).sessionDifficulty)),normalized);
+    const storedJournal=Object.entries(a.storage()).filter(([key])=>key.startsWith('ironSixEntry:')).map(([,value])=>value).join('\n');
+    assert.doesNotMatch(storedJournal,/foreign-access-sentinel|foreign-refresh-sentinel|foreign-nested-sentinel|replacement-access-sentinel|replacement-refresh-sentinel/);
+    assert.equal(a.run('IronSixDifficulty.effectiveFor(activeUser())'),'light','valid session intent must survive data minimization');
+  }finally{a.close()}
+});

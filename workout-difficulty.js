@@ -3,14 +3,14 @@
   const root=typeof window!=='undefined'?window:globalThis;
   if(root.IronSixDifficulty)return;
   const LEVELS=['light','balanced','heavy'];
-  const normalize=value=>LEVELS.includes(String(value||'').toLowerCase())?String(value).toLowerCase():'balanced';
+  const normalize=value=>{const text=String(value||'').toLowerCase();return text==='light'?'light':text==='heavy'?'heavy':'balanced'};
   const sessionKey=u=>u?.program?.currentWorkoutKey||'lower_strength';
   const exposureFor=u=>Number(u?.program?.exposures?.[sessionKey(u)])||0;
   const loadNumber=value=>typeof parseLoad==='function'?parseLoad(value):Number(String(value||'').match(/\d+(?:\.\d+)?/)?.[0])||null;
   function validOverride(u,value=u?.sessionDifficulty){return !!value&&LEVELS.includes(value.level)&&value.workoutKey===sessionKey(u)&&Number(value.exposure)===exposureFor(u)}
   function effectiveFor(u){
-    if(validOverride(u))return u.sessionDifficulty.level;
-    if(LEVELS.includes(u?.workoutDraft?.difficulty))return u.workoutDraft.difficulty;
+    if(validOverride(u))return normalize(u.sessionDifficulty.level);
+    if(LEVELS.includes(u?.workoutDraft?.difficulty))return normalize(u.workoutDraft.difficulty);
     return normalize(u?.workoutDifficulty);
   }
   function equipmentKind(ex){
