@@ -1,0 +1,21 @@
+name: Feature request
+description: Propose a user outcome and measurable acceptance criteria.
+title: "[Feature] "
+labels: [enhancement, "status:triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Proposed behavior and acceptance criteria
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Effects on history, routines, Coach, offline use and existing users

@@ -1,0 +1,38 @@
+name: Bug report
+description: Report incorrect app behavior with reproducible evidence.
+title: "[Bug] "
+labels: [bug, "status:triage"]
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      description: Include the workout, exercise, sets, reps, load and Coach recommendation involved.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include manual routine changes, skips, edits, reloads and the following day's behavior.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: App version, device and browser
+      placeholder: Android build code or web URL; device; browser/version
+    validations:
+      required: true
+  - type: dropdown
+    id: account
+    attributes:
+      label: Account mode
+      options: [Guest, Signed in, Both, Unknown]
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots, errors and sanitized evidence
+      description: Never include passwords, tokens, signing keys or private health information.

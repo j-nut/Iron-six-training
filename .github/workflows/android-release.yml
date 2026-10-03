@@ -60,10 +60,12 @@ jobs:
           printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/ironsix-release.jks"
           test -s "$RUNNER_TEMP/ironsix-release.jks"
       - name: Choose the version name and code
+        env:
+          REQUESTED_VERSION_NAME: ${{ github.event.inputs.version_name }}
         run: |
           # github.event.inputs (not inputs) so the file also validates for tag pushes, and the
           # arithmetic happens here: GitHub expressions have no + operator.
-          NAME="${{ github.event.inputs.version_name }}"
+          NAME="$REQUESTED_VERSION_NAME"
           if [ -z "$NAME" ] && [ "${{ github.ref_type }}" = "tag" ]; then NAME="${GITHUB_REF_NAME#v}"; fi
           echo "IRONSIX_VERSION_NAME=$NAME" >> "$GITHUB_ENV"
           # Always higher than the last build, which Android requires to install an update.
@@ -100,3 +102,44 @@ jobs:
           path: |
             android/app/build/outputs/apk/release/app-release.apk
             android/app/build/outputs/bundle/release/app-release.aab
+
+  publish:
+    needs: release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: iron-six-android-release
+          path: release-assets
+      - name: Publish verified signed downloads
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir publish
+          cp "$(find release-assets -name app-release.apk -print -quit)" publish/iron-six.apk
+          cp "$(find release-assets -name app-release.aab -print -quit)" publish/iron-six.aab
+          (cd publish && sha256sum iron-six.apk iron-six.aab > SHA256SUMS.txt)
+          CODE=$((1000 + GITHUB_RUN_NUMBER))
+          TAG="android-build-$CODE"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; preserving its original assets."
+            exit 0
+          fi
+          cat > publish/notes.md <<EOF
+          Signed Android build $CODE from commit $GITHUB_SHA.
+
+          Install iron-six.apk for sideloading. iron-six.aab is the Play upload bundle.
+          Verify downloaded files with SHA256SUMS.txt. The build passed tests,
+          APK signature verification and the debug-certificate rejection check.
+          Use the same signing key for all updates; do not uninstall to update.
+
+          Build evidence: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          EOF
+          gh release create "$TAG" publish/iron-six.apk publish/iron-six.aab publish/SHA256SUMS.txt \
+            --target "$GITHUB_SHA" --title "Iron Six Android build $CODE" \
+            --notes-file publish/notes.md --generate-notes
