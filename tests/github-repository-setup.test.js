@@ -13,14 +13,14 @@ test('repository onboarding preserves existing metadata and is idempotent across
   ];
   const calls = [];
   const api = {
-    listLabelsForRepo:()=>labels, listMilestones:()=>milestones, listForRepo:()=>issues,
+    listLabelsForRepo:()=>labels, listMilestones:()=>milestones, listForRepo:()=>issues.filter(x=>!x.pull_request),
     createLabel:async x=>{labels.push({...x});calls.push(['label',x.name]);},
     createMilestone:async x=>{const item={...x,number:milestones.length+10};milestones.push(item);return {data:item};},
     create:async x=>{issues.push({...x,number:issues.length+100,state:'open',labels:x.labels.map(name=>({name}))});calls.push(['issue',x.title]);},
     addLabels:async x=>{const i=issues.find(i=>i.number===x.issue_number);for(const name of x.labels)if(!i.labels.some(l=>l.name===name))i.labels.push({name});},
     update:async x=>{const i=issues.find(i=>i.number===x.issue_number);i.milestone={number:x.milestone};calls.push(['update',x.issue_number]);}
   };
-  const args={github:{rest:{issues:api},paginate:async fn=>fn()},context:{repo:{owner:'test',repo:'test'}},core:{summary:{addHeading(){return this;},addRaw(){return this;},async write(){}}}};
+  const args={github:{rest:{issues:api,pulls:{list:()=>issues.filter(x=>x.pull_request)} },paginate:async fn=>fn()},context:{repo:{owner:'test',repo:'test'}},core:{summary:{addHeading(){return this;},addRaw(){return this;},async write(){}}}};
   await setup(args);
   const firstCounts=[labels.length,milestones.length,issues.length];
   await setup(args);

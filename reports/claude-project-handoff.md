@@ -74,4 +74,12 @@ For features, assess issue #28 e1RM calibration (optional max testing and transp
 
 ## Latest delivery evidence
 
-This section must be updated after the GitHub workflow PR passes and is merged, with its PR/merge SHA, actual bootstrap run/created issue numbers, CodeQL results and signed Release URL. Owner-only configuration remains pending until independently verified.
+- GitHub workflow PR #48 merged: https://github.com/j-nut/Iron-six-training/pull/48 ; main commit `a6b45e3c78ae95f144c02095aa15cabf1029b017`.
+- PR validation, both CodeQL languages and native APK build passed on final head `1f26c83594f005b4119eebc5b09d304ae46dc1e0`. Main validation and CodeQL passed after merge. The combined suite is 471 passing tests.
+- Bootstrap succeeded: https://github.com/j-nut/Iron-six-training/actions/runs/37099601976 . Created verification issues #49 (physical Android update), #50 (authenticated sync), #51 (mobile/accessibility), and #52 (owner-only setup). Labels/milestones are live; issue #28 is in Future enhancements.
+- Signed build and publication succeeded: https://github.com/j-nut/Iron-six-training/actions/runs/37099601974 . Permanent Release: https://github.com/j-nut/Iron-six-training/releases/tag/android-build-1007 . Assets verified present: `iron-six.apk` (23,104,590 bytes), `iron-six.aab` (22,355,315 bytes) and `SHA256SUMS.txt` (158 bytes). Source target is the workflow merge commit above.
+- Dependabot successfully ran all three ecosystems and opened upgrade PRs #53–58. They are proposals, not merged compatibility fixes. Review major Gradle/jsdom changes especially carefully.
+- A follow-up explicitly grants read-only pull-request access to onboarding and lists open PRs separately, so their additive labels/milestones are not dependent on the issue-list endpoint returning PRs. It does not alter their code, descriptions or state.
+- Owner authentication was offered securely. The first Google step remained on the identifier screen after manual takeover. A user-requested retry reached the password step, but Google reported “Wrong password.” No signed-in GitHub owner state was verified; a manual sign-in continuation was offered. Actual Project creation, main protection and security toggles remain blocked in issue #52. Do not claim full GitHub setup is complete.
+
+Next agent: inspect the merged follow-up PR, newest main Actions and repository issue metadata. Continue owner setup only after a positive signed-in signal; never request secrets in chat. If owner setup is completed later, append the Project URL, ruleset ID, enabled security settings and demonstrated failing-PR merge block here before closing #52.

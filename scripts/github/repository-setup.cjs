@@ -39,7 +39,12 @@ module.exports = async ({github, context, core}) => {
       await github.rest.issues.create({...repo, title, body, labels:names, milestone:reliability.number});
     }
   }
-  for (const issue of all.filter(x => x.state === 'open')) {
+  // Explicitly include PRs: installations with issue-only permission can omit
+  // them from listForRepo even though labels/milestones use the issues API.
+  const pulls = await github.paginate(github.rest.pulls.list, {...repo, state:'open', per_page:100});
+  const open = new Map(all.filter(x => x.state === 'open').map(x => [x.number, x]));
+  for (const pull of pulls) if (!open.has(pull.number)) open.set(pull.number, pull);
+  for (const issue of open.values()) {
     const names = [];
     if (!issue.labels.some(x => x.name.startsWith('status:'))) names.push('status:triage');
     if (issue.number === 28) names.push('enhancement','area:trainer');
@@ -50,5 +55,5 @@ module.exports = async ({github, context, core}) => {
       await github.rest.issues.update({...repo, issue_number:issue.number, milestone:future.number});
     }
   }
-  core.summary.addHeading('Repository setup complete').addRaw('Labels and milestones ensured without replacing existing metadata. Verification gaps tracked as issues. Owner-only settings remain pending; see .github/OWNER_SETUP.md.').write();
+  await core.summary.addHeading('Repository setup complete').addRaw('Labels and milestones ensured without replacing existing metadata. Verification gaps tracked as issues. Owner-only settings remain pending; see .github/OWNER_SETUP.md.').write();
 };
