@@ -42,3 +42,7 @@ Cross-session audit: remote main still matched baseline 31496df, and the publish
 The user authorized finishing the release on October 2 after checking other sessions. This report captures the release candidate; PR #47 and the Vercel deployment are the authoritative sources for final merge/deployment state. Native device execution and a stable-key signed Android release remain separate delivery checks.
 
 Adaptation uses recorded work and does not account for unlogged activity. These checks provide regression coverage, not a guarantee that every possible device or service behavior is bug-free.
+
+## Final shipped state (October 2, 2026)
+
+PR #47 was subsequently squash-merged to main as `4ced98dc358c29be2c691634662ce25972b19ce5`. Vercel production was READY and served that commit. Main validation and native test builds passed, and the stable-key signed APK/AAB workflow succeeded at https://github.com/j-nut/Iron-six-training/actions/runs/37098369429, including signature verification and debug-key rejection. These results supersede the candidate-only status above. Physical-device installation and real authenticated end-to-end verification remain outstanding. See `reports/claude-project-handoff.md` for current delivery workflow and remaining work.
