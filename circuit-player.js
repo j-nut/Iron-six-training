@@ -106,5 +106,24 @@
   },100);
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')pause('Paused while the app was in the background. Resume when ready.')});
   window.addEventListener('pagehide',()=>pause('Paused'));
-  window.IronSixCircuit={render,pause,rebuild:()=>{pause('Plan updated');clock=null;bound=null;render()}};render();
+  function rebuild(){
+    if(!clock||bound!==binding()){clock=null;bound=null;render();return}
+    pause('Plan updated. Resume when ready.');
+    const previous=steps,state=clock.state,u=activeUser(),next=circuitTimeline(u,finalWorkout(u));
+    const same=(a,b)=>a&&b&&a.kind===b.kind&&a.index===b.index&&a.setIndex===b.setIndex&&a.round===b.round;
+    let index=next.findIndex(step=>same(step,previous[state.index])),remaining=state.remaining;
+    // A changed number of rounds shifts ordinal indices. Stay at the same logical
+    // interval, or move forward to the next surviving interval; never replay work.
+    if(index<0){
+      index=next.length;
+      for(const step of previous.slice(state.index+1)){
+        const found=next.findIndex(candidate=>same(candidate,step));
+        if(found>=0){index=found;break}
+      }
+      remaining=(next[index]?.seconds||0)*1000;
+    }
+    steps=next;clock=circuitClock(steps,{index,remaining,running:false});lastCount=-1;
+    checkpoint();render();
+  }
+  window.IronSixCircuit={render,pause,rebuild};render();
 })();

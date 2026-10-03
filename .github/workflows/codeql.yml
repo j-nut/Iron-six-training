@@ -27,3 +27,32 @@ jobs:
       - uses: github/codeql-action/analyze@v4
         with:
           category: /language:${{ matrix.language }}
+          output: codeql-results
+      - name: Report code scanning finding locations
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for path in Path('codeql-results').glob('*.sarif'):
+              for run in json.loads(path.read_text()).get('runs', []):
+                  for result in run.get('results', []):
+                      for location in result.get('locations', []):
+                          physical = location.get('physicalLocation', {})
+                          print(json.dumps({
+                              'rule': result.get('ruleId'),
+                              'file': physical.get('artifactLocation', {}).get('uri'),
+                              'line': physical.get('region', {}).get('startLine')
+                          }))
+                      if result.get('ruleId') == 'js/clear-text-storage-of-sensitive-data':
+                          for flow in result.get('codeFlows', []):
+                              for thread in flow.get('threadFlows', []):
+                                  locations = []
+                                  for item in thread.get('locations', []):
+                                      physical = item.get('location', {}).get('physicalLocation', {})
+                                      locations.append({
+                                          'file': physical.get('artifactLocation', {}).get('uri'),
+                                          'line': physical.get('region', {}).get('startLine')
+                                      })
+                                  print(json.dumps({'ruleFlow': result.get('ruleId'), 'locations': locations}))
+          PY

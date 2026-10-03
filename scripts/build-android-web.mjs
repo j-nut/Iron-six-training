@@ -33,6 +33,7 @@ const sharedRuntimeScripts=[
   'set-coach-feedback.js',
   'iron-marks-engine.js',
   'iron-marks.js',
+  'workout-difficulty-ui.js',
   'pose-person-isolation.js'
 ];
 const androidRuntimeScripts=['pose-form-coach.js','workout-voice.js'];

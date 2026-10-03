@@ -26,11 +26,13 @@
     else if(fatigue>=65){phase='Deload suggested';recommendation='Reduce working sets about 25–35% for the next several sessions, keep technique crisp, and avoid forcing failure.'}
     else if(fatigue>=45){phase='Manage fatigue';recommendation='Keep priority lifts, trim accessory volume about 10–20%, and avoid unnecessary failure work until readiness improves.'}
     else if(easyFeedback>=4&&hardFeedback===0){phase='Progress';recommendation='Performance feedback supports gradual progression; increase only where rep quality and RIR remain on target.'}
+    const difficulty=window.IronSixDifficulty?.effectiveFor(user)||user?.workoutDifficulty||'balanced';
+    if(difficulty==='light'&&fatigue<45){phase=recent.length<3?'Learning':'Build';recommendation='Keep this Light session comfortable with about 4 reps in reserve. Easy feedback is expected; it does not require a load increase. Change Today’s difficulty when you want a more demanding session.'}
     return {phase,fatigue,recommendation,recent14:{sessions:r.sessions,sets:r.sets,volume:Math.round(r.volume),hardSets:r.hard,avgEnergy:avgEnergy==null?null:Math.round(avgEnergy*10)/10},prior14:{sessions:p.sessions,sets:p.sets,volume:Math.round(p.volume)},volumeChange:volumeChange==null?null:Math.round(volumeChange),feedback14:{easy:easyFeedback,hard:feedback.filter(x=>x.feedback==='hard').length,pain:feedback.filter(x=>x.feedback==='pain').length,right:feedback.filter(x=>x.feedback==='right').length}};
   }
   function coachPayload(user){
     const analytics=window.IronSixInsights?.analyze?.(user)||null;
-    return {trainingState:trainingState(user),setFeedback:(user?.trainingFeedback||[]).slice(0,30),analytics:analytics?{sessions7:analytics.sessions7,sets7:analytics.sets7,volume7:analytics.volume7,trends:analytics.trends?.slice(0,6),freshness:analytics.freshness}:null};
+    return {trainingState:trainingState(user),workoutDifficulty:window.IronSixDifficulty?.effectiveFor(user)||user?.workoutDifficulty||'balanced',setFeedback:(user?.trainingFeedback||[]).slice(0,30),analytics:analytics?{sessions7:analytics.sessions7,sets7:analytics.sets7,volume7:analytics.volume7,trends:analytics.trends?.slice(0,6),freshness:analytics.freshness}:null};
   }
   const nativeFetch=window.fetch?.bind(window);
   if(nativeFetch&&!window.__ironSixTrainerFetchWrapped){

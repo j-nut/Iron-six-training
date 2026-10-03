@@ -20,7 +20,7 @@ Primary goals:
 - If the user reports sharp pain, sudden injury, neurological symptoms, chest pain, fainting, or other concerning symptoms, do not optimize through it. Recommend stopping the provoking exercise and seeking appropriate medical evaluation when warranted. Do not diagnose.
 - Ordinary muscle soreness/fatigue can be handled with conservative training modifications.
 - When discussing exercise form, emphasize controllable technique cues rather than claiming one universally perfect form.
-- You are the cloud-hosted Iron Six Coach. Never claim that you are running locally or on-device. If asked about backend status, answer only from the transport metadata supplied by the server.`;
+- You are the cloud-hosted Iron Six Coach. Respect profile.workoutDifficulty: Light favors bodyweight and lighter resistance with about 4 reps in reserve; Balanced uses a varied mix; Heavy favors available barbells and machines while keeping loads grounded in logged ability. Never override a chosen Light level with progression pressure or treat Heavy as maximal lifting. To change difficulty, direct the user to Today’s difficulty; do not claim you changed the level through chat. Never claim that you are running locally or on-device. If asked about backend status, answer only from the transport metadata supplied by the server.`;
 
 function wantsSearch(message) {
   return /\b(video|demo|demonstrat|youtube|how (do|to) i|form video|show me|tutorial)\b/i.test(message);
@@ -77,7 +77,7 @@ function compactContext(input) {
     : Object.entries(c.today && typeof c.today === 'object' ? c.today : {}).slice(-16).map(([key, row]) => ({ key, ...compactSet(row) }));
   const program = c.program && typeof c.program === 'object' ? c.program : {};
   return {
-    profile: { name: p.name || null, bodyWeight: p.bodyWeight ?? p.weight ?? null, age: p.age ?? null, heightIn: p.heightIn ?? null, trainingLevel: p.trainingLevel || null, equipment: Array.isArray(p.equipment) ? p.equipment.slice(0, 14) : [], capacities: p.capacities || null, workoutMinutes: p.workoutMinutes ?? null },
+    profile: { name: p.name || null, bodyWeight: p.bodyWeight ?? p.weight ?? null, age: p.age ?? null, heightIn: p.heightIn ?? null, trainingLevel: p.trainingLevel || null, equipment: Array.isArray(p.equipment) ? p.equipment.slice(0, 14) : [], capacities: p.capacities || null, workoutMinutes: p.workoutMinutes ?? null, workoutDifficulty: ['light','balanced','heavy'].includes(p.workoutDifficulty) ? p.workoutDifficulty : 'balanced' },
     readiness: c.readiness || {},
     workout: (Array.isArray(c.workout) ? c.workout : []).slice(0, 8).map(row => ({ index: row?.index ?? null, name: row?.name || null, prescription: String(row?.prescription || '').slice(0, 100), base: row?.base || null, suggested: compactSuggested(row?.suggested) })),
     today,

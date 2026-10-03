@@ -21,7 +21,7 @@
     return a._order-b._order||a.event_id.localeCompare(b.event_id);
   })}
   function pending(scope=owner()){return all(scope).filter(event=>!event.sequence)}
-  function snapshot(u,plan){return {key:u.program.currentWorkoutKey,plan:copy(plan||u.workoutDraft?.plan||finalWorkout(u)),today:copy(u.today||{}),exposure:Number(u.program.exposures?.[u.program.currentWorkoutKey])||0,workoutMinutes:u.workoutMinutes,readiness:copy(u.readiness||{}),trainingMode:u.trainingMode||'traditional',circuitPace:u.circuitPace||'balanced',timer:u.workoutDraft?.timer||null}}
+  function snapshot(u,plan){return {key:u.program.currentWorkoutKey,plan:copy(plan||u.workoutDraft?.plan||finalWorkout(u)),today:copy(u.today||{}),exposure:Number(u.program.exposures?.[u.program.currentWorkoutKey])||0,workoutMinutes:u.workoutMinutes,readiness:copy(u.readiness||{}),trainingMode:u.trainingMode||'traditional',circuitPace:u.circuitPace||'balanced',difficulty:window.IronSixDifficulty?.effectiveFor(u)||u.workoutDifficulty||'balanced',sessionDifficulty:normalizedWorkoutDifficultyOverride(u.sessionDifficulty),timer:u.workoutDraft?.timer||null}}
   function append(u,kind,rowKey,payload,fields={}){
     const draft=u.workoutDraft;
     const order=pending().reduce((n,e)=>Math.max(n,(e._order||0)+1),Date.now());
@@ -32,7 +32,7 @@
   }
   function ensure(u,plan){
     if(u.workoutDraft)return u.workoutDraft;
-    u.workoutDraft={id:uuid(),plan:copy(plan||finalWorkout(u)),key:u.program.currentWorkoutKey,heads:{}};
+    u.workoutDraft={id:uuid(),plan:copy(plan||finalWorkout(u)),key:u.program.currentWorkoutKey,heads:{},difficulty:window.IronSixDifficulty?.effectiveFor(u)||u.workoutDifficulty||'balanced'};
     append(u,'start','session',snapshot(u));return u.workoutDraft;
   }
   function captureSet(u,plan,exerciseIndex,setIndex,set){
@@ -60,6 +60,26 @@
     if(!u.workoutDraft)return;
     u.workoutDraft.plan[index]=copy(exercise);
     append(u,'plan','session',{...snapshot(u),changedIndex:index});
+  }
+  function replacePlan(u,plan,fields={}){
+    if(!u.workoutDraft||!Array.isArray(plan)||!plan.length)return false;
+    const draft=u.workoutDraft,previousHead=draft.heads?.session;
+    const selected=fields.difficulty||draft.difficulty||'balanced';
+    const difficulty=window.IronSixDifficulty?.normalize(selected)||selected;
+    const payload={...snapshot(u,plan),difficulty,sessionDifficulty:normalizedWorkoutDifficultyOverride(Object.hasOwn(fields,'sessionDifficulty')?fields.sessionDifficulty:u.sessionDifficulty)};
+    const event=append(u,'plan','session',payload);
+    if(!event._durable){
+      // Reject a plan revision that cannot be recovered; keep every original set intact.
+      events.delete(event.event_id);
+      try{localStorage.removeItem(storageKey(event))}catch(_){}
+      if(db)try{db.transaction('entries','readwrite').objectStore('entries').delete(event.event_id)}catch(_){}
+      if(previousHead)draft.heads.session=previousHead;else delete draft.heads.session;
+      status();return false;
+    }
+    draft.plan=copy(plan);draft.difficulty=difficulty;
+    if(Object.hasOwn(fields,'sessionDifficulty'))u.sessionDifficulty=normalizedWorkoutDifficultyOverride(fields.sessionDifficulty);
+    if(Object.hasOwn(fields,'workoutDifficulty'))u.workoutDifficulty=window.IronSixDifficulty?.normalize(fields.workoutDifficulty)||fields.workoutDifficulty;
+    return true;
   }
   function timerCheckpoint(u,timer){
     ensure(u);u.workoutDraft.timer=copy(timer);
@@ -92,7 +112,7 @@
       s.heads[event.row_key]=event.event_id;s.lastAt=event.client_at;
       if(event.payload.timerOnly){s.timer=event.payload.timer;continue}
       if(event.kind==='set')s.today[event.row_key]=copy(event.payload);
-      else {Object.assign(s,{key:event.payload.key,plan:event.payload.plan,exposure:event.payload.exposure,workoutMinutes:event.payload.workoutMinutes,readiness:event.payload.readiness});
+      else {Object.assign(s,{key:event.payload.key,plan:event.payload.plan,exposure:event.payload.exposure,workoutMinutes:event.payload.workoutMinutes,readiness:event.payload.readiness,difficulty:event.payload.difficulty||'balanced',sessionDifficulty:normalizedWorkoutDifficultyOverride(event.payload.sessionDifficulty)});
         // Plan changes may clear the replaced movement, but the old records remain in this journal.
         if(event.kind==='plan'&&Number.isInteger(event.payload.changedIndex)){for(const key of Object.keys(s.today))if(key.startsWith(event.payload.changedIndex+'-'))delete s.today[key]}
         else s.today=copy(event.payload.today||s.today);
@@ -110,14 +130,15 @@
     for(const key of Object.keys(WORKOUT_META))u.program.exposures[key]=Math.max(Number(u.program.exposures[key])||0,u.history.filter(h=>h.workoutKey===key).length);
     const current=sessions.find(s=>s.id===u.workoutDraft?.id);
     if(current&&current.status!=='active'){
-      u.workoutDraft=null;u.today={};
+      u.workoutDraft=null;u.today={};u.sessionDifficulty=null;
       // An archive is not a completion. Recover a finish from its own key, once,
       // even if a stale profile snapshot already points at the following workout.
       if(current.status==='finished')completeRoutine(u,current.history||{workoutKey:current.key,sessionId:current.id});
     }
     const s=current?.status==='active'?current:[...sessions].reverse().find(s=>s.status==='active'&&s.plan?.length);
     if(!s)return;
-    u.workoutDraft={id:s.id,key:s.key,plan:copy(s.plan),heads:copy(s.heads),timer:s.timer};
+    u.workoutDraft={id:s.id,key:s.key,plan:copy(s.plan),heads:copy(s.heads),timer:s.timer,difficulty:s.difficulty};
+    u.sessionDifficulty=normalizedWorkoutDifficultyOverride(s.sessionDifficulty);
     u.trainingMode=s.trainingMode||'traditional';u.circuitPace=s.circuitPace||'balanced';
     u.program.currentWorkoutKey=s.key;u.workoutMinutes=s.workoutMinutes||60;u.today=copy(s.today);
     u.draftWorkoutKey=s.key;
@@ -159,7 +180,9 @@
       const s=sessions.find(x=>x.id===b.dataset.recover);if(!s?.plan)return;
       if(!confirm('Restore a copy of this saved session? Your current session will be archived, not deleted.'))return;
       if(!archive(u,'Restore another session'))return;
-      u.program.currentWorkoutKey=s.key;u.workoutMinutes=s.workoutMinutes;u.trainingMode=s.trainingMode||'traditional';u.circuitPace=s.circuitPace||'balanced';u.today=copy(s.today);ensure(u,s.plan);saveData();renderAll();showView('today');
+      u.program.currentWorkoutKey=s.key;u.workoutMinutes=s.workoutMinutes;u.trainingMode=s.trainingMode||'traditional';u.circuitPace=s.circuitPace||'balanced';u.today=copy(s.today);
+      u.sessionDifficulty={level:s.difficulty||'balanced',workoutKey:s.key,exposure:Number(u.program.exposures?.[s.key])||0};
+      ensure(u,s.plan);saveData();renderAll();showView('today');
     }))}
   }
   function installUI(){
@@ -190,7 +213,7 @@
     return doomed.length;
   }
 
-  window.IronSixJournal={forget,captureSet,ensure,archive,finish,changePlan,timerCheckpoint,migrateUser,restore,replay,pending,all,ingest,flush,status,renderTable,installUI,exportLog,hydrated,setTransport:fn=>{transport=fn;schedule()}};
+  window.IronSixJournal={forget,captureSet,ensure,archive,finish,changePlan,replacePlan,timerCheckpoint,migrateUser,restore,replay,pending,all,ingest,flush,status,renderTable,installUI,exportLog,hydrated,setTransport:fn=>{transport=fn;schedule()}};
   window.addEventListener('online',schedule);
   window.addEventListener('storage',event=>{if(event.key?.startsWith(PREFIX)&&event.newValue){try{const record=JSON.parse(event.newValue);const old=events.get(record.event_id);if(!old?.sequence||record.sequence){record._durable=true;events.set(record.event_id,record);status();schedule()}}catch(_){}}});
   window.addEventListener('beforeunload',event=>{if(pending().some(e=>!e._durable)){event.preventDefault();event.returnValue='Some edits are not saved.'}});

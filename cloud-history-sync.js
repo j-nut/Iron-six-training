@@ -23,7 +23,7 @@
   loadRuntimeScript('load-progression-v2.js?v=1','load-progression-v2','__ironSixLoadProgressionV2Loaded');
   loadRuntimeScript('bodyweight-load-fix.js?v=1','bodyweight-load-fix','__ironSixBodyweightLoadFix');
   loadRuntimeScript('adaptive-insights.js?v=3','adaptive-insights','__ironSixAdaptiveInsightsLoaded');
-  loadRuntimeScript('trainer-intelligence-v2.js?v=3','trainer-intelligence-v2','__ironSixTrainerIntelligenceV2Loaded');
+  loadRuntimeScript('trainer-intelligence-v2.js?v=4','trainer-intelligence-v2','__ironSixTrainerIntelligenceV2Loaded');
   loadRuntimeScript('program-intelligence-v3.js?v=1','program-intelligence-v3','__ironSixProgramIntelligenceV3Loaded');
   loadRuntimeScript('progress-analytics-v2.js?v=3','progress-analytics-v2','__ironSixProgressAnalyticsV2Loaded');
   loadRuntimeScript('session-adaptation-v3.js?v=2','session-adaptation-v3','__ironSixSessionAdaptationV3Loaded');
@@ -36,4 +36,5 @@
   loadRuntimeScript('set-coach-feedback.js?v=1','set-coach-feedback','__ironSixSetCoachFeedbackLoaded');
   loadRuntimeScript('iron-marks-engine.js?v=2','iron-marks-engine','IronSixMarksEngine');
   loadRuntimeScript('iron-marks.js?v=3','iron-marks','__ironSixMarksLoaded');
+  loadRuntimeScript('workout-difficulty-ui.js?v=1','workout-difficulty-ui','__ironSixDifficultyUILoaded');
 })();

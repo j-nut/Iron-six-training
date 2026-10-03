@@ -103,7 +103,8 @@ function programSlot(u,id,source,index,sets,priority=2,anchor=false){
   if(!pool.length)return null;
 
   const cacheVersion='v5';
-  const token=`${cacheVersion}:${key}:${id}:${anchor?'block'+Math.floor(exposure/4):exposure}`;
+  const difficulty=window.IronSixDifficulty?.effectiveFor(u)||'balanced';
+  const token=`${cacheVersion}:${key}:${id}:${anchor?'block'+Math.floor(exposure/4):exposure}${difficulty==='balanced'?'':':difficulty:'+difficulty}`;
   const cached=u.program.selectionCache[token];
   let selected=pool.find(e=>e.name===cached);
   if(!selected){
@@ -114,7 +115,7 @@ function programSlot(u,id,source,index,sets,priority=2,anchor=false){
       const noEquipmentBias=equipped&&!e.requires?.length?10:0;
       const patternPenalty=anchor?0:patternRecentPenalty(u,e);
       const equipmentPenalty=equipmentPreferencePenalty(u,id,e,pool,anchor);
-      return {e,score:exactPenalty(e)+counterpartPenalty(u,key,e)+patternPenalty+legacyBias+noEquipmentBias+equipmentPenalty};
+      return {e,score:exactPenalty(e)+counterpartPenalty(u,key,e)+patternPenalty+legacyBias+noEquipmentBias+equipmentPenalty+(window.IronSixDifficulty?.selectionPenalty(u,e)||0)};
     }).sort((a,b)=>a.score-b.score||stableNumber(`${token}:${a.e.name}`)-stableNumber(`${token}:${b.e.name}`))[0].e;
     u.program.selectionCache[token]=selected.name;
   }

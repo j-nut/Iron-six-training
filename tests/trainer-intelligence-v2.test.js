@@ -19,3 +19,7 @@ assert.match(b.recommendation,/25–35%/);
 const progress={history:[session(1,8,5,3),session(4,8,5,3),session(8,8,5,3)],trainingFeedback:Array.from({length:5},(_,i)=>({ts:now-(i+1)*864e5,feedback:'easy'}))};
 const c=context.IronSixTrainerV2.trainingState(progress,now);
 assert.equal(c.phase,'Progress');
+const light=context.IronSixTrainerV2.trainingState({...progress,workoutDifficulty:'light'},now);
+assert.equal(light.phase,'Build');assert.match(light.recommendation,/4 reps in reserve/);assert.match(light.recommendation,/does not require a load increase/);
+assert.equal(context.IronSixTrainerV2.coachPayload({...progress,workoutDifficulty:'light'}).workoutDifficulty,'light');
+assert.equal(context.IronSixTrainerV2.trainingState({...fatigued,workoutDifficulty:'light'},now).phase,'Deload suggested');
