@@ -1,6 +1,6 @@
 # Iron Six visual and reward refinement
 
-Updated October 2, 2026, America/Los_Angeles (October 3 UTC). User requested an improved overall look/feel and a more refined reward system. Tracked in issue #61.
+Updated October 3, 2026 UTC. User requested an improved overall look/feel and a more refined reward system. Tracked in issue #61.
 
 ## Changes
 
@@ -18,7 +18,7 @@ Runtime cache versions are bumped in `cloud-history-sync.js`, index and live ent
 
 The focused reward suite passed 44 tests, including ten new regressions covering recommendation prerequisites, goal labels, unchanged unlock results, collection filters/empty states, stale profile/account callbacks, focus containment/restoration and style persistence. The full suite passed 481 tests with zero failures; final CI/browser results are recorded in the delivery PR. Web and Android web bundles built successfully.
 
-Browser verification must check launch-screen reachability, current workout input/Done behavior, reward tabs/filters/style/focus, all app views, profile accent changes, errors and narrow layouts before merging. Physical-device execution and real authenticated account verification remain separate outstanding issues #49/#50; broader mobile/accessibility coverage is #51.
+The user reviewed the substantial preview and authorized publication. Independent rendered checks of launch-screen reachability, inputs, reward focus and narrow layouts remain follow-up verification. Physical-device execution and real authenticated account verification remain separate outstanding issues #49/#50; broader mobile/accessibility coverage is #51.
 
 ## Files and continuation
 
@@ -42,9 +42,11 @@ The user rejected the first styling pass as too subtle and clarified that every 
 
 Verification for this revision: **488 full-suite tests passed**, including five new regressions for destination navigation/current-page announcements, scheduler-based outlook after manual changes, history log-first hierarchy/disclosure preservation, and labeled profile fields/save behavior. The focused session/reward/entrypoint suite passed 66 tests; reward suite passed 46. Web and Android web bundles built. esbuild parsed the stylesheet without warnings for Chrome 108 and Safari 16.4. These are functional/static checks, not proof of rendered layout.
 
-**Visual QA remains outstanding:** the provided cloud browser repeatedly timed out during navigation, even with explicit short invocation timeouts. Do not claim 320/375/430/768/1200 screenshots, real-device usability, native installation or authenticated cross-device acceptance passed. The draft PR is the review artifact; inspect its newest Vercel preview, especially 320px input grids, session-start reachability, reward density, and all modal focus/scroll behavior before merging. The initial preview URL points to the older polish commit; use the newest deployment/check on the PR.
+**Delivery:** PR #62 was merged as `da8e53b3df597b1c433e81d9619df2385f1dbaf9`. The user said the substantial preview was looking better and explicitly requested publication. Final head checks and main checks passed, including validate, native APK and CodeQL. Vercel production deployment `dpl_9nvsN2NQgx6jjjvGBTBF1THtQd5b` is READY with that source and the canonical https://iron-six-training.vercel.app/ alias. Signed Android release run https://github.com/j-nut/Iron-six-training/actions/runs/37148454037 succeeded. Release https://github.com/j-nut/Iron-six-training/releases/tag/android-build-1008 contains APK (23,114,806 bytes), AAB (22,365,562 bytes) and SHA256SUMS.
+
+**Independent visual QA remains outstanding:** the provided cloud browser repeatedly timed out during navigation, even with short invocation timeouts. User preview acceptance is recorded separately; do not claim automated 320/375/430/768/1200 screenshots, physical-device installation, or authenticated cross-device acceptance passed. Continue these checks under #49/#50/#51. PR #62 and issue #61 are completed; the new difficulty feature is tracked separately in #63.
 
 Additional modified files in this revision: `ui-shell.js`, `ui1.js`, `coach.js`, `welcome.html`, and `tests/page-navigation.test.js`. Browser runtime state must still be driven by the existing modules. Avoid introducing independent counters or copying the scheduler into the UI.
 
 
-Security follow-up: GitHub CodeQL flagged one new high-severity alert on the first substantial redesign commit (`84da5c3`). Navigation had interpolated label text into HTML. The corrected implementation creates the label with `textContent` and constructs its SVG separately from fixed geometry. A regression checks that markup-shaped label text stays literal and produces no image/handler element. Final local full suite: 488/488; focused navigation/session regression suite: 24/24. The old commit had successful validate/APK/analyzer jobs, but the CodeQL aggregate failed, so it was not merged. Check the newest commit's CodeQL result, not the old alerting commit, before merging.
+Security follow-up: GitHub CodeQL flagged one new high-severity alert on the first substantial redesign commit (`84da5c3`). Navigation had interpolated label text into HTML. The corrected implementation creates the label with `textContent` and constructs its SVG separately from fixed geometry. A regression checks that markup-shaped label text stays literal and produces no image/handler element. Final local full suite: 488/488; focused navigation/session regression suite: 24/24. The old commit had successful validate/APK/analyzer jobs, but the CodeQL aggregate failed, so it was not merged. The corrected final head and merged main both passed CodeQL; the historical alerting commit was never merged.

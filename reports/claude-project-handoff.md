@@ -1,6 +1,6 @@
 # Iron Six — Claude project handoff
 
-Updated October 2, 2026, America/Los_Angeles (October 3 UTC). This is the entry point for the next agent. Read the current remote main and open PRs before editing; this document describes verified work and explicitly separates pending checks.
+Updated October 3, 2026 UTC. This is the entry point for the next agent. Read the current remote main and open PRs before editing; this document describes verified work and explicitly separates pending checks.
 
 ## Project and release state
 
@@ -93,4 +93,10 @@ GitHub permission correction PR #60 merged as `144b49e6966ad1aa6c9eeaaca850fb891
 
 ### October 3 UI redesign continuation
 
-PR #62 remains a draft and is **not live**. The user rejected the original subtle polish, so the branch now contains a substantial five-tab page redesign, shared navigation/header system, grouped profile fields, log-first History, scheduler-based current/next cards, readable Coach choices and a redesigned earned-reward identity/collection/style experience. See `reports/ui-reward-refinement-handoff.md` for exact surfaces, cache versions, 488 passing tests and visual QA limitations. The initial preview commit `2f2ade5` predates this substantial revision; open the latest Vercel preview on PR #62. Do not merge based only on automated tests while visual/browser checks remain unverified.
+PR #62 is merged and the substantial redesign is **live**. The user reviewed its preview, said it was looking better, and authorized publication. Source `da8e53b3df597b1c433e81d9619df2385f1dbaf9` is the current verified production source. Deployment `dpl_9nvsN2NQgx6jjjvGBTBF1THtQd5b` is READY with the canonical production alias. Signed Android release `android-build-1008` has permanent APK/AAB/checksum assets and the same source; release run `37148454037` succeeded. Final validate, CodeQL and APK checks passed; 488 local tests passed.
+
+The delivered redesign covers all five tabs, navigation, grouped profile fields, log-first History, scheduler-based current/next cards, readable Coach choices, and earned-reward identity/collection/style. Read `reports/ui-reward-refinement-handoff.md`. Independent browser viewport checks were blocked by repeated navigation timeouts. User visual acceptance does not replace physical-device or authenticated cross-device verification; #49/#50/#51 remain open. Owner-only GitHub setup remains #52.
+
+### Saved workout difficulty — current feature branch
+
+The user requested Light/Balanced/Heavy defaults and day-specific adjustments after publishing the design. Read `reports/workout-difficulty-handoff.md` for implementation, APIs, usage, regression evidence and release status. Feature issue #63 is separate from the completed design issue #61. Check the difficulty PR and deployment before saying this feature is on production; the shipped redesign does not contain the new controls until that PR is merged.

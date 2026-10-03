@@ -17,7 +17,7 @@ function oversizedContext() {
   const details = Array.from({ length: 12 }, (_, i) => ({ name: `Exercise ${i}`, base: `Base ${i}`, sets, junk: 'y'.repeat(800) }));
   const history = Array.from({ length: 8 }, (_, i) => ({ name: `Session ${i}`, date: `2026-09-${10 - i}`, workoutKey: 'lower_strength', duration: 60, details, junk: 'z'.repeat(1000) }));
   return {
-    profile: { name: 'Tester', bodyWeight: 220, age: 40, heightIn: 74, trainingLevel: 'intermediate', equipment: Array.from({ length: 30 }, (_, i) => `Equipment ${i}`), capacities: { barbellMax: 300 }, workoutMinutes: 60, junk: 'p'.repeat(3000) },
+    profile: { name: 'Tester', bodyWeight: 220, age: 40, heightIn: 74, trainingLevel: 'intermediate', workoutDifficulty: 'light', equipment: Array.from({ length: 30 }, (_, i) => `Equipment ${i}`), capacities: { barbellMax: 300 }, workoutMinutes: 60, junk: 'p'.repeat(3000) },
     readiness: { energy: 4, soreness: 1 },
     workout: Array.from({ length: 16 }, (_, i) => ({ index: i, name: `Movement ${i}`, prescription: '4 × 8–12', base: `Base ${i}`, suggested: { load: 100, target: 10, text: 'Suggested load', confidence: 'Performance-based', detail: 'd'.repeat(1000) } })),
     today: Array.from({ length: 40 }, (_, i) => ({ key: `0-${i}`, weight: 100, reps: 10, rir: 2, done: true, junk: 't'.repeat(600) })),
@@ -49,6 +49,8 @@ function oversizedContext() {
   assert.equal(compact.profile.equipment.length, 14);
   assert.equal(compact.today.length, 16);
   assert.equal(compact.workout.length, 8);
+  assert.equal(compact.profile.workoutDifficulty, 'light');
+  assert.equal(api.compactContext({profile:{workoutDifficulty:'untrusted'}}).profile.workoutDifficulty, 'balanced');
 
   const exactQuestion = "Can't I hold the barbell at my waist for calf raises the same way I would with dumbbells?";
   const res = makeRes(); await api.handler({ method: 'POST', body: { message: exactQuestion, context: oversizedContext() } }, res);
@@ -64,6 +66,8 @@ function oversizedContext() {
   assert.equal('response_format' in calls[0], false);
   assert.match(calls[0].messages[0].content, /plain text only/i, 'ordinary advice must not ask the model to create JSON');
   assert.match(calls[0].messages[0].content, /exact question first/i, 'Coach must answer the user’s proposed setup instead of substituting a conventional variation');
+  assert.match(calls[0].messages[0].content, /4 reps in reserve/);
+  assert.equal(JSON.parse(calls[0].messages[1].content.split('ACTIVE APP CONTEXT:\n')[1].split('\n\nContinue')[0]).profile.workoutDifficulty,'light');
   assert(JSON.stringify(calls[0]).length < 25000);
 
   const rawCalls = [];

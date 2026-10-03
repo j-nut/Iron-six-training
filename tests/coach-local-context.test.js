@@ -32,3 +32,7 @@ test('a stale selection outside the workout is ignored and unrelated prompts nev
 test('duplicate completed rows do not imply that another set was done',async()=>{
  const a=harness();assert.match((await a.ask('What next?',{today:[{key:'0-0',done:true},{key:'0-0',done:true}]})).reply,/Squat/);
 });
+test('offline Coach respects Light effort and does not suggest progression at 2 RIR',async()=>{
+ const a=harness(),out=await a.ask('Are my suggested weights right?',{profile:{workoutDifficulty:'light'}});
+ assert.match(out.reply,/4 reps in reserve/);assert.match(out.reply,/do not require increasing weight/);assert(!/2\+ reps/.test(out.reply));
+});

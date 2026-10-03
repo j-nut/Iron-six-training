@@ -147,7 +147,7 @@
     const allowedSwaps = workout.map((e,i) => ({ targetIndex:i, targetName:e.name, targetBase:e.base, replacements:availableOptions(u,e).map(o=>o.name) })).filter(x=>x.replacements.length);
     const today = Object.entries(u.today || {}).map(([key,s]) => ({ key, weight:s.weight, reps:s.reps, rir:s.rir, done:!!s.done })).filter(x=>x.weight||x.reps||x.done).slice(-30);
     return {
-      profile:{ name:u.name, bodyWeight:u.weight, age:u.age, heightIn:u.heightIn, trainingLevel:u.trainingLevel, equipment:[...EQUIPMENT.filter(([k])=>has(u,k)).map(([,label])=>label),...(u.customEquipment||[])], capacities:u.capacities, workoutMinutes:u.workoutMinutes },
+      profile:{ name:u.name, bodyWeight:u.weight, age:u.age, heightIn:u.heightIn, trainingLevel:u.trainingLevel, equipment:[...EQUIPMENT.filter(([k])=>has(u,k)).map(([,label])=>label),...(u.customEquipment||[])], capacities:u.capacities, workoutMinutes:u.workoutMinutes,workoutDifficulty:window.IronSixDifficulty?.effectiveFor(u)||'balanced' },
       equipmentCoverage:equipmentCoverage(u),
       readiness:u.readiness,
       workout:workout.map((e,i)=>({ index:i, name:e.name, sets:e.sets, prescription:e.prescription, base:e.base, suggested:suggestedLoadObject(u,e,i) })),
@@ -164,7 +164,7 @@
 
   const pendingRequests=new Map();
   function requestKey(u){return `${window.ironSixAccountScope||'guest'}:${u.id}`}
-  function actionContext(u){return JSON.stringify({id:u.id,key:u.program?.currentWorkoutKey,exposures:u.program?.exposures,session:u.workoutDraft?.sessionId||u.workoutDraft?.id,minutes:u.workoutMinutes,mode:u.trainingMode,workout:finalWorkout(u).map(e=>({name:e.name,base:e.base,sets:e.sets,prescription:e.prescription}))})}
+  function actionContext(u){return JSON.stringify({id:u.id,key:u.program?.currentWorkoutKey,exposures:u.program?.exposures,session:u.workoutDraft?.sessionId||u.workoutDraft?.id,minutes:u.workoutMinutes,mode:u.trainingMode,difficulty:window.IronSixDifficulty?.effectiveFor(u)||'balanced',workout:finalWorkout(u).map(e=>({name:e.name,base:e.base,sets:e.sets,prescription:e.prescription}))})}
   function renderMessages() {
     const chat=document.getElementById('coachChat'), arr=messages();
     const pending=pendingRequests.has(requestKey(activeUser()));
@@ -382,7 +382,7 @@ Anything else you want to know about ${guide.name}? Ask about load, warm-up sets
     saveData();renderExercises();renderTodayHeader();window.IronSixCircuit?.rebuild();toast(`${target.name} → ${option.name}`);return true;
   };
 
-  function workoutIdentity(u){return {id:u.workoutDraft?.id,key:u.program?.currentWorkoutKey,exposures:u.program?.exposures,plan:finalWorkout(u).map(e=>[e.name,e.sets,e.prescription])}}
+  function workoutIdentity(u){return {id:u.workoutDraft?.id,key:u.program?.currentWorkoutKey,exposures:u.program?.exposures,difficulty:window.IronSixDifficulty?.effectiveFor(u)||'balanced',plan:finalWorkout(u).map(e=>[e.name,e.sets,e.prescription])}}
   window.openExerciseSwap=function openExerciseSwap(index){
     const u=activeUser(),exercise=finalWorkout(u)[index],modal=document.getElementById('exerciseSwapModal');
     if(!exercise||!modal)return;

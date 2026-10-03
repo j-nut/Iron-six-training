@@ -61,6 +61,7 @@
     const today = Array.isArray(c.today) ? c.today : [];
     const first = workout[0];
     const match=exerciseMatch(payload);
+    const light=c.profile?.workoutDifficulty==='light'||c.workoutDifficulty==='light';
 
     if(match && wantsExerciseTeaching(payload) && window.IronSixExerciseGuide){
       return window.IronSixExerciseGuide.teachingResponse(match);
@@ -82,6 +83,7 @@
     }
     if (/weight|load|too heavy|too light/.test(message)) {
       const target=match?.name?` for ${match.name}`:'';
+      if(light)return {reply:`Use the Light working suggestion${target} for comfortable effort with about 4 reps in reserve. Reduce resistance or reps if you cannot keep that reserve and clean form. Light days do not require increasing weight when a set feels easy; adjust Today’s difficulty if you want a more demanding session. Log the actual weight, reps and RIR so future suggestions use your performance.`,actions:[],videos:[],followUps:match?.name?[`Teach me ${match.name}`]:['Give me warm-up sets']};
       return { reply: `Use the suggested load${target} as a starting target, but your actual set performance wins. If you exceed the top of the rep range with about 2+ reps still in reserve, increase next time. If you miss the rep range or unexpectedly hit 0 RIR, hold or reduce the load. Iron Six saves those results and updates future suggestions.`, actions: [], videos: [], followUps: match?.name?[`Teach me ${match.name}`]:['Give me warm-up sets'] };
     }
     return { reply: 'The cloud Coach could not be reached for this message, so I am using Iron Six’s built-in workout guidance. Your workout data are still intact.', actions: [], videos: [], followUps: ['Try the cloud Coach again'] };
@@ -104,7 +106,7 @@
     const engine = await getEngine();
     const context = payload?.context || {};
     const allowed = Array.isArray(context.allowedSwaps) ? context.allowedSwaps : [];
-    const system = `You are Iron Six Coach, an evidence-informed strength and hypertrophy assistant running locally on the user's device. Be concise. Use actual logged weight, reps and RIR before demographic estimates. Respect available equipment. Do not diagnose injuries. If sharp pain or concerning symptoms are reported, tell the user to stop the provoking movement and seek appropriate medical evaluation. Return JSON with reply, actions, videos and followUps.`;
+    const system = `You are Iron Six Coach, an evidence-informed strength and hypertrophy assistant running locally on the user's device. Be concise. Use actual logged weight, reps and RIR before demographic estimates. Respect available equipment and the supplied workoutDifficulty. Light means comfortable effort with about 4 reps in reserve, lighter resistance and bodyweight when appropriate; do not push failure or automatically increase Light loads after easy feedback. Heavy favors available barbells/machines, never maximal loading. Suggest changing Today's difficulty when the user wants a different effort. Do not diagnose injuries. If sharp pain or concerning symptoms are reported, tell the user to stop the provoking movement and seek appropriate medical evaluation. Return JSON with reply, actions, videos and followUps.`;
     const prompt = `APP CONTEXT:\n${JSON.stringify({ ...context, allowedSwaps: allowed }).slice(0, 14000)}\n\nUSER:\n${String(payload?.message || '').slice(0, 1400)}`;
     const result = await engine.chat.completions.create({messages:[{role:'system',content:system},{role:'user',content:prompt}],temperature:0.2,max_tokens:650});
     const out = safeJson(result?.choices?.[0]?.message?.content);

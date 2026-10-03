@@ -17,6 +17,8 @@ test('review applies only to unchanged upcoming workout and preserves other trai
  assert.equal(h.user.trainerMemory.summary,'current');assert.equal(h.user.trainerMemory.custom,'keep');assert.equal(h.user.trainerMemory.appearance.accent,'green');assert.equal(h.user.trainerMemory.achievements.earned[0],'first-session');
 });
 for(const [label,change] of Object.entries({
+ 'difficulty preference change':h=>h.user.workoutDifficulty='light',
+ 'today-only difficulty change':h=>h.user.sessionDifficulty={level:'heavy'},
  'manual routine change':h=>h.user.program.currentWorkoutKey='lower_a',
  'a newly logged set':h=>h.user.today['0-0']={weight:10,reps:8,done:true},
  'equipment changes':h=>h.user.equipment={dumbbells:false},

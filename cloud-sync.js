@@ -25,7 +25,7 @@
   const $=id=>document.getElementById(id);
   const journal=()=>window.IronSixJournal;
   function notify(text){message=text;if($('accountStatus'))$('accountStatus').textContent=text}
-  function runtimeState(u){return {today:u.today||{},draftWorkoutKey:u.draftWorkoutKey||null,draftUpdatedAt:Number(u.draftUpdatedAt)||0,workoutDraft:u.workoutDraft||null,history:u.history||[],customEquipment:u.customEquipment||[],coachMessages:u.coachMessages||[],coachOverrides:u.coachOverrides||null,sessionCalibration:u.sessionCalibration||null,trainerMemory:u.trainerMemory||null,localUpdatedAt:Number(u.localUpdatedAt)||0,importedGuestId:u.importedGuestId||null,trainingMode:u.trainingMode||'traditional',circuitPace:u.circuitPace||'balanced'}}
+  function runtimeState(u){return {workoutDifficulty:u.workoutDifficulty||'balanced',sessionDifficulty:u.sessionDifficulty||null,today:u.today||{},draftWorkoutKey:u.draftWorkoutKey||null,draftUpdatedAt:Number(u.draftUpdatedAt)||0,workoutDraft:u.workoutDraft||null,history:u.history||[],customEquipment:u.customEquipment||[],coachMessages:u.coachMessages||[],coachOverrides:u.coachOverrides||null,sessionCalibration:u.sessionCalibration||null,trainerMemory:u.trainerMemory||null,localUpdatedAt:Number(u.localUpdatedAt)||0,importedGuestId:u.importedGuestId||null,trainingMode:u.trainingMode||'traditional',circuitPace:u.circuitPace||'balanced'}}
   function payload(u,userId){return {user_id:userId,client_id:String(u.id),display_name:u.name,body_weight_lb:Number(u.weight)||null,age:u.age||null,height_in:u.heightIn||null,training_level:u.trainingLevel||'unknown',bench_reference:u.benchBest||null,equipment:u.equipment||{},capacities:u.capacities||{},workout_minutes:Number(u.workoutMinutes)||60,readiness:u.readiness||{},program_state:u.program||{},runtime_state:runtimeState(u)}}
   const fingerprint=u=>JSON.stringify(payload(u,scope()));
   function fromRow(r){
@@ -35,9 +35,9 @@
   }
   function mergeSetDrafts(local,cloud){const out={...cloud};for(const [key,set] of Object.entries(local||{})){if(!cloud?.[key]||Number(set?._updatedAt||0)>=Number(cloud[key]?._updatedAt||0))out[key]=set}return out}
   function applyRow(u,row){
-    const remote=fromRow(row),draft=u.workoutDraft,today=u.today,draftKey=u.draftWorkoutKey;
+    const remote=fromRow(row),draft=u.workoutDraft,today=u.today,draftKey=u.draftWorkoutKey,sessionDifficulty=u.sessionDifficulty;
     Object.assign(u,remote);delete u._remoteProfile;
-    if(draft){u.workoutDraft=draft;u.today=draft.id===remote.workoutDraft?.id?mergeSetDrafts(today,remote.today):today;u.draftWorkoutKey=draftKey;u.program.currentWorkoutKey=draft.key}
+    if(draft){u.sessionDifficulty=sessionDifficulty;u.workoutDraft=draft;u.today=draft.id===remote.workoutDraft?.id?mergeSetDrafts(today,remote.today):today;u.draftWorkoutKey=draftKey;u.program.currentWorkoutKey=draft.key}
   }
   async function ensureProfile(u){
     const userId=scope(),version=epoch;
@@ -199,9 +199,11 @@
     for(const source of saved.users){
       if(data.users.some(u=>u.importedGuestId===source.id))continue;
       const u=normalizeUser(JSON.parse(JSON.stringify(source))),plan=u.workoutDraft?.plan;
+      const difficulty=window.IronSixDifficulty?.effectiveFor(u)||u.workoutDifficulty||'balanced';
+      if(plan?.length)u.sessionDifficulty={level:difficulty,workoutKey:u.program.currentWorkoutKey,exposure:Number(u.program.exposures?.[u.program.currentWorkoutKey])||0};
       u.id=crypto.randomUUID();u.accountOwner=scope();u.importedGuestId=source.id;u.localUpdatedAt=Date.now();u.workoutDraft=null;
       for(const key of ['cloudId','_cloudVersion','_cloudFingerprint','_remoteProfile','cloudNormalizedThrough'])delete u[key];
-      data.users.push(u);journal().migrateUser(u,plan);
+      data.users.push(u);journal().migrateUser(u,plan);if(plan?.length)journal().ensure(u,plan);
     }baseSave();renderAll();queueSync();notify('Guest profiles copied. Originals remain on this device.');
   }
   function installUI(){

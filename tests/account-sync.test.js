@@ -148,3 +148,71 @@ test('cancelled OAuth callbacks show a safe retry message and remove error param
   assert.doesNotMatch(a.w.document.getElementById('accountStatus').textContent,/<script>/);
   assert.equal(a.w.document.getElementById('cloudModal').classList.contains('show'),true);a.close();
 });
+
+test('saved difficulty and active override sync and remain isolated between accounts',async()=>{
+  const a=await accountApp();try{
+    a.run(fs.readFileSync('workout-difficulty-ui.js','utf8'));
+    await a.signIn('owner-a');
+    assert.equal(a.w.IronSixDifficultyUI.changeDefault('light'),true);
+    a.run("IronSixJournal.ensure(activeUser(),finalWorkout(activeUser()));activeUser().today['0-0']={weight:'20',reps:'8',done:false};IronSixJournal.captureSet(activeUser(),finalWorkout(activeUser()),0,0,activeUser().today['0-0']);renderAll()");
+    assert.equal(a.w.IronSixDifficultyUI.changeToday('heavy'),true);
+    await a.w.IronSixCloud.syncNow();
+    const row=a.db.profiles.find(r=>r.user_id==='owner-a');
+    assert.equal(row.runtime_state.workoutDifficulty,'light');
+    assert.equal(row.runtime_state.sessionDifficulty.level,'heavy');
+    assert.equal(row.runtime_state.workoutDraft.difficulty,'heavy');
+    const id=a.run('activeUser().workoutDraft.id');
+    await a.signIn('owner-b');
+    assert.equal(a.run('activeUser().workoutDifficulty'),'balanced');
+    assert.equal(a.run('activeUser().sessionDifficulty'),null);
+    assert.equal(a.run('activeUser().workoutDraft ?? null'),null);
+    assert.equal(a.w.document.getElementById('todayDifficulty').value,'balanced');
+    await a.signIn('owner-a');
+    assert.equal(a.run('activeUser().workoutDifficulty'),'light');
+    assert.equal(a.run('activeUser().workoutDraft.id'),id);
+    assert.equal(a.run('IronSixDifficulty.effectiveFor(activeUser())'),'heavy');
+    assert.equal(a.run("activeUser().today['0-0'].weight"),'20');
+    assert.equal(a.w.document.getElementById('todayDifficulty').value,'heavy');
+  }finally{a.close()}
+});
+
+test('accepting cloud settings preserves the local pinned session level and entered work',async()=>{
+  const a=await accountApp();try{
+    a.run(fs.readFileSync('workout-difficulty-ui.js','utf8'));await a.signIn('owner-a');
+    a.run("IronSixJournal.ensure(activeUser(),finalWorkout(activeUser()));renderAll()");
+    a.w.IronSixDifficultyUI.changeToday('light');
+    a.run("activeUser().today['0-0']={weight:'15',reps:'9',done:false};IronSixJournal.captureSet(activeUser(),finalWorkout(activeUser()),0,0,activeUser().today['0-0']);saveData()");
+    await a.w.IronSixCloud.syncNow();
+    const row=a.db.profiles.find(r=>r.user_id==='owner-a');
+    row.runtime_state.workoutDifficulty='heavy';row.runtime_state.sessionDifficulty=null;row.runtime_state.workoutDraft=null;row.runtime_state.today={};row.updated_at='2099-01-01T00:00:00.000Z';
+    a.run("activeUser().name='Local change';saveData()");await a.w.IronSixCloud.syncNow();
+    [...a.w.document.querySelectorAll('#profileConflicts button')].find(b=>b.textContent==='Use cloud settings').click();
+    for(let i=0;i<8;i++)await turn();
+    assert.equal(a.run('activeUser().workoutDifficulty'),'heavy');
+    assert.equal(a.run('IronSixDifficulty.effectiveFor(activeUser())'),'light');
+    assert.equal(a.run("activeUser().today['0-0'].weight"),'15');
+  }finally{a.close()}
+});
+
+for(const entered of [false,true])test('explicit guest import retains the pinned level and future default '+(entered?'with entered work':'before logging'),async()=>{
+  const a=await accountApp();try{
+    a.run(fs.readFileSync('workout-difficulty-ui.js','utf8'));
+    a.w.IronSixDifficultyUI.changeDefault('light');
+    a.run('IronSixJournal.ensure(activeUser(),finalWorkout(activeUser()));renderAll()');
+    if(entered)a.run("activeUser().today['0-0']={weight:'22.5',reps:'8',done:false};IronSixJournal.captureSet(activeUser(),finalWorkout(activeUser()),0,0,activeUser().today['0-0']);saveData()");
+    a.w.IronSixDifficultyUI.changeDefault('heavy');
+    const guest=a.run('activeUser().id'),plan=a.run('JSON.stringify(finalWorkout(activeUser()))');
+    await a.signIn('owner-a');a.w.document.getElementById('accountImport').click();
+    const imported=a.run(`data.users.find(u=>u.importedGuestId===${JSON.stringify(guest)}).id`);
+    a.run(`switchUser(${JSON.stringify(imported)})`);
+    assert.equal(a.run('activeUser().workoutDifficulty'),'heavy');
+    assert.equal(a.run('activeUser().workoutDraft.difficulty'),'light');
+    assert.equal(a.run('IronSixDifficulty.effectiveFor(activeUser())'),'light');
+    assert.equal(a.run('JSON.stringify(finalWorkout(activeUser()))'),plan);
+    assert.equal(a.w.document.getElementById('todayDifficulty').value,'light');
+    if(entered)assert.equal(a.run("activeUser().today['0-0'].weight"),'22.5');
+    await a.w.IronSixCloud.syncNow();
+    const row=a.db.profiles.find(r=>r.user_id==='owner-a'&&r.client_id===imported);
+    assert.equal(row.runtime_state.workoutDifficulty,'heavy');assert.equal(row.runtime_state.workoutDraft.difficulty,'light');
+  }finally{a.close()}
+});

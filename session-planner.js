@@ -22,7 +22,7 @@ function sessionSeconds(u,plan){
   return base+plan.reduce((n,e)=>n+45+e.sets*traditionalSetSeconds(e),0);
 }
 function budgetSessionWorkout(u,workout){
-  const circuit=u.trainingMode==='circuit',minutes=Number(u.workoutMinutes||60),budget=Math.max(600,Math.min(7200,minutes*60));
+  const circuit=u.trainingMode==='circuit',light=window.IronSixDifficulty?.effectiveFor(u)==='light',minutes=Number(u.workoutMinutes||60),budget=Math.max(600,Math.min(7200,minutes*60));
   const used=new Set();
   let pool=workout.filter(e=>e&&exerciseAvailable(u,e)).map(e=>{const selected=circuit?circuitExercise(u,e,used):{...e};if(selected)used.add(String(selected.name).toLowerCase());return selected}).filter(Boolean);
   const coverage=muscleCoverage(u),due=new Set(MUSCLE_GROUPS.filter(m=>coverage.last[m]===null||coverage.last[m]>=3));
@@ -49,19 +49,19 @@ function budgetSessionWorkout(u,workout){
   accessories.sort((a,b)=>programNeed(b)-programNeed(a)||recentDose(a)-recentDose(b)||Number(specificity(b).some(m=>due.has(m)))-Number(specificity(a).some(m=>due.has(m)))||((a._position+exposure)%Math.max(1,pool.length))-((b._position+exposure)%Math.max(1,pool.length)));
   let selected=[...anchors,...accessories].slice(0,count).map(e=>{
     const baseMax=Math.max(1,e.sets);
-    const volumeBonus=!circuit&&minutes>=60&&e.priority!==1?1:0;
+    const volumeBonus=!light&&!circuit&&minutes>=60&&e.priority!==1?1:0;
     return {...e,sets:1,_max:baseMax+volumeBonus};
   });
   const covered=new Set(selected.flatMap(exerciseMuscles));
   const neglected=accessories.find(e=>!selected.some(x=>x.name===e.name)&&(programNeed(e)>.25||specificity(e).some(m=>due.has(m)&&!covered.has(m))));
   if(neglected&&selected.length>2&&selected[selected.length-1].priority!==1){
-    const baseMax=Math.max(1,neglected.sets),volumeBonus=!circuit&&minutes>=60?1:0;
+    const baseMax=Math.max(1,neglected.sets),volumeBonus=!light&&!circuit&&minutes>=60?1:0;
     selected[selected.length-1]={...neglected,sets:1,_max:baseMax+volumeBonus};
   }
   selected.sort((a,b)=>a._position-b._position);
   while(selected.length>1&&sessionSeconds(u,selected)>budget)selected.pop();
   if(circuit){
-    const maxRounds=Number(u.readiness?.energy||4)<=2?4:8;
+    const maxRounds=Number(u.readiness?.energy||4)<=2?4:light?6:8;
     while(selected.length&&selected[0].sets<maxRounds){const next=selected.map(e=>({...e,sets:e.sets+1}));if(sessionSeconds(u,next)>budget)break;selected=next}
     // Use the remaining short-session budget for a final partial round.
     if(minutes<=30)for(const e of selected){if(e.sets>=maxRounds)continue;e.sets++;if(sessionSeconds(u,selected)>budget)e.sets--}
@@ -76,8 +76,9 @@ function circuitTimeline(u,plan){
   const rounds=Math.max(0,...plan.map(e=>e.sets));
   for(let round=0;round<rounds;round++){
     plan.forEach((ex,index)=>{if(round>=ex.sets)return;
-      steps.push({kind:'work',seconds:pace.work,title:ex.name,cue:'Controlled reps. Leave at least 2 reps in reserve.',index,setIndex:round,round:round+1,rounds});
-      steps.push({kind:'rest',seconds:Math.max(20,pace.rest),title:'Rest & change stations',cue:'Breathe, log your reps, and prepare the next exercise.',round:round+1,rounds});
+      const light=window.IronSixDifficulty?.effectiveFor(u)==='light';
+      steps.push({kind:'work',seconds:pace.work,title:ex.name,cue:light?'Controlled reps. Leave about 4 reps in reserve.':'Controlled reps. Leave at least 2 reps in reserve.',index,setIndex:round,round:round+1,rounds});
+      steps.push({kind:'rest',seconds:Math.max(20,pace.rest),title:'Rest & change stations',cue:'Breathe, log your reps, and prepare the next exercise.',index,setIndex:round,round:round+1,rounds});
     });
     if(round<rounds-1)steps.push({kind:'roundRest',seconds:45,title:'Round recovery',cue:'Recover before the next round.',round:round+1,rounds});
   }
