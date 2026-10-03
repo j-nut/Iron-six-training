@@ -16,7 +16,27 @@ function parseLoad(v){const m=String(v||'').match(/(\d+(?:\.\d+)?)/);return m?Nu
 function setPrescriptionRanges(ex){const m=String(ex?.prescription||'').match(/^1\s+top\s+set\s*[×x]\s*(\d+)\s*[–-]\s*(\d+)\s*,?\s*then\s*(\d+)\s*[×x]\s*(\d+)\s*[–-]\s*(\d+)/i);return m?{top:[Number(m[1]),Number(m[2])],backoff:[Number(m[4]),Number(m[5])]}:null}
 function repRange(ex){const text=String(ex.prescription||''),m=text.match(/(\d+)\s*[–-]\s*(\d+)/);if(m)return [Number(m[1]),Number(m[2])];const fixed=text.match(/[×x]\s*(\d+)(?!\d)(?!\s*(?:s(?:ec)?\b|seconds?\b))/i);return fixed?[Number(fixed[1]),Number(fixed[1])]:[8,12]}
 function repTarget(ex){const [a,b]=repRange(ex);return Math.round((a+b)/2)}
-function roundLoad(x,ex,u){if(!Number.isFinite(x)||x<=0)return null;let step=5;if(/Dumbbell/i.test(ex.name))step=5;let r=Math.max(5,Math.round(x/step)*step);if(/Dumbbell/i.test(ex.name)&&u.capacities?.dumbbellMax)r=Math.min(r,u.capacities.dumbbellMax);if(/Barbell|Bench|Squat|Deadlift|Row|Press|Curl|Hip Thrust/i.test(ex.name)&&!(/Dumbbell|Landmine/i.test(ex.name))&&u.capacities?.barbellMax)r=Math.min(r,u.capacities.barbellMax);return r}
+// Equipment metadata is authoritative; names only support older imported exercises.
+function exerciseLoadEquipment(ex){
+ const name=String(ex?.name||''),requires=Array.isArray(ex?.requires)?ex.requires:null;
+ if(requires?.includes('dumbbells'))return 'dumbbell';
+ if(requires?.includes('landmine')||/\blandmine\b/i.test(name))return 'landmine';
+ if(requires?.includes('barbell'))return 'barbell';
+ if(requires?.includes('bands'))return 'band';
+ if(/\bdumbbell\b|\bgoblet squat\b/i.test(name))return 'dumbbell';
+ if(/\bbarbell\b/i.test(name))return 'barbell';
+ if(/\bweighted|\bloaded|\bmachine|\bcable|\bkettlebell|\bband|\bmedicine ball/i.test(name)||(ex?.requiresCustom||[]).length)return 'other';
+ if(requires&&requires.every(key=>['bench','rack','pullup','abwheel'].includes(key)))return 'bodyweight';
+ if(/bodyweight|push[- ]?up|pull[- ]?up|chin[- ]?up|plank|single-leg hip hinge|cyclist squat/i.test(name))return 'bodyweight';
+ return 'other';
+}
+function roundLoad(x,ex,u){
+ if(!Number.isFinite(x)||x<=0)return null;
+ const equipment=exerciseLoadEquipment(ex);let r=Math.max(5,Math.round(x/5)*5);
+ const cap=Number(equipment==='dumbbell'?u.capacities?.dumbbellMax:['barbell','landmine'].includes(equipment)?u.capacities?.barbellMax:null);
+ if(Number.isFinite(cap)&&cap>0)r=Math.min(r,cap);
+ return r;
+}
 function historySetsFor(u,matcher){
  const rows=[];(u.history||[]).forEach(h=>(h.details||[]).forEach(d=>{if(matcher(d))(d.sets||[]).forEach((x,index)=>{if(x.done===true||(x.done==null&&parseLoad(x.weight)>0&&Number(x.reps)>0))rows.push({...x,_setIndex:Number.isInteger(x.setIndex)?x.setIndex:index,_date:Number(h.ts)||0,_exercise:d.name,_base:d.base,_prescription:d.prescription||''})})}));
  return rows.sort((a,b)=>b._date-a._date);
@@ -26,12 +46,12 @@ function median(nums){const a=[...nums].sort((x,y)=>x-y);if(!a.length)return nul
 function benchReferenceE1RM(u){const nums=String(u.benchBest||'').match(/\d+(?:\.\d+)?/g)||[];if(nums.length<2)return null;const w=Number(nums[0]),reps=Number(nums[nums.length-1]);return w&&reps?w*(1+reps/30):null}
 const SEED_FACTORS={squat:.52,hinge:.60,bench:.38,overhead_press:.22,row:.38,hip_thrust:.55,curl:.10,triceps:.10,split_squat:.14,lateral_raise:.035,ham_curl:.08,calves:.18,chest_press:.16};
 function demographicSeed(u,ex){
- const key=ex.seedKey||'',baseFactor=SEED_FACTORS[key];if(!baseFactor)return null;
+ const key=ex.seedKey||'',baseFactor=SEED_FACTORS[key],equipment=exerciseLoadEquipment(ex);if(!baseFactor||equipment==='bodyweight')return null;
  const level={unknown:.78,beginner:.72,intermediate:1,advanced:1.22}[u.trainingLevel]||.78;
  const age=Number(u.age)||35;const ageAdj=age<45?1:age<55?.95:age<65?.90:.85;
  let load=u.weight*baseFactor*level*ageAdj;
- if(/Dumbbell/i.test(ex.name))load/=2;
- if(/Landmine/i.test(ex.name))load*=.70;
+ if(equipment==='dumbbell')load/=2;
+ if(equipment==='landmine')load*=.70;
  return roundLoad(load,ex,u);
 }
 function priorPerformance(u,ex){

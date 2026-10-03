@@ -1,6 +1,6 @@
 # Adaptive workout flow repair
 
-Updated September 30, 2026. Baseline: main 31496dfe2893cf1e12799f69eea913c2ae3eb7bf.
+Updated October 2, 2026 (America/Los_Angeles). Baseline: main 31496dfe2893cf1e12799f69eea913c2ae3eb7bf.
 
 ## Confirmed bugs repaired
 
@@ -25,16 +25,20 @@ Updated September 30, 2026. Baseline: main 31496dfe2893cf1e12799f69eea913c2ae3eb
 
 - Built-in Coach resolves ordinal demo shortcuts against the live workout, ignores stale selected exercises, and locates the next incomplete exercise using each exercise’s actual completed rows and set count. Fully completed sessions receive finish guidance.
 
-## Verification and remaining delivery checks
+## Release verification
 
-Baseline suite: 409 passing tests. Initial repair: 434. Final combined suite: 466 passing tests, zero failures, including the live-preview Coach shortcut repair. Behavioral coverage includes scheduler, journal recovery, DOM editing, backoff loads, cloud races, profiles, account sync simulations, backup/restore, circuit timer, exercise media, voice logging, music, pose analysis, and Android source checks.
+Baseline suite: 409 passing tests. Initial repair: 434. Final combined suite: 470 passing tests, zero failures, including the live-preview Coach shortcut repair. Behavioral coverage includes scheduler, journal recovery, DOM editing, backoff loads, cloud races, profiles, account sync simulations, backup/restore, circuit timer, exercise media, voice logging, music, pose analysis, and Android source checks.
 
 The planner matrix checks 672 combinations of routines, equipment, durations, and modes for nonempty available distinct exercises, time budgets, and agreement between circuit rounds and timeline steps.
 
 Both `node scripts/build-web.mjs` and `node scripts/build-android-web.mjs` passed. The Android result is a packaged web bundle, not a rebuilt native APK.
 
-A hosted preview is accessible in the cloud browser. Guest workout logging reproduced the stale exercise-progress counter, and the first-exercise demo shortcut exposed an additional local Coach matching defect. The preview returned HTTP 503 from /api/coach and /api/recalculate; successful cloud generation has not been verified. Local browser installation failed, so phone viewport checks and native Android execution remain unverified. Automated account tests use simulated services; no authenticated production workouts were created or modified.
+The current hosted preview verified guest Done/undo progress, invalid completed-row editing, persistence after reload, the first-exercise demo guide, manual routine switching with journal archive, preserved displaced routines in the forecast, duration/mode rebuilding, and circuit start/skip/pause. Skipping did not complete a set. That check found excessive Goblet Squat load estimates and invented loads on unloaded hip hinges; equipment-aware caps and bodyweight handling now repair both, with four additional regression tests. Repeated bodyweight refreshes also no longer duplicate load labels.
 
-The user explicitly authorized publishing branch `fix/adaptive-workout-flow` and opening a pull request on September 25, 2026. PR #47 remains a draft, unmerged. Production deployment and native APK delivery remain pending.
+Production cloud Coach successfully returned an openai/gpt-oss-20b response on October 2. Preview endpoints lack cloud configuration and returned 503; deterministic fallback and exercise guides remain usable. GitHub Actions on the prior candidate passed validation and built a native debug APK plus unsigned release bundle. Physical Android execution and phone viewport checks remain unverified. Automated account tests use simulated services; no authenticated production workouts were created or modified.
+
+Cross-session audit: remote main still matched baseline 31496df, and the published repair tree exactly matched the clean local checkout. No other session merged this repair. Separate open landmine-illustration and watch PRs were excluded from this release.
+
+The user authorized finishing the release on October 2 after checking other sessions. This report captures the release candidate; PR #47 and the Vercel deployment are the authoritative sources for final merge/deployment state. Native device execution and a stable-key signed Android release remain separate delivery checks.
 
 Adaptation uses recorded work and does not account for unlogged activity. These checks provide regression coverage, not a guarantee that every possible device or service behavior is bug-free.
