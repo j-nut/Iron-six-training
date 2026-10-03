@@ -46,3 +46,7 @@ Independent rendered visual checks remain blocked by the provided browser naviga
 3. Consider an explicit future-session preview generated from a clone with `workoutDraft:null`, `sessionDifficulty:null`, `today:{}` and cloned program/cache state. Never forecast from today's pinned plan or write forecasting mutations back to the real user.
 4. Evaluate user feedback on exercise effort before adding more levels or numerical sliders. Bodyweight can still be difficult; assistance/regressions require actual supported alternatives, not a promise that all bodyweight choices are easy.
 5. Continue the existing device/sync/accessibility and owner GitHub setup issues before claiming every scenario is verified. Treat future workout-duration or equipment requests as separate changes; do not rewrite performed work to satisfy them.
+
+## Delivery evidence
+
+Draft PR: https://github.com/j-nut/Iron-six-training/pull/64 . Functional source commit: `79c31e3a6bf87cab7c7857be6b517a78662aeb72` (later handoff-only commits do not change app behavior). Vercel preview for that source is READY: https://iron-six-training-itbzsaaup-jordman55-3386s-projects.vercel.app/ . Use the latest PR check/deployment for current head verification. Production continues to serve the reviewed redesign; this feature is not merged. CI runs validate (including Edge type checks), CodeQL Actions/JavaScript and native APK. Inspect their current conclusions on PR #64 before promotion. Preview review and real-device/account acceptance remain as described above.
