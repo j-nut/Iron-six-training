@@ -36,6 +36,17 @@ test('each labeled navigation button opens its view and announces the current de
   }finally{a.close()}
 });
 
+test('navigation label text is never interpreted as markup when chrome is installed',()=>{
+  const a=app();try{
+    const button=a.w.document.querySelector('.navbtn[data-view="today"]');
+    const label='<img src=x onerror="alert(1)">';
+    button.textContent=label;
+    a.run('IronSixUIShell.apply()');
+    assert.equal(button.querySelector('span').textContent,label);
+    assert.equal(button.querySelector('img'),null);
+  }finally{a.close()}
+});
+
 test('the Plan outlook uses the scheduler after a manual routine change and summary uses the actual prescription',()=>{
   const a=app();try{
     a.run("chooseWorkout('upper_specialization');renderAll()");

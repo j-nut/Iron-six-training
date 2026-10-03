@@ -53,8 +53,14 @@
     inner.parentElement.setAttribute('aria-label', 'Main navigation');
     buttons.forEach(button => {
       if (!button.querySelector('.pr-nav-icon')) {
-        const label = button.textContent.trim();
-        button.innerHTML = `<svg class="pr-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NAV_ICONS[button.dataset.view]}</svg><span>${label}</span>`;
+        const label = document.createElement('span');
+        label.textContent = button.textContent.trim();
+        const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        icon.classList.add('pr-nav-icon');
+        for (const [name,value] of Object.entries({viewBox:'0 0 24 24',fill:'none',stroke:'currentColor','stroke-width':'1.7','stroke-linecap':'round','stroke-linejoin':'round','aria-hidden':'true'})) icon.setAttribute(name,value);
+        // Geometry is from the fixed icon map. Labels never pass through an HTML parser.
+        icon.innerHTML = NAV_ICONS[button.dataset.view];
+        button.replaceChildren(icon, label);
       }
       if (button.classList.contains('active')) button.setAttribute('aria-current', 'page');
       else button.removeAttribute('aria-current');
