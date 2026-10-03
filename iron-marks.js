@@ -111,7 +111,7 @@
       .im-backdrop[hidden]{display:none}
       .im-modal{width:min(100%,680px);max-height:calc(100dvh - 16px);overflow:auto;overscroll-behavior:contain;background:linear-gradient(155deg,rgba(255,255,255,.025),transparent 32%),var(--surface);border:1px solid #363b47;border-radius:24px;padding:22px 16px max(20px,env(safe-area-inset-bottom));box-shadow:0 24px 80px #0009;box-sizing:border-box}
       .im-head{display:flex;align-items:center;gap:16px;margin:4px 4px 24px}
-      .im-head>div:nth-child(2){min-width:0;flex:1}
+      .im-head>div:not(.im-avatar){min-width:0;flex:1}
       .im-head h3{margin:0;font-size:22px;letter-spacing:-.7px;line-height:1.15}.im-head p{margin:7px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
       .im-head .im-close{margin-left:auto;align-self:flex-start}
       .im-close{border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:50%;width:40px;height:40px;font-weight:700;cursor:pointer;flex:0 0 auto}
@@ -165,8 +165,8 @@
     el.dataset.ring = avatar.ring?.id || '';
     el.dataset.emblem = avatar.emblem || '';
     if (avatar.emblem) {
-      const art = icon(avatar.emblem, el.classList.contains('im-avatar') ? 32 : 17, avatar.detail);
-      const size = el.classList.contains('im-avatar') ? 32 : 17;
+      const art = icon(avatar.emblem, el.classList.contains('im-avatar') ? (el.classList.contains('im-identity-avatar') || el.classList.contains('im-preview-avatar') ? 48 : 32) : 17, avatar.detail);
+      const size = el.classList.contains('im-avatar') ? (el.classList.contains('im-identity-avatar') || el.classList.contains('im-preview-avatar') ? 48 : 32) : 17;
       if (el.firstElementChild?.getAttribute('data-im-glyph') !== `${avatar.emblem}-${size}-${avatar.detail}`) el.innerHTML = art;
     }
     else if (fallbackText != null) el.textContent = fallbackText;
@@ -246,8 +246,8 @@
     const pct = Math.min(100, Math.max(0, Math.round(mark.value / mark.target * 100)));
     const status = mark.unlocked
       ? `<em>Earned${mark.unlockedAt ? ' ' + esc(dateOf(mark.unlockedAt)) : ''}${mark.emblem ? ` · unlocks the ${esc(engine.EMBLEMS[mark.emblem])} emblem` : ''}${mark.ring ? ' · avatar ring' : ''}</em>`
-      : `<div class="im-bar" aria-hidden="true"><i style="width:${pct}%"></i></div>`;
-    return `<div class="im-card ${mark.unlocked ? 'earned' : 'locked'}" data-mark="${esc(mark.id)}"><div class="im-badge">${markIcon(mark)}</div><div class="im-body"><strong>${esc(mark.title)}</strong><span>${esc(mark.text)}</span>${status}${mark.unlocked ? '' : `<small class="im-count">Locked · ${mark.value} / ${mark.target}</small>`}</div></div>`;
+      : `<div class="im-bar" role="progressbar" aria-label="${esc(mark.title)} progress" aria-valuemin="0" aria-valuemax="${mark.target}" aria-valuenow="${Math.min(mark.value,mark.target)}"><i style="width:${pct}%"></i></div>`;
+    return `<div class="im-card ${mark.unlocked ? 'earned' : 'locked'}" data-mark="${esc(mark.id)}"><div class="im-badge">${markIcon(mark)}</div><div class="im-body"><strong>${esc(mark.title)}</strong><span>${esc(mark.text)}</span>${status}${mark.unlocked ? '' : `<small class="im-count">${mark.value} of ${mark.target} · in progress</small>`}</div></div>`;
   }
 
   function evidence(event) {
@@ -260,7 +260,7 @@
     const ringOptions=[{id:'auto',label:'Highest earned ring'},{id:'none',label:'No ring'},...engine.RINGS.map(t=>({id:t.id,label:`${t.label} · ${t.rotations} rotations`,unlocked:r.stats.rotations>=t.rotations}))];
     const detailOptions=[{id:'auto',label:'Auto · highest earned'},...engine.EVOLUTIONS.map(t=>({id:String(t.level),label:t.label,unlocked:!!evo&&evo.level>=t.level}))];
     const titles=r.titles.map(t=>({...t,label:t.label+(t.mark?' · '+r.marks.find(m=>m.id===t.mark)?.title:'')}));
-    return `<div class="im-section" id="imStylePanel"><h4>Make it yours</h4><p class="im-help">Your favorites stay yours. Choose any earned ring and detail level.</p><div class="im-customize">
+    return `<div class="im-section" id="imStylePanel"><h4>Finishing touches</h4><p class="im-help">Choose your ring, emblem detail and title. These choices only change your profile’s appearance.</p><div class="im-customize">
       <label>Avatar ring<select data-custom="ring">${options(ringOptions,state.ring||'auto')}</select></label>
       <label>Emblem detail<select data-custom="detail" ${evo?'':'disabled'}>${options(detailOptions,state.detail||'auto')}</select></label>
       <label>Profile title<select data-custom="title">${options(titles,state.title||'none')}</select></label></div>
@@ -311,26 +311,43 @@
     reconcileDialogs();
     const backdrop = ensureModal('ironMarksModal', 'Iron Marks'), modal = backdrop.querySelector('.im-modal'), state = readState(u);
     const earned = r.marks.filter(m => m.unlocked).length, avatar = engine.avatarFor(u, r), worn = avatar.emblem;
-    const closest = engine.closestMarks(r), goal = engine.nextGoal(u, r);
+    const goal = engine.nextGoal(u, r);
     const ringLine = r.nextRing
       ? `<strong>${r.stats.rotations} full rotation${r.stats.rotations === 1 ? '' : 's'}</strong><small> · ${esc(r.nextRing.label)} ring at ${r.nextRing.rotations}</small><div class="im-bar" role="progressbar" aria-label="Progress to ${esc(r.nextRing.label)} ring" aria-valuemin="0" aria-valuemax="${r.nextRing.rotations}" aria-valuenow="${r.stats.rotations}"><i style="width:${Math.round(r.stats.rotations / r.nextRing.rotations * 100)}%"></i></div>`
       : `<strong>${r.stats.rotations} full rotations</strong><small> · every ring earned</small>`;
-    const emblemButtons = Object.entries(engine.EMBLEMS).map(([id, label]) => {
+    const emblemButtons = ownedOnly => Object.entries(engine.EMBLEMS).map(([id, label]) => {
       const mark = r.marks.find(m => m.emblem === id), owned = r.emblems.includes(id);
-      if (!owned && mark?.hidden) return '';
+      if (owned !== ownedOnly || (!owned && mark?.hidden)) return '';
       return `<button type="button" class="im-emblem ${worn === id ? 'active' : ''}" data-wear="${id}" aria-pressed="${worn === id}" ${owned ? '' : 'disabled'} title="${esc(owned ? label : `${label}: ${mark?.text || ''}`)}">${icon(id, 32, worn===id ? avatar.detail : r.evolutions[id]?.level || 1)}<span>${esc(label)}</span><small>${worn === id ? 'Wearing' : owned ? 'Available' : 'Locked'}</small></button>`;
     }).join('');
+    const availableEmblems = emblemButtons(true), lockedEmblems = emblemButtons(false);
     const recent = r.marks.filter(m => m.unlocked).sort((a,b) => (b.unlockedAt || 0) - (a.unlockedAt || 0)).slice(0, 2);
-    modal.innerHTML = `<div class="im-head"><div class="im-avatar" id="imAvatarPreview"></div><div><h3>Iron Marks</h3><p>${avatar.title ? esc(avatar.title)+' · ' : ''}Your training, recognized.<br>Rest days never reset your progress.</p></div><button class="im-close" type="button" aria-label="Close Iron Marks">✕</button></div>`
+    const identityName = avatar.title || u.name || 'Your training identity';
+    const identityMeta = [avatar.emblem ? engine.EMBLEMS[avatar.emblem] + ' emblem' : 'Initials', avatar.ring ? avatar.ring.label + ' ring' : 'No ring'].join(' · ');
+    const groupDescriptions = {
+      six:'Your first sessions, full rotations and earned rings.',
+      forge:'Experience built across your program days.',
+      balance:'Training that covers the full program.',
+      consistency:'Returning to training at your own pace.',
+      honest:'Completed sessions and the effort you log.',
+      progress:'Rep improvements confirmed in comparable logs.',
+      blocks:'Balanced training across all six program days.',
+      evolution:'Extra detail for emblems you already own.'
+    };
+    const goalMeasure = goal.kind === 'block' || goal.kind === 'progress' ? 'block sessions' : goal.id === 'full_six' ? 'program days' : 'sessions';
+    modal.innerHTML = `<div class="im-head"><div><span class="im-eyebrow">YOUR ACHIEVEMENTS</span><h3>Iron Marks</h3><p>Earned through training. Yours to keep.</p></div><button class="im-close" type="button" aria-label="Close Iron Marks">✕</button></div>`
       + `<nav class="im-tabs" role="tablist" aria-label="Iron Marks views">${[['overview','Overview'],['collection','Collection'],['style','Style']].map(([id,label]) => `<button type="button" role="tab" id="im-tab-${id}" aria-controls="im-panel-${id}" aria-selected="${view===id}" tabindex="${view===id?'0':'-1'}" data-panel="${id}">${label}</button>`).join('')}</nav>`
-      + `<section class="im-panel" role="tabpanel" id="im-panel-overview" aria-labelledby="im-tab-overview" ${view==='overview'?'':'hidden'}><div class="im-overview-stats"><div><strong>${earned}</strong><span>Marks earned</span></div><div><strong>${r.stats.qualifying}</strong><span>Successful sessions</span></div><div><strong>${r.depth.improvements.length}</strong><span>Confirmed improvements</span></div></div>`
-      + `<div class="im-story"><span class="im-goal-label">${esc(goal.label)}</span><p><strong>${esc(goal.title)}</strong><br>${esc(goal.text)}</p><div class="im-bar" role="progressbar" aria-label="${esc(goal.title)}" aria-valuemin="0" aria-valuemax="${goal.target}" aria-valuenow="${goal.value}"><i style="width:${Math.min(100,goal.value/goal.target*100)}%"></i></div><p>${goal.value} / ${goal.target}</p></div>`
-      + (closest.length ? `<div class="im-section"><h4>Within reach</h4><div class="im-grid">${closest.map(markCard).join('')}</div></div>` : '')
-      + (recent.length ? `<div class="im-section"><h4>Recently earned</h4><div class="im-grid">${recent.map(markCard).join('')}</div></div>` : '<p class="im-help">Your first successful session begins your collection. Follow the workout at the effort that suits today.</p>')
-      + `<div class="im-section"><h4>Your next ring</h4><div class="im-ringline">${ringLine}</div></div>` + depthPanel(r) + '</section>'
-      + `<section class="im-panel" role="tabpanel" id="im-panel-collection" aria-labelledby="im-tab-collection" ${view==='collection'?'':'hidden'}><div class="im-filter"><label for="imFilter">${earned} of ${r.marks.length} earned</label><select id="imFilter"><option value="all">All marks</option><option value="earned">Earned</option><option value="progress">In progress</option></select></div><div class="im-empty" id="imEmpty" hidden></div><div id="imCollectionPanel">${engine.GROUPS.map(g => {const group=r.marks.filter(m=>m.group===g.id);return `<details class="im-section im-mark-group" ${g.id==='six'?'open':''}><summary>${esc(g.title)} <small>${group.filter(m=>m.unlocked).length} / ${group.length} earned</small></summary><div class="im-grid">${group.map(markCard).join('')}</div></details>`;}).join('')}</div></section>`
-      + `<section class="im-panel" role="tabpanel" id="im-panel-style" aria-labelledby="im-tab-style" ${view==='style'?'':'hidden'}><div class="im-section"><h4>Profile emblem</h4><div class="im-emblems"><button type="button" class="im-emblem ${worn ? '' : 'active'}" data-wear="" aria-pressed="${!worn}"><span>${esc(initialsOf(u))}</span><span>Initials</span><small>${worn ? 'Available' : 'Wearing'}</small></button>${emblemButtons}</div></div>${customization(u,r)}</section>`;
+      + `<section class="im-panel" role="tabpanel" id="im-panel-overview" aria-labelledby="im-tab-overview" ${view==='overview'?'':'hidden'}>`
+      + `<div class="im-identity"><div class="im-avatar im-identity-avatar" id="imAvatarPreview"></div><div class="im-identity-copy"><span class="im-eyebrow">YOUR TRAINING IDENTITY</span><h4>${esc(identityName)}</h4><p class="im-identity-meta">${esc(identityMeta)}</p><button type="button" class="im-shortcut" data-open-panel="style">Customize profile <span aria-hidden="true">→</span></button></div></div>`
+      + `<div class="im-overview-stats" aria-label="Training achievements"><div><strong>${earned}</strong><span>Marks earned</span></div><div><strong>${r.stats.qualifying}</strong><span>Successful sessions</span></div><div><strong>${r.depth.improvements.length}</strong><span>Confirmed improvements</span></div></div>`
+      + `<div class="im-featured-goal"><div class="im-goal-topline"><span class="im-eyebrow">${esc(goal.label)}</span><span class="im-goal-value">${goal.value}<small> / ${goal.target}</small></span></div><h4>${esc(goal.title)}</h4><p>${esc(goal.text)}</p><div class="im-bar" role="progressbar" aria-label="${esc(goal.title)}: ${goalMeasure}" aria-valuemin="0" aria-valuemax="${goal.target}" aria-valuenow="${goal.value}"><i style="width:${Math.min(100,goal.value/goal.target*100)}%"></i></div><div class="im-goal-footnote">${goal.value} of ${goal.target} ${goalMeasure} · no deadline</div></div>`
+      + `<div class="im-section"><div class="im-section-heading"><h4>Latest achievements</h4><button type="button" class="im-shortcut" data-open-panel="collection">View collection <span aria-hidden="true">→</span></button></div>${recent.length ? `<div class="im-grid">${recent.map(markCard).join('')}</div>` : `<div class="im-first-mark"><div class="im-badge">${icon('spark',40)}</div><div><strong>Your collection starts here</strong><p>Your first successful session earns First Rep and the Spark emblem. Follow the plan at the effort that suits today.</p></div></div>`}</div>`
+      + `<div class="im-section"><h4>${r.nextRing ? 'Next ring' : 'Ring collection complete'}</h4><div class="im-ringline">${ringLine}</div><p class="im-help">A full rotation includes all six program days. Rest days never reset your progress.</p></div>`
+      + `<details class="im-training-record"><summary>Training record <span>Blocks &amp; confirmed progress</span></summary>${depthPanel(r)}</details></section>`
+      + `<section class="im-panel" role="tabpanel" id="im-panel-collection" aria-labelledby="im-tab-collection" ${view==='collection'?'':'hidden'}><div class="im-collection-header"><span class="im-eyebrow">YOUR COLLECTION</span><h4>${earned}<span> / ${r.marks.length} marks earned</span></h4><p>Every mark recognizes completed training. Open a category to see what counts.</p></div><div class="im-filter"><label for="imFilter">Show</label><select id="imFilter"><option value="all">All marks</option><option value="earned">Earned</option><option value="progress">In progress</option></select></div><div class="im-empty" id="imEmpty" hidden></div><div id="imCollectionPanel">${engine.GROUPS.map(g => {const group=r.marks.filter(m=>m.group===g.id);return `<details class="im-section im-mark-group" ${g.id==='six'?'open':''}><summary>${esc(g.title)} <small>${group.filter(m=>m.unlocked).length} / ${group.length} earned</small></summary><p class="im-section-intro">${esc(groupDescriptions[g.id] || '')}</p><div class="im-grid">${group.map(markCard).join('')}</div></details>`;}).join('')}</div></section>`
+      + `<section class="im-panel" role="tabpanel" id="im-panel-style" aria-labelledby="im-tab-style" ${view==='style'?'':'hidden'}><div class="im-style-preview"><div class="im-avatar im-preview-avatar" id="imStyleAvatarPreview"></div><div><span class="im-eyebrow">PROFILE PREVIEW</span><h4>${esc(identityName)}</h4><p>${esc(identityMeta)}</p></div></div><div class="im-section"><h4>Choose your emblem</h4><p class="im-section-intro">Wear an earned emblem or keep your initials.</p><div class="im-emblems"><button type="button" class="im-emblem ${worn ? '' : 'active'}" data-wear="" aria-pressed="${!worn}"><span>${esc(initialsOf(u))}</span><span>Initials</span><small>${worn ? 'Available' : 'Wearing'}</small></button>${availableEmblems}</div>${lockedEmblems ? `<details class="im-style-locked"><summary>Emblems to earn <small>${Object.keys(engine.EMBLEMS).filter(id=>!r.emblems.includes(id) && !r.marks.find(m=>m.emblem===id)?.hidden).length} locked</small></summary><p class="im-help">Explore the Collection tab for each emblem’s requirements. Your workout plan comes first.</p><div class="im-emblems">${lockedEmblems}</div></details>` : ''}</div>${customization(u,r)}<p class="im-style-note">Your choices save automatically to this profile.</p></section>`;
     paintAvatar(modal.querySelector('#imAvatarPreview'), u, initialsOf(u));
+    paintAvatar(modal.querySelector('#imStyleAvatarPreview'), u, initialsOf(u));
     modal.querySelector('.im-close').addEventListener('click', () => closeModal(backdrop));
     modal.querySelectorAll('[data-wear]').forEach(button => button.addEventListener('click', () => dialogAction(backdrop, () => wear(button.dataset.wear || null, true))));
     const choosePanel = (name, focus = false) => {
@@ -341,6 +358,7 @@
         if (selected && focus) button.focus();
       }
     };
+    modal.querySelectorAll('[data-open-panel]').forEach(button => button.addEventListener('click', () => dialogAction(backdrop, () => { choosePanel(button.dataset.openPanel, true); modal.scrollTop = 0; })));
     modal.querySelectorAll('[data-panel]').forEach(button => {
       button.addEventListener('click', () => dialogAction(backdrop, () => choosePanel(button.dataset.panel)));
       button.addEventListener('keydown', event => {
@@ -381,8 +399,8 @@
     const backdrop = ensureModal('ironMarksEarned', 'Iron Mark earned'), modal = backdrop.querySelector('.im-modal');
     const worn = engine.avatarFor(u, evaluate(u)).emblem;
     modal.innerHTML = `<div class="im-head"><div class="im-avatar" id="imEarnedAvatar"></div><div><h3>${marks.length === 1 ? 'Iron Mark earned' : `${marks.length} Iron Marks earned`}</h3><p>From the session you just finished.</p></div><button class="im-close" type="button" aria-label="Close">✕</button></div>`
-      + `<div class="im-earned-list">${marks.map(m => `<div class="im-card earned"><div class="im-badge">${markIcon(m)}</div><div class="im-body"><strong>${esc(m.title)}</strong><span>${esc(m.text)}</span>${m.evolvedEmblem ? `<em>A new detail level for your ${esc(engine.EMBLEMS[m.evolvedEmblem])} emblem. Choose it in your collection.</em>` : ''}${m.group==='progress' ? `<em>${esc(evidence(evaluate(u).depth.improvements.filter(e=>e.ts<=m.unlockedAt).at(-1)))}</em>` : ''}${m.group==='blocks' ? `<em>${evaluate(u).depth.blocks.completed.find(b=>b.end===m.unlockedAt)?.sessions || 24} successful sessions across all six days.</em>` : ''}${m.ring ? `<em>Unlocked the ${esc(m.title.replace(/ Ring$/, ''))} ring. Choose it in your collection.</em>` : ''}${m.emblem && m.emblem !== worn ? `<button type="button" class="im-wear" data-wear="${m.emblem}">Wear the ${esc(engine.EMBLEMS[m.emblem])} emblem</button>` : ''}</div></div>`).join('')}</div>`
-      + `<div class="im-actions"><button type="button" class="btn secondary" data-all>See all marks</button><button type="button" class="btn primary" data-done>Nice</button></div>`;
+      + `<div class="im-earned-list">${marks.map(m => `<div class="im-card earned"><div class="im-badge">${markIcon(m)}</div><div class="im-body"><strong>${esc(m.title)}</strong><span>${esc(m.text)}</span>${m.evolvedEmblem ? `<em>A new detail level for your ${esc(engine.EMBLEMS[m.evolvedEmblem])} emblem. Choose it in the Style tab.</em>` : ''}${m.group==='progress' ? `<em>${esc(evidence(evaluate(u).depth.improvements.filter(e=>e.ts<=m.unlockedAt).at(-1)))}</em>` : ''}${m.group==='blocks' ? `<em>${evaluate(u).depth.blocks.completed.find(b=>b.end===m.unlockedAt)?.sessions || 24} successful sessions across all six days.</em>` : ''}${m.ring ? `<em>Unlocked the ${esc(m.title.replace(/ Ring$/, ''))} ring. Choose it in the Style tab.</em>` : ''}${m.emblem && m.emblem !== worn ? `<button type="button" class="im-wear" data-wear="${m.emblem}">Wear the ${esc(engine.EMBLEMS[m.emblem])} emblem</button>` : ''}</div></div>`).join('')}</div>`
+      + `<div class="im-actions"><button type="button" class="btn secondary" data-all>View collection</button><button type="button" class="btn primary" data-done>Continue</button></div>`;
     paintAvatar(modal.querySelector('#imEarnedAvatar'), u, initialsOf(u));
     const done = () => { closeModal(backdrop); };
     modal.querySelector('.im-close').addEventListener('click', done);

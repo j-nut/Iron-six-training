@@ -25,3 +25,23 @@ Browser verification must check launch-screen reachability, current workout inpu
 Primary files: `premium-ui.css`, `iron-marks-engine.js`, `iron-marks.js`, `cloud-history-sync.js`, `index.html`, `live.html`; regression files: `tests/iron-marks-goals.test.js`, `tests/iron-marks.test.js`, `tests/feature-entrypoints.test.js`.
 
 Avoid adding more shadow/glow or shrinking labels to fit: resolve density through hierarchy and spacing. Keep reward recommendations subordinate to the adaptive training plan. Do not turn low recovery into a goal or encourage overriding manually chosen routines for an ordered reward. Future useful work: dedicated cross-browser end-to-end tests, accessible achievement evidence navigation, and evidence-backed explanations of what counts toward each mark.
+
+
+## Substantial page redesign — October 3, 2026
+
+The user rejected the first styling pass as too subtle and clarified that every tab/page must be readable, usable, coherent and easy to navigate. This revision changes information architecture and visible page structure, rather than just adjusting glow and spacing.
+
+- **Shared chrome:** larger borderless page headers, charcoal/slate surfaces, readable body copy, a labeled SVG icon for each of the five navigation destinations, a floating navigation dock, and accessible current-page announcements. Accent preferences remain supported. The design stylesheet loads directly in both entrypoint heads, before scripts, and the guarded runtime loader remains as a fallback.
+- **Today:** real minutes/exercises/working-set summary derived from the active prescription. The start action remains prominent; setup stays expandable. Active training keeps the compact header and working inputs before media, with legible labels and effort feedback.
+- **Plan:** current/next cards use the same scheduler as the engine. A manual change updates the outlook. Long coach notes, fatigue estimates/planning signals, and static explanations are expandable, retaining their actual content and engine ownership.
+- **History:** saved sessions and search/filter/export controls come first. Progress and freshness sections become native disclosures that retain their open state across updates. Analytics and historical data remain intact.
+- **Profiles:** semantic groups for personal details, training experience and equipment, responsive field grids, connected labels and one save action. Existing save/rebuild behavior is preserved.
+- **Coach:** matching header, visible question choices instead of a hidden horizontal scroll strip, calmer conversation styling, readable guidance and clear send action.
+- **Rewards:** earned identity with direct customization, one featured milestone with explicit progress units/no deadline, recent achievements and direct collection access, live style preview, earned cosmetics first, and locked emblems/training evidence expandable. Hidden rewards stay concealed; qualification/unlock rules stay unchanged.
+- **Supporting surfaces:** account, equipment, movement guides, camera guidance, music, circuit controls and the welcome page use the shared type/material conventions. No new dependencies.
+
+Verification for this revision: **487 full-suite tests passed**, including four new regressions for destination navigation/current-page announcements, scheduler-based outlook after manual changes, history log-first hierarchy/disclosure preservation, and labeled profile fields/save behavior. The focused session/reward/entrypoint suite passed 66 tests; reward suite passed 46. Web and Android web bundles built. esbuild parsed the stylesheet without warnings for Chrome 108 and Safari 16.4. These are functional/static checks, not proof of rendered layout.
+
+**Visual QA remains outstanding:** the provided cloud browser repeatedly timed out during navigation, even with explicit short invocation timeouts. Do not claim 320/375/430/768/1200 screenshots, real-device usability, native installation or authenticated cross-device acceptance passed. The draft PR is the review artifact; inspect its newest Vercel preview, especially 320px input grids, session-start reachability, reward density, and all modal focus/scroll behavior before merging. The initial preview URL points to the older polish commit; use the newest deployment/check on the PR.
+
+Additional modified files in this revision: `ui-shell.js`, `ui1.js`, `coach.js`, `welcome.html`, and `tests/page-navigation.test.js`. Browser runtime state must still be driven by the existing modules. Avoid introducing independent counters or copying the scheduler into the UI.

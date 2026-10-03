@@ -403,3 +403,41 @@ test('changing earned style keeps its panel and keyboard focus after rerender an
   modal.querySelector('.im-close').click();a.run("IronSixMarks.open('style')");assert.equal(modal.querySelector('[data-custom="ring"]').value,'none');
  }finally{a.close()}
 });
+
+
+test('the earned identity and collection shortcuts lead to the right reward panels without changing progress',()=>{
+ const a=app();try{
+  a.setHistory(cycles(3));a.run("IronSixMarks.wear('hex');IronSixMarks.open()");
+  const modal=a.w.document.getElementById('ironMarksModal'),before=a.json('IronSixMarks.evaluate().stats');
+  const preview=modal.querySelector('#imAvatarPreview');
+  assert.equal(preview.dataset.emblem,'hex');assert.equal(preview.dataset.ring,'iron');
+  assert.equal(preview.querySelector('svg').getAttribute('width'),'48');
+  assert.match(modal.querySelector('.im-identity-meta').textContent,/Hex emblem · Iron ring/);
+  assert.equal(modal.querySelector('.im-featured-goal [role="progressbar"]').getAttribute('aria-valuemax'),'24');
+  modal.querySelector('[data-open-panel="style"]').click();
+  assert.equal(modal.querySelector('#im-panel-style').hidden,false);
+  assert.equal(a.w.document.activeElement,modal.querySelector('[data-panel="style"]'));
+  assert.equal(modal.querySelector('#imStyleAvatarPreview').dataset.emblem,'hex');
+  modal.querySelector('[data-panel="overview"]').click();
+  modal.querySelector('[data-open-panel="collection"]').click();
+  assert.equal(modal.querySelector('#im-panel-collection').hidden,false);
+  assert.deepEqual(a.json('IronSixMarks.evaluate().stats'),before);
+ }finally{a.close()}
+});
+
+test('style prioritizes usable earned emblems and keeps locked choices behind a disclosure',()=>{
+ const a=app();try{
+  a.setHistory([session('push_a',0)]);a.run("IronSixMarks.open('style')");
+  const modal=a.w.document.getElementById('ironMarksModal'),locked=modal.querySelector('.im-style-locked');
+  assert.equal(locked.open,false);
+  const mainChoices=modal.querySelector('#im-panel-style .im-section > .im-emblems');
+  assert(mainChoices.querySelector('[data-wear="spark"]'));
+  assert([...mainChoices.querySelectorAll('button')].every(button=>!button.disabled));
+  assert([...locked.querySelectorAll('[data-wear]')].every(button=>button.disabled));
+  assert.equal(modal.querySelector('[data-wear="sixsix"]'),null,'secret emblem stays concealed');
+  modal.querySelector('[data-wear="spark"]').click();
+  assert.equal(modal.querySelector('#imStyleAvatarPreview').dataset.emblem,'spark');
+  assert.equal(modal.querySelector('#im-panel-style').hidden,false);
+  assert.equal(modal.querySelector('[data-wear="spark"]').getAttribute('aria-pressed'),'true');
+ }finally{a.close()}
+});
