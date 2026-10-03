@@ -15,7 +15,7 @@
     if(document.querySelector(`link[data-${datasetKey}]`))return;
     const link=document.createElement('link');link.rel='stylesheet';link.href=href;link.setAttribute(`data-${datasetKey}`,'true');document.head.appendChild(link);
   }
-  loadRuntimeStyle('premium-ui.css?v=1','premium-ui');
+  loadRuntimeStyle('premium-ui.css?v=3','premium-ui');
   loadRuntimeScript('coach-recovery.js?v=2','coach-recovery','__ironSixCoachRecoveryLoaded');
   loadRuntimeScript('auth-hardening.js?v=2','auth-hardening','__ironSixAuthHardened');
   loadRuntimeScript('account-polish.js?v=1','account-polish','__ironSixAccountPolish');
@@ -34,6 +34,6 @@
   loadRuntimeScript('accent-theme.js?v=1','accent-theme','__ironSixAccentThemeLoaded');
   loadRuntimeScript('active-workout-clean.js?v=1','active-workout-clean','__ironSixActiveWorkoutCleanLoaded');
   loadRuntimeScript('set-coach-feedback.js?v=1','set-coach-feedback','__ironSixSetCoachFeedbackLoaded');
-  loadRuntimeScript('iron-marks-engine.js?v=1','iron-marks-engine','IronSixMarksEngine');
-  loadRuntimeScript('iron-marks.js?v=1','iron-marks','__ironSixMarksLoaded');
+  loadRuntimeScript('iron-marks-engine.js?v=2','iron-marks-engine','IronSixMarksEngine');
+  loadRuntimeScript('iron-marks.js?v=3','iron-marks','__ironSixMarksLoaded');
 })();

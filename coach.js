@@ -28,12 +28,12 @@
   section.innerHTML = `
     <div class="hero">
       <div class="eyebrow">AI training coach</div>
-      <h1>Ask about this workout.</h1>
+      <h1>Your training coach.</h1>
       <p id="coachHeroText">Iron Six Coach can see the active profile, equipment, today’s prescription, logged sets, and recent training history.</p>
-      <div class="badge-row"><span class="badge">Knows your workout</span><span class="badge">Exercise swaps</span><span class="badge">Load advice</span><span class="badge">Video search</span></div>
+
     </div>
     <div class="section">
-      <div class="section-head"><div><h2>Quick asks</h2><small>Answered using today’s workout and your history</small></div></div>
+      <div class="section-head"><div><h2>How can I help?</h2><small>Choose a question or write your own below</small></div></div>
       <div class="coach-quick" id="coachQuick">
         <button type="button" class="coach-chip">What should I do next?</button>
         <button type="button" class="coach-chip">Are my suggested weights right?</button>
@@ -45,7 +45,7 @@
       <div class="coach-chat" id="coachChat"></div>
       <form class="coach-compose" id="coachForm">
         <textarea id="coachInput" rows="2" maxlength="1400" placeholder="Ask about today’s workout…" aria-label="Ask Iron Six Coach"></textarea>
-        <button class="btn primary coach-send" type="submit">Ask</button>
+        <button class="btn primary coach-send" type="submit">Send</button>
       </form>
       <div class="coach-status" id="coachStatus"></div>
       <div class="coach-disclaimer">Training guidance only. For sharp pain, sudden injury, chest pain, fainting, neurological symptoms, or other concerning symptoms, stop the provoking activity and seek appropriate medical care.</div>
