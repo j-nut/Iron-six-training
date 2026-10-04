@@ -100,7 +100,7 @@ for(const name of askable){
 const none=resolver.resolve('Cossack Lunge');
 if(none.tier===6){
   assert.equal(none.media,null);
-  assert(window.IronSixMediaView.gallery({name:'Cossack Lunge'}).includes('Demo coming soon'));
+  assert(window.IronSixMediaView.gallery({name:'Cossack Lunge'}).includes('Illustration unavailable'));
 }
 
 // The legacy catalogue itself still refuses inexact matches; substitution is the resolver's
@@ -123,4 +123,15 @@ window.document.body.appendChild(brokenCard);
 const img=brokenCard.querySelector('img');
 img.dispatchEvent(new window.Event('error'));
 assert(window.document.querySelector('.media-load-error'));
+assert(window.document.querySelector('.media-load-error a').href.includes('youtube.com/results?search_query=Push-Up'));
+const mixed=window.IronSixMediaView.gallery({name:'Barbell Bench Press + Unknown Equipment Move'});
+const mixedHost=window.document.createElement('div');mixedHost.innerHTML=mixed;
+assert.equal(mixedHost.querySelectorAll('img').length,1,'the available half of a superset keeps its exact illustration');
+const fallbackLink=mixedHost.querySelector('.exercise-media-missing a');
+assert.equal(new URL(fallbackLink.href).searchParams.get('search_query'),'Unknown Equipment Move exercise form tutorial');
+assert(mixedHost.textContent.includes('Opens YouTube search results'),'a search must not claim to be a reviewed video');
+vm.runInContext(fs.readFileSync('media-experience-v2.js','utf8'),ctx);
+const motionCard=window.IronSixVisualDebug.renderPanel({name:'Plank'});window.document.body.append(motionCard);
+motionCard.querySelector('img').dispatchEvent(new window.Event('error'));
+assert(motionCard.querySelector('.exercise-media-missing a').href.includes('search_query=Plank'));
 dom.window.close();

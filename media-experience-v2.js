@@ -16,9 +16,9 @@
     if(media.frames.length===1){
       const shot=`<img style="opacity:1" src="${esc(media.frames[0])}"${size} alt="${esc(name)}${composite?' — start, midpoint and finish positions':' position'}" loading="lazy" decoding="async">`;
       const stage=composite?`<a href="${esc(media.frames[0])}" target="_blank" rel="noopener noreferrer" aria-label="Enlarge the ${esc(name)} form guide">${shot}</a>`:shot;
-      return `<figure class="exercise-media ${compact?'compact':''}"><div class="motion-stage${composite?' composite':''}">${stage}</div><figcaption>${credit}</figcaption><div class="media-form-cues">${esc(cues(name))}</div></figure>`;
+      return `<figure data-exercise-name="${esc(name)}" class="exercise-media ${compact?'compact':''}"><div class="motion-stage${composite?' composite':''}">${stage}</div><figcaption>${credit}</figcaption><div class="media-form-cues">${esc(cues(name))}</div></figure>`;
     }
-    return `<figure class="exercise-media ${compact?'compact':''} motion-demo" data-motion-demo><div class="motion-stage">${media.frames.slice(0,2).map((src,i)=>`<img src="${esc(src)}" alt="${esc(name)} — ${i?'finish':'start'} position" loading="lazy" decoding="async">`).join('')}</div><div class="motion-labels"><span>Start</span><span>Finish</span></div><div class="motion-actions"><button type="button" class="motion-toggle" data-motion-toggle>Auto demo</button><span class="media-coverage-chip">2-position exact movement</span></div><div class="media-form-cues">${esc(cues(name))}</div><figcaption>${esc(name)} · <a href="${esc(media.source)}" target="_blank" rel="noopener noreferrer">${esc(media.author)}</a> · <a href="${esc(media.licenseUrl)}" target="_blank" rel="noopener noreferrer">${esc(media.license)}</a></figcaption></figure>`;
+    return `<figure data-exercise-name="${esc(name)}" class="exercise-media ${compact?'compact':''} motion-demo" data-motion-demo><div class="motion-stage">${media.frames.slice(0,2).map((src,i)=>`<img src="${esc(src)}" alt="${esc(name)} — ${i?'finish':'start'} position" loading="lazy" decoding="async">`).join('')}</div><div class="motion-labels"><span>Start</span><span>Finish</span></div><div class="motion-actions"><button type="button" class="motion-toggle" data-motion-toggle>Auto demo</button><span class="media-coverage-chip">2-position exact movement</span></div><div class="media-form-cues">${esc(cues(name))}</div><figcaption>${esc(name)} · <a href="${esc(media.source)}" target="_blank" rel="noopener noreferrer">${esc(media.author)}</a> · <a href="${esc(media.licenseUrl)}" target="_blank" rel="noopener noreferrer">${esc(media.license)}</a></figcaption></figure>`;
   }
   style();
   const prior=window.IronSixMediaView?.gallery;
@@ -28,7 +28,7 @@
         // Resolver first so first-party art outranks legacy art and any substitution keeps
         // its label; the catalogue stays as a fallback if the resolver is unavailable.
         const media=window.IronSixMediaResolver?.legacyShape?.(name)||window.IronSixExerciseMedia?.resolve?.(name);
-        if(!media)return prior({name},{compact});
+        if(!media||media.tier>=4)return prior({name},{compact});
         const notice=media.label?'<p class="media-variant">'+String(media.label).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))+'</p>':'';
         const variant=/paused|tempo/i.test(name)?'<p class="media-variant">Standard movement shown. Follow the prescribed pause or tempo.</p>':'';
         return demo(name,media,compact)+notice+variant;
