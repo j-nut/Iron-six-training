@@ -13,7 +13,7 @@
     style.id = 'activeWorkoutCleanStyles';
     style.textContent = `
       /* Active workout = control surface, not a stack of cards. */
-      #sessionCardNav{gap:7px!important;margin:0 0 8px!important;position:sticky;top:0;z-index:8;padding:6px 0;background:linear-gradient(180deg,var(--bg) 78%,transparent)}
+      #sessionCardNav{gap:7px!important;margin:0 0 8px!important;position:sticky;top:var(--app-safe-top,0px);z-index:8;padding:6px 0;background:var(--bg)}
       #sessionCardNav .sc-arrow{min-width:42px!important;min-height:42px!important;height:42px!important;border-radius:12px!important}
       #sessionCardNav .sc-step{display:flex!important;flex-direction:column;justify-content:center;min-width:0;line-height:1.1}
       #sessionCardNav .sc-step strong{font-size:11.5px!important;line-height:1.15!important}
@@ -23,9 +23,10 @@
       .awc-overview-proxy:active{transform:scale(.96)}
 
       #exerciseList.awc-focus .exercise:not(.sc-hidden){padding:13px 13px 14px!important;border-radius:18px!important}
-      #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-head{align-items:flex-start;margin-bottom:0!important}
+      #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-head{align-items:flex-start;margin-bottom:0!important;padding:0;flex-wrap:wrap}
+      #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-title{flex:1 1 100%;width:100%}
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-title h3,
-      #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-title strong:first-child{font-size:20px!important;line-height:1.12!important;margin:0!important}
+      #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-title>strong:first-child{font-size:20px!important;line-height:1.12!important;margin:0!important}
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-title>span{font-size:12px;line-height:1.25;color:var(--muted);margin-top:2px}
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .tag,
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-help-btn,
@@ -33,9 +34,11 @@
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .substitution,
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .pose-bar{display:none!important}
 
-      /* Keep the target prominent, but make it a compact pill rather than another card. */
-      #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion{display:inline-flex!important;align-items:center;margin:7px 0 0!important;padding:7px 10px!important;border-radius:11px!important;min-height:0!important}
+      /* Details stack under the target instead of competing for a narrow flex row. */
+      #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion{display:grid!important;gap:6px;width:100%;min-width:0;margin:7px 0 0!important;padding:7px 10px!important;border-radius:11px!important;min-height:0!important}
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion strong{font-size:15px!important;line-height:1.15!important}
+      #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion .confidence{justify-self:start;margin:0}
+      #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion>div{margin:0!important;line-height:1.5}
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion .confidence,
       #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion>div{display:none!important}
       #exerciseList.awc-focus .exercise:not(.sc-hidden).awc-details .substitution{display:block!important;margin-top:8px}

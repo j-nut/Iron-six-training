@@ -20,6 +20,8 @@
   }
 
   function bodyweightRecommendation(exercise, completedSet = null) {
+    const timed = /\b(?:sec(?:onds?)?|s)\b/i.test(String(exercise?.prescription || ''));
+    const unit = timed ? 'sec' : 'reps';
     const range = typeof repRange === 'function' ? repRange(exercise) : [8, 12];
     const lo = Number(range?.[0]) || 8, hi = Number(range?.[1]) || 12;
     const midpoint = typeof repTarget === 'function' ? repTarget(exercise) : Math.round((lo + hi) / 2);
@@ -27,15 +29,21 @@
       return {
         load: null,
         target: midpoint,
-        text: `Bodyweight × about ${midpoint}`,
+        text: `Bodyweight × about ${midpoint} ${unit}`,
+        unit,
         confidence: 'Bodyweight',
-        detail: 'No external load is prescribed. Progress with clean reps, control, range of motion, and harder variations when appropriate.'
+        detail: timed ? 'Hold with control for the target time. Stop the hold if your form breaks down.' : 'No external load is prescribed. Progress with clean reps, control, range of motion, and harder variations when appropriate.'
       };
     }
     const reps = Number(completedSet.reps) || 0;
     const rirText = String(completedSet.rir ?? '').trim();
     const rir = rirText === '' ? null : Number(rirText);
     let target = Math.max(lo, Math.min(hi, reps || midpoint));
+    if (timed) {
+      return {load:null,reps:target,target,unit,label:'Repeat a controlled hold',
+        text:`Repeat a controlled hold: aim for about ${target} sec.`,confidence:'Timed bodyweight hold',
+        detail:'Keep a steady position and stop if your form breaks down. Duration is recorded in seconds.'};
+    }
     let label = 'Repeat clean bodyweight reps';
     if (reps < lo || rir === 0) {
       target = lo;
@@ -54,6 +62,7 @@
       load: null,
       reps: target,
       target,
+      unit,
       label,
       text: `${label}: aim for about ${target} reps.`,
       confidence: 'Bodyweight progression',
@@ -94,10 +103,19 @@
       if (!isBodyweightExercise(exercise)) return;
       const card = document.querySelector(`[data-exercise-index="${exerciseIndex}"]`);
       if (!card) return;
+      const timed = /\b(?:sec(?:onds?)?|s)\b/i.test(String(exercise.prescription || ''));
+      card.classList.add('bodyweight-exercise');
+      card.classList.toggle('timed-exercise',timed);
       const labels = card.querySelector('.field-labels');
       const weightLabel = labels?.children?.[1];
       if (weightLabel) weightLabel.textContent = 'Load';
+      if (labels?.children?.[2]) labels.children[2].textContent = timed ? 'Seconds' : 'Reps';
       card.querySelectorAll('.set-row').forEach((row, setIndex) => {
+        const reps = row.querySelector('.reps');
+        if (reps) {
+          reps.setAttribute('aria-label',`${exercise.name} set ${setIndex + 1} ${timed ? 'seconds' : 'reps'}`);
+          reps.placeholder = timed ? 'sec' : 'reps';
+        }
         const input = row.querySelector('input.weight');
         if (!input) return;
         input.value = 'bodyweight';

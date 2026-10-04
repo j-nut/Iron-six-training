@@ -2,9 +2,16 @@
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const videoFor = name => 'https://www.youtube.com/results?search_query=' + encodeURIComponent(name + ' exercise form tutorial');
 
-  function missing(name) {
-    return `<div class="exercise-media-missing"><strong>${esc(name)}</strong><span>Demo coming soon.</span>`
-      + `<a href="${esc(videoFor(name))}" target="_blank" rel="noopener noreferrer">Find a video demonstration ↗</a></div>`;
+  function missing(name, failed = false) {
+    const guide = window.IronSixExerciseGuide?.guideFor?.({name});
+    const cues = (guide?.cues || []).slice(0, 2);
+    return `<div class="exercise-media-missing${failed ? ' media-load-error' : ''}" data-exercise-name="${esc(name)}">`
+      + '<span class="media-placeholder-icon" aria-hidden="true">▶</span>'
+      + `<strong>${esc(name)}</strong><span>${failed ? 'Illustration could not load' : 'Illustration unavailable'}</span>`
+      + `<a class="media-video-link" href="${esc(videoFor(name))}" target="_blank" rel="noopener noreferrer" aria-label="Search YouTube for ${esc(name)} form videos">Find form videos ↗</a>`
+      + '<small>Opens YouTube search results</small>'
+      + (cues.length ? `<div class="media-cues"><ul>${cues.map(c => `<li>${esc(c)}</li>`).join('')}</ul></div>` : '')
+      + '</div>';
   }
 
   function attribution(media) {
@@ -23,7 +30,7 @@
   }
 
   function one(name, resolved, compact) {
-    if (!resolved.media) return missing(name);
+    if (!resolved.media || resolved.tier >= 4) return missing(name);
     const media = resolved.media;
     const notice0 = resolved.label ? `<p class="media-variant">${esc(resolved.label)}</p>` : '';
     // A tempo or paused variant reuses the standard movement's illustration, so the card has to
@@ -35,7 +42,7 @@
     if (media.layout === 'composite') {
       const src = media.start;
       const size = media.width && media.height ? ` width="${esc(media.width)}" height="${esc(media.height)}"` : '';
-      return `<figure class="exercise-media composite ${compact ? 'compact' : ''}" data-media-tier="${esc(resolved.tier)}" data-media-id="${esc(media.id)}">`
+      return `<figure class="exercise-media composite ${compact ? 'compact' : ''}" data-exercise-name="${esc(name)}" data-media-tier="${esc(resolved.tier)}" data-media-id="${esc(media.id)}">`
         + `<div class="exercise-media-frames composite">`
         + `<a href="${esc(src)}" target="_blank" rel="noopener" aria-label="Enlarge the ${esc(name)} form guide">`
         + `<img src="${esc(src)}" alt="${esc(name)} — start, midpoint and finish positions"${size} loading="lazy" decoding="async"></a></div>`
@@ -52,7 +59,7 @@
     const images = shown.map((src, i) => `<a href="${esc(src)}" target="_blank" rel="noopener" aria-label="Enlarge ${esc(name)} ${esc(phase[i] || 'position ' + (i + 1))}">`
       + `<img src="${esc(src)}" alt="${esc(name)} — ${esc(phase[i] || 'position ' + (i + 1))} position" loading="lazy" decoding="async" width="480" height="480">`
       + `<span>${esc(phase[i] || 'Position ' + (i + 1))}</span></a>`).join('');
-    return `<figure class="exercise-media ${compact ? 'compact' : ''}" data-media-tier="${esc(resolved.tier)}" data-media-id="${esc(media.id)}">`
+    return `<figure class="exercise-media ${compact ? 'compact' : ''}" data-exercise-name="${esc(name)}" data-media-tier="${esc(resolved.tier)}" data-media-id="${esc(media.id)}">`
       + `<div class="exercise-media-frames">${images}</div>`
       + (compact ? '' : cueList(media))
       + `<figcaption>${notice}${variant}${attribution(media)}</figcaption></figure>`;
@@ -71,9 +78,12 @@
 
   window.IronSixMediaView = { gallery };
   document.addEventListener('error', event => {
-    const img = event.target; if (img.tagName !== 'IMG' || !img.closest('.exercise-media')) return;
-    const text = document.createElement('span'); text.className = 'media-load-error';
-    text.textContent = 'Image unavailable. Open to retry, or use the video demonstration.';
-    img.replaceWith(text);
+    const img = event.target; if (img.tagName !== 'IMG') return;
+    const figure = img.closest('.exercise-media'); if (!figure) return;
+    const name = figure.dataset.exerciseName;
+    if (!name) return;
+    const template = document.createElement('template');
+    template.innerHTML = missing(name, true);
+    figure.replaceWith(template.content);
   }, true);
 })();

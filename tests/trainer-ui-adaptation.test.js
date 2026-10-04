@@ -64,3 +64,23 @@ test('invalid set inputs remain saved drafts and cannot count as completed work'
 test('Done can be undone without losing the entered set or its feedback',()=>{
  const a=app();try{const row=a.w.document.querySelector('.set-row');row.querySelector('.done').click();a.run("activeUser().today['0-0'].feedback='right'");const weight=row.querySelector('.weight').value;row.querySelector('.done').click();assert.equal(a.run("activeUser().today['0-0'].done"),false);assert.equal(a.run("activeUser().today['0-0'].weight"),weight);assert.equal(a.run("activeUser().today['0-0'].feedback"),'right');}finally{a.close()}
 });
+
+test('timed bodyweight rows label seconds and preserve completed hold duration after refresh',()=>{
+ const a=app();try{
+  a.run(fs.readFileSync('bodyweight-load-fix.js','utf8'));
+  a.run("finalWorkout=()=>[{name:'Plank',base:'Anterior core',sets:3,prescription:'3 × 30–60 sec',requires:[]}];activeUser().today={};renderExercises()");
+  const card=a.w.document.querySelector('[data-exercise-index="0"]');
+  assert(card.classList.contains('bodyweight-exercise'));
+  assert(card.classList.contains('timed-exercise'));
+  assert.equal(card.querySelector('.field-labels').children[2].textContent,'Seconds');
+  assert.match(card.querySelector('.reps').getAttribute('aria-label'),/seconds/);
+  assert.match(card.querySelector('.suggestion strong').textContent,/45 sec/);
+  const row=card.querySelector('.set-row');row.querySelector('.reps').value='40';row.querySelector('.reps').dispatchEvent(new a.w.Event('input'));row.querySelector('.done').click();
+  assert.match(card.querySelector('.suggestion strong').textContent,/Bodyweight × about 40 sec/);
+  assert(!card.querySelector('.suggestion').textContent.includes('null lb'));
+  assert.equal(a.run("activeUser().today['0-0'].reps"),'40');
+  a.run('renderExercises()');
+  assert.equal(a.w.document.querySelector('.reps').value,'40');
+  assert.equal(a.run("activeUser().today['0-0'].done"),true);
+ }finally{a.close()}
+});
