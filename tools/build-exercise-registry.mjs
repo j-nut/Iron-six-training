@@ -68,8 +68,8 @@ const legacy = require('../exercise-media-catalog.js');
 const poses = (await import('./exercise-art/poses.mjs')).POSES;
 const cues = JSON.parse(readFileSync('tools/exercise-art/cues.json', 'utf8'));
 
-// Approved first-party illustrations. Each file is one wide composite holding all three
-// phases of the movement, so it is a single frame with its own in-image step labels rather
+// Approved first-party illustrations. Each file is a complete form guide: either three
+// poses or one reviewed pose with movement instructions, rather
 // than a start/finish pair the app cross-fades between; `layout: 'composite'` tells the
 // renderers that. The manifest carries a sha256 per file so a silently swapped or truncated
 // asset fails the build instead of shipping.
@@ -146,7 +146,7 @@ for (const row of registry) {
   const file = ILLUSTRATION_DIR + '/' + hit.filename;
   const cue = cuesByName.get(normalize(row.name)) || {};
   manifest.push({
-    id: 'ironsix-' + row.id, tier: 'professional', style: 'ironsix-form-guide-v1', status: 'approved',
+    id: 'ironsix-' + row.id, tier: 'professional', style: hit.style || 'ironsix-form-guide-v1', status: 'approved',
     layout: 'composite', title: row.name,
     thumbnail: file, start: file, finish: null, motion: [file],
     width: hit.width, height: hit.height,

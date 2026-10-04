@@ -1,6 +1,6 @@
 [
  {
-  "canonicalName": "1½-Rep Bodyweight Squat",
+  "canonicalName": "1\u00bd-Rep Bodyweight Squat",
   "filename": "11-5-rep-bodyweight-squat.webp",
   "width": 960,
   "height": 640,
@@ -393,11 +393,14 @@
  },
  {
   "canonicalName": "Half-Kneeling Landmine Press",
-  "filename": "half-kneeling-landmine-press.webp",
-  "width": 960,
-  "height": 540,
-  "bytes": 20910,
-  "sha256": "20fac3267558c94ea0a9a8dac8c008de00f0cda6f8993da4a27487c2257a9a4a"
+  "filename": "half-kneeling-landmine-press-v2.webp",
+  "width": 1200,
+  "height": 800,
+  "bytes": 57232,
+  "sha256": "8103df34b62fcd90137e11b44b977914dae5883d27eb2072013532df9e5e8ceb",
+  "style": "ironsix-form-guide-v2",
+  "reviewDate": "2026-09-21",
+  "reviewReport": "reports/landmine-illustration-review.md"
  },
  {
   "canonicalName": "Hamstring Walkout",
@@ -457,67 +460,91 @@
  },
  {
   "canonicalName": "Landmine Hack Squat",
-  "filename": "landmine-hack-squat.webp",
-  "width": 960,
-  "height": 540,
-  "bytes": 18786,
-  "sha256": "741609999c3973fa3506aac101b88d89f5ec0b26333cd6b64f4f40fa4dce9302"
+  "filename": "landmine-hack-squat-v2.webp",
+  "width": 1200,
+  "height": 800,
+  "bytes": 61340,
+  "sha256": "46234c80a6a29d0c61dc64944b89468b75df7320add4d1390d1ac84c2a831804",
+  "style": "ironsix-form-guide-v2",
+  "reviewDate": "2026-09-21",
+  "reviewReport": "reports/landmine-illustration-review.md"
  },
  {
   "canonicalName": "Landmine Press",
-  "filename": "landmine-press.webp",
-  "width": 960,
-  "height": 540,
-  "bytes": 19822,
-  "sha256": "a076a3cc5dbe4c1cd524b3401ef8d8d59a78c31538a49beb265ad9b39705d69d"
+  "filename": "landmine-press-v2.webp",
+  "width": 1200,
+  "height": 800,
+  "bytes": 56520,
+  "sha256": "99ea4f077161001e147cdb2bb5de28596026e987e667b85f2cbdc20914910f51",
+  "style": "ironsix-form-guide-v2",
+  "reviewDate": "2026-09-21",
+  "reviewReport": "reports/landmine-illustration-review.md"
  },
  {
   "canonicalName": "Landmine Reverse Lunge",
-  "filename": "landmine-reverse-lunge.webp",
-  "width": 960,
-  "height": 540,
-  "bytes": 19268,
-  "sha256": "44dcc196a209769f7522d66f590da9c10819216b51372483c5100a0685dc2930"
+  "filename": "landmine-reverse-lunge-v2.webp",
+  "width": 1200,
+  "height": 800,
+  "bytes": 64300,
+  "sha256": "f6d8058a670338bb31a98f25c60ec4ce96f4b23763d7caa79035447717065528",
+  "style": "ironsix-form-guide-v2",
+  "reviewDate": "2026-09-21",
+  "reviewReport": "reports/landmine-illustration-review.md"
  },
  {
   "canonicalName": "Landmine Romanian Deadlift",
-  "filename": "landmine-romanian-deadlift.webp",
-  "width": 960,
-  "height": 540,
-  "bytes": 20098,
-  "sha256": "32e8786de6bab9a302a8031f601306771b6963d9425bd1b7e2ad8a33c98a4d6d"
+  "filename": "landmine-romanian-deadlift-v2.webp",
+  "width": 1200,
+  "height": 800,
+  "bytes": 75816,
+  "sha256": "923d3b91ce58e8737fd9be48cd0b247d00a9bb828f728ce59bfc9898558b914d",
+  "style": "ironsix-form-guide-v2",
+  "reviewDate": "2026-09-21",
+  "reviewReport": "reports/landmine-illustration-review.md"
  },
  {
   "canonicalName": "Landmine Rotation",
-  "filename": "landmine-rotation.webp",
-  "width": 960,
-  "height": 540,
-  "bytes": 19888,
-  "sha256": "b4c4eb572db8c75ee7762b11b3039af1d6758e2be6861bde2b37c3d1007f724c"
+  "filename": "landmine-rotation-v2.webp",
+  "width": 1200,
+  "height": 800,
+  "bytes": 96612,
+  "sha256": "69315a1e8eda2e0f6cacbb40aae2a8eedbe0ec73fefda89bc1df03630a3b829c",
+  "style": "ironsix-form-guide-v2",
+  "reviewDate": "2026-09-21",
+  "reviewReport": "reports/landmine-illustration-review.md"
  },
  {
   "canonicalName": "Landmine Row",
-  "filename": "landmine-row.webp",
-  "width": 960,
-  "height": 540,
-  "bytes": 19920,
-  "sha256": "5982df33c28b6f6daa6f7030ac26ccf842e2b3762cc33bf28d9ebbe9f53ee9a7"
+  "filename": "landmine-row-v2.webp",
+  "width": 1200,
+  "height": 800,
+  "bytes": 59696,
+  "sha256": "f3f93c0ff5dfb48e9cd8a1b8dae37e3508c9159945567ed2411a21d0f8ea2db4",
+  "style": "ironsix-form-guide-v2",
+  "reviewDate": "2026-09-21",
+  "reviewReport": "reports/landmine-illustration-review.md"
  },
  {
   "canonicalName": "Landmine Squat",
-  "filename": "landmine-squat.webp",
-  "width": 960,
-  "height": 540,
-  "bytes": 19858,
-  "sha256": "731de992878b5acc661dd52be476de0ba0ed18218e8a1408719bf47ebbdfa5c8"
+  "filename": "landmine-squat-v2.webp",
+  "width": 1200,
+  "height": 800,
+  "bytes": 50806,
+  "sha256": "c8fb55af0b921baa367adf50c42c097c80aa17905f2e1d6325236fcb72b8d735",
+  "style": "ironsix-form-guide-v2",
+  "reviewDate": "2026-09-21",
+  "reviewReport": "reports/landmine-illustration-review.md"
  },
  {
   "canonicalName": "Landmine T-Bar Row",
-  "filename": "landmine-t-bar-row.webp",
-  "width": 960,
-  "height": 540,
-  "bytes": 19830,
-  "sha256": "1c391a9f29fd08db92734560e5ecbd56732083947cdaf941bbea1ddfbdddd6c4"
+  "filename": "landmine-t-bar-row-v2.webp",
+  "width": 1200,
+  "height": 800,
+  "bytes": 49460,
+  "sha256": "d6d9a179788f6d0d56d26712cf2e585b5770d23164e0a280c82349d7681f3451",
+  "style": "ironsix-form-guide-v2",
+  "reviewDate": "2026-09-21",
+  "reviewReport": "reports/landmine-illustration-review.md"
  },
  {
   "canonicalName": "Lean-Away Lateral Raise",
@@ -529,11 +556,14 @@
  },
  {
   "canonicalName": "Meadows Row",
-  "filename": "meadows-row.webp",
-  "width": 960,
-  "height": 540,
-  "bytes": 19778,
-  "sha256": "bad28e9db21acb36933591c4899cff27284085e75b06e8c6cc67f7cfad940f3e"
+  "filename": "meadows-row-v2.webp",
+  "width": 1200,
+  "height": 800,
+  "bytes": 53574,
+  "sha256": "28b5891f84374a50855ad1b534495803d3ddc439cfe68323e9949124e1f33419",
+  "style": "ironsix-form-guide-v2",
+  "reviewDate": "2026-09-21",
+  "reviewReport": "reports/landmine-illustration-review.md"
  },
  {
   "canonicalName": "One-Arm Dumbbell Row",
