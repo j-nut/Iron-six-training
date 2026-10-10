@@ -10,15 +10,15 @@
     "android:bundle": "npm run android:sync && cd android && ./gradlew bundleRelease"
   },
   "devDependencies": {
-    "@capacitor/cli": "8.5.1",
+    "@capacitor/cli": "8.5.3",
     "esbuild": "0.28.2",
     "jsdom": "26.1.0"
   },
   "dependencies": {
-    "@capacitor/android": "8.5.1",
-    "@capacitor/app": "8.1.1",
-    "@capacitor/browser": "8.0.4",
-    "@capacitor/core": "8.5.1",
+    "@capacitor/android": "8.5.3",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/browser": "8.0.5",
+    "@capacitor/core": "8.5.3",
     "@supabase/supabase-js": "2.112.4"
   }
 }
