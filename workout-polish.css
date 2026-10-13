@@ -327,3 +327,268 @@ body .app .exercise input.awc-scrubbing{
   font-variant-numeric:tabular-nums;text-align:center;
   pointer-events:none;white-space:nowrap
 }
+
+
+/* ==========================================================================
+   Iron Six visual system, October 2026
+   This is a cross-view design pass. It deliberately shares the same neutral
+   surface, typographic hierarchy, compact chrome, and accent variables on
+   Today, Coach, Plan, History, and Profiles.
+   ========================================================================== */
+:root{
+  --ix-canvas:#0c1118;
+  --ix-surface:#18212b;
+  --ix-raised:#202a35;
+  --ix-line:#384653;
+  --ix-hairline:rgba(198,215,228,.12);
+  --ix-ink:#f6f8fa;
+  --ix-secondary:#becad5;
+  --ix-soft:#91a2b0;
+  --ix-shadow:0 14px 36px rgba(0,0,0,.18);
+}
+body{
+  background:radial-gradient(ellipse 115% 44% at 50% -16%,rgba(var(--accent-rgb,46,229,128),.075),transparent 75%),var(--ix-canvas)!important;
+  font-synthesis:none;
+  -webkit-font-smoothing:antialiased;
+}
+body .app{
+  color:var(--ix-ink);min-width:0
+}
+body .app main,body .app .view,body .app .section{min-width:0}
+body .app .topbar{
+  border-color:var(--ix-hairline)!important;
+  margin-bottom:26px!important
+}
+body .app .topbar .brand img{max-width:146px!important}
+body .app .pr-page-hero .eyebrow{
+  color:var(--accent);font-weight:750!important;letter-spacing:.12em!important
+}
+body .app .pr-page-hero h1{
+  letter-spacing:-.044em!important;font-weight:745!important;
+  line-height:1.12!important;text-wrap:balance
+}
+body .app .pr-page-hero p{
+  max-width:50ch!important;color:var(--ix-secondary)!important;
+  font-size:14px!important;line-height:1.6!important
+}
+body .app .section-head{
+  align-items:center;gap:12px!important
+}
+body .app .section-head h2{
+  font-size:19px!important;font-weight:735!important;
+  letter-spacing:-.025em!important;line-height:1.3!important
+}
+body .app .section-head small{
+  color:var(--ix-secondary)!important;
+  font-size:12px!important;line-height:1.5!important
+}
+body .app :is(.shell-panel,.pr-guide,.pr-analysis,.pr-schedule-card,.pr-profile-group,.profile-card,.note,.history-item){
+  border-color:var(--ix-line)!important
+}
+body .app .shell-panel{
+  background:linear-gradient(145deg,var(--ix-surface),#151d26)!important;
+  box-shadow:0 6px 18px rgba(0,0,0,.09)
+}
+body .app .shell-toggle{
+  min-height:64px!important;padding:13px 16px!important;
+  gap:12px!important
+}
+body .app .shell-toggle-text strong{
+  color:var(--ix-ink)!important;
+  font-weight:730!important;font-size:14px!important
+}
+body .app .shell-toggle-text span{
+  font-size:12px!important;line-height:1.4!important;
+  color:var(--ix-secondary)!important;margin-top:3px!important
+}
+body .app .shell-chevron{
+  color:var(--accent)!important;font-size:15px!important
+}
+body .app #musicPanel.shell-panel:not(.open) .shell-toggle,
+body .app #sessionSetup.shell-panel:not(.open) .shell-toggle{
+  min-height:59px!important
+}
+body .app #musicPanel.shell-panel:not(.open) .shell-toggle-text span{
+  white-space:nowrap!important;overflow:hidden!important;
+  text-overflow:ellipsis!important;max-width:100%
+}
+body .app .btn.primary{
+  border:1px solid rgba(var(--accent-rgb,46,229,128),.4)!important;
+  box-shadow:0 5px 14px rgba(var(--accent-rgb,46,229,128),.10)
+}
+body .app .btn.secondary,body .app .iconbtn,
+body .app .awc-action{
+  border-color:#43515f!important;background:var(--ix-raised)
+}
+body .app :is(.btn,.duration-btn,.iconbtn,.awc-action,.shell-toggle,.navbtn){
+  -webkit-tap-highlight-color:transparent;
+  transition:background-color .15s ease,border-color .15s ease,transform .15s ease,color .15s ease
+}
+@media(hover:hover) and (pointer:fine){
+  body .app :is(.shell-toggle,.btn.secondary,.awc-action):hover{
+    background:#293744!important;border-color:#687889!important
+  }
+  body .app .btn.primary:hover{filter:brightness(1.06)}
+}
+body .app :is(.btn,.duration-btn,.awc-action):active{
+  transform:scale(.985)
+}
+/* Active exercise: reduce duplicate visual chrome and give every action a
+   clear position within a visible progress hierarchy. */
+body .app #sessionCardNav{
+  padding:8px 0 15px!important;margin-bottom:15px!important;
+  border-bottom:none!important;
+}
+body .app #sessionCardNav .sc-step strong{
+  font-weight:740!important
+}
+body .app #sessionCardNav .sc-step span{
+  color:var(--ix-secondary)!important;font-size:12px!important
+}
+body .app #sessionCardNav .sc-progress-track{
+  position:absolute!important;bottom:0;left:0;right:0;
+  height:3px;border-radius:999px;
+  background:#34414d;overflow:hidden
+}
+body .app #sessionCardNav .sc-progress-fill{
+  display:block;height:100%;width:0;
+  border-radius:999px;background:var(--accent);
+  transition:width .2s ease
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden){
+  border-color:#41515f!important;
+  box-shadow:var(--ix-shadow)!important
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .sets{
+  border-color:var(--ix-hairline)!important
+}
+/* A non-editable transparent touch surface prevents Android from activating
+   the numeric IME on touch-down. It is hidden from assistive technology and
+   absent on mouse/trackpad devices; the real input remains keyboard focusable. */
+body .app .awc-adjust-field{
+  position:relative;min-width:0!important;width:100%;display:block
+}
+body .app .awc-adjust-field>.field{
+  display:block;width:100%;margin:0
+}
+body .app .awc-touch-target{
+  position:absolute;inset:0;
+  display:block;z-index:2;
+  border:0;background:transparent;
+  touch-action:none;
+  -webkit-touch-callout:none;
+  -webkit-user-select:none;user-select:none;
+  cursor:ns-resize
+}
+@media(hover:hover) and (pointer:fine){
+  body .app .awc-touch-target{display:none!important}
+}
+body .app .exercise .set-row:focus-within .awc-adjust-field{
+  border-radius:10px
+}
+body .app .exercise .set-row input.awc-scrubbing{
+  color:var(--accent)!important;font-weight:790!important
+}
+body .app .awc-scrub-tip{
+  text-align:left!important;font-size:11px!important;
+  margin:7px 0 0!important;
+  color:var(--ix-secondary)!important
+}
+/* Keep a crisp, five-stop navigation dock in every view. The selected
+   destination is a quiet accent panel rather than an oversized floating tile. */
+body .bottom-nav{
+  background:rgba(24,33,43,.975)!important;
+  border-color:#405160!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.33)!important
+}
+body .bottom-nav .navbtn{
+  color:#b9c6d0!important;gap:5px!important
+}
+body .bottom-nav .navbtn.active{
+  color:var(--accent)!important;
+  background:rgba(var(--accent-rgb,46,229,128),.105)!important
+}
+body .bottom-nav .pr-nav-icon{
+  stroke-width:1.85
+}
+/* Plan, History and Profile screens should feel like one product, not
+   unrelated pages with different rounding, padding and density. */
+body .app .pr-schedule-card,
+body .app .pr-profile-group{
+  border-radius:17px!important;
+  background:linear-gradient(145deg,var(--ix-surface),#151d25)!important
+}
+body .app .pr-schedule-current{
+  border-color:rgba(var(--accent-rgb,46,229,128),.5)!important;
+  background:linear-gradient(140deg,rgba(var(--accent-rgb,46,229,128),.10),var(--ix-surface) 55%)!important
+}
+body .app .pr-schedule-card h3{
+  font-weight:730!important;letter-spacing:-.03em!important;
+  line-height:1.22!important
+}
+body .app :is(.pr-analysis,.pr-guide){
+  border-radius:14px!important;
+  background:linear-gradient(145deg,var(--ix-surface),#151d26)!important
+}
+body .app :is(.pr-analysis,.pr-guide)>summary{
+  min-height:62px!important;padding:15px 18px!important
+}
+body .app :is(.pr-analysis,.pr-guide)>summary strong,
+body .app .pr-guide-title{
+  font-size:14px!important;font-weight:730!important
+}
+body .app .pr-guide-description,
+body .app .pr-analysis>summary small{
+  font-size:12px!important;color:var(--ix-secondary)!important
+}
+body .app .pr-profile-group .setting input,
+body .app .pr-profile-group .setting select{
+  background:#111a23!important;border-color:#465665!important;
+  color:var(--ix-ink)!important
+}
+body .app .pr-profile-group .setting label{
+  color:var(--ix-secondary)!important;font-weight:620!important
+}
+body .app .history-item{
+  padding:14px 12px!important;
+  border-bottom-color:var(--ix-hairline)!important
+}
+body .app .history-item strong{
+  font-weight:680!important
+}
+body .app .history-item span{
+  color:var(--ix-secondary)!important
+}
+body .app .profile-card{
+  background:var(--ix-surface)!important;
+  border-radius:13px!important
+}
+@media(max-width:520px){
+  body .app{padding-left:14px!important;padding-right:14px!important}
+  body .app .topbar{margin-bottom:22px!important}
+  body .app .pr-page-hero h1{font-size:clamp(25px,7vw,34px)!important}
+  body .app .section{margin-top:24px}
+  body .app #exerciseList.awc-focus .exercise:not(.sc-hidden){padding:16px!important}
+  body .app #musicPanel.shell-panel{margin-top:2px}
+  body .app .pr-schedule-grid{gap:10px}
+  body .app .pr-schedule-card{padding:16px!important}
+}
+@media(max-width:350px){
+  body .app #sessionCardNav .sc-step strong{font-size:11px!important}
+  body .app #sessionCardNav .sc-step span{font-size:10px!important}
+  body .app #sessionCardNav #scNextBtn{min-width:58px!important;padding:0 7px!important}
+  body .app #sessionCardNav .awc-overview-proxy{min-width:40px!important;width:40px!important}
+  body .app #exerciseList.awc-focus .exercise:not(.sc-hidden){padding:12px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  body .app :is(.btn,.duration-btn,.iconbtn,.awc-action,.shell-toggle,.navbtn),
+  body .app #sessionCardNav .sc-progress-fill{transition:none!important;animation:none!important}
+}
+
+
+/* Numeric keyboard mode: screen real estate belongs to editing, not tabs. */
+body.ix-editing-set .bottom-nav{
+  opacity:0!important;pointer-events:none!important;
+  transform:translateY(130%)!important
+}
+body.ix-editing-set .app{padding-bottom:calc(34px + var(--app-safe-bottom,0px))!important}

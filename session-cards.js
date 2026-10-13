@@ -146,9 +146,17 @@
     if (!$('sessionCardNav')) {
       const nav = document.createElement('div');
       nav.id = 'sessionCardNav';
+      nav.setAttribute('role','group');
+      nav.setAttribute('aria-label','Exercise navigation and workout progress');
       nav.innerHTML = '<button class="sc-arrow" id="scPrev" type="button" aria-label="Previous exercise">‹</button>'
         + '<div class="sc-step"><strong id="scStep"></strong><span id="scNext"></span></div>'
         + '<button class="sc-arrow" id="scNextBtn" type="button" aria-label="Next exercise">Next ›</button>';
+      const track=document.createElement('div');
+      track.className='sc-progress-track';
+      track.setAttribute('role','progressbar');
+      track.setAttribute('aria-label','Workout sets completed');
+      track.innerHTML='<span class="sc-progress-fill"></span>';
+      nav.appendChild(track);
       list.before(nav);
       nav.querySelector('#scPrev').addEventListener('click', () => { const w = finalWorkout(activeUser()); goTo(Math.max(0, activeIndex(activeUser(), w) - 1), w); });
       nav.querySelector('#scNextBtn').addEventListener('click', () => { const w = finalWorkout(activeUser()); goTo(Math.min(w.length, activeIndex(activeUser(), w) + 1), w); });
@@ -218,6 +226,13 @@
     if (focusName === null && index < workout.length) focusName = workout[index].name;
     const reviewing = index >= workout.length;
     const { done, planned, perExercise } = progress(user, workout);
+    const track=$('sessionCardNav')?.querySelector('.sc-progress-track');
+    if(track){
+      track.setAttribute('aria-valuenow',String(done));
+      track.setAttribute('aria-valuemin','0');
+      track.setAttribute('aria-valuemax',String(planned));
+      track.querySelector('.sc-progress-fill').style.width=(planned?done/planned*100:0)+'%';
+    }
 
     all.forEach(card => card.classList.toggle('sc-hidden', reviewing || Number(card.dataset.exerciseIndex) !== index));
     $('sessionCardFoot')?.classList.remove('sc-hidden');
@@ -239,7 +254,7 @@
     const current = perExercise[index];
     const step = $('scStep'), nextLabel = $('scNext');
     if (step) step.textContent = `Exercise ${index + 1} of ${workout.length} · ${current.complete}/${current.sets} sets`;
-    if (nextLabel) nextLabel.textContent = `${current.complete}/${current.sets} sets · ${index + 1 < workout.length ? `Next: ${workout[index + 1].name}` : 'Review & finish'}`;
+    if (nextLabel) nextLabel.textContent = index + 1 < workout.length ? `Up next: ${workout[index + 1].name}` : 'Up next: Review & finish';
     const prev = $('scPrev'), next = $('scNextBtn');
     if (prev) prev.disabled = index === 0;
     if (next) {

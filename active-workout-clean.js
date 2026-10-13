@@ -197,35 +197,54 @@
     if(!sets.querySelector('.awc-scrub-tip')){
       const tip=document.createElement('p');
       tip.className='awc-scrub-tip';
-      tip.textContent='Hold weight or reps, then slide up or down to adjust · Tap to type';
+      tip.textContent='Tap to type  ·  Hold and slide to adjust';
       sets.appendChild(tip);
     }
     for(const input of card.querySelectorAll('.set-row input.weight, .set-row input.reps')){
-      if(input.dataset.ixScrubReady)continue; // each newly rebuilt field is wired once
+      if(input.dataset.ixScrubReady||input.style.display==='none')continue;
       input.dataset.ixScrubReady='true';
       const kind=input.classList.contains('weight')?'weight':'reps';
       input.setAttribute('aria-description',
-        'Tap to type, or touch and hold then slide upward to increase or downward to decrease.');
-      let drag=null,ignoreClickUntil=0;
-      const cleanup=()=>{
+        'Tap to type. On a touchscreen, press and hold, then slide up or down to adjust.');
+      // An overlay receives the *initial* touch, not the editable input.
+      // Android WebView may open its IME before a pointerdown preventDefault
+      // callback can stop the input's native focus. A non-editable pointer
+      // target eliminates that race. We focus the input only after a short tap.
+      let wrapper=input.parentElement;
+      if(!wrapper.classList.contains('awc-adjust-field')){
+        wrapper=document.createElement('div');
+        wrapper.className='awc-adjust-field';
+        input.before(wrapper);
+        wrapper.appendChild(input);
+      }
+      const overlay=document.createElement('span');
+      overlay.className='awc-touch-target';
+      overlay.setAttribute('aria-hidden','true');
+      overlay.dataset.adjust=kind;
+      wrapper.appendChild(overlay);
+      let drag=null;
+      const finish=()=>{
         if(!drag)return;
         clearTimeout(drag.timer);
         drag.bubble?.remove();
         input.classList.remove('awc-scrubbing');
-        try{input.releasePointerCapture?.(drag.id)}catch(_){}
+        try{overlay.releasePointerCapture?.(drag.id)}catch(_){}
         drag=null;
       };
-      input.addEventListener('pointerdown',event=>{
-        if(event.pointerType!=='touch'||event.isPrimary===false||drag)return;
-        if(event.cancelable)event.preventDefault(); // don't raise the keyboard for a hold
+      overlay.addEventListener('pointerdown',event=>{
+        if((event.pointerType!=='touch'&&event.pointerType!=='pen')||event.isPrimary===false||drag)return;
+        if(event.cancelable)event.preventDefault();
         const next={id:event.pointerId,startY:event.clientY,startX:event.clientX,
           initial:input.value,changed:false,armed:false,moved:false,bubble:null,timer:null};
         drag=next;
-        try{input.setPointerCapture?.(event.pointerId)}catch(_){}
+        try{overlay.setPointerCapture?.(event.pointerId)}catch(_){}
         next.timer=setTimeout(()=>{
           if(drag!==next||next.moved)return;
-          next.armed=true;input.blur();input.classList.add('awc-scrubbing');
-          const bubble=document.createElement('output');bubble.className='awc-scrub-value';
+          next.armed=true;
+          input.blur();
+          input.classList.add('awc-scrubbing');
+          const bubble=document.createElement('output');
+          bubble.className='awc-scrub-value';
           bubble.setAttribute('role','status');
           bubble.textContent=(kind==='weight'?'Weight ':'Reps ')+(input.value||'—')+(kind==='weight'?' lb':'');
           const rect=input.getBoundingClientRect();
@@ -235,7 +254,7 @@
           if(window.navigator?.vibrate)try{window.navigator.vibrate(8)}catch(_){}
         },380);
       },{passive:false});
-      input.addEventListener('pointermove',event=>{
+      overlay.addEventListener('pointermove',event=>{
         if(!drag||event.pointerId!==drag.id)return;
         if(!drag.armed){
           if(Math.hypot(event.clientY-drag.startY,event.clientX-drag.startX)>12){
@@ -252,29 +271,23 @@
             (kind==='weight'?'Weight ':'Reps ')+next+(kind==='weight'?' lb':'');
         }
       },{passive:false});
-      function endScrub(event,cancelled=false){
+      const end=(event,cancelled=false)=>{
         if(!drag||event.pointerId!==drag.id)return;
-        const wasArmed=drag.armed,wasMoved=drag.moved,changed=drag.changed;
-        cleanup();
-        if(wasArmed){
-          ignoreClickUntil=Date.now()+450;
+        const armed=drag.armed,moved=drag.moved,changed=drag.changed;
+        if(event.cancelable)event.preventDefault();
+        finish();
+        if(armed){
           if(changed)input.dispatchEvent(new Event('input',{bubbles:true}));
-        }else if(!cancelled&&!wasMoved){
-          // On Android this is a genuine touch-release user action, so the
-          // numeric keyboard still opens for normal deliberate taps.
+        }else if(!cancelled&&!moved){
+          // This is the only touch path that focuses an editable element.
+          // The native keyboard must never open during touch-down or hold.
           input.focus();
         }
-      }
-      input.addEventListener('pointerup',event=>endScrub(event));
-      input.addEventListener('pointercancel',event=>endScrub(event,true));
-      input.addEventListener('click',event=>{
-        if(Date.now()<ignoreClickUntil){
-          event.preventDefault();event.stopImmediatePropagation();input.blur();
-        }
-      });
-      input.addEventListener('contextmenu',event=>{
-        if(drag?.armed){event.preventDefault()}
-      });
+      };
+      overlay.addEventListener('pointerup',event=>end(event));
+      overlay.addEventListener('pointercancel',event=>end(event,true));
+      overlay.addEventListener('click',event=>event.preventDefault());
+      overlay.addEventListener('contextmenu',event=>event.preventDefault());
     }
   }
 
@@ -324,6 +337,19 @@
     wrapped.__awcWrapped = true;
     window.renderAll = wrapped;
   }
+
+  // When an actual number field is being edited, remove the floating dock
+  // from the reduced Android keyboard viewport. Scrubbing never focuses the
+  // field, so the dock stays in place for the hold gesture.
+  const isSetInput=el=>el?.matches?.('.set-row input.weight, .set-row input.reps');
+  document.addEventListener('focusin',event=>{
+    if(isSetInput(event.target))document.body.classList.add('ix-editing-set');
+  });
+  document.addEventListener('focusout',event=>{
+    if(isSetInput(event.target))setTimeout(()=>{
+      if(!isSetInput(document.activeElement))document.body.classList.remove('ix-editing-set');
+    },0);
+  });
 
   document.addEventListener('click', event => {
     if (event.target.closest?.('#sessionBeginBtn,#sessionCardNav,#sessionCardFoot,.done,.duration-btn,#applyCustomTime,.exercise-swap-btn,.awc-swap-btn,[data-view="today"]')) scheduleApply();

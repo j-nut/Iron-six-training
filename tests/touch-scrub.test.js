@@ -8,10 +8,11 @@ function app(){
   const dom=new JSDOM(fs.readFileSync('index.html','utf8'),{
     url:'https://iron-six.test/',runScripts:'outside-only',pretendToBeVisual:true
   });
-  const w=dom.window,ctx=dom.getInternalVMContext();
+  const w=dom.window,ctx=dom.getInternalVMContext(),errors=[];
   w.confirm=()=>true;w.scrollTo=()=>{};
   w.setInterval=()=>0;w.setTimeout=()=>0;w.HTMLElement.prototype.scrollIntoView=()=>{};
   w.fetch=async()=>({ok:false,json:async()=>({})});
+  w.addEventListener('error',event=>errors.push(event.error));
   for(const file of [...w.document.scripts].map(s=>s.getAttribute('src').split('?')[0])
     .filter(x=>!['cloud-sync.js','cloud-history-sync.js'].includes(x))){
     vm.runInContext(fs.readFileSync(file,'utf8'),ctx,{filename:file});
@@ -20,7 +21,7 @@ function app(){
   vm.runInContext('renderAll();IronSixActiveWorkoutClean.apply()',ctx);
   w.document.getElementById('sessionBeginBtn').click();
   vm.runInContext('IronSixActiveWorkoutClean.apply()',ctx);
-  return {w,run:code=>vm.runInContext(code,ctx),close:()=>w.close()};
+  return {w,run:code=>vm.runInContext(code,ctx),errors,close:()=>w.close()};
 }
 
 function pointer(win,el,type,y){
@@ -29,6 +30,16 @@ function pointer(win,el,type,y){
     Object.defineProperty(e,k,{value:v});
   el.dispatchEvent(e);
   return e;
+}
+
+function field(doc,kind){
+  const card=doc.querySelector('#exerciseList .exercise:not(.sc-hidden)');
+  const input=card.querySelector('input.'+kind);
+  const overlay=input.closest('.awc-adjust-field')?.querySelector('.awc-touch-target');
+  assert(overlay,'a separate, non-editable touch surface must cover '+kind);
+  assert.equal(overlay.getAttribute('aria-hidden'),'true');
+  assert.equal(overlay.tagName,'SPAN','touching a real input can prematurely open Android keyboard');
+  return {input,overlay,card};
 }
 
 test('scrub helper applies natural increments and clamps safe ranges',()=>{
@@ -45,53 +56,93 @@ test('scrub helper applies natural increments and clamps safe ranges',()=>{
   }finally{a.close()}
 });
 
-test('long-press vertical drag updates weight without syncing until touch release',()=>{
+test('long press touches a non-editable element and never focuses the keyboard input',()=>{
   const a=app();
   try{
-    const w=a.w,d=w.document;
-    const card=d.querySelector('#exerciseList .exercise:not(.sc-hidden)');
-    const weight=card.querySelector('input.weight');
-    assert(weight);
-    let timerFn=null,events=0;
-    w.setTimeout=(fn,ms)=>{if(ms===380)timerFn=fn;return 101};
-    weight.addEventListener('input',()=>events++);
-    const baseline=Number(weight.value||0);
-    const initialSaved=a.run("activeUser().today['0-0']?.weight ?? null");
-    const down=pointer(w,weight,'pointerdown',300);
-    assert.equal(down.defaultPrevented,true,'avoid opening keyboard while waiting to scrub');
-    assert(timerFn,'long-press must arm after a deliberate delay');
-    timerFn();
-    assert(d.querySelector('.awc-scrub-value'),'visible live readout');
-    pointer(w,weight,'pointermove',260);
-    assert.equal(Number(weight.value),baseline+5,'40px upwards increases by 5 lb');
-    assert.equal(events,0,'do not generate an input event on each drag frame');
-    assert.equal(a.run("activeUser().today['0-0']?.weight ?? null"),initialSaved,
-      'draft is unchanged until release');
-    pointer(w,weight,'pointerup',260);
-    assert.equal(d.querySelector('.awc-scrub-value'),null,'release hides indicator');
-    assert.equal(events,1,'single standard input event persists the adjustment');
+    const w=a.w,d=w.document,{input,overlay}=field(d,'weight');
+    let arm=null,events=0;
+    w.setTimeout=(fn,ms)=>{if(ms===380)arm=fn;return 101};
+    input.addEventListener('input',()=>events++);
+    const baseline=Number(input.value||0);
+    const initiallySaved=a.run("activeUser().today['0-0']?.weight ?? null");
+    const down=pointer(w,overlay,'pointerdown',300);
+    assert(down.defaultPrevented,'native browser focus is blocked on touch down');
+    assert.notEqual(d.activeElement,input,'IME must remain closed while holding');
+    assert(arm,'hold must wait before activation');
+    arm();
+    assert.notEqual(d.activeElement,input,'IME must remain closed once scrub activates');
+    assert(d.querySelector('.awc-scrub-value'),'floating live readout');
+    pointer(w,overlay,'pointermove',260);
+    assert.equal(Number(input.value),baseline+5);
+    assert.equal(events,0,'no save on each move');
+    assert.equal(a.run("activeUser().today['0-0']?.weight ?? null"),initiallySaved);
+    pointer(w,overlay,'pointerup',260);
+    assert.notEqual(d.activeElement,input,'releasing a scrub must not summon the IME');
+    assert.equal(d.querySelector('.awc-scrub-value'),null);
+    assert.equal(events,1,'one standard input event commits the change');
     assert.equal(Number(a.run("activeUser().today['0-0'].weight")),baseline+5);
-    assert.equal(weight.isConnected,true,'logging must not remount a card');
+    assert.strictEqual(input.isConnected,true);
+    assert.deepEqual(a.errors,[]);
   }finally{a.close()}
 });
 
-test('quick tap retains typing and rep scrubs advance by one rep per stop',()=>{
+test('quick tap focuses only upon release; reps scrub saves once',()=>{
   const a=app();
   try{
-    const w=a.w,d=w.document,rep=d.querySelector('#exerciseList .exercise:not(.sc-hidden) input.reps');
-    w.setTimeout=()=>202;
-    pointer(w,rep,'pointerdown',210);
-    pointer(w,rep,'pointerup',210);
-    assert.strictEqual(d.activeElement,rep,'ordinary tap should focus the input');
-    rep.blur();
-    let arm;
-    w.setTimeout=(fn,ms)=>{if(ms===380)arm=fn;return 203};
-    const start=Number(rep.value||1);
-    pointer(w,rep,'pointerdown',210);arm();pointer(w,rep,'pointermove',170);
-    assert.equal(Number(rep.value),start+2);
-    pointer(w,rep,'pointerup',170);
+    const w=a.w,d=w.document,{input,overlay}=field(d,'reps');
+    let arm=null;
+    w.setTimeout=(fn,ms)=>{if(ms===380)arm=fn;return 202};
+    pointer(w,overlay,'pointerdown',210);
+    assert.notEqual(d.activeElement,input,'keyboard cannot open on touch down');
+    pointer(w,overlay,'pointerup',210);
+    assert.strictEqual(d.activeElement,input,'tap release activates ordinary typing');
+    assert(d.body.classList.contains('ix-editing-set'),'bottom dock retracts while keyboard editing');
+    input.blur();
+    const start=Number(input.value||1);
+    pointer(w,overlay,'pointerdown',210);
+    arm();
+    pointer(w,overlay,'pointermove',170);
+    assert.equal(Number(input.value),start+2);
+    pointer(w,overlay,'pointerup',170);
+    assert.notEqual(d.activeElement,input,'hold must not refocus or launch keyboard');
     assert.equal(Number(a.run("activeUser().today['0-0'].reps")),start+2);
-    assert.match(rep.getAttribute('aria-description'),/Tap to type/);
+    assert.match(input.getAttribute('aria-description'),/Tap to type/);
     assert(d.querySelector('.awc-scrub-tip'));
+  }finally{a.close()}
+});
+
+test('a cancelled or moved-before-hold gesture neither focuses input nor changes weight',()=>{
+  const a=app();
+  try{
+    const w=a.w,d=w.document,{input,overlay}=field(d,'weight');
+    let arm=null;w.setTimeout=(fn,ms)=>{if(ms===380)arm=fn;return 303};
+    const value=input.value;
+    pointer(w,overlay,'pointerdown',200);
+    pointer(w,overlay,'pointermove',145);
+    arm();
+    pointer(w,overlay,'pointerup',145);
+    assert.equal(input.value,value);
+    assert.notEqual(d.activeElement,input);
+    pointer(w,overlay,'pointerdown',200);
+    pointer(w,overlay,'pointercancel',200);
+    assert.notEqual(d.activeElement,input);
+    assert.equal(d.querySelector('.awc-scrub-value'),null);
+  }finally{a.close()}
+});
+
+test('editing mode retracts and restores the floating dock, unlike a hold',()=>{
+  const a=app();
+  try{
+    const w=a.w,d=w.document,{input,overlay}=field(d,'reps');
+    w.setTimeout=(fn,ms)=>{if(ms===0)fn();return 404};
+    pointer(w,overlay,'pointerdown',220);
+    assert(!d.body.classList.contains('ix-editing-set'));
+    pointer(w,overlay,'pointerup',220);
+    assert(d.body.classList.contains('ix-editing-set'));
+    input.blur();
+    assert(!d.body.classList.contains('ix-editing-set'));
+    const css=fs.readFileSync('workout-polish.css','utf8');
+    assert(css.includes('body.ix-editing-set .bottom-nav'));
+    assert(css.includes('pointer-events:none!important'));
   }finally{a.close()}
 });
