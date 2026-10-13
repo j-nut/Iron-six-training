@@ -67,9 +67,14 @@ function budgetSessionWorkout(u,workout){
   });
   const covered=new Set(selected.flatMap(exerciseMuscles));
   const neglected=accessories.find(e=>!selected.some(x=>x.name===e.name)&&(programNeed(e)>.25||specificity(e).some(m=>due.has(m)&&!covered.has(m))));
-  if(neglected&&selected.length>2&&selected[selected.length-1].priority!==1){
+  // A neglected accessory may replace another optional accessory, but it cannot
+  // silently erase a protected horizontal/vertical pull or curl angle. The selected
+  // slot order is subsequently restored to the original workout sequence.
+  const replaceAt=selected.reduce((index,e,i)=>
+    e.priority!==1&&!protectedPullSlots.has(e._programSlot)?i:index,-1);
+  if(neglected&&selected.length>2&&replaceAt>=0){
     const baseMax=Math.max(1,neglected.sets),volumeBonus=!light&&!circuit&&minutes>=60?1:0;
-    selected[selected.length-1]={...neglected,sets:1,_max:baseMax+volumeBonus};
+    selected[replaceAt]={...neglected,sets:1,_max:baseMax+volumeBonus};
   }
   selected.sort((a,b)=>a._position-b._position);
   while(selected.length>1&&sessionSeconds(u,selected)>budget)selected.pop();
