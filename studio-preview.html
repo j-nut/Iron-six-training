@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#090d13">
+<title>Iron Six Studio — Design Preview</title>
+<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="premium-ui.css?v=4">
+<link rel="stylesheet" href="workout-polish.css?v=1">
+<link rel="stylesheet" href="studio-ui.css?v=3">
+<style>
+  .ix-preview-flag{padding:7px 12px;border:1px solid #47596b;border-radius:999px;color:#a8bacb;font-size:10px;font-weight:760;letter-spacing:.12em;text-transform:uppercase}
+  .ix-preview-banner{max-width:960px;margin:0 auto;padding:14px 20px 0;color:#8fa5b7;font-size:11px;line-height:1.5;text-align:center}
+  .ix-preview-banner strong{color:#e6eef8}
+  .ix-preview-panel{padding:22px;background:#162231;border:1px solid #3a4d60;border-radius:17px;margin-bottom:13px}
+  .ix-preview-panel h3{font-size:21px;font-weight:790;letter-spacing:-.04em;margin:0 0 10px}
+  .ix-preview-panel p{color:#a9bbcc;font-size:13px;line-height:1.65;margin:0}
+  .ix-preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:14px}
+  .ix-preview-small{font-size:10px;font-weight:800;color:#8da4b6;letter-spacing:.11em;text-transform:uppercase}
+  .ix-preview-grid strong{display:block;margin:7px 0 0;font-size:24px;letter-spacing:-.04em}
+  .ix-preview-rail{margin-top:15px;height:4px;border-radius:5px;background:#2b3a49;overflow:hidden}
+  .ix-preview-rail span{display:block;width:26%;height:100%;background:var(--accent)}
+  .ix-preview-quick{display:flex;gap:8px;margin-top:13px;flex-wrap:wrap}
+  .ix-preview-quick button{border:1px solid #405367;background:#223244;color:#e0eaf5;border-radius:10px;padding:10px 12px;font:inherit;font-size:11px;font-weight:690}
+  .ix-preview-coach{border:1px solid #364c61;background:#192634;border-radius:18px;padding:18px;margin-bottom:13px}
+  .ix-preview-message{max-width:90%;border:1px solid #3a5167;border-radius:16px;background:#263649;padding:15px;margin:12px 0;font-size:13px;line-height:1.6;color:#eaf1f8}
+  .ix-preview-message.me{background:rgba(var(--accent-rgb,46,229,128),.12);border-color:rgba(var(--accent-rgb,46,229,128),.32);margin-left:auto}
+  .ix-preview-input{background:#111d29;border:1px solid #3e5064;border-radius:14px;padding:14px;color:#9aadc0;font-size:13px}
+  .ix-preview-profile{padding:17px;border-radius:15px;background:linear-gradient(135deg,#1b2a38,#111b27);border:1px solid #455c6a;margin-bottom:13px}
+  .ix-preview-profile strong{display:block;font-size:17px;margin-bottom:4px}
+  .ix-preview-profile span{color:#a8bac9;font-size:12px}
+  .ix-preview-caption{color:#8da4b6;font-size:11px;line-height:1.5;margin:13px 0 0}
+  .ix-preview-overrides{position:relative}
+  .ix-preview-overrides #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row,
+  .ix-preview-overrides #exerciseList.awc-focus .exercise:not(.sc-hidden) .field-labels{grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 64px 46px;gap:7px}
+  .ix-preview-overrides #exerciseList.awc-focus .exercise:not(.sc-hidden) .sets{margin-top:0!important}
+  body.ix-studio .app .ix-preview-overrides #sessionCardNav{position:relative!important;top:auto!important}
+  @media(max-width:375px){.ix-preview-flag{font-size:8px;padding:6px 8px}.ix-preview-overrides #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row,.ix-preview-overrides #exerciseList.awc-focus .exercise:not(.sc-hidden) .field-labels{grid-template-columns:20px minmax(0,1fr) minmax(0,1fr) 55px 39px!important;gap:5px!important}}
+</style>
+</head>
+<body class="ix-studio">
+<div class="ix-preview-banner"><strong>DESIGN PREVIEW</strong> · Illustrative workout data only. Nothing here edits your account.</div>
+<div class="app" id="app">
+<div class="topbar">
+ <a class="brand" href="studio-preview.html" aria-label="Iron Six Studio preview"><img src="assets/brand/logo-horizontal.png" width="140" height="28" alt="Iron Six"></a>
+ <span class="ix-preview-flag">STUDIO V3</span>
+</div>
+<main>
+<section id="today" class="view active session-compact ix-preview-overrides">
+ <div class="hero pr-page-hero">
+  <div class="eyebrow">TODAY · STRENGTH SESSION</div>
+  <h1>Lower body. Built for you.</h1>
+  <p>Five focused movements · 45 minutes · Dumbbell + barbell</p>
+ </div>
+ <div class="section ix-active-workout-section" style="margin-top:0!important">
+ <div id="sessionCardNav" role="group" aria-label="Exercise navigation preview">
+  <button id="scPrev" class="sc-arrow" type="button" aria-label="Previous" disabled>‹</button>
+  <div class="sc-step"><strong>Exercise 1 of 5 · <span id="doneCounter" style="display:inline;color:inherit;font-size:inherit;margin:0">0/3</span> sets</strong><span>Up next: High-Bar Back Squat</span></div>
+  <button class="awc-overview-proxy" type="button" aria-label="All exercises" title="All exercises">All</button>
+  <button id="scNextBtn" class="sc-arrow" type="button">Next ›</button>
+  <div class="sc-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="15" aria-valuenow="0"><span class="sc-progress-fill" style="width:0%"></span></div>
+ </div>
+ <div id="exerciseList" class="awc-focus">
+  <article class="exercise" data-exercise-index="0">
+   <div class="exercise-head">
+    <div class="exercise-title">
+     <span class="ix-movement-index">MOVEMENT 01 / 05</span>
+     <a href="#formGuide" class="exercise-name-link"><strong>Dumbbell Romanian Deadlift</strong></a>
+     <span>3 × 10–15 · Hinge / posterior chain</span>
+     <div class="suggestion"><strong>30 lb × 13 reps</strong></div>
+     <div class="awc-actions"><button class="awc-action" type="button">Swap</button><button class="awc-action" type="button" id="previewMore">Details</button></div>
+    </div>
+   </div>
+   <div class="sets">
+    <div class="ix-set-summary"><b>Working sets</b><span>Tap or hold to adjust</span></div>
+    <div class="field-labels"><span>Set</span><span>Weight</span><span>Reps</span><span>RIR</span><span>Done</span></div>
+    <div class="rows">
+     <div class="set-row"><span class="set-num">1</span><div class="awc-adjust-field"><input class="field weight" type="number" inputmode="decimal" value="30" aria-label="Set 1 weight"></div><div class="awc-adjust-field"><input class="field reps" type="number" inputmode="numeric" value="13" aria-label="Set 1 reps"></div><select class="field rir" aria-label="Set 1 RIR"><option>RIR</option><option>1</option><option>2</option></select><button class="done" type="button" aria-label="Mark first set completed">✓</button></div>
+     <div class="set-row"><span class="set-num">2</span><div class="awc-adjust-field"><input class="field weight" type="number" value="30" aria-label="Set 2 weight"></div><div class="awc-adjust-field"><input class="field reps" type="number" value="13" aria-label="Set 2 reps"></div><select class="field rir" aria-label="Set 2 RIR"><option>RIR</option><option>1</option><option>2</option></select><button class="done" type="button" aria-label="Mark second set completed">✓</button></div>
+     <div class="set-row"><span class="set-num">3</span><div class="awc-adjust-field"><input class="field weight" type="number" value="30" aria-label="Set 3 weight"></div><div class="awc-adjust-field"><input class="field reps" type="number" value="13" aria-label="Set 3 reps"></div><select class="field rir" aria-label="Set 3 RIR"><option>RIR</option><option>1</option><option>2</option></select><button class="done" type="button" aria-label="Mark third set completed">✓</button></div>
+    </div>
+    <p class="awc-scrub-tip">Tap to type · Hold and slide to adjust</p>
+   </div>
+   <details class="awc-form-guide" id="formGuide"><summary><strong>Exercise form guide</strong><span>Technique &amp; photos</span></summary><div class="ix-preview-panel" style="border:0;background:transparent;margin:0"><p>Brace the core, push the hips back, keep dumbbells close, and stand tall without leaning backward.</p></div></details>
+  </article>
+ </div>
+ </div>
+ <div class="section" style="margin-top:16px!important">
+ <div class="shell-panel" id="musicPanel">
+  <button class="shell-toggle" type="button" id="musicPreview"><span class="shell-toggle-text"><strong>Workout music</strong><span>Originals, radio and your music</span></span><span class="shell-chevron">⌄</span></button>
+ </div>
+ </div>
+</section>
+<section id="coach" class="view">
+ <div class="hero pr-page-hero"><div class="eyebrow">AI TRAINING COACH</div><h1>A smarter training partner.</h1><p>Useful coaching grounded in your completed sessions, your equipment and your goals.</p></div>
+ <div class="section"><div class="section-head"><div><h2>Coach conversation</h2><small>Clarity and momentum between sets</small></div></div>
+ <div class="ix-preview-coach"><div class="ix-preview-message me">How should I progress my Romanian deadlift?</div><div class="ix-preview-message">You hit 30 lb for all 3 sets at 13 reps last time. Keep your hinge controlled, aim for 14–15 clean reps, then increase load when you can repeat the top of your range without losing form.</div><div class="ix-preview-quick"><button type="button">Adjust today's workout</button><button type="button">Explain my progress</button></div></div><div class="ix-preview-input">Ask about training, recovery, or form…</div>
+ </div>
+</section>
+<section id="plan" class="view">
+ <div class="hero pr-page-hero"><div class="eyebrow">YOUR TRAINING PROGRAM</div><h1>Every session has a purpose.</h1><p>Balanced movement patterns, meaningful progression and the right recovery between sessions.</p></div>
+ <div class="section"><div class="section-head"><div><h2>Training outlook</h2><small>What you're training now and next</small></div></div>
+ <div class="pr-schedule-grid"><article class="pr-schedule-card pr-schedule-current"><span class="pr-kicker">CURRENT SESSION</span><h3>Lower body strength</h3><p>Posterior chain · Squat pattern · Core</p><div class="ix-preview-rail"><span></span></div></article><article class="pr-schedule-card"><span class="pr-kicker">UP NEXT</span><h3>Pull / upper body</h3><p>Rows · Vertical pulling · Biceps</p></article></div></div>
+ <div class="section"><div class="section-head"><div><h2>How your plan adapts</h2></div></div><details class="pr-guide"><summary><span class="pr-guide-title">Progressive overload</span><span class="pr-guide-description">Your logged sets guide future recommendations</span></summary><p style="padding:15px;color:#b5c6d5">Progress at a sustainable pace, one quality session at a time.</p></details></div>
+</section>
+<section id="history" class="view">
+ <div class="hero pr-page-hero"><div class="eyebrow">YOUR WORK, RECORDED</div><h1>Progress you can see.</h1><p>Every session builds the picture. Review your actual training—not just the plan.</p></div>
+ <div class="section"><div class="section-head"><div><h2>Training history</h2><small>Recent sessions</small></div></div>
+ <div class="ix-preview-panel"><span class="ix-preview-small">SESSIONS COMPLETED</span><div class="ix-preview-grid"><div><strong>24</strong><span class="ix-preview-small">TOTAL WORKOUTS</span></div><div><strong>7,850 lb</strong><span class="ix-preview-small">LATEST VOLUME</span></div></div></div>
+ <div class="history-item"><div><strong>Lower strength</strong><span>Yesterday · 5 exercises</span></div><span>42 min ›</span></div><div class="history-item"><div><strong>Upper specialization</strong><span>Saturday · 6 exercises</span></div><span>49 min ›</span></div>
+ </div>
+</section>
+<section id="profiles" class="view">
+ <div class="hero pr-page-hero"><div class="eyebrow">TRAINING SETUP</div><h1>Made for your setup.</h1><p>Accurate equipment, capacity and preferences lead to better recommendations.</p></div>
+ <div class="section"><div class="section-head"><div><h2>Your profiles</h2><small>Sample data for preview only</small></div></div>
+ <div class="ix-preview-profile"><strong>Alex · Main profile</strong><span>Intermediate · Free weights · 45-minute sessions</span></div>
+ <fieldset class="pr-profile-group"><legend class="pr-group-title">Training preferences</legend><p class="pr-group-copy">Your equipment and experience can be changed at any time between workouts.</p><div class="setting"><label for="previewLevel">Experience</label><select id="previewLevel"><option>Intermediate</option><option>Beginner</option><option>Advanced</option></select></div><div class="setting"><label for="previewMax">Heaviest dumbbell (lb)</label><input id="previewMax" type="number" value="60"></div></fieldset>
+ </div>
+</section>
+</main>
+</div>
+<nav class="bottom-nav" aria-label="Design preview tabs"><div class="bottom-inner">
+<button class="navbtn active" data-preview-view="today" aria-current="page"><svg class="pr-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/></svg><span>Today</span></button>
+<button class="navbtn" data-preview-view="coach"><svg class="pr-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M4 5h16v12H9l-5 4zM8 10h8M8 14h5"/></svg><span>Coach</span></button>
+<button class="navbtn" data-preview-view="plan"><svg class="pr-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 14h3M13 14h3"/></svg><span>Plan</span></button>
+<button class="navbtn" data-preview-view="history"><svg class="pr-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M3 20V12l5-5 4 4 7-8M3 20h18"/></svg><span>History</span></button>
+<button class="navbtn" data-preview-view="profiles"><svg class="pr-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg><span>Profiles</span></button>
+</div></nav>
+<script>
+document.querySelectorAll('[data-preview-view]').forEach(button=>button.addEventListener('click',()=>{
+  const page=button.dataset.previewView;
+  document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===page));
+  document.querySelectorAll('[data-preview-view]').forEach(b=>{
+    const selected=b===button;b.classList.toggle('active',selected);
+    if(selected)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
+  });
+  window.scrollTo({top:0,behavior:'instant'});
+}));
+document.querySelectorAll('#today .done').forEach(button=>button.addEventListener('click',()=>{
+  button.classList.toggle('active');
+  const n=document.querySelectorAll('#today .done.active').length;
+  document.getElementById('doneCounter').textContent=n+'/3';
+  document.querySelector('.sc-progress-track').setAttribute('aria-valuenow',String(n));
+  document.querySelector('.sc-progress-fill').style.width=(n/15*100)+'%';
+}));
+document.getElementById('previewMore').addEventListener('click',()=>document.getElementById('formGuide').open=true);
+document.getElementById('musicPreview').addEventListener('click',()=>{const b=document.getElementById('musicPreview');b.querySelector('.shell-toggle-text span').textContent='Music playback is available in the real app';});
+</script>
+</body></html>
