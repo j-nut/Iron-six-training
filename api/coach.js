@@ -1,6 +1,5 @@
-const NORMAL_MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-20b';
-const SEARCH_MODEL = process.env.GROQ_SEARCH_MODEL || 'groq/compound-mini';
-const OVERFLOW_MODEL = process.env.GROQ_FALLBACK_MODEL || 'groq/compound-mini';
+import { aiChat, aiConfigured, aiProviders } from './_lib/ai-chat.js';
+import { aiGuard } from './_lib/ai-guard.js';
 
 const SYSTEM = `You are Iron Six Coach, an evidence-informed strength and hypertrophy assistant embedded inside a workout app.
 You receive structured context about the active user's physical profile, equipment, current workout, logged sets, recent history, set feedback, progress analytics, training freshness, and current training-block state. You may also receive recent conversation turns. Use those turns to resolve follow-up questions naturally instead of treating every message as a new conversation.
@@ -147,27 +146,6 @@ function youtubeFromTools(tools) {
   return out;
 }
 
-async function callGroq(model, messages, useSearch) {
-  const request = { model, messages, temperature: 0.2, max_completion_tokens: 800 };
-  if (/^openai\/gpt-oss-(20b|120b)$/.test(model)) {
-    request.reasoning_effort = 'low';
-    request.include_reasoning = false;
-  }
-  if (useSearch) request.citation_options = 'enabled';
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(request)
-  });
-  let body;
-  try { body = await response.json(); } catch (_) { body = null; }
-  return { response, body };
-}
-
-function retryableProviderStatus(status) {
-  return status === 400 || status === 408 || status === 429 || status >= 500;
-}
-
 function recoveryReply(message, context, retryAfter) {
   const wait = Number(retryAfter);
   const suffix = Number.isFinite(wait) && wait > 0 ? ` Try again in about ${Math.ceil(wait)} seconds.` : ' Try again in a few seconds.';
@@ -175,6 +153,13 @@ function recoveryReply(message, context, retryAfter) {
   return {
     reply: `The cloud coach is temporarily rate-limited, but your workout data are still intact.${current ? ` I still have ${current} and the rest of today’s plan in context.` : ''}${suffix}`,
     actions: [], videos: [], followUps: [String(message || '').slice(0, 120)], model: 'Iron Six cloud recovery', degraded: true,
+  };
+}
+
+function limitReply(message) {
+  return {
+    reply: 'You have reached the Coach limit for now, so I am pausing cloud answers for a little while. Your workout logging, load suggestions and history are unaffected — keep training and ask again later.',
+    actions: [], videos: [], followUps: [String(message || '').slice(0, 120)], model: 'Iron Six usage limit', degraded: true, limited: true,
   };
 }
 
@@ -195,15 +180,17 @@ function formattingInstruction(structured) {
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
-  if (!process.env.GROQ_API_KEY) return res.status(503).json({ error: 'Coach AI is not configured. GROQ_API_KEY is missing from the production environment.' });
+  const guard = await aiGuard(req, 'coach');
+  if (guard.reason === 'too_large') return res.status(413).json({ error: 'Coach request is too large.' });
+  if (!aiConfigured()) return res.status(503).json({ error: 'Coach AI is not configured on the server.' });
 
   const message = String(req.body?.message || '').trim().slice(0, 1200);
   if (!message) return res.status(400).json({ error: 'Message required' });
+  if (!guard.allowed) return res.status(200).json(limitReply(message));
   const context = compactContext(req.body?.context);
   const conversation = compactConversation(req.body?.conversation, message);
   const useSearch = wantsSearch(message);
   const structured = useSearch || wantsAction(message);
-  const requestedModel = useSearch ? SEARCH_MODEL : NORMAL_MODEL;
   const extra = useSearch ? 'The user wants or may benefit from a demonstration. If useful, use web search and prioritize a clear reputable exercise demonstration. Return direct video/page URLs in videos. Do not claim you watched a video.' : '';
 
   try {
@@ -214,36 +201,19 @@ export default async function handler(req, res) {
       { role: 'user', content: message }
     ];
 
-    let usedModel = requestedModel;
-    let attempt = await callGroq(usedModel, messages, useSearch);
-    if (!attempt.response.ok && retryableProviderStatus(attempt.response.status)) {
-      const alternate = usedModel === NORMAL_MODEL ? OVERFLOW_MODEL : NORMAL_MODEL;
-      console.warn('Iron Six Coach primary provider attempt failed', {
-        model: usedModel,
-        status: attempt.response.status,
-        error: attempt.body?.error?.message || null,
-        retryAfter: attempt.response.headers.get('retry-after'),
-      });
-      if (alternate && alternate !== usedModel) {
-        usedModel = alternate;
-        attempt = await callGroq(usedModel, messages, false);
-      }
+    let attempt = await aiChat({ messages, maxTokens: 800, temperature: 0.2, search: useSearch });
+    const requestedModel = attempt.attempts?.[0]?.model || aiProviders()[0]?.model || null;
+    if (!attempt.ok) {
+      console.error('Iron Six Coach providers all failed', { attempts: attempt.attempts });
+      if (attempt.rateLimited) return res.status(200).json(recoveryReply(message, context, attempt.retryAfter));
+      return res.status(502).json({ error: 'Coach is temporarily unavailable. Please retry.' });
     }
 
-    if (!attempt.response.ok) {
-      console.error('Iron Six Coach provider failed after retry', { model: usedModel, status: attempt.response.status, error: attempt.body?.error?.message || null });
-      if (attempt.response.status === 429) return res.status(200).json(recoveryReply(message, context, attempt.response.headers.get('retry-after')));
-      return res.status(502).json({ error: attempt.body?.error?.message || `Coach provider failed (${attempt.response.status}). Please retry.` });
-    }
-
-    let choice = attempt.body?.choices?.[0] || {};
+    let choice = attempt.choice;
     if (choice.finish_reason === 'length') {
-      const alternate = usedModel === NORMAL_MODEL ? OVERFLOW_MODEL : NORMAL_MODEL;
-      if (alternate && alternate !== usedModel) {
-        const retryMessages = [...messages, { role: 'user', content: 'Your previous answer was cut off. Answer the same question completely in no more than 120 words.' }];
-        const retry = await callGroq(alternate, retryMessages, false);
-        if (retry.response.ok) { usedModel = alternate; attempt = retry; choice = retry.body?.choices?.[0] || {}; }
-      }
+      const retryMessages = [...messages, { role: 'user', content: 'Your previous answer was cut off. Answer the same question completely in no more than 120 words.' }];
+      const retry = await aiChat({ messages: retryMessages, maxTokens: 800, temperature: 0.2, skip: [attempt.provider, 'groq-search'] });
+      if (retry.ok) { attempt = retry; choice = retry.choice; }
     }
 
     const msg = choice.message || {};
@@ -253,8 +223,9 @@ export default async function handler(req, res) {
     parsed.videos = Array.isArray(parsed.videos) ? parsed.videos.slice(0, 3) : [];
     if (useSearch && !parsed.videos.length) parsed.videos = youtubeFromTools(msg.executed_tools);
     parsed.followUps = Array.isArray(parsed.followUps) ? parsed.followUps.slice(0, 3) : [];
-    parsed.model = usedModel;
-    parsed.fallbackModel = usedModel !== requestedModel;
+    parsed.model = attempt.model;
+    parsed.provider = attempt.provider;
+    parsed.fallbackModel = attempt.model !== requestedModel;
     parsed.truncated = choice.finish_reason === 'length';
     if (isCloudStatusQuestion(message)) {
       parsed.reply = parsed.fallbackModel
@@ -264,6 +235,6 @@ export default async function handler(req, res) {
     return res.status(200).json(parsed);
   } catch (err) {
     console.error('Iron Six Coach request exception', { error: String(err?.message || err) });
-    return res.status(500).json({ error: 'Coach AI request failed. Please retry.', detail: String(err?.message || err) });
+    return res.status(500).json({ error: 'Coach AI request failed. Please retry.' });
   }
 }

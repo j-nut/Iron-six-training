@@ -2,6 +2,7 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
+const {loadApiSource}=require('./helpers/load-api.js');
 function harness(){
  const user={id:'u',program:{currentWorkoutKey:'push_a'},history:[],today:{},trainerMemory:{status:'pending',custom:'keep',appearance:{accent:'green'},achievements:{earned:['first-session']}}};
  const pending=[];
@@ -35,7 +36,7 @@ test('out of order reviews cannot replace latest result',async()=>{
 });
 test('cloud reviewer cannot round a light load beyond its five percent bound',async()=>{
  const context={process:{env:{GROQ_API_KEY:'test'}},fetch:async()=>({ok:true,json:async()=>({choices:[{message:{content:JSON.stringify({checks:[{index:0,load:8,reps:8,sets:3}]})}}]})})};
- vm.createContext(context);vm.runInContext(fs.readFileSync('api/review-workout.js','utf8').replace('export default async function handler','async function handler'),context);
+ vm.createContext(context);vm.runInContext(loadApiSource('api/review-workout.js'),context);
  let result;
  await context.handler({method:'POST',body:{nextWorkout:[{name:'Light raise',base:'Lateral',load:7.5,reps:8,repMin:6,repMax:10,sets:3}]}},{status(){return this},json(x){result=x;return this}});
  assert.equal(result.verifiedPlan[0].verifiedLoad,7.875);

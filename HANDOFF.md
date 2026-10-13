@@ -282,7 +282,7 @@ Public configuration may be committed only when it is genuinely publishable. `ap
 
 Likely deployment secrets/configuration to inspect in Vercel/Supabase before changing AI/auth behavior include:
 
-- Groq API credential used by Coach backend
+- AI provider credentials used by every AI endpoint: `GROQ_API_KEY`, and optionally `CEREBRAS_API_KEY`, `CLOUDFLARE_ACCOUNT_ID` + `CLOUDFLARE_API_TOKEN`, `OPENROUTER_API_KEY` (see `.env.example`)
 - Supabase URL/config overrides if any
 - Supabase publishable key override if any
 - server-side auth bridge credentials/configuration
@@ -291,6 +291,14 @@ Likely deployment secrets/configuration to inspect in Vercel/Supabase before cha
 Never guess secret values from old chats or commit them to Git.
 
 ## 9. AI Coach architecture and expectations
+
+### Provider chain and abuse limits (October 2026)
+
+- `api/_lib/ai-chat.js` is the only place that talks to AI providers. `/api/coach`, `/api/recalculate`, `/api/review-workout` and `/api/equipment-exercises` all call `aiChat()`, which walks Groq → Cerebras → Cloudflare Workers AI → OpenRouter → Groq overflow, using only providers whose keys are configured. Each provider has its own free allowance; a 429, error, empty answer or 12-second timeout moves to the next one.
+- `api/_lib/ai-guard.js` runs before any provider call. Signed-in users are limited per account (the browser attaches their Supabase access token via `ai-request-auth.js`); guests are limited per network address. Over-limit requests get the endpoint's existing deterministic fallback, never an error, and never spend provider allowance. Limits live in `AI_LIMITS`.
+- Durable per-account limits need `supabase/migrations/202610130001_ai_rate_limits.sql` applied. Until then the guard verifies the token with Supabase Auth and limits per serverless instance, which is weaker but still blocks simple loops.
+- Client JSON is bounded with `aiCompact()` before it is placed in a prompt, bodies over ~120 KB are refused, and provider error text is never returned to users.
+- The Supabase Edge Function `supabase/functions/coach` is a secondary Coach path for signed-in users and still calls Groq directly; it already requires a valid JWT.
 
 The desired hierarchy is:
 

@@ -40,7 +40,7 @@ assert(result.shortMuscles.includes('calves'),'short workouts should reserve a s
 for(let i=1;i<result.sequence.length;i++)assert.notEqual(result.sequence[i],result.sequence[i-1],'the scheduler must not repeat a workout immediately');
 
 const api=fs.readFileSync('api/equipment-exercises.js','utf8');
-assert(api.includes('process.env.GROQ_API_KEY'),'the Groq key must stay server-side');
+assert(api.includes("from './_lib/ai-chat.js'")&&fs.readFileSync('api/_lib/ai-chat.js','utf8').includes('process.env'),'AI provider keys must stay server-side');
 assert(api.includes('const SLOTS='),'Groq output must be constrained to deterministic workout slots');
 assert(api.includes('validatedExercises'),'generated exercises must be validated before reaching the client');
 assert(api.includes("validatedExercises(equipment.flatMap(curatedRows),equipment,'curated')"),'equipment generation must degrade safely if Groq is unavailable');
