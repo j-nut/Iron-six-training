@@ -6,7 +6,9 @@
   window.__ironSixStudioLoaded=true;
   let applying=false;
   function apply(){
-    if(applying)return;
+    // JSDOM and native navigation can close a view before a queued callback runs.
+    // Do not keep work alive after its document is gone.
+    if(typeof document==='undefined'||!document?.getElementById||applying)return;
     applying=true;
     try{
       const list=document.getElementById('exerciseList');
