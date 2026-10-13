@@ -494,3 +494,22 @@ body.ix-studio .app .ix-active-workout-section>.section-head{
 body.ix-studio .app #today.session-compact:not(.session-prestart) .ix-active-workout-section>.section-head{
  display:none!important
 }
+
+/* Keep the exercise step and set count on one predictable row, not three
+   awkward wraps at 360-430px widths. A small progress pill is always legible. */
+body.ix-studio .app #sessionCardNav .sc-step strong{
+  display:flex!important;flex-direction:row!important;align-items:center!important;
+  gap:7px!important;white-space:nowrap!important;min-width:0!important
+}
+body.ix-studio .app #sessionCardNav .sc-step strong .ix-step-title{
+  display:inline!important;min-width:0!important;font-size:11px!important;
+  color:#e9f1f8!important;font-weight:820!important;white-space:nowrap!important;margin:0!important
+}
+body.ix-studio .app #sessionCardNav .sc-step strong .ix-step-count{
+  display:inline-block!important;flex:0 0 auto!important;
+  font-size:10px!important;font-weight:800!important;line-height:1.25!important;
+  color:var(--accent)!important;white-space:nowrap!important;margin:0!important;
+  padding:3px 5px!important;border:1px solid rgba(var(--accent-rgb,46,229,128),.3)!important;
+  background:rgba(var(--accent-rgb,46,229,128),.085)!important;
+  border-radius:6px!important
+}
