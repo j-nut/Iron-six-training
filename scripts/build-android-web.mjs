@@ -38,7 +38,7 @@ const sharedRuntimeScripts=[
 ];
 const androidRuntimeScripts=['pose-form-coach.js','workout-voice.js'];
 const runtimeScripts=[...sharedRuntimeScripts,...androidRuntimeScripts];
-const publicFiles=[...new Set([...scripts,...runtimeScripts,'style.css','premium-ui.css','workout-polish.css','studio-ui.css','EXERCISE_MEDIA.md','MUSIC.md'])];
+const publicFiles=[...new Set([...scripts,...runtimeScripts,'style.css','premium-ui.css','workout-polish.css','studio-ui.css','studio-preview.html','EXERCISE_MEDIA.md','MUSIC.md'])];
 
 for(const file of publicFiles){
   if(file.includes('/')||file.includes('..'))throw Error('Unexpected entrypoint asset: '+file);
