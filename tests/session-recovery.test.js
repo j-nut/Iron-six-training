@@ -216,3 +216,20 @@ test('changing away from partial legs preserves its real work for scheduling aft
   assert.equal(a.run('activeUser().program.interruptedWork.length'),0);
   a.close();
 });
+
+
+test('unchanged journal status checks do not re-create the History table',()=>{
+  const a=app(),d=a.w.document;
+  try{
+    a.run("showView('history');IronSixJournal.status()");
+    const table=d.querySelector('#savedWorkoutTable table');
+    assert(table,'History table should exist');
+    a.run("IronSixJournal.status();IronSixJournal.status()");
+    assert.strictEqual(d.querySelector('#savedWorkoutTable table'),table,
+      'idle sync status checks must preserve the original History DOM');
+    a.run("const u=activeUser();u.today['0-0']={weight:'40',reps:'10',done:true};IronSixJournal.captureSet(u,finalWorkout(u),0,0,u.today['0-0']);");
+    assert.notStrictEqual(d.querySelector('#savedWorkoutTable table'),table,
+      'a newly recorded set should refresh visible History');
+    assert.match(d.getElementById('savedWorkoutTable').textContent,/40/);
+  }finally{a.close()}
+});
