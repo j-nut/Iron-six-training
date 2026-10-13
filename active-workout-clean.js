@@ -201,7 +201,7 @@
       sets.appendChild(tip);
     }
     for(const input of card.querySelectorAll('.set-row input.weight, .set-row input.reps')){
-      if(input.dataset.ixScrubReady)return /* each newly rebuilt card is wired once */;
+      if(input.dataset.ixScrubReady)continue; // each newly rebuilt field is wired once
       input.dataset.ixScrubReady='true';
       const kind=input.classList.contains('weight')?'weight':'reps';
       input.setAttribute('aria-description',
