@@ -18,6 +18,8 @@ download, no DOM changes, no global.
 https://<your-deployment>/index.html?pose=1
 ```
 
+A profile can also turn it on without the URL flag: onboarding's camera preference (`preferences.camera`) enables it when the browser has a camera API, and `false` keeps it off. An explicit `?pose=` in the address wins, and the voice preference (`preferences.voice`) shows or hides the voice controls inside the camera sheet.
+
 A **Count reps with camera** button then appears on the exercises that have a rule, inside the
 set table. Everything else in the app is untouched.
 

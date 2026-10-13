@@ -16,6 +16,37 @@
     for(const alt of [ex,...(ex?._alternatives||[])])if(alt?.name&&alt?.base)bases.set(lower(alt.name),alt.base);
     return (u?.trainingFeedback||[]).some(f=>n(f.ts)>=cutoff&&f.feedback==='pain'&&(lower(f.exercise)===lower(ex?.name)||(ex?.base&&bases.get(lower(f.exercise))===ex.base)));
   }
+  // Limitations the lifter reported during setup. This is not medical advice: it only starts the
+  // affected movements lighter, or swaps in a gentler option from the same slot.
+  const LIMIT_AREAS=['shoulder','elbow','wrist','lower_back','hip','knee'];
+  const LIMIT_LABEL={shoulder:'shoulder',elbow:'elbow',wrist:'wrist',lower_back:'lower back',hip:'hip',knee:'knee'};
+  const LIMIT_NOTE='Stop if it hurts and see a professional for ongoing pain.';
+  const dumbbellLevel=(heavy,light)=>name=>/dumbbell/.test(name)?light:heavy;
+  // Stress per area: 0 = not affected, 1 = mildly loaded, 2 = clearly loaded, 3 = most demanding.
+  // The first matching rule on the lower-cased exercise name wins.
+  const LIMIT_RULES={
+    shoulder:[[/landmine press/,1],[/overhead press|pike push|shoulder press|feet-elevated push/,3],[/bench press/,dumbbellLevel(3,2)],[/dumbbell (flat|incline) press/,2],[/push-up/,2],[/dumbbell fly/,2],[/band chest fly/,1],[/lateral raise/,name=>/band/.test(name)?1:2]],
+    elbow:[[/skull crusher|close-grip bench|diamond push|close-grip push|barbell curl/,3],[/curl/,name=>/band|towel/.test(name)?1:2],[/pressdown/,1]],
+    wrist:[[/diamond push|close-grip push|pike push|ab wheel|barbell curl/,3],[/front squat|push-up|walkout|plank/,2]],
+    lower_back:[[/good morning|barbell romanian|barbell row|pendlay|back squat/,3],[/box squat|romanian deadlift|landmine row|t-bar row|meadows|one-arm dumbbell row|barbell standing calf/,2],[/single-leg hip hinge|goblet|chest-supported|band row|front squat|landmine squat|hack squat/,1]],
+    hip:[[/good morning|barbell romanian|bulgarian/,3],[/hip thrust/,name=>/banded/.test(name)?1:2],[/romanian deadlift|reverse lunge|split squat|hip hinge/,2],[/glute bridge/,1]],
+    knee:[[/back squat|hack squat|bulgarian|cyclist|1½-rep|leg extension/,3],[/box squat|front squat|landmine squat|reverse lunge|split squat|tempo bodyweight squat/,2],[/goblet/,1]]
+  };
+  function limitationAreas(u){
+    const raw=u?.limitations;if(!Array.isArray(raw))return [];
+    const given=raw.map(x=>lower(x).trim().replace(/[\s-]+/g,'_'));
+    return LIMIT_AREAS.filter(a=>given.includes(a));
+  }
+  function areaStress(area,ex){
+    const name=lower(ex?.name);
+    for(const [pattern,level] of LIMIT_RULES[area]||[])if(pattern.test(name))return typeof level==='function'?level(name):level;
+    return 0;
+  }
+  function limitationStress(areas,ex){return areas.reduce((total,area)=>total+areaStress(area,ex),0)}
+  function limitationText(areas){
+    const names=areas.map(a=>LIMIT_LABEL[a]);
+    return names.length>1?names.slice(0,-1).join(', ')+' and '+names[names.length-1]:names[0]||'';
+  }
   function daysSinceLastSession(u,now=Date.now()){
     // History dated before 2024 (imported without real timestamps) never counts as a layoff.
     const last=Math.max(0,...(u?.history||[]).map(h=>n(h.ts)).filter(ts=>ts>0&&ts<=now));
@@ -42,6 +73,22 @@
         const alt=chosen._alternatives.find(a=>!occupied.has(String(a.name).toLowerCase())&&!recentPain(u,a.name)&&(typeof exerciseAvailable!=='function'||exerciseAvailable(u,a))&&(u.trainingMode!=='circuit'||typeof circuitSuitable!=='function'||circuitSuitable(a))&&(u.trainingMode==='circuit'||typeof traditionalSetSeconds!=='function'||traditionalSetSeconds({...chosen,...a,priority:chosen.priority})<=traditionalSetSeconds(chosen)));
         if(alt){occupied.delete(String(ex.name).toLowerCase());occupied.add(String(alt.name).toLowerCase());chosen={...chosen,...alt,sets:ex.sets,priority:ex.priority,_programSlot:ex._programSlot,_anchor:ex._anchor,_alternatives:[ex,...chosen._alternatives].filter(x=>x.name!==alt.name),_adaptReason:'Recent pain feedback: swapped to a saved alternative.'};}
       }
+      // Reported limitations: prefer a gentler option from the same slot; otherwise keep the exercise
+      // lighter. Muscle groups are never dropped, and the swap stays on the same movement base.
+      let limitReason='',limitFactor=1;
+      const areas=limitationAreas(u),before=limitationStress(areas,chosen);
+      if(areas.length&&before>0){
+        const hit=areas.filter(a=>areaStress(a,chosen)>0),original=chosen;
+        const best=(chosen._alternatives||[]).filter(a=>a?.name&&a.base===chosen.base&&!occupied.has(String(a.name).toLowerCase())&&!recentPain(u,a.name)&&(typeof exerciseAvailable!=='function'||exerciseAvailable(u,a))&&(u.trainingMode!=='circuit'||typeof circuitSuitable!=='function'||circuitSuitable(a))&&(u.trainingMode==='circuit'||typeof traditionalSetSeconds!=='function'||traditionalSetSeconds({...chosen,...a,priority:chosen.priority})<=traditionalSetSeconds(chosen))).map(a=>({a,stress:limitationStress(areas,a)})).filter(x=>x.stress<before).sort((x,y)=>x.stress-y.stress)[0];
+        if(best){
+          occupied.delete(String(chosen.name).toLowerCase());occupied.add(String(best.a.name).toLowerCase());
+          chosen={...chosen,...best.a,sets:original.sets,priority:original.priority,_programSlot:original._programSlot,_anchor:original._anchor,_alternatives:[original,...original._alternatives].filter(x=>x.name!==best.a.name),_adaptReason:original._adaptReason};
+        }
+        const remaining=limitationStress(areas,chosen),still=areas.filter(a=>areaStress(a,chosen)>0),what=limitationText(best&&remaining===0?hit:still.length?still:hit);
+        const swap=best?`swapped to ${chosen.name}, which is easier on it`:'';
+        if(remaining>0){limitFactor=.9;chosen._extraRir=2;limitReason=`You noted your ${what}: ${swap?swap+' and starting it lighter':'starting this lighter'} with about 2 extra reps in reserve. ${LIMIT_NOTE}`}
+        else limitReason=`You noted your ${what}: ${swap}. ${LIMIT_NOTE}`;
+      }
       const score=readinessScore(u,chosen);
       // "Manage fatigue" keeps priority lifts intact and trims accessories, as its advice says.
       let factor=state.phase==='Manage fatigue'&&n(chosen.priority)===1?1:overallFactor;
@@ -51,10 +98,11 @@
       if(state.phase==='Deload suggested'){loadFactor=.9;loadReason='Deload: about 10% lighter with more reps in reserve.'}
       if(returning){factor=Math.min(factor,.75);loadReason=`First session after ${Math.round(daysOff)} days off: fewer sets while you ease back in.`}
       if(painInPattern(u,chosen)){factor=Math.min(factor,.75);loadFactor=Math.min(loadFactor,.85);loadReason='Recent pain on this movement: about 15% lighter and one fewer set. Stop the set if it hurts.'}
+      loadFactor=Math.min(loadFactor,limitFactor);
       if(loadFactor<1)chosen._loadFactor=loadFactor;
       const oldSets=Math.max(1,n(chosen.sets)||1),sets=reduce(oldSets,factor);
       const volumeReason=sets<oldSets?`${state.phase==='Build'?'Readiness':'How recovered you are'} adjusted volume (${oldSets}→${sets} sets).`:'';
-      const reasons=[loadReason,volumeReason].filter(Boolean).join(' ');
+      const reasons=[loadReason,limitReason,volumeReason].filter(Boolean).join(' ');
       if(reasons)chosen._adaptReason=chosen._adaptReason?`${chosen._adaptReason} ${reasons}`:reasons;
       if(sets<oldSets){chosen.sets=sets;chosen.prescription=String(chosen.prescription||'').replace(/^\d+\s*×/,sets+' ×')}
       // Alternatives carry template prescriptions; the cards must describe the
@@ -85,5 +133,5 @@
   document.addEventListener('click',e=>{if(e.target.closest?.('[data-view="today"]'))setTimeout(renderNote,20)});
   for(const id of ['energy','soreness'])document.getElementById(id)?.addEventListener('change',()=>setTimeout(()=>{if(typeof renderAll==='function')renderAll();renderNote()},10));
   setTimeout(()=>{if(typeof renderAll==='function')renderAll();renderNote()},60);
-  window.IronSixAdaptiveSessionV3={adaptPlan,readinessScore,summary,painInPattern,daysSinceLastSession};
+  window.IronSixAdaptiveSessionV3={adaptPlan,readinessScore,summary,painInPattern,daysSinceLastSession,limitationAreas,limitationStress};
 })();
