@@ -33,7 +33,8 @@ test('Heavy uses an available custom machine but never invents missing equipment
 });
 test('all difficulty equipment mode and duration combinations retain valid budgets and circuits',()=>{
   const run=app();const count=run(`let count=0;for(const level of ['light','balanced','heavy'])for(const equipment of [{},{dumbbells:true},{bands:true},DEFAULT_EQUIPMENT])for(const key of Object.keys(WORKOUT_META))for(const mode of ['traditional','circuit'])for(const minutes of [10,15,20,30,45,60,120]){const u=makeUser('Matrix',180,equipment);u.workoutDifficulty=level;u.program.currentWorkoutKey=key;u.trainingMode=mode;u.workoutMinutes=minutes;const plan=finalWorkout(u);if(!plan.length||plan.some(e=>!exerciseAvailable(u,e)||e.sets<1)||new Set(plan.map(e=>e.name)).size!==plan.length)throw Error('Invalid '+level+' '+key+' '+mode+' '+minutes);if(sessionSeconds(u,plan)>minutes*60)throw Error('Overbudget '+level+' '+key);if(mode==='circuit'){if(circuitTimeline(u,plan).reduce((n,s)=>n+s.seconds,0)!==sessionSeconds(u,plan))throw Error('Timer mismatch');for(const e of plan)if(!e.prescription.includes(e.sets+' rounds'))throw Error('Rounds mismatch');}count++;}return count;`);
-  assert.equal(count,2016);
+  // 19 workout keys: six rotation days, six legacy keys and seven split days (upper/lower, full body).
+  assert.equal(count,3*4*19*2*7);
 });
 test('low energy and soreness remain authoritative even for Heavy and a fresh trainer review',()=>{
   const run=app();const out=run(`const u=makeUser();u.program.currentWorkoutKey='lower_strength';u.workoutDifficulty='heavy';u.readiness={energy:2,soreness:4};const plain=finalWorkout(u);u.trainerMemory={reviewedAt:Date.now(),verifiedForWorkoutKey:'lower_strength',verifiedPlan:plain.map(e=>({...e,verifiedSets:9}))};return {plain,reviewed:finalWorkout(u)};`);

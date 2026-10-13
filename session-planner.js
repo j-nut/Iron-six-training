@@ -23,8 +23,15 @@ function restProfile(minutes){
   if(minutes<60)return {main:135,compound:90,accessory:60,setup:45,work:45};
   return {main:150,compound:120,accessory:60,setup:45,work:45};
 }
-function traditionalSetSeconds(ex,minutes=60){
-  const prof=restProfile(minutes),superset=/superset| + /i.test(ex.prescription+' '+ex.name);
+/* Goal changes rest, not the user's time budget: heavy strength sets need longer recovery between
+ * main-lift sets; general fitness trains a little further from failure and can rest less. */
+const GOAL_REST={strength:{main:1.25,compound:1.15,accessory:1},general:{main:.85,compound:.9,accessory:1}};
+function goalRestProfile(minutes,goal){
+  const prof=restProfile(minutes),f=GOAL_REST[goal];
+  return f?{...prof,main:Math.round(prof.main*f.main),compound:Math.round(prof.compound*f.compound),accessory:Math.round(prof.accessory*f.accessory)}:prof;
+}
+function traditionalSetSeconds(ex,minutes=60,goal='muscle'){
+  const prof=goalRestProfile(minutes,goal),superset=/superset| + /i.test(ex.prescription+' '+ex.name);
   // Unilateral and superset sets work both sides/movements before the rest.
   const work=(superset||isUnilateral(ex))?prof.work*2:prof.work;
   const compound=['bench','chest_press','overhead_press','squat','hinge','split_squat','pullup','row'].includes(ex.seedKey);
@@ -54,7 +61,8 @@ function sessionSeconds(u,plan){
   const prof=restProfile(minutes),rampSec=rampSpec(u,plan).reduce((n,r)=>n+(r?r.length*RAMP_SET_SECONDS:0),0);
   // Ramp sets double as warm-up: a minimum general block (60 s) plus the ramps, never less than the standard warm-up.
   const pre=Math.max(sessionWarmup(u),60+rampSec);
-  return pre+60+plan.reduce((n,e)=>n+prof.setup+e.sets*traditionalSetSeconds(e,minutes),0);
+  const goal=typeof programGoal==='function'?programGoal(u):'muscle';
+  return pre+60+plan.reduce((n,e)=>n+prof.setup+e.sets*traditionalSetSeconds(e,minutes,goal),0);
 }
 /* Rolling completed-work coverage for short sessions.
  * Floors are direct completed sets expected over COVERAGE_WINDOW completed sessions (1.5 rotation
@@ -109,7 +117,11 @@ function budgetSessionWorkout(u,workout){
   const traditionalCount=minutes<=10?2:minutes<=20?3:minutes<=30?4:pool.length;
   const circuitCount=minutes<=30?4:minutes<60?5:pool.length;
   const count=Math.min(circuit?circuitCount:traditionalCount,pool.length);
-  const setsBonus=e=>circuit||light||e._extra?0:e.priority===1?(minutes>=90?2:minutes>=45?1:0):(minutes>=105?3:minutes>=60?2:minutes>=45?1:0);
+  // Goal shifts where long-session volume goes: strength adds main-lift sets and trims accessory
+  // sets; general fitness keeps slightly lower volume overall. Muscle is unchanged.
+  const goal=typeof programGoal==='function'?programGoal(u):'muscle';
+  const baseBonus=e=>circuit||light||e._extra?0:e.priority===1?(minutes>=90?2:minutes>=45?1:0):(minutes>=105?3:minutes>=60?2:minutes>=45?1:0);
+  const setsBonus=goal==='muscle'?baseBonus:e=>{const b=baseBonus(e);if(!b)return 0;return goal==='strength'?(e.priority===1?b+1:b-1):b-1};
   const anchors=pool.filter(e=>e.priority===1),accessories=pool.filter(e=>e.priority!==1);
   // Short and 45-minute plans retain main work plus the most useful accessories. Completed
   // rolling-program history is a priority signal: recurring omissions rise, but we do not add
@@ -134,7 +146,9 @@ function budgetSessionWorkout(u,workout){
   // (protected pull pattern, displaced anchor, or secondary lift) instead of always losing to it.
   // Protected curl angles win ties but yield once biceps are adequately dosed and another group is not.
   const cov=rollingCoverage(u),isSmall=e=>Boolean(SMALL_GROUP_FLOORS[programCategory(e)]);
-  const keep=anchors.slice(0,Math.max(1,Math.min(anchors.length,count-(minutes<=10&&!circuit?1:0)-(anchors.length>=count?1:0))));
+  // Full-body days keep their lower, press and pull main lifts together whenever the slot count allows.
+  const fullBody=/^full/.test(String(u.program?.currentWorkoutKey||''));
+  const keep=anchors.slice(0,Math.max(1,Math.min(anchors.length,fullBody?count:count-(minutes<=10&&!circuit?1:0)-(anchors.length>=count?1:0))));
   const dropped=anchors.filter(e=>!keep.includes(e));
   const leftover=[...dropped,...protectedAccessories,...otherAccessories];
   const tie=(a,b)=>Number(protectedPullSlots.has(b._programSlot))-Number(protectedPullSlots.has(a._programSlot))||Number(specificity(b).some(m=>due.has(m)))-Number(specificity(a).some(m=>due.has(m)))||recentDose(a)-recentDose(b)||((a._position+exposure)%Math.max(1,pool.length))-((b._position+exposure)%Math.max(1,pool.length));
@@ -158,13 +172,20 @@ function budgetSessionWorkout(u,workout){
   // Fill in priority order; a candidate that cannot fit even at one set is skipped so a cheaper
   // under-dosed accessory can use the time instead of leaving it unused.
   const candidates=[...new Set([...order,...smalls,...leftover])];
+  // Above 20 minutes, split days (and any non-default goal) only add a movement that fits at a real
+  // dose: two working sets, three for strength main lifts. Default six-day muscle plans are unchanged.
+  const floorSets=!circuit&&minutes>20&&((typeof rotationFor==='function'&&rotationFor(u)!==ROTATION)||goal!=='muscle')?2:1;
+  const floorOf=x=>Math.min(x._max,goal==='strength'&&x.priority===1&&floorSets>1?3:floorSets);
   let selected=[];
   for(const e of candidates){
     if(selected.length>=count)break;
     // Short-session small accessories are micro-doses (max 2 sets); missed volume is not crammed into one day.
     const baseMax=Math.max(1,e.sets),microCap=!circuit&&minutes<=30&&isSmall(e)?2:Infinity;
     const next=[...selected,{...e,sets:1,_max:Math.min(6,microCap,baseMax+setsBonus(e)),_rank:selected.length}];
-    if(!selected.length||sessionSeconds(u,next)<=budget)selected=next;
+    // Upper/lower and full-body days list more movements; above 20 minutes each one must fit at two
+    // working sets, otherwise it waits for a later session instead of becoming a one-set token.
+    const fit=floorSets>1?next.map(x=>({...x,sets:floorOf(x)})):next;
+    if(!selected.length||sessionSeconds(u,fit)<=budget)selected=next;
   }
   selected.sort((a,b)=>a._position-b._position);
   // Micro-dose: if time remains after the compounds' two-set floor, add one more under-dosed small

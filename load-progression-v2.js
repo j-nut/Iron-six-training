@@ -18,7 +18,8 @@
   };
   const rangeFor = exercise => typeof repRange === 'function' ? repRange(exercise) : [8, 12];
   const midpointFor = exercise => typeof repTarget === 'function' ? repTarget(exercise) : Math.round(rangeFor(exercise).reduce((a, b) => a + b, 0) / 2);
-  const targetRirFor = user => user?.trainingLevel === 'advanced' ? 1.5 : 2;
+  // Goal-aware (core.js goalTargetRir): general fitness works about one rep further from failure.
+  const targetRirFor = user => typeof goalTargetRir === 'function' ? goalTargetRir(user) : user?.trainingLevel === 'advanced' ? 1.5 : 2;
   const feedbackSupport = feedback => feedback === 'easy' ? 1 : feedback === 'hard' ? -0.5 : 0;
 
   function rounded(load, exercise, user) {

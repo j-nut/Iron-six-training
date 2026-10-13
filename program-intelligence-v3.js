@@ -23,7 +23,14 @@
     pull_a:'Lat/width pull · vertical pulling, direct lats, lighter supported row, long-head biceps, core',
     push_b:'Balanced push · alternate chest angle, overhead press, chest isolation, side delts, triceps',
     lower_b:'Hinge/posterior lower · hinge strength, squat support, direct glutes, hamstrings, calves',
-    pull_b:'Mid-back/thickness pull · supported rows, secondary vertical pull, rear delts/scapulae, brachialis/forearms'
+    pull_b:'Mid-back/thickness pull · supported rows, secondary vertical pull, rear delts/scapulae, brachialis/forearms',
+    upper_a:'Upper A · bench benchmark, vertical pull benchmark, row, chest isolation, side delts, biceps, triceps',
+    upper_b:'Upper B · overhead and row benchmarks, incline press, vertical pull, rear delts, side delts, brachialis, triceps',
+    full_a:'Full body A · squat, bench and row benchmarks, hamstrings, side delts, biceps',
+    full_b:'Full body B · hinge, overhead and vertical-pull benchmarks, secondary press, single-leg, triceps, calves',
+    full_c:'Full body C · squat, incline and vertical-pull benchmarks, row, rear delts, core, brachialis',
+    full2_a:'Full body A · squat, bench and row benchmarks, hamstrings, side delts, biceps, calves',
+    full2_b:'Full body B · hinge, overhead and vertical-pull benchmarks, secondary press, single-leg, triceps, rear delts, core'
   };
   const completedSets=d=>(d?.sets||[]).filter(s=>s?.done===true).length;
 
@@ -74,7 +81,7 @@
   }
 
   function upcoming(user,count=3){
-    const rotation=Array.isArray(window.ROTATION)?window.ROTATION:(typeof ROTATION!=='undefined'?ROTATION:[]);
+    const rotation=typeof rotationFor==='function'?rotationFor(user):Array.isArray(window.ROTATION)?window.ROTATION:(typeof ROTATION!=='undefined'?ROTATION:[]);
     const metaTable=typeof WORKOUT_META!=='undefined'?WORKOUT_META:{};
     const current=user?.program?.currentWorkoutKey||rotation[0],start=Math.max(0,rotation.indexOf(current));
     const result=[];
@@ -93,6 +100,7 @@
       undercovered:gaps.filter(x=>x.deficit>=1).slice(0,5),
       adjacentExactRepeats:repeats.slice(0,4),
       upcoming:next,
+      program:typeof splitFor==='function'?{goal:typeof programGoal==='function'?programGoal(user):'muscle',daysPerWeek:splitFor(user).daysPerWeek,split:splitFor(user).label,goalDescription:typeof describeGoal==='function'?describeGoal(typeof programGoal==='function'?programGoal(user):'muscle'):''}:undefined,
       rule:'Use deficits to prioritize future optional/accessory work, not to force catch-up volume. Preserve benchmark lifts when useful; vary redundant accessories and angles. Never rewrite an active workout.'
     };
   }
