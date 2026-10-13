@@ -1,7 +1,11 @@
 /* An edit is an immutable record, not a replacement of a user's entire profile. */
 (() => {
   const PREFIX='ironSixEntry:', events=new Map();
-  let db=null, localError='', cloudError='', flushing=null, timer=null, transport=null, lastHistoryStatusStamp=null;
+  let db=null, localError='', cloudError='', flushing=null, timer=null, transport=null, lastHistoryStatusStamp=null, sendTimeout=10000;
+  // fresh: events created in this page session that no upload has attempted yet. Only these may be
+  // revised in place; once a request has left the device the event is immutable (it may have landed).
+  // failed: events the database itself refused (constraint errors). They stay in the local journal.
+  const fresh=new Set(), failed=new Map();
   const owner=()=>window.ironSixAccountScope||'guest';
   const copy=value=>JSON.parse(JSON.stringify(value));
   const uuid=()=>crypto.randomUUID();
@@ -22,11 +26,24 @@
   })}
   function pending(scope=owner()){return all(scope).filter(event=>!event.sequence)}
   function snapshot(u,plan){return {key:u.program.currentWorkoutKey,plan:copy(plan||u.workoutDraft?.plan||finalWorkout(u)),today:copy(u.today||{}),exposure:Number(u.program.exposures?.[u.program.currentWorkoutKey])||0,workoutMinutes:u.workoutMinutes,readiness:copy(u.readiness||{}),trainingMode:u.trainingMode||'traditional',circuitPace:u.circuitPace||'balanced',difficulty:window.IronSixDifficulty?.effectiveFor(u)||u.workoutDifficulty||'balanced',sessionDifficulty:normalizedWorkoutDifficultyOverride(u.sessionDifficulty),timer:u.workoutDraft?.timer||null}}
+  // Typing "102.5" must not create five journal records. A set revision that has not been uploaded yet
+  // and is still the row's head is rewritten in place (same event_id, so chain heads stay valid) and
+  // re-persisted immediately. A done/undone change or anything already attempted appends instead.
+  function coalesce(u,kind,rowKey,payload,fields){
+    const draft=u.workoutDraft;
+    if(kind!=='set'||fields.event_id||!draft)return null;
+    const head=events.get(draft.heads?.[rowKey]);
+    if(!head||head.kind!=='set'||head.sequence||!fresh.has(head.event_id)||head.user_id!==owner()||head.session_id!==draft.id||head.profile_client_id!==u.id||head.completed!==!!fields.completed)return null;
+    Object.assign(head,fields,{payload:copy(payload),client_at:new Date().toISOString()});
+    persist(head);return head;
+  }
   function append(u,kind,rowKey,payload,fields={}){
     const draft=u.workoutDraft;
+    const merged=coalesce(u,kind,rowKey,payload,fields);
+    if(merged){status();schedule();return merged}
     const order=pending().reduce((n,e)=>Math.max(n,(e._order||0)+1),Date.now());
     const event={event_id:uuid(),user_id:owner(),profile_client_id:u.id,session_id:draft.id,kind,row_key:rowKey,base_event_id:draft.heads?.[rowKey]||null,payload:copy(payload),client_at:new Date().toISOString(),completed:false,...fields,_order:order};
-    events.set(event.event_id,event);persist(event);
+    events.set(event.event_id,event);fresh.add(event.event_id);persist(event);
     draft.heads=draft.heads||{};draft.heads[rowKey]=event.event_id;
     status();schedule();return event;
   }
@@ -143,21 +160,45 @@
     u.program.currentWorkoutKey=s.key;u.workoutMinutes=s.workoutMinutes||60;u.today=copy(s.today);
     u.draftWorkoutKey=s.key;
   }
-  async function flush(){
+  function withTimeout(promise,ms){
+    let handle;
+    const limit=new Promise((_,reject)=>{handle=setTimeout(()=>reject(Object.assign(new Error('The database did not respond in time. Will retry.'),{timeout:true})),ms)});
+    return Promise.race([promise,limit]).finally(()=>clearTimeout(handle));
+  }
+  // The database refused this exact record (data/constraint error). Retrying cannot help, so it must not
+  // block later edits. Connectivity, auth, timeout and missing-profile errors are NOT permanent.
+  function rejected(error){const code=String(error?.code||'');return /^(22|23)\d{3}$/.test(code)&&code!=='23503'}
+  async function flush(options={}){
     if(flushing)return flushing;
     const scope=owner();if(scope==='guest'||!transport||navigator.onLine===false){status();return false}
-    flushing=(async()=>{try{
-      for(const event of pending(scope)){
-        if(scope!==owner())return false;
-        const saved=await transport(copy(event));
-        if(!saved?.sequence)throw new Error('The database did not confirm this entry.');
-        ingest({...event,...saved});cloudError='';status();
-      }
-      return true;
-    }catch(error){cloudError=error.message||'Cloud save failed';status();return false}})();
-    try{return await flushing}finally{flushing=null}
+    if(options.retryFailed===true)failed.clear();
+    flushing=(async()=>{
+      const tried=new Set();let clean=true;
+      try{
+        // Drain until nothing new is waiting: edits appended while this flush was uploading go out now.
+        for(let pass=0;pass<100;pass++){
+          const batch=pending(scope).filter(e=>!tried.has(e.event_id)&&!failed.has(e.event_id));
+          if(!batch.length)break;
+          for(const event of batch){
+            if(scope!==owner())return false;
+            tried.add(event.event_id);fresh.delete(event.event_id);
+            let saved;
+            try{saved=await withTimeout(transport(copy(event)),sendTimeout)}
+            catch(error){
+              if(!rejected(error))throw error;
+              failed.set(event.event_id,error.message||'The database rejected this entry.');clean=false;status();continue;
+            }
+            if(!saved?.sequence)throw new Error('The database did not confirm this entry.');
+            ingest({...event,...saved});failed.delete(event.event_id);cloudError='';status();
+          }
+        }
+        return clean&&failed.size===0;
+      }catch(error){cloudError=error.message||'Cloud save failed';status();return false}
+    })();
+    const run=flushing;
+    try{return await run}finally{if(flushing===run)flushing=null}
   }
-  function schedule(){clearTimeout(timer);timer=setTimeout(flush,250)}
+  function schedule(){clearTimeout(timer);timer=setTimeout(()=>flush(),700)}
   function status(){
     // Status messages update frequently during automatic sync. The History table
     // should only rebuild if the underlying user's journal entries changed.
@@ -167,12 +208,13 @@
         .map(e=>e.event_id+':'+(e.sequence||0)+':'+Number(!!e.completed)).join('|'):null;
       if(stamp!==lastHistoryStatusStamp){lastHistoryStatusStamp=stamp;renderTable()}
     }else lastHistoryStatusStamp=null;
-    const items=pending(),unsaved=items.some(e=>!e._durable),scope=owner();
-    const message=unsaved?'NOT SAVED — keep this page open':localError||
+    const items=pending(),unsaved=items.some(e=>!e._durable),scope=owner(),refused=items.filter(e=>failed.has(e.event_id)).length;
+    const message=unsaved?'NOT SAVED — keep this page open':localError||(refused?`${refused} edit${refused===1?'':'s'} saved on this device but refused by the database (${[...failed.values()][0]}) · tap Retry saves`:null)||
       (scope==='guest'?'Saved on this device only — sign in to back up':items.length?`${items.length} edits saved locally · ${cloudError?'cloud retry needed':navigator.onLine===false?'offline':'sending to database…'}`:'All workout edits saved to database');
-    const element=document.getElementById('workoutSaveStatus');if(element){element.textContent=message;element.dataset.state=unsaved||localError?'error':items.length||scope==='guest'?'pending':'saved'}
-    window.dispatchEvent(new CustomEvent('iron-six-save-status',{detail:{message,pending:items.length,error:cloudError||localError}}));
-    return {message,pending:items.length,error:cloudError||localError};
+    const element=document.getElementById('workoutSaveStatus');if(element){element.textContent=message;element.dataset.state=unsaved||localError||refused?'error':items.length||scope==='guest'?'pending':'saved'}
+    const error=cloudError||localError||(refused?[...failed.values()][0]:'');
+    window.dispatchEvent(new CustomEvent('iron-six-save-status',{detail:{message,pending:items.length,failed:refused,error}}));
+    return {message,pending:items.length,failed:refused,error};
   }
   function exportLog(){
     if(window.IronSixNative){return window.IronSixNative.exportBackup(JSON.stringify({exportedAt:new Date().toISOString(),profiles:data,entries:all()},null,2)).catch(()=>{if(typeof toast==='function')toast('Backup could not be exported. Your saved workout is still on this device.');});}
@@ -194,7 +236,7 @@
   }
   function installUI(){
     if(!document.getElementById('workoutSaveStatus')){const statusBox=document.createElement('div');statusBox.id='workoutSaveStatus';statusBox.setAttribute('role','status');statusBox.setAttribute('aria-live','polite');document.getElementById('exerciseList')?.before(statusBox)}
-    if(!document.getElementById('savedWorkoutTable')){const section=document.createElement('div');section.className='section';section.innerHTML='<h2>Saved workout table</h2><button type="button" class="btn secondary" id="retryWorkoutSaves">Retry saves</button> <button type="button" class="btn secondary" id="exportWorkoutLog">Export backup</button><div id="savedWorkoutTable"></div><h3>Recover a session</h3><div id="workoutRecovery"></div>';document.getElementById('history')?.append(section);section.querySelector('#retryWorkoutSaves').onclick=async()=>{await flush();renderTable()};section.querySelector('#exportWorkoutLog').onclick=exportLog}
+    if(!document.getElementById('savedWorkoutTable')){const section=document.createElement('div');section.className='section';section.innerHTML='<h2>Saved workout table</h2><button type="button" class="btn secondary" id="retryWorkoutSaves">Retry saves</button> <button type="button" class="btn secondary" id="exportWorkoutLog">Export backup</button><div id="savedWorkoutTable"></div><h3>Recover a session</h3><div id="workoutRecovery"></div>';document.getElementById('history')?.append(section);section.querySelector('#retryWorkoutSaves').onclick=async()=>{await flush({retryFailed:true});renderTable()};section.querySelector('#exportWorkoutLog').onclick=exportLog}
     status();renderTable();
   }
   try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key?.startsWith(PREFIX)){try{const event=JSON.parse(localStorage.getItem(key));event._durable=true;events.set(event.event_id,event)}catch(_){localError='A local journal record needs recovery.'}}}}catch(_){localError='Device storage is unavailable.'}
@@ -220,10 +262,10 @@
     return doomed.length;
   }
 
-  window.IronSixJournal={forget,captureSet,ensure,archive,finish,changePlan,replacePlan,timerCheckpoint,migrateUser,restore,replay,pending,all,ingest,flush,status,renderTable,installUI,exportLog,hydrated,setTransport:fn=>{transport=fn;schedule()}};
+  window.IronSixJournal={forget,captureSet,ensure,archive,finish,changePlan,replacePlan,timerCheckpoint,migrateUser,restore,replay,pending,all,ingest,flush,status,renderTable,installUI,exportLog,hydrated,setSendTimeout:ms=>{sendTimeout=Number(ms)>0?Number(ms):10000},setTransport:fn=>{transport=fn;schedule()}};
   window.addEventListener('online',schedule);
   window.addEventListener('storage',event=>{if(event.key?.startsWith(PREFIX)&&event.newValue){try{const record=JSON.parse(event.newValue);const old=events.get(record.event_id);if(!old?.sequence||record.sequence){record._durable=true;events.set(record.event_id,record);status();schedule()}}catch(_){}}});
   window.addEventListener('beforeunload',event=>{if(pending().some(e=>!e._durable)){event.preventDefault();event.returnValue='Some edits are not saved.'}});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flush()});
-  setInterval(flush,15000);
+  setInterval(()=>flush(),15000);
 })();

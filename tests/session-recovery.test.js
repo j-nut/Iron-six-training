@@ -21,7 +21,9 @@ test('unfinished edits and deliberate blanks survive a reload and reset remains 
   const a=app();await a.w.IronSixJournal.hydrated;
   const weight=a.w.document.querySelector('.weight');weight.value='42.5';weight.dispatchEvent(new a.w.Event('input'));
   const reps=a.w.document.querySelector('.reps');reps.value='';reps.dispatchEvent(new a.w.Event('input'));
-  assert.equal(a.w.IronSixJournal.all().filter(e=>e.kind==='set').length,2);
+  // Unsent revisions of one row are rewritten in place: one record holding the latest (blank) reps.
+  assert.equal(a.w.IronSixJournal.all().filter(e=>e.kind==='set').length,1);
+  assert.equal(a.w.IronSixJournal.all().at(-1).weight_text,'42.5');assert.equal(a.w.IronSixJournal.all().at(-1).reps_text,'');
   assert.equal(a.w.IronSixJournal.all().at(-1).completed,false);
   const snapshot=a.storage();a.close();
   const b=app(snapshot);await b.w.IronSixJournal.hydrated;
@@ -41,7 +43,7 @@ test('offline queue, late acknowledgements, and account boundaries retain newer 
     if(event.kind==='set'&&!added){added=true;a.run("activeUser().today['0-0'].reps='12';IronSixJournal.captureSet(activeUser(),finalWorkout(activeUser()),0,0,activeUser().today['0-0'])")}
     return {sequence:++sequence,saved_at:new Date().toISOString()};
   });
-  await j.flush();assert.equal(j.pending().length,1);assert.equal(j.pending()[0].reps_text,'12');await j.flush();assert.equal(j.pending().length,0);
+  await j.flush();assert.equal(j.pending().length,0,'an edit made during the flush is drained by the same flush');assert.equal(j.all().filter(x=>x.kind==='set').at(-1).reps_text,'12');await j.flush();assert.equal(j.pending().length,0);
   a.w.ironSixAccountScope='account-b';assert.equal(j.all().length,0);
   a.w.ironSixAccountScope='account-a';assert.equal(j.all().filter(x=>x.kind==='set').length,2);
   a.close();
