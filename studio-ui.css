@@ -1,0 +1,482 @@
+/*
+ * IRON SIX / STUDIO — mobile-first design system v3
+ * One coherent, deliberate visual language across all five destinations.
+ * This final-layer stylesheet supersedes legacy scattered declarations without
+ * remounting inputs, changing workout state, or altering the user's accent.
+ */
+body.ix-studio{
+  --ix-bg:#090d13; --ix-panel:#131b25; --ix-panel2:#192431;
+  --ix-edge:#344351; --ix-hair:rgba(185,207,229,.13);
+  --ix-type:#f6f8fd; --ix-mid:#c0ccda; --ix-dim:#8799ab;
+  --ix-radius:20px; --ix-spacing:18px;
+  --ix-shadow:0 28px 64px rgba(0,0,0,.35);
+  --bg:var(--ix-bg);--surface:var(--ix-panel);--surface2:var(--ix-panel2);
+  --line:var(--ix-edge);--text:var(--ix-type);--muted:var(--ix-mid);
+  color:var(--ix-type);
+  background:radial-gradient(ellipse 100% 400px at 80% -140px,rgba(var(--accent-rgb,46,229,128),.10),transparent 88%),#090d13!important;
+  -webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1;
+}
+body.ix-studio::before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.32;z-index:0;
+  background-image:radial-gradient(circle at center,#415469 0.55px,transparent 0.8px);
+  background-size:25px 25px;mask-image:linear-gradient(180deg,#000 0%,transparent 52%);
+}
+body.ix-studio .app{position:relative;max-width:960px;padding:24px clamp(16px,4vw,38px) calc(133px + var(--app-safe-bottom,0px))!important}
+body.ix-studio .app .topbar{
+  position:relative;min-height:62px;margin-bottom:22px!important;padding-bottom:17px!important;
+  border-bottom:1px solid var(--ix-hair)!important
+}
+body.ix-studio .app .topbar::after{
+  content:"";position:absolute;left:0;bottom:-1px;width:46px;height:2px;border-radius:2px;
+  background:var(--accent);box-shadow:0 0 24px rgba(var(--accent-rgb,46,229,128),.35)
+}
+body.ix-studio .app .brand{gap:6px}
+body.ix-studio .app .brand img{height:32px!important;max-width:148px!important;filter:drop-shadow(0 0 10px rgba(255,255,255,.055))}
+body.ix-studio .app .pr-brand-context{font-weight:760;letter-spacing:.22em;color:var(--ix-dim)}
+body.ix-studio .app #profileMenuButton{
+  background:#141e29!important;border:1px solid #3c4b5c!important;border-radius:15px!important;
+  box-shadow:0 5px 18px #0002;min-height:46px
+}
+/* Page headings: editorial contrast and a strong page identity. */
+body.ix-studio .app .pr-page-hero{
+  position:relative;overflow:hidden;isolation:isolate;
+  border:1px solid #32414d!important;border-radius:23px!important;
+  background:linear-gradient(125deg,#192635 0%,#121a25 66%,#101720 100%)!important;
+  padding:25px 27px 26px!important;
+  margin-bottom:22px!important;
+  box-shadow:0 16px 36px #0003!important
+}
+body.ix-studio .app .pr-page-hero::before{
+  content:"";position:absolute;inset:0 0 auto 0;height:3px;z-index:2;
+  background:linear-gradient(90deg,var(--accent),rgba(var(--accent-rgb,46,229,128),.22) 48%,transparent)
+}
+body.ix-studio .app .pr-page-hero::after{
+  content:"VI";position:absolute;right:-5px;bottom:-44px;z-index:-1;pointer-events:none;
+  font-family:Impact,"Arial Black",system-ui,sans-serif;
+  font-size:210px;font-weight:900;line-height:1;letter-spacing:-.12em;
+  color:rgba(var(--accent-rgb,46,229,128),.065);transform:skew(-8deg)
+}
+body.ix-studio .app .pr-page-hero .eyebrow{
+  position:relative;display:flex;align-items:center;gap:9px;
+  margin:0 0 11px;color:var(--accent)!important;
+  font-size:10px!important;font-weight:850!important;letter-spacing:.19em!important
+}
+body.ix-studio .app .pr-page-hero .eyebrow::before{
+  content:"";display:inline-block;width:7px;height:7px;flex:0 0 auto;
+  border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(var(--accent-rgb,46,229,128),.1)
+}
+body.ix-studio .app .pr-page-hero h1,
+body.ix-studio .app #today.session-prestart>.pr-page-hero h1{
+  max-width:18ch;margin:0 0 10px!important;
+  font-size:clamp(29px,7vw,46px)!important;letter-spacing:-.06em!important;
+  font-weight:820!important;line-height:1.07!important;text-wrap:balance
+}
+body.ix-studio .app .pr-page-hero p{
+  max-width:46ch;font-size:13px!important;color:#b3c2d0!important;
+  line-height:1.55!important;margin:0!important
+}
+body.ix-studio .app #today.session-prestart>.pr-page-hero{padding:30px 26px!important}
+body.ix-studio .app #today.session-prestart .pr-session-summary{
+  gap:8px!important;margin-top:21px;padding:14px 0 0!important;border-top:1px solid var(--ix-hair)!important;border-bottom:0!important
+}
+body.ix-studio .app .pr-session-summary>*,body.ix-studio .app .metrics .metric{
+  min-width:0;padding:12px!important;border-radius:12px!important;
+  border:1px solid #304050!important;background:rgba(6,12,18,.4)!important
+}
+body.ix-studio .app .pr-session-summary strong,body.ix-studio .app .metric strong{
+  font-size:clamp(18px,4vw,27px)!important;font-weight:800!important;letter-spacing:-.045em!important;
+  color:#fff!important;line-height:1.1!important
+}
+body.ix-studio .app .pr-session-summary span,body.ix-studio .app .metric span{
+  color:var(--ix-dim)!important;font-size:10px!important;margin-top:8px!important;letter-spacing:.015em
+}
+body.ix-studio .app .section{margin-top:27px!important;min-width:0}
+body.ix-studio .app .section-head{
+  display:flex;gap:12px;align-items:center!important;margin-bottom:13px!important
+}
+body.ix-studio .app .section-head h2{
+  font-size:18px!important;font-weight:820!important;letter-spacing:-.035em!important;line-height:1.2!important
+}
+body.ix-studio .app .section-head small{
+  display:block;margin-top:5px;font-size:11px!important;color:var(--ix-dim)!important;
+  line-height:1.45!important
+}
+/* A distinctive primary action language: restrained glow, crisp geometry. */
+body.ix-studio .app .btn.primary,
+body.ix-studio .app #sessionBeginBtn{
+  border-radius:13px!important;min-height:54px!important;font-weight:810!important;
+  font-size:15px!important;letter-spacing:-.01em;
+  border:1px solid rgba(255,255,255,.14)!important;
+  background:linear-gradient(135deg,var(--accent),rgba(var(--accent-rgb,46,229,128),.8))!important;
+  color:#081017!important;box-shadow:0 9px 28px rgba(var(--accent-rgb,46,229,128),.18)!important
+}
+body.ix-studio .app .btn.secondary,body.ix-studio .app .awc-action,body.ix-studio .app .iconbtn{
+  border:1px solid #435466!important;background:#1a2633!important;color:#e9eff7!important;
+  border-radius:12px!important;font-size:13px!important;font-weight:700!important
+}
+body.ix-studio .app #sessionStart{
+  display:block!important;border:1px solid #3c4d5d!important;border-radius:20px!important;
+  background:linear-gradient(150deg,rgba(var(--accent-rgb,46,229,128),.12),#1b2937 38%,#111924)!important;
+  box-shadow:0 13px 33px #0003!important;padding:22px!important
+}
+body.ix-studio .app #today.session-prestart #sessionStart h3{font-size:21px!important;font-weight:790!important;letter-spacing:-.045em}
+body.ix-studio .app #sessionStart p{color:var(--ix-mid)!important}
+body.ix-studio .app .duration-picker{gap:7px!important}
+body.ix-studio .app .duration-btn{
+  border-radius:11px!important;background:#192633!important;border-color:#3c4c5b!important;
+  font-size:13px!important;font-weight:770!important;box-shadow:inset 0 1px rgba(255,255,255,.025)
+}
+body.ix-studio .app .duration-btn.active{
+  background:rgba(var(--accent-rgb,46,229,128),.13)!important;
+  border-color:var(--accent)!important;color:var(--accent)!important;
+  box-shadow:0 0 0 1px rgba(var(--accent-rgb,46,229,128),.1)!important
+}
+body.ix-studio .app .shell-panel,body.ix-studio .app .select-wrap{
+  border:1px solid #334455!important;border-radius:16px!important;
+  background:linear-gradient(140deg,#192633,#121b26)!important;
+  box-shadow:0 8px 26px #0002!important
+}
+body.ix-studio .app .shell-toggle{min-height:60px!important;padding:14px 16px!important}
+body.ix-studio .app .shell-toggle-text strong{font-size:14px!important;font-weight:780!important}
+body.ix-studio .app .shell-toggle-text span{font-size:11px!important;color:var(--ix-dim)!important}
+body.ix-studio .app .shell-chevron{color:var(--accent)!important}
+/* Active mode is a focused instrument panel, not a tall stack of generic cards. */
+body.ix-studio .app #today.session-compact:not(.session-prestart)>.pr-page-hero{
+  padding:15px 18px!important;min-height:0;margin-bottom:13px!important;border-radius:15px!important
+}
+body.ix-studio .app #today.session-compact:not(.session-prestart)>.pr-page-hero .eyebrow{
+  margin-bottom:5px!important;font-size:9px!important
+}
+body.ix-studio .app #today.session-compact:not(.session-prestart)>.pr-page-hero h1{
+  font-size:20px!important;margin:0!important;line-height:1.18!important
+}
+body.ix-studio .app #today.session-compact:not(.session-prestart)>.pr-page-hero::after{
+  font-size:130px;right:0;bottom:-23px
+}
+body.ix-studio .app #sessionCardNav{
+  position:sticky!important;
+  top:calc(var(--app-safe-top,0px) + 5px)!important;
+  z-index:18!important;
+  display:grid!important;grid-template-columns:44px minmax(0,1fr) 46px 72px!important;
+  gap:9px!important;padding:11px 12px 17px!important;
+  margin:0 0 13px!important;border:1px solid #344454!important;
+  border-radius:16px!important;
+  background:rgba(19,28,39,.97)!important;
+  box-shadow:0 12px 26px rgba(0,0,0,.28)!important;
+  backdrop-filter:blur(14px)
+}
+body.ix-studio .app #sessionCardNav .sc-step{
+  display:flex!important;flex-direction:column;justify-content:center;
+  min-width:0!important;text-align:left!important;padding:0!important
+}
+body.ix-studio .app #sessionCardNav .sc-step strong{
+  color:var(--ix-type)!important;font-size:12px!important;
+  font-weight:790!important;line-height:1.3!important;letter-spacing:-.025em!important
+}
+body.ix-studio .app #sessionCardNav .sc-step span{
+  font-size:10px!important;color:var(--ix-dim)!important;margin-top:4px!important
+}
+body.ix-studio .app #sessionCardNav .sc-arrow,
+body.ix-studio .app #sessionCardNav .awc-overview-proxy{
+  height:43px!important;min-height:43px!important;min-width:0!important;width:100%!important;
+  background:#253241!important;border:1px solid #465669!important;
+  border-radius:11px!important;color:#f2f5fa!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.06)!important
+}
+body.ix-studio .app #sessionCardNav #scPrev{width:44px!important}
+body.ix-studio .app #sessionCardNav #scNextBtn{
+  min-width:0!important;width:72px!important;height:43px!important;
+  font-size:12px!important;font-weight:810!important;
+  background:rgba(var(--accent-rgb,46,229,128),.15)!important;color:var(--accent)!important;
+  border-color:rgba(var(--accent-rgb,46,229,128),.6)!important;
+  animation:none!important
+}
+body.ix-studio .app #sessionCardNav .sc-progress-track{
+  position:absolute;bottom:0;left:10px;right:10px;height:3px!important;
+  border-radius:4px;background:#2b3947!important
+}
+body.ix-studio .app #sessionCardNav .sc-progress-fill{height:100%;background:var(--accent)!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden){
+  position:relative;overflow:hidden;
+  border-radius:20px!important;padding:0!important;
+  border:1px solid #364b5f!important;
+  background:linear-gradient(160deg,#1e2b3b 0%,#121c28 58%,#101821 100%)!important;
+  box-shadow:0 18px 44px #0005!important
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden)::before{
+  content:"";position:absolute;inset:0 0 auto 0;height:3px;z-index:2;
+  background:linear-gradient(90deg,var(--accent),rgba(var(--accent-rgb,46,229,128),.2),transparent)
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-head{
+  width:100%!important;padding:22px 19px 17px!important;
+  margin:0!important;border:0!important
+}
+body.ix-studio .app .ix-movement-index{
+  display:block;margin-bottom:9px;
+  color:var(--accent);font-size:10px;font-weight:840;
+  letter-spacing:.16em;line-height:1.25;text-transform:uppercase
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-name-link{
+  font-size:clamp(23px,5.6vw,30px)!important;font-weight:830!important;
+  line-height:1.15!important;letter-spacing:-.048em!important;
+  max-width:24ch!important;color:#fcfdff!important;margin:0!important;
+  text-wrap:balance
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-title>span{
+  font-size:13px!important;font-weight:600!important;color:#a9bccb!important;margin-top:8px!important
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion{
+  border:1px solid rgba(var(--accent-rgb,46,229,128),.25)!important;
+  border-left:0!important;margin:18px 0 0!important;
+  padding:11px 13px!important;
+  display:flex!important;flex-direction:column!important;gap:7px!important;
+  border-radius:11px!important;
+  background:linear-gradient(90deg,rgba(var(--accent-rgb,46,229,128),.115),rgba(var(--accent-rgb,46,229,128),.035))!important
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion::before{
+  content:"COACH'S TARGET";color:#a9bac7;font-size:9px;font-weight:850;
+  letter-spacing:.14em
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion strong{
+  display:block;font-size:17px!important;font-weight:810!important;
+  color:var(--accent)!important;line-height:1.25!important
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .awc-actions{
+  margin-top:13px!important;display:flex!important;gap:8px!important
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .awc-action{
+  min-height:38px!important;min-width:75px!important;
+  padding:8px 13px!important;border-radius:10px!important;
+  background:#243244!important;border-color:#435569!important;
+  color:#dfebf5!important;font-size:12px!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.025)
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .sets{
+  position:relative;order:1;min-width:0;width:100%;
+  padding:19px 17px 18px!important;margin:0!important;
+  border-top:1px solid #364858!important;
+  background:rgba(5,12,20,.38)!important
+}
+body.ix-studio .app .ix-set-summary{
+  display:flex;align-items:center;justify-content:space-between;gap:9px;
+  padding:0 0 15px;margin:0 0 14px;
+  border-bottom:1px solid var(--ix-hair)
+}
+body.ix-studio .app .ix-set-summary b{
+  color:#e4eef7;font-size:10px;font-weight:850;letter-spacing:.14em;text-transform:uppercase
+}
+body.ix-studio .app .ix-set-summary span{
+  color:var(--ix-dim);font-size:10px;font-weight:620;white-space:nowrap
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .field-labels{
+  margin:0 0 8px!important;color:#91aabd!important;
+  font-size:10px!important;font-weight:800!important;letter-spacing:.09em!important
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row{
+  margin:0 0 9px!important;min-height:52px!important;gap:7px!important
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .field{
+  height:52px!important;min-height:52px!important;
+  color:#fff!important;background:#111e2a!important;
+  border:1px solid #3f5368!important;border-radius:11px!important;
+  font-size:18px!important;font-weight:800!important;
+  box-shadow:inset 0 2px 5px #0002!important
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .field:focus{
+  outline:none!important;border-color:var(--accent)!important;
+  box-shadow:0 0 0 2px rgba(var(--accent-rgb,46,229,128),.25)!important
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .rir{
+  font-size:12px!important;font-weight:740!important
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .done{
+  width:100%!important;min-width:40px!important;min-height:52px!important;height:52px!important;
+  border:1px solid #42586b!important;border-radius:11px!important;
+  background:#203042!important;color:#c0ceda!important
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .done.active{
+  color:#06111a!important;background:var(--accent)!important;border-color:var(--accent)!important
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-num{
+  font-size:12px!important;font-weight:760!important;color:var(--ix-dim)!important
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .awc-scrub-tip{
+  display:flex;align-items:center;gap:7px;margin:12px 0 0!important;
+  color:#8399ab!important;font-size:10px!important
+}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .awc-scrub-tip::before{
+  content:"↕";display:grid;place-items:center;width:16px;height:16px;
+  border-radius:4px;background:#25374a;color:var(--accent);font-size:12px
+}
+body.ix-studio .app .exercise .awc-form-guide{
+  order:2;margin:0!important;border:0!important;border-top:1px solid #354958!important;
+  border-radius:0!important;background:#182431!important
+}
+body.ix-studio .app .exercise .awc-form-guide>summary{
+  min-height:53px!important;padding:13px 17px!important;
+  font-size:12px!important;font-weight:790!important;color:#e4edf7!important
+}
+body.ix-studio .app .exercise .awc-form-guide>summary span{
+  margin-left:auto;font-size:11px!important;color:#8fa3b6!important
+}
+body.ix-studio .app .exercise .awc-form-guide>summary::after{font-size:21px!important}
+body.ix-studio .app .set-feedback-actions{
+  background:#142131!important;border-radius:12px!important
+}
+/* Compact utility cards: secondary actions never outshine the movement. */
+body.ix-studio .app #musicPanel.shell-panel{
+  background:#111b27!important;border-color:#2d3e4f!important;
+  box-shadow:none!important
+}
+body.ix-studio .app #musicPanel .shell-toggle{
+  padding:13px 17px!important;min-height:57px!important
+}
+body.ix-studio .app #musicPanel .shell-toggle-text strong{font-size:13px!important}
+body.ix-studio .app #musicPanel .shell-toggle-text span{font-size:10px!important}
+/* Navigation is a black-glass control rail instead of a floating billboard. */
+body.ix-studio .bottom-nav{
+  left:12px!important;right:12px!important;bottom:calc(10px + var(--app-safe-bottom,0px))!important;
+  max-width:700px!important;padding:6px!important;border-radius:18px!important;
+  border:1px solid #3a4b5c!important;
+  background:rgba(16,25,35,.97)!important;
+  box-shadow:0 12px 42px #0008!important
+}
+body.ix-studio .bottom-nav .bottom-inner{gap:2px!important}
+body.ix-studio .bottom-nav .navbtn{
+  position:relative;min-height:63px!important;
+  gap:6px!important;border-radius:12px!important;
+  color:#9db0c2!important;font-size:10px!important;font-weight:720!important;
+  transition:background .15s,color .15s!important
+}
+body.ix-studio .bottom-nav .navbtn.active{
+  background:linear-gradient(180deg,rgba(var(--accent-rgb,46,229,128),.15),rgba(var(--accent-rgb,46,229,128),.045))!important;
+  color:#f5f8fb!important
+}
+body.ix-studio .bottom-nav .navbtn.active::before{
+  content:"";position:absolute;top:3px;left:calc(50% - 12px);
+  width:24px;height:3px;border-radius:10px;background:var(--accent);
+  box-shadow:0 2px 14px rgba(var(--accent-rgb,46,229,128),.5)
+}
+body.ix-studio .bottom-nav .navbtn.active svg{color:var(--accent)}
+body.ix-studio .bottom-nav .pr-nav-icon{width:21px!important;height:21px!important}
+body.ix-studio.ix-editing-set .bottom-nav{
+  opacity:0!important;transform:translateY(130%)!important;pointer-events:none!important
+}
+/* Plan = movement agenda; history = durable training record. */
+body.ix-studio .app .pr-schedule-grid{gap:12px!important}
+body.ix-studio .app .pr-schedule-card{
+  position:relative;overflow:hidden;padding:23px!important;
+  border-radius:17px!important;border-color:#394b5d!important;
+  background:linear-gradient(135deg,#1d2b39,#111b26 74%)!important;
+  box-shadow:0 13px 34px #0003!important
+}
+body.ix-studio .app .pr-schedule-card::before{
+  content:"";position:absolute;inset:0 0 auto;height:2px;
+  background:linear-gradient(90deg,rgba(var(--accent-rgb,46,229,128),.85),transparent 82%)
+}
+body.ix-studio .app .pr-schedule-current{
+  border-color:rgba(var(--accent-rgb,46,229,128),.55)!important;
+  background:linear-gradient(140deg,rgba(var(--accent-rgb,46,229,128),.15),#1b2b37 65%,#121b26)!important
+}
+body.ix-studio .app .pr-kicker{
+  font-size:10px!important;letter-spacing:.12em;font-weight:800!important;text-transform:uppercase;color:var(--ix-dim)!important
+}
+body.ix-studio .app .pr-schedule-current .pr-kicker{color:var(--accent)!important}
+body.ix-studio .app .pr-schedule-card h3{
+  margin:16px 0 10px!important;font-size:clamp(23px,5vw,31px)!important;
+  font-weight:810!important;letter-spacing:-.055em!important
+}
+body.ix-studio .app .pr-schedule-card p{font-size:12px!important;color:#acbdcc!important}
+body.ix-studio .app :is(.pr-guide,.pr-analysis,.pr-profile-group,.profile-card){
+  border:1px solid #384b5c!important;border-radius:16px!important;
+  background:linear-gradient(155deg,#1b2937,#111a25)!important;
+  box-shadow:0 9px 23px #0002!important
+}
+body.ix-studio .app :is(.pr-guide,.pr-analysis)>summary{
+  padding:17px 19px!important;min-height:68px!important
+}
+body.ix-studio .app :is(.pr-guide,.pr-analysis)>summary strong,
+body.ix-studio .app .pr-guide-title{font-size:13px!important;color:#eaf1f8!important;font-weight:780!important}
+body.ix-studio .app .pr-guide-description,body.ix-studio .app .pr-analysis>summary small{font-size:11px!important;color:#8fa4b7!important}
+body.ix-studio .app .history-item{
+  padding:17px!important;background:#172331!important;
+  margin-bottom:9px;border:1px solid #34485b!important;border-radius:13px!important
+}
+body.ix-studio .app .history-item strong{font-weight:790!important;color:#f3f7fb}
+body.ix-studio .app .history-item span{font-size:11px!important;color:#9bafbf!important}
+body.ix-studio .app #historyList input,body.ix-studio .app #historyList select,
+body.ix-studio .app .setting input,body.ix-studio .app .setting select{
+  min-height:49px!important;background:#101c28!important;border:1px solid #40546a!important;
+  color:var(--ix-type)!important;border-radius:11px!important
+}
+body.ix-studio .app .pr-profile-group{padding:21px!important}
+body.ix-studio .app .pr-group-title{font-size:17px!important;font-weight:800!important}
+body.ix-studio .app .pr-group-copy{font-size:12px!important;line-height:1.55!important;color:#9bafc0!important}
+body.ix-studio .app .profile-card.active{border-color:var(--accent)!important}
+body.ix-studio .app .equip{
+  border-radius:11px!important;background:#142231!important;border-color:#364c60!important
+}
+body.ix-studio .app .equip:has(input:checked){
+  border-color:rgba(var(--accent-rgb,46,229,128),.65)!important;
+  background:rgba(var(--accent-rgb,46,229,128),.075)!important
+}
+/* Coach should look like a dedicated assistant workspace, not a form appended to a page. */
+body.ix-studio .app .coach-chat{
+  padding:17px!important;border:1px solid #394a5c!important;
+  border-radius:20px!important;background:linear-gradient(155deg,#182532,#111923)!important;
+  box-shadow:0 15px 37px #0003
+}
+body.ix-studio .app .coach-msg{
+  border-radius:16px!important;padding:15px 17px!important;
+  line-height:1.58!important;font-size:13px!important
+}
+body.ix-studio .app .coach-msg.assistant,
+body.ix-studio .app .coach-msg.ai{
+  border:1px solid #384e62!important;background:#223040!important
+}
+body.ix-studio .app .coach-msg.user{
+  background:rgba(var(--accent-rgb,46,229,128),.12)!important;
+  border:1px solid rgba(var(--accent-rgb,46,229,128),.24)!important
+}
+body.ix-studio .app .coach-chip{
+  min-height:43px!important;border-radius:11px!important;
+  background:#1c2b3a!important;border:1px solid #41576b!important;
+  font-size:11px!important;font-weight:700!important
+}
+body.ix-studio .app .coach-compose{
+  border-radius:16px!important;background:#121d29!important;border-color:#394d5e!important
+}
+@media(max-width:520px){
+  body.ix-studio .app{padding:15px 13px calc(119px + var(--app-safe-bottom,0px))!important}
+  body.ix-studio .app .topbar{margin-bottom:16px!important;padding-bottom:14px!important}
+  body.ix-studio .app .pr-page-hero{padding:23px 19px 24px!important}
+  body.ix-studio .app #today.session-prestart>.pr-page-hero{padding:23px 20px!important}
+  body.ix-studio .app .pr-page-hero::after{font-size:150px;bottom:-33px}
+  body.ix-studio .app .section{margin-top:22px!important}
+  body.ix-studio .app #today.session-compact:not(.session-prestart)>.pr-page-hero{
+    padding:12px 15px!important
+  }
+  body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-head{padding:20px 16px 15px!important}
+  body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .sets{padding:18px 13px 16px!important}
+  body.ix-studio .app #sessionCardNav{gap:6px!important;padding:9px 8px 15px!important}
+  body.ix-studio .app .pr-schedule-card{padding:19px!important}
+  body.ix-studio .app .pr-profile-group{padding:17px!important}
+}
+@media(max-width:375px){
+  body.ix-studio .app #sessionCardNav{grid-template-columns:38px minmax(0,1fr) 42px 63px!important;gap:5px!important}
+  body.ix-studio .app #sessionCardNav #scPrev{width:38px!important}
+  body.ix-studio .app #sessionCardNav #scNextBtn{width:63px!important}
+  body.ix-studio .app #sessionCardNav .sc-step strong{font-size:11px!important}
+  body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row,
+  body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .field-labels{
+    grid-template-columns:20px minmax(0,1fr) minmax(0,1fr) 55px 39px!important;column-gap:5px!important
+  }
+  body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .rir{font-size:11px!important}
+  body.ix-studio .app .pr-page-hero h1{font-size:29px!important}
+  body.ix-studio .bottom-nav{left:6px!important;right:6px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  body.ix-studio *,body.ix-studio *::before,body.ix-studio *::after{
+    animation-duration:.001ms!important;transition-duration:.001ms!important
+  }
+}
