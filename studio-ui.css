@@ -480,3 +480,17 @@ body.ix-studio .app .coach-compose{
     animation-duration:.001ms!important;transition-duration:.001ms!important
   }
 }
+
+/* Movement kicker wins over the generic exercise-title span rules, including
+   dynamically injected module styles that are appended after this stylesheet. */
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-title>.ix-movement-index{
+ display:block!important;margin:0 0 10px!important;
+ color:var(--accent)!important;font-size:10px!important;font-weight:850!important;
+ letter-spacing:.15em!important;line-height:1.3!important;
+}
+body.ix-studio .app .ix-active-workout-section>.section-head{
+ margin-bottom:12px!important
+}
+body.ix-studio .app #today.session-compact:not(.session-prestart) .ix-active-workout-section>.section-head{
+ display:none!important
+}
