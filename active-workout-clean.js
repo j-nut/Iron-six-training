@@ -157,6 +157,26 @@
     updateActions(card);
   }
 
+  // A full-page illustration between the sets and next workout made the card
+  // look lopsided and forced the primary controls below the fold. Keep every
+  // picture and form cue available in a semantic, keyboard-operable disclosure.
+  function foldFormGuide(card) {
+    const media=[...card.children].filter(node=>
+      node.classList?.contains('exercise-media')||
+      node.classList?.contains('exercise-media-missing'));
+    if(!media.length)return;
+    let guide=[...card.children].find(node=>node.classList?.contains('awc-form-guide'));
+    if(!guide){
+      guide=document.createElement('details');
+      guide.className='awc-form-guide';
+      const summary=document.createElement('summary');
+      summary.innerHTML='<strong>Exercise form guide</strong><span>Photos and technique</span>';
+      guide.appendChild(summary);
+      card.appendChild(guide);
+    }
+    media.forEach(node=>guide.appendChild(node));
+  }
+
   function addOverviewShortcut() {
     const nav = document.getElementById('sessionCardNav');
     const original = document.getElementById('scOverview');
@@ -179,7 +199,7 @@
       const list = document.getElementById('exerciseList');
       if (!list) return;
       const cards = [...list.querySelectorAll('[data-exercise-index]')];
-      cards.forEach(addActions);
+      cards.forEach(card=>{ addActions(card); foldFormGuide(card); });
       const shown = cards.filter(visible);
       const state = window.IronSixSessionCards?.state();
       const circuit = typeof activeUser === 'function' && activeUser()?.trainingMode === 'circuit';
