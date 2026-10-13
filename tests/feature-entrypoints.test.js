@@ -6,7 +6,7 @@ const required = [
 ];
 for (const page of ['index.html','live.html']) {
   const html=fs.readFileSync(page,'utf8');
-  assert(html.includes('core.js?v=20'));assert(html.includes('assets/brand/logo-horizontal.png'),`${page} must carry the brand lockup`);assert(html.includes('assets/brand/icon-32.png'),`${page} must declare a favicon`);assert(html.includes('engine.js?v=18'));assert(html.includes('ui1.js?v=18'));assert(html.includes('ui3.js?v=18'));assert(html.includes('ui2.js?v=18'));
+  assert(html.includes('core.js?v=20'));assert(html.includes('assets/brand/logo-horizontal.png'),`${page} must carry the brand lockup`);assert(html.includes('assets/brand/icon-32.png'),`${page} must declare a favicon`);assert(html.includes('engine.js?v=20'));assert(html.includes('ui1.js?v=19'));assert(html.includes('ui3.js?v=19'));assert(html.includes('ui2.js?v=18'));
   assert(html.indexOf('history-explorer.js')>html.indexOf('ui2.js') && html.indexOf('history-explorer.js')<html.indexOf('ui3.js'));
   assert(html.indexOf('exercise-media-catalog.js?v=1')<html.indexOf('exercise-media.js?'));
   assert(html.indexOf('exercise-media.js?')<html.indexOf('ui2.js?v=18'));
@@ -39,5 +39,5 @@ assert(manager.includes('refreshEquipmentExercises'),'the picker must trigger ex
 assert(manager.includes('Finish or reset the current workout before changing equipment'),'the picker must keep the mid-workout guard');
 assert(fs.readFileSync('coach.js','utf8').includes('equipmentCoverage'),'the coach must receive measured equipment coverage');
 
-for(const page of ['index.html','live.html']){const html=fs.readFileSync(page,'utf8');assert(html.indexOf('workout-difficulty.js?v=3')>html.indexOf('core.js?v=20'));assert(html.indexOf('workout-difficulty.js?v=3')<html.indexOf('engine.js?v=18'));assert(html.includes('session-planner.js?v=5'));assert(html.includes('circuit-player.js?v=4'));}
+for(const page of ['index.html','live.html']){const html=fs.readFileSync(page,'utf8');assert(html.indexOf('workout-difficulty.js?v=3')>html.indexOf('core.js?v=20'));assert(html.indexOf('workout-difficulty.js?v=3')<html.indexOf('engine.js?v=20'));assert(html.includes('session-planner.js?v=5'));assert(html.includes('circuit-player.js?v=4'));}
 assert(cloudHistory.indexOf('workout-difficulty-ui.js')>cloudHistory.indexOf('bodyweight-load-fix.js'),'difficulty load adjustment installs after runtime load wrappers');

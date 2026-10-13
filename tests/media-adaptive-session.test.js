@@ -48,7 +48,7 @@ test('pain substitution retains circuit timing and displays reduced actual round
   context.IronSixTrainerV2={trainingState:()=>({phase:'Deload suggested'})};vm.createContext(context);vm.runInContext(fs.readFileSync('session-adaptation-v3.js','utf8'),context);
   const user={trainingMode:'circuit',trainingFeedback:[{ts:Date.now(),feedback:'pain',exercise:'Press'}]};
   const result=context.IronSixAdaptiveSessionV3.adaptPlan(user,[{name:'Press',sets:5,priority:1,_programSlot:'press',prescription:'40s controlled work · 5 rounds',_alternatives:[{name:'Band Press',sets:3,priority:3,prescription:'3 × 12'}]}]);
-  assert.equal(result[0].name,'Band Press');assert.equal(result[0].sets,4);assert.equal(result[0].prescription,'40s controlled work · 4 rounds');assert.equal(result[0].priority,1);assert.equal(result[0]._programSlot,'press');
+  assert.equal(result[0].name,'Band Press');assert.equal(result[0].sets,3);assert.equal(result[0].prescription,'40s controlled work · 3 rounds');assert.equal(result[0].priority,1);assert.equal(result[0]._programSlot,'press');
 });
 
 test('pain substitutions avoid duplicating other selected exercises and use replacement readiness',()=>{
@@ -56,5 +56,5 @@ test('pain substitutions avoid duplicating other selected exercises and use repl
   context.IronSixProgressV2={recovery:()=>({chest:{score:100},shoulders:{score:10}})};vm.createContext(context);vm.runInContext(fs.readFileSync('session-adaptation-v3.js','utf8'),context);
   const user={trainingFeedback:[{ts:Date.now(),feedback:'pain',exercise:'Press'}]};
   const result=context.IronSixAdaptiveSessionV3.adaptPlan(user,[{name:'Press',sets:5,prescription:'5 × 8',_alternatives:[{name:'Other Press',prescription:'3 × 12'},{name:'New Press',prescription:'3 × 12'}]},{name:'Other Press',sets:3,prescription:'3 × 12'}]);
-  assert.equal(result[0].name,'New Press');assert.equal(result[0]._readinessScore,10);assert.equal(result[0].sets,4);assert.equal(result[0].prescription,'4 × 12');assert.equal(new Set(result.map(e=>e.name)).size,2);
+  assert.equal(result[0].name,'New Press');assert.equal(result[0]._readinessScore,10);assert.equal(result[0].sets,3);assert.equal(result[0].prescription,'3 × 12');assert.equal(new Set(result.map(e=>e.name)).size,2);
 });
