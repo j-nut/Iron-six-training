@@ -584,3 +584,11 @@ body .app .profile-card{
   body .app :is(.btn,.duration-btn,.iconbtn,.awc-action,.shell-toggle,.navbtn),
   body .app #sessionCardNav .sc-progress-fill{transition:none!important;animation:none!important}
 }
+
+
+/* Numeric keyboard mode: screen real estate belongs to editing, not tabs. */
+body.ix-editing-set .bottom-nav{
+  opacity:0!important;pointer-events:none!important;
+  transform:translateY(130%)!important
+}
+body.ix-editing-set .app{padding-bottom:calc(34px + var(--app-safe-bottom,0px))!important}
