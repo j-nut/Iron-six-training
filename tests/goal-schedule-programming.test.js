@@ -46,14 +46,15 @@ test('normalizeUser defaults and sanitises the shared profile contract',()=>{
     return {legacy:{goal:legacy.goal,days:legacy.daysPerWeek,refs:legacy.strengthRefs,lim:legacy.limitations,prefs:legacy.preferences,onb:legacy.onboarding,key:legacy.program.currentWorkoutKey,exp:legacy.program.exposures,history:legacy.history.length},
       messy:{goal:messy.goal,days:messy.daysPerWeek,refs:messy.strengthRefs,lim:messy.limitations,prefs:messy.preferences,onb:messy.onboarding},low:low.daysPerWeek,three:[three.daysPerWeek,three.goal],
       fresh:{goal:fresh.goal,days:fresh.daysPerWeek,lim:fresh.limitations,onb:fresh.onboarding}}`);
-  assert.deepEqual(out.legacy,{goal:'muscle',days:6,refs:{},lim:[],prefs:{music:true,camera:true,voice:true,sounds:true},onb:{version:1,completedAt:null,optionalSkipped:[]},key:'pull_b',exp:{pull_b:3},history:1});
-  assert.equal(out.messy.goal,'muscle');assert.equal(out.messy.days,6);
+  // Unanswered onboarding fields stay empty in storage (readers apply the defaults), so setup can tell what was never asked.
+  assert.deepEqual(out.legacy,{goal:null,days:null,refs:null,lim:null,prefs:{},onb:null,key:'pull_b',exp:{pull_b:3},history:1});
+  assert.equal(out.messy.goal,null);assert.equal(out.messy.days,6);
   assert.deepEqual(out.messy.refs,{squat:{weight:225,reps:5,equipment:'barbell'},row:{weight:60,reps:30,equipment:'dumbbell'}});
   assert.deepEqual(out.messy.lim,['shoulder','knee']);
-  assert.deepEqual(out.messy.prefs,{music:false,camera:true,voice:true,sounds:true});
+  assert.equal(out.messy.prefs.music,false);assert.equal(Object.values(out.messy.prefs).every(v=>typeof v==='boolean'),true);
   assert.deepEqual(out.messy.onb,{version:1,completedAt:null,optionalSkipped:['strengthRefs']});
   assert.equal(out.low,2);assert.deepEqual(out.three,[3,'strength']);
-  assert.deepEqual(out.fresh,{goal:'muscle',days:6,lim:[],onb:{version:1,completedAt:null,optionalSkipped:[]}});
+  assert.deepEqual(out.fresh,{goal:null,days:null,lim:null,onb:null});
 });
 
 test('each frequency uses an honest split and covers every major muscle each week',()=>{
