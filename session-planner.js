@@ -1,25 +1,60 @@
 /* Shared deterministic budgets: the timer and exercise cards use the same plan. */
 const CIRCUIT_PACES={steady:{work:30,rest:30,label:'Steady · 30s / 30s'},balanced:{work:40,rest:20,label:'Strong · 40s / 20s'},intense:{work:45,rest:20,label:'Intense · 45s / 20s'}};
 function circuitPace(u){return (Number(u.readiness?.energy||4)<=2)?CIRCUIT_PACES.steady:(CIRCUIT_PACES[u.circuitPace]||CIRCUIT_PACES.balanced)}
-function circuitSuitable(ex){return !/barbell|deadlift|good morning|meadows|ab wheel|ab roller|superset/i.test(ex.name)}
+function circuitSuitable(ex){
+  // Exclude by equipment first (loaded barbell/rack/landmine work is not a safe 40 s station), then by technical movement.
+  const gear=(ex.requires||[]).map(String);
+  if(gear.includes('barbell')||gear.includes('rack')||gear.includes('landmine'))return false;
+  return !/barbell|landmine|pendlay|good morning|meadows|ab wheel|ab roller|superset|^(?:conventional |sumo )?deadlift$/i.test(ex.name);
+}
+const UNILATERAL_PATTERN=/each (?:leg|arm|side)|each$|one-arm|single-leg|split squat|lunge/i;
+function unilateralByName(ex){return UNILATERAL_PATTERN.test(String(ex.prescription||'')+' '+String(ex.name||''))}
+// Circuit prescriptions are rewritten ("40s controlled work · 3 rounds"), so the flag is stored at planning time.
+function isUnilateral(ex){return typeof ex._unilateral==='boolean'?ex._unilateral:unilateralByName(ex)}
 function circuitExercise(u,ex,used=new Set()){
   const pool=[ex,...(ex._alternatives||[])].filter(x=>exerciseAvailable(u,x)&&circuitSuitable(x)&&!used.has(String(x.name).toLowerCase()));
-  const chosen=pool[0];return chosen?{...ex,...chosen,sets:ex.sets,priority:ex.priority,_programSlot:ex._programSlot,_anchor:ex._anchor,_alternatives:pool.filter(x=>x.name!==chosen.name)}:null;
+  const chosen=pool[0];return chosen?{...ex,...chosen,sets:ex.sets,priority:ex.priority,_programSlot:ex._programSlot,_anchor:ex._anchor,_unilateral:unilateralByName(chosen),_alternatives:pool.filter(x=>x.name!==chosen.name)}:null;
 }
 function sessionWarmup(u){return Number(u.workoutMinutes)<=20?120:180}
-function traditionalSetSeconds(ex){
-  const both=/each (?:leg|arm|side)|each$|one-arm|single-leg|split squat|lunge/i.test(ex.prescription+' '+ex.name),superset=/superset| \+ /i.test(ex.prescription+' '+ex.name);
-  const work=superset?90:both?90:45;
-  const compound=['bench','chest_press','overhead_press','squat','hinge','split_squat','pullup','row'].includes(ex.seedKey);
-  return work+((ex.priority||2)===1?150:compound?120:60);
+/* Rest scales with the time the user has: a 15-minute session cannot afford 2.5 minutes between sets. */
+function restProfile(minutes){
+  if(minutes<=20)return {main:70,compound:45,accessory:40,setup:20,work:40};
+  if(minutes<=30)return {main:100,compound:70,accessory:50,setup:35,work:45};
+  if(minutes<60)return {main:135,compound:90,accessory:60,setup:45,work:45};
+  return {main:150,compound:120,accessory:60,setup:45,work:45};
 }
+function traditionalSetSeconds(ex,minutes=60){
+  const prof=restProfile(minutes),superset=/superset| + /i.test(ex.prescription+' '+ex.name);
+  // Unilateral and superset sets work both sides/movements before the rest.
+  const work=(superset||isUnilateral(ex))?prof.work*2:prof.work;
+  const compound=['bench','chest_press','overhead_press','squat','hinge','split_squat','pullup','row'].includes(ex.seedKey);
+  return work+((ex.priority||2)===1?prof.main:compound?prof.compound:prof.accessory);
+}
+/* Display-only ramp-up sets before heavy barbell/dumbbell main lifts (traditional mode). They are never
+ * logged as working sets; the UI shows them as a warm-up line. Their time overlaps the general warm-up. */
+const RAMP_SET_SECONDS=35;
+function rampSpec(u,plan){
+  if(u.trainingMode==='circuit')return plan.map(()=>null);
+  const short=(Number(u.workoutMinutes)||60)<=20;let first=true;
+  return plan.map(e=>{
+    if(e.priority!==1||!/barbell|dumbbell/i.test((e.requires||[]).join(' ')+' '+e.name))return null;
+    const sets=first
+      ?(short?[{pct:60,reps:5},{pct:80,reps:3}]:[{pct:50,reps:8},{pct:70,reps:5},{pct:85,reps:3}])
+      :(short?[{pct:75,reps:3}]:[{pct:60,reps:5},{pct:80,reps:3}]);
+    first=false;return sets;
+  });
+}
+function rampText(ramp){return ramp.map(r=>r.reps+' × '+r.pct+'%').join(' · ')+' of working weight (warm-up, not logged)'}
 function sessionSeconds(u,plan){
-  const base=sessionWarmup(u)+60;
+  const minutes=Number(u.workoutMinutes)||60;
   if(u.trainingMode==='circuit'){
-    const pace=circuitPace(u),rounds=Math.max(0,...plan.map(e=>e.sets));
-    return base+plan.reduce((n,e)=>n+e.sets*(pace.work+Math.max(20,pace.rest)),0)+Math.max(0,rounds-1)*45;
+    const pace=circuitPace(u),rounds=Math.max(0,...plan.map(e=>e.sets)),base=sessionWarmup(u)+60;
+    return base+plan.reduce((n,e)=>n+e.sets*((isUnilateral(e)?2:1)*pace.work+Math.max(20,pace.rest)),0)+Math.max(0,rounds-1)*45;
   }
-  return base+plan.reduce((n,e)=>n+45+e.sets*traditionalSetSeconds(e),0);
+  const prof=restProfile(minutes),rampSec=rampSpec(u,plan).reduce((n,r)=>n+(r?r.length*RAMP_SET_SECONDS:0),0);
+  // Ramp sets double as warm-up: a minimum general block (60 s) plus the ramps, never less than the standard warm-up.
+  const pre=Math.max(sessionWarmup(u),60+rampSec);
+  return pre+60+plan.reduce((n,e)=>n+prof.setup+e.sets*traditionalSetSeconds(e,minutes),0);
 }
 /* Rolling completed-work coverage for short sessions.
  * Floors are direct completed sets expected over COVERAGE_WINDOW completed sessions (1.5 rotation
@@ -47,10 +82,8 @@ function rollingCoverage(u,windowSize=COVERAGE_WINDOW){
 function budgetSessionWorkout(u,workout){
   const circuit=u.trainingMode==='circuit',light=window.IronSixDifficulty?.effectiveFor(u)==='light',minutes=Number(u.workoutMinutes||60),budget=Math.max(600,Math.min(7200,minutes*60));
   const used=new Set();
-  let pool=workout.filter(e=>e&&exerciseAvailable(u,e)).map(e=>{const selected=circuit?circuitExercise(u,e,used):{...e};if(selected)used.add(String(selected.name).toLowerCase());return selected}).filter(Boolean);
+  let pool=workout.filter(e=>e&&exerciseAvailable(u,e)).map(e=>{const selected=circuit?circuitExercise(u,e,used):{...e,_unilateral:unilateralByName(e)};if(selected)used.add(String(selected.name).toLowerCase());return selected}).filter(Boolean);
   const coverage=muscleCoverage(u),due=new Set(MUSCLE_GROUPS.filter(m=>coverage.last[m]===null||coverage.last[m]>=3));
-  const traditionalCount=minutes<=10?2:minutes<=20?3:minutes<=30?4:minutes<60?Math.min(4,pool.length):pool.length;
-  const count=circuit?Math.min(4,pool.length):Math.min(traditionalCount,pool.length);
   const exposure=Number(u.program?.exposures?.[u.program?.currentWorkoutKey])||0;
   const specificity=e=>e.seedKey==='calves'?['calves']:e.seedKey==='core'?['core']:e.seedKey==='ham_curl'?['hamstrings']:exerciseMuscles(e);
   const recentDose=e=>(u.history||[]).slice(0,6).reduce((n,h)=>n+(h.details||[]).reduce((v,d)=>v+(d.seedKey===e.seedKey?(d.sets||[]).filter(s=>s.done===true).length:0),0),0);
@@ -58,6 +91,25 @@ function budgetSessionWorkout(u,workout){
   const deficitRows=window.IronSixProgramV3?.deficits?.(u)||[],deficitMap=new Map(deficitRows.map(x=>[x.key,x]));
   const programNeed=e=>{const row=deficitMap.get(programCategory(e));return row?Math.max(0,Math.min(2,row.deficit/Math.max(1,row.expected))):0};
   pool=pool.map((e,i)=>({...e,_position:i}));
+  // Long sessions add real work instead of repeating the same plan: a second variation of the most
+  // under-dosed accessory slots (capped at 3 sets each), plus extra sets via setsBonus below.
+  const extraN=circuit?(minutes>=90?2:minutes>=60?1:0):(minutes>=105?3:minutes>=90?2:minutes>=75?1:0);
+  if(extraN){
+    const names=new Set(pool.map(e=>String(e.name).toLowerCase())),extras=[],covEarly=rollingCoverage(u);
+    for(const e of pool){
+      if(e.priority===1)continue;
+      const alt=(e._alternatives||[]).find(a=>exerciseAvailable(u,a)&&(!circuit||circuitSuitable(a))&&!names.has(String(a.name).toLowerCase()));
+      if(alt){names.add(String(alt.name).toLowerCase());extras.push({...alt,sets:Math.min(3,Math.max(1,e.sets)),priority:3,_programSlot:(e._programSlot||'x')+'_extra',_extra:true,_anchor:false,_unilateral:unilateralByName(alt),_alternatives:[],_position:e._position+.5})}
+    }
+    extras.sort((x,y)=>covEarly.need(programCategoryOf(y.seedKey))-covEarly.need(programCategoryOf(x.seedKey))||x._position-y._position);
+    // No other slot may swap into an extra's movement (a pain swap or difficulty replan would duplicate it).
+    const chosenExtras=extras.slice(0,extraN),taken=new Set(chosenExtras.map(x=>x.name));
+    pool=[...pool.map(e=>({...e,_alternatives:(e._alternatives||[]).filter(a=>!taken.has(a.name))})),...chosenExtras];
+  }
+  const traditionalCount=minutes<=10?2:minutes<=20?3:minutes<=30?4:pool.length;
+  const circuitCount=minutes<=30?4:minutes<60?5:pool.length;
+  const count=Math.min(circuit?circuitCount:traditionalCount,pool.length);
+  const setsBonus=e=>circuit||light||e._extra?0:e.priority===1?(minutes>=90?2:minutes>=45?1:0):(minutes>=105?3:minutes>=60?2:minutes>=45?1:0);
   const anchors=pool.filter(e=>e.priority===1),accessories=pool.filter(e=>e.priority!==1);
   // Short and 45-minute plans retain main work plus the most useful accessories. Completed
   // rolling-program history is a priority signal: recurring omissions rise, but we do not add
@@ -110,8 +162,8 @@ function budgetSessionWorkout(u,workout){
   for(const e of candidates){
     if(selected.length>=count)break;
     // Short-session small accessories are micro-doses (max 2 sets); missed volume is not crammed into one day.
-    const baseMax=Math.max(1,e.sets),volumeBonus=!light&&!circuit&&minutes>=60&&e.priority!==1?1:0,microCap=!circuit&&minutes<=30&&isSmall(e)?2:Infinity;
-    const next=[...selected,{...e,sets:1,_max:Math.min(microCap,baseMax+volumeBonus),_rank:selected.length}];
+    const baseMax=Math.max(1,e.sets),microCap=!circuit&&minutes<=30&&isSmall(e)?2:Infinity;
+    const next=[...selected,{...e,sets:1,_max:Math.min(6,microCap,baseMax+setsBonus(e)),_rank:selected.length}];
     if(!selected.length||sessionSeconds(u,next)<=budget)selected=next;
   }
   selected.sort((a,b)=>a._position-b._position);
@@ -127,15 +179,25 @@ function budgetSessionWorkout(u,workout){
     }
   }
   if(circuit){
-    const maxRounds=Number(u.readiness?.energy||4)<=2?4:light?6:8;
-    while(selected.length&&selected[0].sets<maxRounds){const next=selected.map(e=>({...e,sets:e.sets+1}));if(sessionSeconds(u,next)>budget)break;selected=next}
-    // Use the remaining short-session budget for a final partial round.
-    if(minutes<=30)for(const e of selected){if(e.sets>=maxRounds)continue;e.sets++;if(sessionSeconds(u,selected)>budget)e.sets--}
+    // Rounds are capped per station (main 5, accessory 4, core 3): eight rounds of every station piled
+    // 16 sets onto one pattern. Unused time is reported honestly rather than filled with junk volume.
+    const maxRounds=Number(u.readiness?.energy||4)<=2?4:light?6:8,capOf=e=>Math.min(maxRounds,(e.priority===1?5:e.seedKey==='core'?3:4)-(light?1:0));
+    for(;;){
+      const next=selected.map(e=>e.sets<capOf(e)?{...e,sets:e.sets+1}:e);
+      if(next.every((e,i)=>e.sets===selected[i].sets)||sessionSeconds(u,next)>budget)break;
+      selected=next;
+    }
+    // Use the remaining budget for a final partial round.
+    for(const e of selected){if(e.sets>=capOf(e))continue;e.sets++;if(sessionSeconds(u,selected)>budget)e.sets--}
   }else{
+    // Per-session cap of 10 direct sets per movement category keeps long sessions sensible.
+    const catSets=cat=>cat?selected.filter(x=>programCategory(x)===cat).reduce((n,x)=>n+x.sets,0):0;
     let grew=true;
-    while(grew){grew=false;for(const e of selected){if(e.sets>=e._max)continue;e.sets++;if(sessionSeconds(u,selected)>budget)e.sets--;else grew=true}}
+    while(grew){grew=false;for(const e of selected){if(e.sets>=e._max||(programCategory(e)&&catSets(programCategory(e))>=10))continue;e.sets++;if(sessionSeconds(u,selected)>budget)e.sets--;else grew=true}}
   }
-  return selected.map(({_position,_max,_rank,...e})=>({...e,prescription:circuit?circuitPace(u).work+'s controlled work · '+e.sets+' rounds':String(e.prescription).replace(/^\d+\s*×/,e.sets+' ×')}));
+  const result=selected.map(({_position,_max,_rank,...e})=>({...e,prescription:circuit?circuitPace(u).work+'s controlled work · '+e.sets+' rounds':String(e.prescription).replace(/^\d+\s*×/,e.sets+' ×')}));
+  const ramps=rampSpec(u,result);
+  return result.map((e,i)=>ramps[i]?{...e,_ramp:ramps[i],_rampText:rampText(ramps[i])}:e);
 }
 function circuitTimeline(u,plan){
   const pace=circuitPace(u),steps=[{kind:'warmup',seconds:sessionWarmup(u),title:'Warm up',cue:'Easy movement, then light practice reps of today’s exercises.'}];
@@ -143,7 +205,8 @@ function circuitTimeline(u,plan){
   for(let round=0;round<rounds;round++){
     plan.forEach((ex,index)=>{if(round>=ex.sets)return;
       const light=window.IronSixDifficulty?.effectiveFor(u)==='light';
-      steps.push({kind:'work',seconds:pace.work,title:ex.name,cue:light?'Controlled reps. Leave about 4 reps in reserve.':'Controlled reps. Leave at least 2 reps in reserve.',index,setIndex:round,round:round+1,rounds});
+      const both=isUnilateral(ex),reserve=light?'Controlled reps. Leave about 4 reps in reserve.':'Controlled reps. Leave at least 2 reps in reserve.';
+      steps.push({kind:'work',seconds:pace.work*(both?2:1),title:ex.name,cue:both?'Work one side for the first half, then switch sides. '+reserve:reserve,index,setIndex:round,round:round+1,rounds});
       steps.push({kind:'rest',seconds:Math.max(20,pace.rest),title:'Rest & change stations',cue:'Breathe, log your reps, and prepare the next exercise.',index,setIndex:round,round:round+1,rounds});
     });
     if(round<rounds-1)steps.push({kind:'roundRest',seconds:45,title:'Round recovery',cue:'Recover before the next round.',round:round+1,rounds});
