@@ -253,7 +253,7 @@
 
     const current = perExercise[index];
     const step = $('scStep'), nextLabel = $('scNext');
-    if (step) step.textContent = `Exercise ${index + 1} of ${workout.length} · ${current.complete}/${current.sets} sets`;
+    if (step) step.innerHTML = `<span class="ix-step-title">Exercise ${index + 1} of ${workout.length}</span><span class="ix-step-count">${current.complete}/${current.sets} sets</span>`;
     if (nextLabel) nextLabel.textContent = index + 1 < workout.length ? `Up next: ${workout[index + 1].name}` : 'Up next: Review & finish';
     const prev = $('scPrev'), next = $('scNextBtn');
     if (prev) prev.disabled = index === 0;
