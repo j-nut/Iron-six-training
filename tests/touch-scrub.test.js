@@ -96,6 +96,7 @@ test('quick tap focuses only upon release; reps scrub saves once',()=>{
     assert.notEqual(d.activeElement,input,'keyboard cannot open on touch down');
     pointer(w,overlay,'pointerup',210);
     assert.strictEqual(d.activeElement,input,'tap release activates ordinary typing');
+    assert(d.body.classList.contains('ix-editing-set'),'bottom dock retracts while keyboard editing');
     input.blur();
     const start=Number(input.value||1);
     pointer(w,overlay,'pointerdown',210);
@@ -126,5 +127,22 @@ test('a cancelled or moved-before-hold gesture neither focuses input nor changes
     pointer(w,overlay,'pointercancel',200);
     assert.notEqual(d.activeElement,input);
     assert.equal(d.querySelector('.awc-scrub-value'),null);
+  }finally{a.close()}
+});
+
+test('editing mode retracts and restores the floating dock, unlike a hold',()=>{
+  const a=app();
+  try{
+    const w=a.w,d=w.document,{input,overlay}=field(d,'reps');
+    w.setTimeout=(fn,ms)=>{if(ms===0)fn();return 404};
+    pointer(w,overlay,'pointerdown',220);
+    assert(!d.body.classList.contains('ix-editing-set'));
+    pointer(w,overlay,'pointerup',220);
+    assert(d.body.classList.contains('ix-editing-set'));
+    input.blur();
+    assert(!d.body.classList.contains('ix-editing-set'));
+    const css=fs.readFileSync('workout-polish.css','utf8');
+    assert(css.includes('body.ix-editing-set .bottom-nav'));
+    assert(css.includes('pointer-events:none!important'));
   }finally{a.close()}
 });
