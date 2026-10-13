@@ -79,3 +79,16 @@ test('complete rolling cycles train all major patterns without unsafe equipment 
     }
   }
 });
+
+test('replanning clears current accessory choices while preserving benchmark lifts',()=>{
+  const result=harness()(`const u=makeUser();u.program.currentWorkoutKey='pull_a';u.program.selectionCache={
+      'v5:pull_a:curl_long:0':'Barbell Curl',
+      'v5:pull_a:vertical:block0':'Pull-Up',
+      'v5:pull_b:hammer:0':'Dumbbell Hammer Curl',
+      'pull_a:0:Elbow flexion':'Dumbbell Curl'
+    };clearCurrentSelectionCache(u);return u.program.selectionCache;`);
+  assert.equal(result['v5:pull_a:curl_long:0'],undefined);
+  assert.equal(result['pull_a:0:Elbow flexion'],undefined);
+  assert.equal(result['v5:pull_a:vertical:block0'],'Pull-Up');
+  assert.equal(result['v5:pull_b:hammer:0'],'Dumbbell Hammer Curl');
+});
