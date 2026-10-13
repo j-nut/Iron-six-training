@@ -177,6 +177,107 @@
     media.forEach(node=>guide.appendChild(node));
   }
 
+  // A tap still opens the keyboard. On touchscreens, a deliberate hold
+  // (380 ms) turns the same field into a vertical precision scrubber:
+  // upward increases, downward decreases. Do not write a set or queue a
+  // cloud sync for every pixel: commit one normal input event on release.
+  function scrubValue(raw, steps, kind) {
+    const weight=kind==='weight';
+    const starting=Number.parseFloat(raw);
+    const base=Number.isFinite(starting)?starting:(weight?0:1);
+    const increment=weight?2.5:1;
+    const floor=weight?0:1;
+    const ceiling=weight?2000:200;
+    return Math.max(floor,Math.min(ceiling,Math.round((base+steps*increment)*10)/10));
+  }
+
+  function enableScrub(card) {
+    const sets=card.querySelector('.sets');
+    if(!sets)return;
+    if(!sets.querySelector('.awc-scrub-tip')){
+      const tip=document.createElement('p');
+      tip.className='awc-scrub-tip';
+      tip.textContent='Hold weight or reps, then slide up or down to adjust · Tap to type';
+      sets.appendChild(tip);
+    }
+    for(const input of card.querySelectorAll('.set-row input.weight, .set-row input.reps')){
+      if(input.dataset.ixScrubReady)return /* each newly rebuilt card is wired once */;
+      input.dataset.ixScrubReady='true';
+      const kind=input.classList.contains('weight')?'weight':'reps';
+      input.setAttribute('aria-description',
+        'Tap to type, or touch and hold then slide upward to increase or downward to decrease.');
+      let drag=null,ignoreClickUntil=0;
+      const cleanup=()=>{
+        if(!drag)return;
+        clearTimeout(drag.timer);
+        drag.bubble?.remove();
+        input.classList.remove('awc-scrubbing');
+        try{input.releasePointerCapture?.(drag.id)}catch(_){}
+        drag=null;
+      };
+      input.addEventListener('pointerdown',event=>{
+        if(event.pointerType!=='touch'||event.isPrimary===false||drag)return;
+        if(event.cancelable)event.preventDefault(); // don't raise the keyboard for a hold
+        const next={id:event.pointerId,startY:event.clientY,startX:event.clientX,
+          initial:input.value,changed:false,armed:false,moved:false,bubble:null,timer:null};
+        drag=next;
+        try{input.setPointerCapture?.(event.pointerId)}catch(_){}
+        next.timer=setTimeout(()=>{
+          if(drag!==next||next.moved)return;
+          next.armed=true;input.blur();input.classList.add('awc-scrubbing');
+          const bubble=document.createElement('output');bubble.className='awc-scrub-value';
+          bubble.setAttribute('role','status');
+          bubble.textContent=(kind==='weight'?'Weight ':'Reps ')+(input.value||'—')+(kind==='weight'?' lb':'');
+          const rect=input.getBoundingClientRect();
+          bubble.style.left=Math.max(58,Math.min(window.innerWidth-58,rect.left+rect.width/2))+'px';
+          bubble.style.top=Math.max(64,rect.top-56)+'px';
+          document.body.appendChild(bubble);next.bubble=bubble;
+          if(window.navigator?.vibrate)try{window.navigator.vibrate(8)}catch(_){}
+        },380);
+      },{passive:false});
+      input.addEventListener('pointermove',event=>{
+        if(!drag||event.pointerId!==drag.id)return;
+        if(!drag.armed){
+          if(Math.hypot(event.clientY-drag.startY,event.clientX-drag.startX)>12){
+            drag.moved=true;clearTimeout(drag.timer);
+          }
+          return;
+        }
+        if(event.cancelable)event.preventDefault();
+        const steps=Math.round((drag.startY-event.clientY)/20);
+        const next=String(scrubValue(drag.initial,steps,kind));
+        if(input.value!==next){
+          input.value=next;drag.changed=input.value!==drag.initial;
+          if(drag.bubble)drag.bubble.textContent=
+            (kind==='weight'?'Weight ':'Reps ')+next+(kind==='weight'?' lb':'');
+        }
+      },{passive:false});
+      function endScrub(event,cancelled=false){
+        if(!drag||event.pointerId!==drag.id)return;
+        const wasArmed=drag.armed,wasMoved=drag.moved,changed=drag.changed;
+        cleanup();
+        if(wasArmed){
+          ignoreClickUntil=Date.now()+450;
+          if(changed)input.dispatchEvent(new Event('input',{bubbles:true}));
+        }else if(!cancelled&&!wasMoved){
+          // On Android this is a genuine touch-release user action, so the
+          // numeric keyboard still opens for normal deliberate taps.
+          input.focus();
+        }
+      }
+      input.addEventListener('pointerup',event=>endScrub(event));
+      input.addEventListener('pointercancel',event=>endScrub(event,true));
+      input.addEventListener('click',event=>{
+        if(Date.now()<ignoreClickUntil){
+          event.preventDefault();event.stopImmediatePropagation();input.blur();
+        }
+      });
+      input.addEventListener('contextmenu',event=>{
+        if(drag?.armed){event.preventDefault()}
+      });
+    }
+  }
+
   function addOverviewShortcut() {
     const nav = document.getElementById('sessionCardNav');
     const original = document.getElementById('scOverview');
@@ -199,7 +300,7 @@
       const list = document.getElementById('exerciseList');
       if (!list) return;
       const cards = [...list.querySelectorAll('[data-exercise-index]')];
-      cards.forEach(card=>{ addActions(card); foldFormGuide(card); });
+      cards.forEach(card=>{ addActions(card); foldFormGuide(card); enableScrub(card); });
       const shown = cards.filter(visible);
       const state = window.IronSixSessionCards?.state();
       const circuit = typeof activeUser === 'function' && activeUser()?.trainingMode === 'circuit';
@@ -231,5 +332,5 @@
 
   scheduleApply();
   addEventListener('load', apply);
-  window.IronSixActiveWorkoutClean = { apply, version: 6, observer: false, layout: 'compact-control-surface' };
+  window.IronSixActiveWorkoutClean = { apply, scrubValue, version: 7, observer: false, layout: 'premium-mobile-workout' };
 })();
