@@ -338,6 +338,19 @@
     window.renderAll = wrapped;
   }
 
+  // When an actual number field is being edited, remove the floating dock
+  // from the reduced Android keyboard viewport. Scrubbing never focuses the
+  // field, so the dock stays in place for the hold gesture.
+  const isSetInput=el=>el?.matches?.('.set-row input.weight, .set-row input.reps');
+  document.addEventListener('focusin',event=>{
+    if(isSetInput(event.target))document.body.classList.add('ix-editing-set');
+  });
+  document.addEventListener('focusout',event=>{
+    if(isSetInput(event.target))setTimeout(()=>{
+      if(!isSetInput(document.activeElement))document.body.classList.remove('ix-editing-set');
+    },0);
+  });
+
   document.addEventListener('click', event => {
     if (event.target.closest?.('#sessionBeginBtn,#sessionCardNav,#sessionCardFoot,.done,.duration-btn,#applyCustomTime,.exercise-swap-btn,.awc-swap-btn,[data-view="today"]')) scheduleApply();
   });
