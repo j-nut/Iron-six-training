@@ -30,6 +30,7 @@
       trainingLevel:u.trainingLevel,benchBest:u.benchBest,
       equipment:u.equipment,customEquipment:u.customEquipment,capacities:u.capacities,
       workoutMinutes:u.workoutMinutes,readiness:u.readiness,
+      goal:u.goal,daysPerWeek:u.daysPerWeek,strengthRefs:u.strengthRefs,limitations:u.limitations,preferences:u.preferences,onboarding:u.onboarding,
       program:u.program,history:u.history,
       // Journal restoration adds event and writer metadata; those do not affect
       // rendered weight/reps/RIR/completion and must not remount active inputs.
@@ -53,7 +54,12 @@
   const $=id=>document.getElementById(id);
   const journal=()=>window.IronSixJournal;
   function notify(text){message=text;if($('accountStatus'))$('accountStatus').textContent=text}
-  function runtimeState(u){return {workoutDifficulty:u.workoutDifficulty||'balanced',sessionDifficulty:normalizedWorkoutDifficultyOverride(u.sessionDifficulty),today:u.today||{},draftWorkoutKey:u.draftWorkoutKey||null,draftUpdatedAt:Number(u.draftUpdatedAt)||0,workoutDraft:u.workoutDraft||null,history:u.history||[],customEquipment:u.customEquipment||[],coachMessages:u.coachMessages||[],coachOverrides:u.coachOverrides||null,sessionCalibration:u.sessionCalibration||null,trainerMemory:u.trainerMemory||null,localUpdatedAt:Number(u.localUpdatedAt)||0,importedGuestId:u.importedGuestId||null,trainingMode:u.trainingMode||'traditional',circuitPace:u.circuitPace||'balanced'}}
+  // Answers from first-run setup and the profile editor. They ride in runtime_state (an open JSON column) so a
+  // second device or a restored account sees the same goal, limits and completed-setup flag. Absent fields are
+  // left absent rather than sent as null, which would read back as an answer.
+  const SETUP_FIELDS=['goal','daysPerWeek','strengthRefs','limitations','preferences','onboarding','onboardingDraft'];
+  function setupState(u){const out={};for(const key of SETUP_FIELDS)if(u[key]!==undefined&&u[key]!==null)out[key]=u[key];return out}
+  function runtimeState(u){return {workoutDifficulty:u.workoutDifficulty||'balanced',sessionDifficulty:normalizedWorkoutDifficultyOverride(u.sessionDifficulty),today:u.today||{},draftWorkoutKey:u.draftWorkoutKey||null,draftUpdatedAt:Number(u.draftUpdatedAt)||0,workoutDraft:u.workoutDraft||null,history:u.history||[],customEquipment:u.customEquipment||[],coachMessages:u.coachMessages||[],coachOverrides:u.coachOverrides||null,sessionCalibration:u.sessionCalibration||null,trainerMemory:u.trainerMemory||null,localUpdatedAt:Number(u.localUpdatedAt)||0,importedGuestId:u.importedGuestId||null,trainingMode:u.trainingMode||'traditional',circuitPace:u.circuitPace||'balanced',...setupState(u)}}
   function payload(u,userId){return {user_id:userId,client_id:String(u.id),display_name:u.name,body_weight_lb:Number(u.weight)||null,age:u.age||null,height_in:u.heightIn||null,training_level:u.trainingLevel||'unknown',bench_reference:u.benchBest||null,equipment:u.equipment||{},capacities:u.capacities||{},workout_minutes:Number(u.workoutMinutes)||60,readiness:u.readiness||{},program_state:u.program||{},runtime_state:runtimeState(u)}}
   const fingerprint=u=>JSON.stringify(payload(u,scope()));
   function fromRow(r){

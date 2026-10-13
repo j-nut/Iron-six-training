@@ -79,11 +79,17 @@ test('History puts logs before optional analytics without losing the filters or 
 test('profile groups keep labeled editable fields and saving still updates the active profile',()=>{
   const a=app();try{
     const d=a.w.document;
-    for(const id of ['profileName','bodyWeight','age','heightIn','trainingLevel','benchBest','dumbbellMax','barbellMax']){
+    for(const id of ['profileName','bodyWeight','age','heightIn','trainingLevel','profileGoal','profileDays','profileMinutes','profileMode','profileDifficulty','dumbbellMax','barbellMax']){
       const field=d.getElementById(id);
       assert(field.closest('fieldset')?.querySelector('legend'));
       assert(d.querySelector(`label[for="${id}"]`));
     }
+    for(const id of ['ref_squat_weight','ref_bench_reps','ref_row_equipment']){
+      const field=d.getElementById(id);
+      assert(field.closest('fieldset')?.querySelector('legend'));
+      assert(field.getAttribute('aria-label'),`${id} needs an accessible name`);
+    }
+    for(const id of ['prefMusic','prefCamera','prefVoice','prefSounds'])assert(d.getElementById(id).closest('label')?.textContent.trim(),`${id} needs a visible label`);
     d.getElementById('profileName').value='Premium test';
     d.getElementById('saveProfile').click();
     assert.equal(a.run('activeUser().name'),'Premium test');

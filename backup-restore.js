@@ -54,6 +54,10 @@
 
   // Sessions are identified by the id the journal already uses, falling back to the timestamp
   // for history logged before session ids existed.
+  // Lets first-run setup react to a restore without backup-restore knowing anything about it.
+  function announce(detail) {
+    try { window.dispatchEvent(new CustomEvent('ironsix:backup-restored', { detail })); } catch (_) { }
+  }
   const sessionKey = session => String((session && (session.sessionId || session.ts)) || '');
 
   // Merge adds the sessions the target does not already have and leaves every date it does have
@@ -97,6 +101,7 @@
     say('Added ' + addedSessions + ' session' + (addedSessions === 1 ? '' : 's') + ' to ' + target.name
       + ' (' + before + ' \u2192 ' + target.history.length + ')'
       + (keptOnCollision ? ', kept ' + keptOnCollision + ' you already had' : '') + '.');
+    announce({ mode: 'merge', targetId: target.id, userIds: [target.id] });
     return { added: 0, merged: true, addedSessions, keptOnCollision, target: target.id };
   }
 
@@ -109,6 +114,7 @@
     if (!confirm(`Import ${summarise(backup.users)} into ${where}?\n\nThey are added as new profiles. Nothing already here is changed or removed.`)) return null;
 
     let added = 0, skipped = 0;
+    const addedIds = [];
     for (const source of backup.users) {
       const marker = `${stamp}:${source.id || source.name}`;
       if (data.users.some(u => u.importedBackupId === marker)) { skipped++; continue; }
@@ -122,6 +128,7 @@
       // Cloud identity belongs to the profile it was issued for, never to a copy of it.
       for (const key of ['cloudId', '_cloudVersion', '_cloudFingerprint', '_remoteProfile', 'cloudNormalizedThrough']) delete user[key];
       data.users.push(user);
+      addedIds.push(user.id);
       window.IronSixJournal?.migrateUser(user);
       added++;
     }
@@ -130,6 +137,7 @@
     saveData();
     if (typeof renderAll === 'function') renderAll();
     say(`Imported ${added} profile${added === 1 ? '' : 's'}${skipped ? `, skipped ${skipped} already imported` : ''}.${scope ? ' Syncing to your account…' : ''}`);
+    announce({ mode: 'new', userIds: addedIds });
     return { added, skipped };
   }
 
