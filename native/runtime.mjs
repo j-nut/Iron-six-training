@@ -38,7 +38,7 @@ function installSafeArea(win){
   if(win.document.getElementById('ironSixNativeInsets'))return;
   const style=win.document.createElement('style');style.id='ironSixNativeInsets';
   style.textContent=`
-    .iron-six-native{--app-safe-top:max(env(safe-area-inset-top,0px),var(--safe-area-inset-top,28px));--app-safe-bottom:max(env(safe-area-inset-bottom,0px),var(--safe-area-inset-bottom,16px));scroll-padding-top:calc(16px + var(--app-safe-top));scroll-padding-bottom:calc(124px + var(--app-safe-bottom))}
+    .iron-six-native{--app-safe-top:max(env(safe-area-inset-top,0px),var(--safe-area-inset-top,28px),24px);--app-safe-bottom:max(env(safe-area-inset-bottom,0px),var(--safe-area-inset-bottom,16px));scroll-padding-top:calc(16px + var(--app-safe-top));scroll-padding-bottom:calc(124px + var(--app-safe-bottom))}
     .iron-six-native body{min-height:100dvh}
     .iron-six-native body::before{content:'';position:fixed;top:0;left:0;right:0;height:var(--app-safe-top);background:var(--bg);z-index:9;pointer-events:none}
     .iron-six-native .app{padding-top:calc(20px + var(--app-safe-top));padding-bottom:calc(124px + var(--app-safe-bottom));padding-left:max(14px,var(--safe-area-inset-left,env(safe-area-inset-left,0px)));padding-right:max(14px,var(--safe-area-inset-right,env(safe-area-inset-right,0px)))}
