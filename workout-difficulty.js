@@ -24,13 +24,17 @@
     return 'bodyweight';
   }
   function selectionPenalty(u,ex,level=effectiveFor(u)){
-    if(level==='balanced')return 0;
+    // Light changes effort, not the movement: same exercises and equipment the user would get
+    // in a balanced session, so history and benchmark lifts carry over. Only Heavy expresses an
+    // equipment preference.
+    if(level!=='heavy')return 0;
     const kind=equipmentKind(ex);
     // Larger than recency penalties: intent is a preference, not another random variation.
-    const light={bodyweight:0,band:1500,dumbbell:3000,'challenging-bodyweight':4500,machine:6000,landmine:7500,barbell:9000};
     const heavy={machine:-500,barbell:0,landmine:1500,dumbbell:3000,'challenging-bodyweight':4500,bodyweight:6000,band:7500};
-    return (level==='light'?light:heavy)[kind]||0;
+    return heavy[kind]||0;
   }
+  // A real cut: at least one set fewer whenever there are two or more, never below one.
+  const lightSets=sets=>{const n=Math.max(1,Math.round(Number(sets))||1);return n<2?n:Math.max(1,Math.min(n-1,Math.ceil(n*.75)))};
   const available=(u,ex)=>typeof exerciseAvailable==='function'?exerciseAvailable(u,ex):(ex?.requires||[]).every(k=>u?.equipment?.[k])&&(ex?.requiresCustom||[]).every(n=>(u?.customEquipment||[]).some(x=>String(x).toLowerCase()===String(n).toLowerCase()));
   const painless=(u,ex)=>!(u?.trainingFeedback||[]).some(f=>f.feedback==='pain'&&Date.now()-Number(f.ts)<7*864e5&&String(f.exercise||'').toLowerCase()===String(ex.name||'').toLowerCase());
   function selectAlternative(u,ex,used,level){
@@ -48,7 +52,7 @@
     return (workout||[]).map(ex=>{
       const chosen=selectAlternative(u,ex,used,level);used.add(chosen.name.toLowerCase());
       if(level==='light'){
-        chosen.sets=Math.max(1,Math.ceil(chosen.sets*.75));
+        chosen.sets=lightSets(chosen.sets);
         chosen.prescription=String(chosen.prescription).replace(/^\d+\s*×/,chosen.sets+' ×');
       }
       return chosen;
@@ -73,7 +77,7 @@
       }else{
         chosen=selectAlternative(u,ex,used,level);
         // A day adjustment cannot lengthen a live session or reindex entered work.
-        if(level==='light'&&ex._difficulty!=='light')chosen.sets=Math.max(1,Math.ceil(ex.sets*.75));
+        if(level==='light'&&ex._difficulty!=='light')chosen.sets=lightSets(ex.sets);
         chosen.prescription=String(chosen.prescription).replace(/^\d+\s*×/,chosen.sets+' ×');
         delete chosen._difficultyAnchorLoad;
       }
@@ -143,7 +147,7 @@
     };
     return true;
   }
-  const api={levels:LEVELS,labels:{light:'Light',balanced:'Balanced',heavy:'Heavy'},normalize,effectiveFor,validOverride,selectionPenalty,equipmentKind,transformWorkout,replanRemaining,adjustSuggestion,installLoadAdjustment};
+  const api={lightSets,levels:LEVELS,labels:{light:'Light',balanced:'Balanced',heavy:'Heavy'},normalize,effectiveFor,validOverride,selectionPenalty,equipmentKind,transformWorkout,replanRemaining,adjustSuggestion,installLoadAdjustment};
   root.IronSixDifficulty=api;
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })();

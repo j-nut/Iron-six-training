@@ -38,7 +38,7 @@ function counterpartPenalty(u,key,e){
   return (u.history||[]).slice(0,8).reduce((n,h,i)=>n+(h.workoutKey===other&&(h.details||[]).some(d=>d.name===e.name)?Math.max(12,70-i*8):0),0);
 }
 function patternRecentPenalty(u,e){
-  return (u.history||[]).slice(0,6).reduce((n,h,i)=>n+(h.details||[]).some(d=>d.seedKey===e.seedKey)?Math.max(0,8-i):0,0);
+  return (u.history||[]).slice(0,6).reduce((n,h,i)=>n+((h.details||[]).some(d=>d.seedKey===e.seedKey)?Math.max(0,8-i):0),0);
 }
 
 /* Equipment is not neutral. When a user owns substantial free weights, those should do most of
@@ -65,6 +65,15 @@ function equipmentPreferencePenalty(u,id,e,pool,anchor){
   return 0;
 }
 
+/* Equipment-free movements that train their target muscle poorly (unloaded, isometric, or a
+   weak lever). They stay available as last resorts, but never beat a loaded option the user's
+   equipment allows. The penalty exceeds the largest realistic recency penalty on purpose. */
+const LOW_STIMULUS_FALLBACKS=new Set(['Lean-Away Lateral Raise','Prone Lat Pull','Isometric Lat Press','Towel Isometric Curl','Bodyweight Curl Isometric','Hamstring Walkout']);
+function lowStimulusPenalty(e,pool){
+  if(!LOW_STIMULUS_FALLBACKS.has(e.name))return 0;
+  return pool.some(x=>!LOW_STIMULUS_FALLBACKS.has(x.name))?1000:0;
+}
+
 function programSlot(u,id,source,index,sets,priority=2,anchor=false){
   const key=u.program.currentWorkoutKey,exposure=Number(u.program.exposures[key])||0;
   const variation=anchor?Math.floor(exposure/4)%3:exposure%3;
@@ -80,7 +89,15 @@ function programSlot(u,id,source,index,sets,priority=2,anchor=false){
   }
 
   if(id==='row'){
-    pool=[0,1,2].flatMap(v=>programOptions('back',v,u)[1]||[]).filter(e=>/Chest-Supported|One-Arm Dumbbell|Band Row/.test(e.name));
+    const rows=[0,1,2].flatMap(v=>programOptions('back',v,u)[1]||[]);
+    /* Supported rows (chest-supported, one-arm braced, band) protect the lower back next to hinge
+       work, so they win whenever a loaded one is possible. With none available the whole row
+       family opens up (barbell/Pendlay/landmine rows) so a barbell-only lifter still gets a
+       horizontal pull. Equipment-free setups have no illustrated row, so the slot is reported
+       in planGaps rather than filled with a movement that has no truthful artwork. */
+    const supported=/Chest-Supported|One-Arm Dumbbell|Band Row/;
+    const loadedSupported=rows.some(e=>supported.test(e.name)&&equipmentClass(e)!=='band'&&exerciseAvailable(u,e));
+    pool=loadedSupported?rows.filter(e=>supported.test(e.name)):rows;
     const order=key==='pull_a'
       ? ['One-Arm Dumbbell Row','Chest-Supported Dumbbell Row','Band Row']
       : ['Chest-Supported Dumbbell Row','One-Arm Dumbbell Row','Band Row'];
@@ -93,7 +110,10 @@ function programSlot(u,id,source,index,sets,priority=2,anchor=false){
     pool.sort((a,b)=>{const ai=order.indexOf(a.name),bi=order.indexOf(b.name);return (ai<0?99:ai)-(bi<0?99:bi)});
   }
 
+  /* Bodyweight presses are always a valid chest-press fallback, whichever variant is current. */
+  if(source==='chest'&&(id==='press'||id==='secondary'))pool.push(...[0,1,2].flatMap(v=>programOptions('chest',v,u)[0]||[]).filter(e=>!e.requires?.length));
   if(id==='curl')pool.push(...programOptions('shoulders_arms',0,u)[5]);
+  if(id==='hammer')pool.push(...programOptions('shoulders_arms',0,u)[3].filter(e=>e.name==='Barbell Curl'));
   const probe={...u,program:{...u.program,currentWorkoutKey:source}};
   pool.push(...generatedOptionsForSlot(probe,original));
   const sample=original[0]||pool[0];
@@ -104,7 +124,7 @@ function programSlot(u,id,source,index,sets,priority=2,anchor=false){
 
   const cacheVersion='v5';
   const difficulty=window.IronSixDifficulty?.effectiveFor(u)||'balanced';
-  const token=`${cacheVersion}:${key}:${id}:${anchor?'block'+Math.floor(exposure/4):exposure}${difficulty==='balanced'?'':':difficulty:'+difficulty}`;
+  const token=`${cacheVersion}:${key}:${id}:${anchor?'block'+Math.floor(exposure/4):exposure}${difficulty==='heavy'?':difficulty:heavy':''}`;
   const cached=u.program.selectionCache[token];
   let selected=pool.find(e=>e.name===cached);
   if(!selected){
@@ -115,7 +135,7 @@ function programSlot(u,id,source,index,sets,priority=2,anchor=false){
       const noEquipmentBias=equipped&&!e.requires?.length?10:0;
       const patternPenalty=anchor?0:patternRecentPenalty(u,e);
       const equipmentPenalty=equipmentPreferencePenalty(u,id,e,pool,anchor);
-      return {e,score:exactPenalty(e)+counterpartPenalty(u,key,e)+patternPenalty+legacyBias+noEquipmentBias+equipmentPenalty+(window.IronSixDifficulty?.selectionPenalty(u,e)||0)};
+      return {e,score:exactPenalty(e)+counterpartPenalty(u,key,e)+patternPenalty+legacyBias+noEquipmentBias+equipmentPenalty+lowStimulusPenalty(e,pool)+(window.IronSixDifficulty?.selectionPenalty(u,e)||0)};
     }).sort((a,b)=>a.score-b.score||stableNumber(`${token}:${a.e.name}`)-stableNumber(`${token}:${b.e.name}`))[0].e;
     u.program.selectionCache[token]=selected.name;
   }
