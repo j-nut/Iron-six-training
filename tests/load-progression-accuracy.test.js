@@ -99,3 +99,16 @@ test('a rotated main-lift variant starts from the related lift, not a body-weigh
   const dumbbellBench = {name: 'Dumbbell Bench Press', base: 'Horizontal press', prescription: '3 × 8–12', seedKey: 'bench'};
   assert.notEqual(baseline(u, dumbbellBench).confidence, 'Estimated from a related lift', 'a barbell total never seeds a per-hand dumbbell');
 });
+
+test('the smallest-jump settings survive profile normalisation (sync, restore, reload)', () => {
+  const context = {window: {}, localStorage: {getItem() { return null; }, setItem() {}}, crypto: {randomUUID: () => 'id'}, document: {getElementById() { return null; }}};
+  vm.createContext(context);
+  const source = fs.readFileSync('core.js', 'utf8');
+  const start = source.indexOf('function normalizeUser');
+  vm.runInContext('function normalizedWorkoutDifficultyOverride(v){return v||null}\nconst DEFAULT_EQUIPMENT={};function normalizeEquipmentName(x){return x}function emptyProgram(){return {}}function emptyTrainerMemory(){return {}}\n' + source.slice(start, source.indexOf('\n', start)), context);
+  const normalize = vm.runInContext('normalizeUser', context);
+  const kept = normalize({capacities: {dumbbellMax: 50, barbellMax: 300, dumbbellStep: 2.5, barbellStep: 2.5}});
+  assert.equal(kept.capacities.dumbbellStep, 2.5);
+  assert.equal(kept.capacities.barbellStep, 2.5);
+  assert.equal(normalize({capacities: {}}).capacities.dumbbellStep, 5);
+});
