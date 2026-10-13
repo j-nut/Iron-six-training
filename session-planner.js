@@ -47,7 +47,20 @@ function budgetSessionWorkout(u,workout){
   // rolling-program history is a priority signal: recurring omissions rise, but we do not add
   // catch-up volume or displace stable benchmark lifts just to satisfy a quota.
   accessories.sort((a,b)=>programNeed(b)-programNeed(a)||recentDose(a)-recentDose(b)||Number(specificity(b).some(m=>due.has(m)))-Number(specificity(a).some(m=>due.has(m)))||((a._position+exposure)%Math.max(1,pool.length))-((b._position+exposure)%Math.max(1,pool.length)));
-  let selected=[...anchors,...accessories].slice(0,count).map(e=>{
+  // On short pull days protect the complementary vertical/horizontal patterns and
+  // the planned curl angle. Without this guard, an under-dosed lat or rear-delt
+  // accessory can repeatedly displace direct biceps work, leaving users with
+  // hammer-only (or supinated-only) exposures despite the A/B program.
+  // Ten-minute micro sessions remain free to prioritize just two pulling patterns.
+  const pullKey=u.program?.currentWorkoutKey;
+  const protectedPullSlots=minutes>=15&&pullKey==='pull_a'
+    ? new Set(['row','curl_long'])
+    : minutes>=15&&pullKey==='pull_b'
+      ? new Set(['vertical','hammer'])
+      : new Set();
+  const protectedAccessories=accessories.filter(e=>protectedPullSlots.has(e._programSlot));
+  const otherAccessories=accessories.filter(e=>!protectedPullSlots.has(e._programSlot));
+  let selected=[...anchors,...protectedAccessories,...otherAccessories].slice(0,count).map(e=>{
     const baseMax=Math.max(1,e.sets);
     const volumeBonus=!light&&!circuit&&minutes>=60&&e.priority!==1?1:0;
     return {...e,sets:1,_max:baseMax+volumeBonus};
