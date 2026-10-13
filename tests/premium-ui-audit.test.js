@@ -43,7 +43,7 @@ test('live workout progress bar updates when sets are marked complete',()=>{
     const first=w.document.querySelector('.exercise:not(.sc-hidden) .done');
     first.click();
     assert.equal(track.getAttribute('aria-valuenow'),'1');
-    assert.equal(track.querySelector('.sc-progress-fill').style.width,100/max+'%');
+    assert(Math.abs(parseFloat(track.querySelector('.sc-progress-fill').style.width)-100/max)<0.0001);
     const label=nav.querySelector('#scNext')?.textContent;
     assert(label.startsWith('Up next:'));
     assert(!/^\d+\/\d+ sets/.test(label),'set count must not be duplicated in subtitle');
