@@ -201,7 +201,7 @@
       sets.appendChild(tip);
     }
     for(const input of card.querySelectorAll('.set-row input.weight, .set-row input.reps')){
-      if(input.dataset.ixScrubReady)continue;
+      if(input.dataset.ixScrubReady||input.style.display==='none')continue;
       input.dataset.ixScrubReady='true';
       const kind=input.classList.contains('weight')?'weight':'reps';
       input.setAttribute('aria-description',
