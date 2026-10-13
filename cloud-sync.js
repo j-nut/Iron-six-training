@@ -25,10 +25,27 @@
   // Only redraw the screen for meaningful profile/journal changes, never simply because
   // a timer ran. Internal cloud versions and local save timestamps aren't screen data.
   function screenFingerprint(){
-    const visible=(data.users||[]).map(u=>{
-      const {cloudId,accountOwner,localUpdatedAt,_cloudVersion,_cloudFingerprint,_remoteProfile,cloudNormalizedThrough,...rest}=u;
-      return rest;
-    });
+    const visible=(data.users||[]).map(u=>({
+      id:u.id,name:u.name,weight:u.weight,age:u.age,heightIn:u.heightIn,
+      trainingLevel:u.trainingLevel,benchBest:u.benchBest,
+      equipment:u.equipment,customEquipment:u.customEquipment,capacities:u.capacities,
+      workoutMinutes:u.workoutMinutes,readiness:u.readiness,
+      program:u.program,history:u.history,
+      // Journal restoration adds event and writer metadata; those do not affect
+      // rendered weight/reps/RIR/completion and must not remount active inputs.
+      today:Object.fromEntries(Object.entries(u.today||{}).map(([key,set])=>[key,{
+        weight:String(set?.weight??''),reps:String(set?.reps??''),
+        rir:String(set?.rir??''),done:!!set?.done,feedback:set?.feedback??null
+      }])),
+      workoutDraft:u.workoutDraft?{
+        id:u.workoutDraft.id,key:u.workoutDraft.key,plan:u.workoutDraft.plan,
+        difficulty:u.workoutDraft.difficulty,timer:u.workoutDraft.timer||null
+      }:null,
+      trainingMode:u.trainingMode,circuitPace:u.circuitPace,
+      workoutDifficulty:u.workoutDifficulty,sessionDifficulty:u.sessionDifficulty,
+      trainerMemory:u.trainerMemory,coachMessages:u.coachMessages,
+      coachOverrides:u.coachOverrides,sessionCalibration:u.sessionCalibration
+    }));
     return JSON.stringify({activeUserId:data.activeUserId,users:visible});
   }
   const scope=()=>window.ironSixAccountScope||null;
