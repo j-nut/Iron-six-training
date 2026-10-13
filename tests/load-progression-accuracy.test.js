@@ -25,7 +25,7 @@ function user(sessions, capacities = {}) {
   return {
     weight: 200, trainingLevel: 'intermediate', today: {}, program: {currentWorkoutKey: 'push_a'},
     capacities: {barbellMax: 400, dumbbellMax: 60, ...capacities},
-    history: sessions.map(([ts, exercise, sets]) => ({ts, details: [{name: exercise.name, base: exercise.base, prescription: exercise.prescription, sets: sets.map(([weight, reps, rir]) => ({weight: String(weight), reps: String(reps), rir: rir === null ? '' : String(rir), done: true}))}]})),
+    history: sessions.map(([ts, exercise, sets]) => ({ts: Date.now() - 864e5 * 2 + ts, details: [{name: exercise.name, base: exercise.base, prescription: exercise.prescription, sets: sets.map(([weight, reps, rir]) => ({weight: String(weight), reps: String(reps), rir: rir === null ? '' : String(rir), done: true}))}]})),
   };
 }
 

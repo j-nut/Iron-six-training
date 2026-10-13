@@ -20,13 +20,13 @@
   loadRuntimeScript('auth-hardening.js?v=2','auth-hardening','__ironSixAuthHardened');
   loadRuntimeScript('account-polish.js?v=1','account-polish','__ironSixAccountPolish');
   loadRuntimeScript('profile-delete.js?v=3','profile-delete','__ironSixProfileDeleteLoaded');
-  loadRuntimeScript('load-progression-v2.js?v=2','load-progression-v2','__ironSixLoadProgressionV2Loaded');
+  loadRuntimeScript('load-progression-v2.js?v=3','load-progression-v2','__ironSixLoadProgressionV2Loaded');
   loadRuntimeScript('bodyweight-load-fix.js?v=2','bodyweight-load-fix','__ironSixBodyweightLoadFix');
   loadRuntimeScript('adaptive-insights.js?v=3','adaptive-insights','__ironSixAdaptiveInsightsLoaded');
-  loadRuntimeScript('trainer-intelligence-v2.js?v=4','trainer-intelligence-v2','__ironSixTrainerIntelligenceV2Loaded');
+  loadRuntimeScript('trainer-intelligence-v2.js?v=5','trainer-intelligence-v2','__ironSixTrainerIntelligenceV2Loaded');
   loadRuntimeScript('program-intelligence-v3.js?v=1','program-intelligence-v3','__ironSixProgramIntelligenceV3Loaded');
   loadRuntimeScript('progress-analytics-v2.js?v=3','progress-analytics-v2','__ironSixProgressAnalyticsV2Loaded');
-  loadRuntimeScript('session-adaptation-v3.js?v=2','session-adaptation-v3','__ironSixSessionAdaptationV3Loaded');
+  loadRuntimeScript('session-adaptation-v3.js?v=3','session-adaptation-v3','__ironSixSessionAdaptationV3Loaded');
   loadRuntimeScript('media-experience-v2.js?v=2','media-experience-v2','__ironSixMediaExperienceV2Loaded');
   loadRuntimeScript('music-originals.js?v=1','music-originals','__ironSixMusicOriginalsLoaded');
   loadRuntimeScript('music.js?v=1','music','__ironSixMusicLoaded');

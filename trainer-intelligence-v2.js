@@ -13,13 +13,38 @@
     }
     return {sets,volume,hard};
   }
+  const bestE1=session=>{const out=new Map();for(const ex of session?.details||[])for(const s of ex.sets||[]){if(s?.done===false)continue;const w=n(s.weight),r=n(s.reps);if(!w||!r||r>30)continue;const rir=s.rir==null||String(s.rir).trim()===''?0:n(s.rir);const e=w*(1+(r+rir)/30),key=String(ex.name||'').toLowerCase();if(e>(out.get(key)||0))out.set(key,e)}return out};
+  // Lifts whose last two sessions both fell at least 3% short of their best in the prior four weeks.
+  function decliningLifts(history,now){
+    const byLift=new Map();
+    for(const h of history.filter(h=>now-n(h.ts)<=42*864e5).slice().sort((a,b)=>n(a.ts)-n(b.ts)))for(const [lift,e] of bestE1(h)){if(!byLift.has(lift))byLift.set(lift,[]);byLift.get(lift).push(e)}
+    return [...byLift].filter(([,list])=>{if(list.length<4)return false;const earlier=Math.max(...list.slice(0,-2));return list.slice(-2).every(e=>e<earlier*.97)}).map(([lift])=>lift);
+  }
+  // Weeks in a row (ending this week) with 2+ sessions and no lighter week to recover in.
+  function consecutiveHardWeeks(history,now){
+    const weeks=Array.from({length:8},(_,i)=>history.filter(h=>{const age=(now-n(h.ts))/864e5;return age>=i*7&&age<(i+1)*7}));
+    const sets=weeks.map(list=>list.reduce((a,h)=>a+sessionLoad(h).sets,0)),avg=sets.reduce((a,b)=>a+b,0)/Math.max(1,sets.filter(Boolean).length);
+    let count=0;for(let i=0;i<weeks.length;i++){if(weeks[i].length>=2&&sets[i]>=avg*.6)count++;else break}
+    return count;
+  }
   function trainingState(user,now=Date.now()){
     const history=(user?.history||[]).filter(h=>n(h.ts)>0&&n(h.ts)<=now&&sessionLoad(h).sets>0).sort((a,b)=>n(b.ts)-n(a.ts));
     const recent=history.filter(h=>now-n(h.ts)<=14*864e5),prior=history.filter(h=>now-n(h.ts)>14*864e5&&now-n(h.ts)<=28*864e5);
     const summarize=list=>list.reduce((a,h)=>{const l=sessionLoad(h);a.sessions++;a.sets+=l.sets;a.volume+=l.volume;a.hard+=l.hard;const e=n(h.readiness?.energy);if(e){a.energy+=e;a.energyN++}return a},{sessions:0,sets:0,volume:0,hard:0,energy:0,energyN:0});
     const r=summarize(recent),p=summarize(prior),feedback=(user?.trainingFeedback||[]).filter(x=>now-n(x.ts)<=14*864e5),hardFeedback=feedback.filter(x=>x.feedback==='hard'||x.feedback==='pain').length,easyFeedback=feedback.filter(x=>x.feedback==='easy').length;
     const avgEnergy=r.energyN?r.energy/r.energyN:null,volumeChange=p.volume?((r.volume-p.volume)/p.volume)*100:null;
-    let fatigue=0; if(avgEnergy!=null)fatigue+=(5-avgEnergy)*12; if(r.sets>=35)fatigue+=12;if(r.sets>=50)fatigue+=10;if(r.hard>=8)fatigue+=10;if(hardFeedback>=3)fatigue+=12;if(hardFeedback>=6)fatigue+=8;if(volumeChange!=null&&volumeChange>35)fatigue+=10;
+    // Load is judged against this lifter's own previous four weeks, not fixed set counts that
+    // every regular trainee exceeds (which made the energy slider the only real signal).
+    const baselineList=history.filter(h=>now-n(h.ts)>14*864e5&&now-n(h.ts)<=42*864e5),b=summarize(baselineList);
+    // Average only over the weeks that actually contain training, so a lifter with three weeks of
+    // history isn't compared against a four-week window that is a quarter empty.
+    const baselineWeeks=new Set(baselineList.map(h=>Math.floor((now-n(h.ts))/(7*864e5)))).size,baselineSets=b.sessions>=3&&baselineWeeks?b.sets/baselineWeeks*2:null;
+    const loadRatio=baselineSets?r.sets/baselineSets:null,hardShare=r.sets?r.hard/r.sets:0;
+    const declining=decliningLifts(history,now),straightWeeks=consecutiveHardWeeks(history,now);
+    let fatigue=0; if(avgEnergy!=null)fatigue+=(5-avgEnergy)*12;
+    if(loadRatio!=null&&loadRatio>=1.3)fatigue+=12;if(loadRatio!=null&&loadRatio>=1.5)fatigue+=10;
+    if(r.sets>=12&&hardShare>=.4)fatigue+=10;if(hardFeedback>=3)fatigue+=12;if(hardFeedback>=6)fatigue+=8;if(volumeChange!=null&&volumeChange>35)fatigue+=10;
+    if(declining.length>=2)fatigue+=15;if(straightWeeks>=6)fatigue+=15;
     fatigue=clamp(Math.round(fatigue),0,100);
     let phase='Build',recommendation='Continue progressive training and let performance drive small load changes.';
     if(recent.length<3){phase='Learning';recommendation='Keep logging your weight, reps and how hard each set felt. A few sessions in, your coach can start setting targets from your real numbers.'}

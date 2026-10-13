@@ -40,9 +40,26 @@ function loadIncrement(ex,u){
 function roundLoad(x,ex,u){
  if(!Number.isFinite(x)||x<=0)return null;
  const equipment=exerciseLoadEquipment(ex),step=loadIncrement(ex,u);let r=Math.max(step,Math.round(x/step)*step);
- const cap=Number(equipment==='dumbbell'?u.capacities?.dumbbellMax:['barbell','landmine'].includes(equipment)?u.capacities?.barbellMax:null);
+ const configured=Number(equipment==='dumbbell'?u.capacities?.dumbbellMax:['barbell','landmine'].includes(equipment)?u.capacities?.barbellMax:null);
+ // New profiles start with a 30 lb dumbbell cap nobody was asked about. While it is still that
+ // untouched default, heavier dumbbells the user has actually logged prove it wrong. Any other
+ // value was chosen deliberately (e.g. after selling heavy dumbbells) and is always respected.
+ const cap=equipment==='dumbbell'&&configured===30?Math.max(configured,heaviestLogged(u,equipment)):configured;
  if(Number.isFinite(cap)&&cap>0)r=Math.min(r,cap);
  return r;
+}
+const heaviestLoggedCache=new WeakMap();
+function heaviestLogged(u,equipment){
+ if(!u||!['dumbbell','barbell','landmine'].includes(equipment))return 0;
+ const signature=(u.history||[]).length+':'+Object.keys(u.today||{}).length+':'+JSON.stringify(u.today||{}).length;
+ let cached=heaviestLoggedCache.get(u);
+ if(!cached||cached.signature!==signature){
+  const max={};const note=(name,weight)=>{const kind=exerciseLoadEquipment({name}),w=parseLoad(weight);if(w>0&&w>(max[kind]||0))max[kind]=w};
+  (u.history||[]).forEach(h=>(h.details||[]).forEach(d=>(d.sets||[]).forEach(s=>{if(s?.done!==false)note(d.name,s?.weight)})));
+  const plan=u.workoutDraft?.plan||[];Object.entries(u.today||{}).forEach(([key,s])=>{const ex=plan[Number(key.split('-')[0])];if(ex&&s?.done)note(ex.name,s.weight)});
+  cached={signature,max};heaviestLoggedCache.set(u,cached);
+ }
+ return equipment==='landmine'?Math.max(cached.max.landmine||0,cached.max.barbell||0):cached.max[equipment]||0;
 }
 function historySetsFor(u,matcher){
  const rows=[];(u.history||[]).forEach(h=>(h.details||[]).forEach(d=>{if(matcher(d))(d.sets||[]).forEach((x,index)=>{if(x.done===true||(x.done==null&&parseLoad(x.weight)>0&&Number(x.reps)>0))rows.push({...x,_setIndex:Number.isInteger(x.setIndex)?x.setIndex:index,_date:Number(h.ts)||0,_exercise:d.name,_base:d.base,_prescription:d.prescription||''})})}));
@@ -53,14 +70,20 @@ function median(nums){const a=[...nums].sort((x,y)=>x-y);if(!a.length)return nul
 function benchReferenceE1RM(u){const nums=String(u.benchBest||'').match(/\d+(?:\.\d+)?/g)||[];if(nums.length<2)return null;const w=Number(nums[0]),reps=Number(nums[nums.length-1]);return w&&reps?w*(1+reps/30):null}
 const SEED_FACTORS={squat:.52,hinge:.60,bench:.38,overhead_press:.22,row:.38,hip_thrust:.55,curl:.10,triceps:.10,split_squat:.14,lateral_raise:.035,ham_curl:.08,calves:.18,chest_press:.16};
 function demographicSeed(u,ex){
- const key=ex.seedKey||'',baseFactor=SEED_FACTORS[key],equipment=exerciseLoadEquipment(ex);if(!baseFactor||equipment==='bodyweight')return null;
+ const key=ex.seedKey||'',equipment=exerciseLoadEquipment(ex);
+ // Band tension is not a pound load, and a good morning is far weaker than a Romanian deadlift.
+ const baseFactor=/good morning/i.test(ex.name||'')?.25:SEED_FACTORS[key];if(!baseFactor||equipment==='bodyweight'||equipment==='band')return null;
  const level={unknown:.78,beginner:.72,intermediate:1,advanced:1.22}[u.trainingLevel]||.78;
  const age=Number(u.age)||35;const ageAdj=age<45?1:age<55?.95:age<65?.90:.85;
  let load=u.weight*baseFactor*level*ageAdj;
  if(equipment==='dumbbell')load/=2;
  if(equipment==='landmine')load*=.70;
- return roundLoad(load,ex,u);
+ const seeded=roundLoad(load,ex,u);
+ // An empty Olympic bar is 45 lb, so no barbell exercise can start lighter than that.
+ return equipment==='barbell'&&seeded?Math.max(45,seeded):seeded;
 }
+// Volume cuts must actually remove work: Math.ceil turned 3 sets × 0.75 back into 3.
+function reducedSets(sets,factor){const old=Math.max(1,Math.round(Number(sets)||1));if(!(factor<1))return old;let next=Math.round(old*factor);if(factor<=.75&&old>=2)next=Math.min(next,old-1);return Math.max(1,Math.min(old,next))}
 function priorPerformance(u,ex){
  // A shared movement pattern does not make loads interchangeable (per-hand dumbbells,
  // barbell totals, cables and landmines all use different resistance conventions).
@@ -83,7 +106,7 @@ function suggestedLoadObject(u,ex,exIndex){
 function recalculateSessionCalibration(u,workout){const ratios=[];(workout||[]).forEach((ex,ei)=>{const base=baselineLoadObject(u,ex);if(!base.load)return;const targetRir=workoutDifficultyLevel(u,ex)==='light'?4:u.trainingLevel==='advanced'?1.5:2,expected=base.load*(1+(base.target+targetRir)/30);currentSessionCompleted(u,ei).forEach(set=>{const actual=e1rmFromSet(set);if(actual&&expected)ratios.push(actual/expected)})});if(!ratios.length){u.sessionCalibration=null;return null}const ratio=median(ratios),light=workoutDifficultyLevel(u)==='light',factor=Math.max(.94,Math.min(light?1:1.06,1+(ratio-1)*.35)),pct=Math.round((factor-1)*100);u.sessionCalibration={factor,source:'Live session',summary:pct===0?'Today’s completed sets support the planned loads.':`Today’s completed sets adjusted remaining loads ${pct>0?'+':''}${pct}%.`,updatedAt:Date.now()};return u.sessionCalibration}
 function nextSetRecommendation(u,ex,exIndex){const sets=currentSessionCompleted(u,exIndex);if(!sets.length)return null;const last=sets[sets.length-1],w=parseLoad(last.weight),reps=Number(last.reps),rirText=String(last.rir??'').trim(),rir=rirText===''?null:Number(rirText),[lo,hi]=repRange(ex);if(!w||!reps)return null;let factor=1,label='Keep the same load';if(reps>=hi&&rir!==null&&rir>=2){factor=1.035;label='You beat the target — add a little weight'}else if(reps<lo||rir===0){factor=.94;label='That set was too hard — reduce the load'}else if(reps>=lo&&reps<=hi&&rir!==null&&rir>=1&&rir<=3){factor=1;label='Right on target — repeat this load'}else if(rir!==null&&rir>=4){factor=1.025;label='Too much left in reserve — add a little weight'}else if(rir===null){label=reps>hi?'Reps were high; add RIR next time for a sharper adjustment':'Repeat this load; add RIR for a sharper adjustment'}const load=roundLoad(w*factor,ex,u),target=Math.max(lo,Math.min(hi,repTarget(ex)));return {load,reps:target,label,text:`${label}: try about ${load} lb × ${target} next set.`}}
 function nextSetAdjustment(u,ex,exIndex){return nextSetRecommendation(u,ex,exIndex)?.text||null}
-function workoutReadinessAdjustment(u,workout){const energy=Number(u.readiness?.energy)||4,sore=Number(u.readiness?.soreness)||1;let adjusted=energy<=2?workout.map(e=>({...e,sets:Math.max(1,Math.ceil(e.sets*.75))})):workout;if(sore>=4&&(u.program?.currentWorkoutKey||'').includes('lower'))adjusted=adjusted.filter(e=>e.base!=='Hip hinge');return adjusted}
+function workoutReadinessAdjustment(u,workout){const energy=Number(u.readiness?.energy)||4,sore=Number(u.readiness?.soreness)||1;let adjusted=energy<=2?workout.map(e=>({...e,sets:reducedSets(e.sets,.75)})):workout;if(sore>=4&&(u.program?.currentWorkoutKey||'').includes('lower'))adjusted=adjusted.filter(e=>e.base!=='Hip hinge');return adjusted}
 function workoutOverrides(u,workout){const key=u.program?.currentWorkoutKey||'lower_strength',exposure=Number(u.program?.exposures?.[key])||0,override=u.coachOverrides;if(!override||override.workoutKey!==key||Number(override.exposure)!==exposure)return workout;return workout.map((exercise,index)=>{const replacement=override.byIndex?.[index]||override.byBase?.[exercise.base];if(!replacement||(replacement._targetName&&replacement._targetName!==exercise.name)||!exerciseAvailable(u,replacement))return exercise;const alternatives=[{...exercise},...(exercise._alternatives||[])].filter((x,i,a)=>x.name!==replacement.name&&a.findIndex(y=>y.name===x.name)===i);return {...exercise,...replacement,_alternatives:alternatives}})}
 function finalWorkout(u){if(u.workoutDraft?.plan?.length)return u.workoutDraft.plan.map(ex=>({...ex}));let workout=getWorkout(u);if(window.IronSixDifficulty)workout=window.IronSixDifficulty.transformWorkout(u,workout);workout=workoutReadinessAdjustment(u,workout);let memory=u.trainerMemory||{},fresh=Date.now()-Number(memory.reviewedAt||0)<=1000*60*60*24*21;if(fresh&&memory.verifiedForWorkoutKey===(u.program?.currentWorkoutKey||'lower_strength'))workout=workout.map(ex=>{const checked=(memory.verifiedPlan||[]).find(x=>x.name===ex.name&&x.base===ex.base),sets=Number(checked?.verifiedSets);const effort=window.IronSixDifficulty?.effectiveFor(u)||'balanced',ceiling=effort!=='balanced'&&(effort==='light'||Number(u.readiness?.energy)<=2||Number(u.readiness?.soreness)>=4)?ex.sets:10;return Number.isFinite(sets)?{...ex,sets:Math.max(1,Math.min(ceiling,Math.round(sets)))}:ex});workout=workoutOverrides(u,workout);return typeof budgetSessionWorkout==='function'?budgetSessionWorkout(u,workout):workout}
 const MUSCLE_GROUPS=['chest','back','shoulders','biceps','triceps','quads','hamstrings','glutes','calves','core'];
