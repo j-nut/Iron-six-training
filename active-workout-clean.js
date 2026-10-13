@@ -232,7 +232,7 @@
         drag=null;
       };
       overlay.addEventListener('pointerdown',event=>{
-        if(event.pointerType!=='touch'||event.isPrimary===false||drag)return;
+        if((event.pointerType!=='touch'&&event.pointerType!=='pen')||event.isPrimary===false||drag)return;
         if(event.cancelable)event.preventDefault();
         const next={id:event.pointerId,startY:event.clientY,startX:event.clientX,
           initial:input.value,changed:false,armed:false,moved:false,bubble:null,timer:null};
