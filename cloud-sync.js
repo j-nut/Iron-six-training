@@ -20,6 +20,34 @@
     }finally{deletingProfile=false;queueSync()}
   }
   let client=null,session=null,epoch=0,activated,syncing=null,syncTimer,activation=Promise.resolve(),mode='login',busy=false,message='Connecting…';
+  let localEditSerial=0,screenRefreshPending=false;
+  // A background sync can finish after a set is entered or while a phone keyboard is open.
+  // Only redraw the screen for meaningful profile/journal changes, never simply because
+  // a timer ran. Internal cloud versions and local save timestamps aren't screen data.
+  function screenFingerprint(){
+    const visible=(data.users||[]).map(u=>({
+      id:u.id,name:u.name,weight:u.weight,age:u.age,heightIn:u.heightIn,
+      trainingLevel:u.trainingLevel,benchBest:u.benchBest,
+      equipment:u.equipment,customEquipment:u.customEquipment,capacities:u.capacities,
+      workoutMinutes:u.workoutMinutes,readiness:u.readiness,
+      program:u.program,history:u.history,
+      // Journal restoration adds event and writer metadata; those do not affect
+      // rendered weight/reps/RIR/completion and must not remount active inputs.
+      today:Object.fromEntries(Object.entries(u.today||{}).map(([key,set])=>[key,{
+        weight:String(set?.weight??''),reps:String(set?.reps??''),
+        rir:String(set?.rir??''),done:!!set?.done,feedback:set?.feedback??null
+      }])),
+      workoutDraft:u.workoutDraft?{
+        id:u.workoutDraft.id,key:u.workoutDraft.key,plan:u.workoutDraft.plan,
+        difficulty:u.workoutDraft.difficulty,timer:u.workoutDraft.timer||null
+      }:null,
+      trainingMode:u.trainingMode,circuitPace:u.circuitPace,
+      workoutDifficulty:u.workoutDifficulty,sessionDifficulty:u.sessionDifficulty,
+      trainerMemory:u.trainerMemory,coachMessages:u.coachMessages,
+      coachOverrides:u.coachOverrides,sessionCalibration:u.sessionCalibration
+    }));
+    return JSON.stringify({activeUserId:data.activeUserId,users:visible});
+  }
   const scope=()=>window.ironSixAccountScope||null;
   const own=()=>!!session?.user&&session.user.id===scope();
   const $=id=>document.getElementById(id);
@@ -105,17 +133,28 @@
   }
   async function syncNow(showToast=false){
     if(!own()||deletingProfile)return false;if(syncing)return syncing;
-    const version=epoch;
+    const version=epoch,previousScreen=screenFingerprint(),editSerial=localEditSerial;
     syncing=(async()=>{try{
-      notify('Syncing…');await pullProfiles(version);if(version!==epoch)return false;
+      if(showToast)notify('Syncing…');
+      await pullProfiles(version);if(version!==epoch)return false;
       await pushProfiles(version);if(version!==epoch)return false;
       await journal().flush();if(version!==epoch)return false;
       await pullEntries(version);if(version!==epoch)return false;
       const editing=['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName);
-      if(!editing){for(const u of data.users)journal().restore(u);baseSave();renderAll()}else baseSave();
+      // Replaying journal data may genuinely change a completed session or an active
+      // workout. Preserve focused fields and wait until editing is over to show it.
+      if(!editing)for(const u of data.users)journal().restore(u);
+      if(previousScreen!==screenFingerprint())screenRefreshPending=true;
+      baseSave();
+      if(screenRefreshPending&&!editing&&editSerial===localEditSerial){
+        renderAll();
+        screenRefreshPending=false;
+      }
       const conflicts=data.users.some(u=>u._remoteProfile),pending=journal().pending().length;
       notify(conflicts?'Profile settings changed on another device. Choose which settings to keep below.':pending?'Workout edits are saved locally; database upload needs a retry.':'Account and workout records are backed up.');
-      renderConflicts();journal().status();if(showToast)toast(message);return !pending&&!conflicts;
+      // Empty conflict panels should not be rebuilt every time a background poll runs.
+      if(conflicts||$('profileConflicts')?.childElementCount)renderConflicts();
+      journal().status();if(showToast)toast(message);return !pending&&!conflicts;
     }catch(error){if(version===epoch){notify('Cloud unavailable: '+(error.message||'please retry')+'. Local workout entries are retained.');if(showToast)toast('Cloud save needs a retry; local records retained.')}return false}
     finally{syncing=null}})();return syncing;
   }
@@ -238,7 +277,7 @@
       if(callbackIssue){callbackIssue.clear();notify(callbackIssue.message);openAccount()}
     }catch(error){if(callbackIssue){callbackIssue.clear();notify(callbackIssue.message);openAccount()}else notify('Sign-in unavailable. Local workout logging still works. '+(error.message||''));renderAccount()}
   }
-  window.saveData=function(){data.fresh=false;const u=typeof activeUser==='function'?activeUser():null;if(u){u.localUpdatedAt=Date.now();if(own())u.accountOwner=scope()}const saved=baseSave();queueSync();return saved};
+  window.saveData=function(){localEditSerial++;data.fresh=false;const u=typeof activeUser==='function'?activeUser():null;if(u){u.localUpdatedAt=Date.now();if(own())u.accountOwner=scope()}const saved=baseSave();queueSync();return saved};
   window.IronSixCloud={withProfileDeletion,saveLocal:baseSave,syncNow,client:()=>client,session:()=>session,openAccount};
   window.addEventListener('online',()=>syncNow(false));
   setInterval(()=>syncNow(false),30000);init();

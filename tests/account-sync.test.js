@@ -216,3 +216,40 @@ for(const entered of [false,true])test('explicit guest import retains the pinned
     assert.equal(row.runtime_state.workoutDifficulty,'heavy');assert.equal(row.runtime_state.workoutDraft.difficulty,'light');
   }finally{a.close()}
 });
+
+
+test('background sync preserves workout cards, input values, and keyboard focus when nothing changed',async()=>{
+  const a=await accountApp();await a.signIn('owner-a');
+  await a.w.IronSixCloud.syncNow();
+  const d=a.w.document,card=d.querySelector('.exercise'),weight=card.querySelector('.weight');
+  const before=weight.value;
+  await a.w.IronSixCloud.syncNow();
+  assert.strictEqual(d.querySelector('.exercise'),card,'no-op sync must not destroy workout cards');
+  assert.strictEqual(d.querySelector('.weight'),weight,'no-op sync must preserve inputs');
+
+  weight.focus();weight.value='47.5';weight.dispatchEvent(new a.w.Event('input',{bubbles:true}));
+  await a.w.IronSixCloud.syncNow();
+  assert.strictEqual(d.querySelector('.weight'),weight,'focused input must survive background sync');
+  assert.equal(d.querySelector('.weight').value,'47.5');
+  assert.equal(a.run("activeUser().today['0-0'].weight"),'47.5');
+  weight.blur();
+  await a.w.IronSixCloud.syncNow();
+  await a.w.IronSixCloud.syncNow();
+  assert.strictEqual(d.querySelector('.weight'),weight,'settled sync must not repaint already-correct workout');
+  assert.notEqual(before,'47.5');
+  a.close();
+});
+
+test('meaningful incoming cloud profile changes still redraw a stable workout screen',async()=>{
+  const a=await accountApp();await a.signIn('owner-a');
+  await a.w.IronSixCloud.syncNow();
+  const first=a.w.document.querySelector('.exercise');
+  const row=a.db.profiles.find(p=>p.user_id==='owner-a');
+  assert(row,'signed-in profile was uploaded');
+  row.display_name='Updated on another device';
+  row.updated_at='2099-01-01T00:00:00.000Z';
+  await a.w.IronSixCloud.syncNow();
+  assert.equal(a.run('activeUser().name'),'Updated on another device');
+  assert.notStrictEqual(a.w.document.querySelector('.exercise'),first,'visible remote change requires redraw');
+  a.close();
+});

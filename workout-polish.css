@@ -1,0 +1,329 @@
+/* Iron Six mobile workout finish — one visual specification, not another
+   competing component system. Loaded with the page on web and Android.
+   The more specific rules intentionally normalize legacy inline module CSS. */
+:root{
+  --ix-panel:#181e26;
+  --ix-panel-strong:#202832;
+  --ix-panel-border:#38434f;
+  --ix-space:16px;
+}
+html{scroll-padding-top:calc(78px + var(--app-safe-top,0px));scroll-padding-bottom:calc(126px + var(--app-safe-bottom,0px))}
+body{background:#0e1217;letter-spacing:-.005em}
+body .app .hero{border-color:#35404c;background:linear-gradient(155deg,rgba(var(--accent-rgb,46,229,128),.065),#181e26 56%,#171d25)!important}
+body .app .section h2{letter-spacing:-.025em}
+body .app .btn,body .app .duration-btn{transition:background-color .16s ease,border-color .16s ease,color .16s ease}
+body .app :is(button,input,select,textarea):focus-visible,body .bottom-nav .navbtn:focus-visible{
+  outline:2px solid var(--accent)!important;outline-offset:3px
+}
+/* Make the active exercise navigator a deliberate, readable toolbar. */
+body .app #sessionCardNav{
+  position:sticky!important;
+  top:calc(var(--app-safe-top,0px) + 4px)!important;
+  z-index:18!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  width:100%;
+  min-width:0;
+  margin:0 0 18px!important;
+  padding:8px 0 12px!important;
+  border-bottom:1px solid var(--ix-panel-border)!important;
+  background:#0e1217!important
+}
+body .app #sessionCardNav .sc-step{
+  flex:1 1 0!important;min-width:0!important;
+  text-align:left!important;padding:0 2px!important;
+  line-height:1.25!important
+}
+body .app #sessionCardNav .sc-step strong{
+  color:#f4f7fa!important;
+  font-size:14px!important;
+  font-weight:750!important;
+  line-height:1.35!important;
+  letter-spacing:-.015em
+}
+body .app #sessionCardNav .sc-step span{
+  display:block!important;
+  color:#b4c0cc!important;
+  font-size:12px!important;
+  margin-top:3px!important;
+  line-height:1.3!important;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+body .app #sessionCardNav .sc-arrow,
+body .app #sessionCardNav .awc-overview-proxy{
+  flex:0 0 auto!important;
+  height:44px!important;min-height:44px!important;
+  border-radius:12px!important;
+  background:#212a34!important;border:1px solid #43515f!important;
+  color:#e8ecf1!important;
+  font-weight:650!important;
+  box-shadow:none!important
+}
+body .app #sessionCardNav #scPrev{min-width:42px!important;width:42px!important}
+body .app #sessionCardNav .awc-overview-proxy{
+  min-width:44px!important;width:44px!important;font-size:12px!important;padding:0 7px!important
+}
+body .app #sessionCardNav #scNextBtn{
+  min-width:69px!important;width:auto!important;
+  padding:0 12px!important;color:var(--accent)!important;
+  background:rgba(var(--accent-rgb,46,229,128),.09)!important;
+  border-color:rgba(var(--accent-rgb,46,229,128),.55)!important;
+  animation:none!important;
+}
+body .app #sessionCardNav #scNextBtn.ready{
+  background:rgba(var(--accent-rgb,46,229,128),.16)!important;
+  box-shadow:none!important
+}
+/* The exercise is the hero. The title, recommendation, and actions share
+   the full available width; no narrow nested column or excessive blank side. */
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden){
+  display:flex!important;flex-direction:column!important;
+  width:100%;min-width:0!important;
+  margin:0 0 14px!important;
+  padding:18px!important;
+  border:1px solid #394651!important;
+  border-radius:20px!important;
+  background:linear-gradient(165deg,#202732 0%,#192028 36%,#171e26 100%)!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.16)!important
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-head{
+  display:block!important;width:100%!important;max-width:none!important;
+  padding:0!important;margin:0!important
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-title{
+  display:block!important;
+  width:100%!important;max-width:none!important;min-width:0!important;
+  flex:none!important;
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-name-link{
+  display:block!important;
+  width:100%!important;max-width:100%!important;
+  margin:0!important;padding:0!important;text-align:left!important;
+  color:#f9fafb!important;
+  font-size:clamp(21px,5.6vw,26px)!important;
+  font-weight:750!important;line-height:1.2!important;
+  letter-spacing:-.035em!important;
+  overflow-wrap:normal!important;word-break:normal!important;
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-title>span{
+  display:block!important;margin:7px 0 0!important;
+  font-size:14px!important;line-height:1.4!important;
+  font-weight:550!important;color:#becad5!important
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion{
+  display:flex!important;flex-wrap:wrap!important;align-items:baseline!important;
+  gap:5px 10px!important;min-height:0!important;
+  width:100%!important;max-width:none!important;min-width:0!important;
+  margin:15px 0 0!important;padding:12px 14px!important;
+  background:rgba(var(--accent-rgb,46,229,128),.085)!important;
+  border:1px solid rgba(var(--accent-rgb,46,229,128),.35)!important;
+  border-left:3px solid var(--accent)!important;
+  border-radius:12px!important;box-shadow:none!important
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion::before{
+  content:'SUGGESTED START';
+  display:block;flex:1 0 100%;
+  color:#c7d0d9;font-size:10px;font-weight:800;
+  letter-spacing:.12em;line-height:1.2
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion strong{
+  display:block!important;min-width:0!important;
+  color:var(--accent)!important;
+  font-size:16px!important;line-height:1.35!important;
+  font-weight:760!important;letter-spacing:-.015em!important;
+  white-space:normal!important;overflow-wrap:normal!important
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .awc-actions{
+  display:flex!important;gap:9px!important;flex-wrap:wrap!important;
+  margin:13px 0 0!important
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .awc-action{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:82px!important;min-height:42px!important;
+  padding:9px 16px!important;
+  border:1px solid #485361!important;border-radius:11px!important;
+  background:#27313d!important;
+  color:#e8edf2!important;font-size:13px!important;font-weight:675!important;
+  line-height:1.25!important;
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .awc-action[hidden]{display:none!important}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .awc-action.primary-lite{
+  border-color:rgba(var(--accent-rgb,46,229,128),.5)!important;
+  background:rgba(var(--accent-rgb,46,229,128),.1)!important;
+  color:var(--accent)!important
+}
+/* Logging rows align to the same columns and remain large enough for thumbs. */
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .sets{
+  width:100%;margin:20px 0 0!important;padding:17px 0 0!important;
+  border-top:1px solid #3a4551!important;
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row,
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .field-labels{
+  display:grid!important;grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 64px 46px!important;
+  column-gap:7px!important;width:100%;min-width:0!important
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .field-labels{
+  align-items:end!important;color:#aebdca!important;
+  margin-bottom:7px!important;padding:0!important;
+  font-size:11px!important;line-height:1.3!important;letter-spacing:.04em!important
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row{
+  align-items:center!important;
+  margin:0 0 8px!important;min-height:48px!important
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .field{
+  min-width:0!important;max-width:100%!important;
+  height:48px!important;min-height:48px!important;
+  padding:8px 3px!important;text-align:center!important;
+  background:#111820!important;
+  border:1px solid #485866!important;
+  border-radius:10px!important;
+  color:#f4f7fa!important;font-size:16px!important;
+  font-variant-numeric:tabular-nums
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .rir{
+  font-size:13px!important;padding:7px 1px!important
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .done{
+  width:100%!important;min-width:44px!important;
+  height:48px!important;min-height:48px!important;
+  border-radius:10px!important;
+  border:1px solid #485866!important;
+  background:#1e2934!important;color:#b7c4ce!important;
+  font-size:20px!important
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .done.active{
+  background:var(--accent)!important;color:#101419!important;
+  border-color:var(--accent)!important
+}
+body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-num{
+  font-size:13px!important;font-variant-numeric:tabular-nums
+}
+/* Visual form guidance should be useful, but shouldn't occupy a full screen
+   or force the core set-entry task below a large image. */
+body .app .exercise .awc-form-guide{
+  order:2;display:block;width:100%;min-width:0;
+  margin:18px 0 0;padding:0;border:1px solid #3b4854;
+  border-radius:12px;overflow:hidden;background:#161d25;
+}
+body .app .exercise .awc-form-guide>summary{
+  display:flex;align-items:center;gap:8px;
+  list-style:none;cursor:pointer;
+  min-height:49px;padding:12px 14px;
+  color:#f1f4f8;font-size:13px;font-weight:720
+}
+body .app .exercise .awc-form-guide>summary::-webkit-details-marker{display:none}
+body .app .exercise .awc-form-guide>summary::before{
+  content:'◧';font-size:17px;line-height:1;color:var(--accent)
+}
+body .app .exercise .awc-form-guide>summary::after{
+  content:'+';margin-left:auto;color:var(--accent);
+  font-size:20px;font-weight:450;line-height:1
+}
+body .app .exercise .awc-form-guide[open]>summary::after{content:'−'}
+body .app .exercise .awc-form-guide>summary span{
+  color:#aab8c4;font-size:12px;font-weight:450;white-space:nowrap
+}
+body .app .exercise .awc-form-guide[open]>summary{
+  border-bottom:1px solid #3b4854
+}
+body .app .exercise .awc-form-guide .exercise-media,
+body .app .exercise .awc-form-guide .exercise-media-missing{
+  margin:10px!important;max-width:calc(100% - 20px);
+  border-radius:10px!important
+}
+body .app .exercise .awc-form-guide .exercise-media img{max-width:100%;height:auto}
+body .app .exercise .awc-form-guide .exercise-media figcaption,
+body .app .exercise .awc-form-guide .media-cues{
+  font-size:12px!important;line-height:1.5!important
+}
+/* Navigation should support the workout, not visually dominate it. */
+body .bottom-nav{
+  left:10px!important;right:10px!important;
+  width:auto!important;max-width:640px!important;
+  bottom:calc(10px + var(--app-safe-bottom,0px))!important;
+  padding:5px!important;border-radius:16px!important;
+  background:#19212a!important;
+  border:1px solid #42505d!important;
+  box-shadow:0 6px 22px rgba(0,0,0,.28)!important;
+  backdrop-filter:none!important
+}
+body .bottom-nav .bottom-inner{
+  display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:2px!important;max-width:none!important
+}
+body .bottom-nav .navbtn{
+  display:flex!important;min-width:0!important;
+  min-height:57px!important;gap:4px!important;
+  padding:7px 2px!important;border-radius:11px!important;
+  font-size:11px!important;line-height:1.2!important;
+  font-weight:650!important;color:#b9c5ce!important
+}
+body .bottom-nav .navbtn.active{
+  color:var(--accent)!important;
+  background:rgba(var(--accent-rgb,46,229,128),.115)!important
+}
+body .bottom-nav .pr-nav-icon{width:20px!important;height:20px!important}
+body .app{padding-bottom:calc(116px + var(--app-safe-bottom,0px))!important}
+body .app .modal{box-shadow:0 20px 65px rgba(0,0,0,.4)}
+@media(max-width:380px){
+  body .app #exerciseList.awc-focus .exercise:not(.sc-hidden){padding:14px!important;border-radius:16px!important}
+  body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row,
+  body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .field-labels{
+    grid-template-columns:20px minmax(0,1fr) minmax(0,1fr) 58px 44px!important;column-gap:5px!important
+  }
+  body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-name-link{
+    font-size:21px!important
+  }
+  body .app #sessionCardNav{gap:5px!important}
+  body .app #sessionCardNav .sc-step strong{font-size:12px!important}
+  body .app #sessionCardNav .sc-step span{font-size:11px!important}
+  body .app .exercise .awc-form-guide>summary span{display:none}
+  body .bottom-nav{left:6px!important;right:6px!important}
+  body .bottom-nav .navbtn{font-size:10px!important}
+}
+@media(min-width:641px){
+  body .app #exerciseList.awc-focus .exercise:not(.sc-hidden){padding:24px!important}
+  body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-name-link{
+    font-size:26px!important
+  }
+  body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row,
+  body .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .field-labels{
+    grid-template-columns:35px minmax(0,1fr) minmax(0,1fr) 100px 54px!important;column-gap:12px!important
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  body .app .btn,body .app .duration-btn{transition:none!important}
+}
+
+
+/* Touch-first precision scrub. Long-press is opt-in; typing and accessibility
+   remain fully available. Only the numeric input surface captures touch drags. */
+body .app .awc-scrub-tip{
+  margin:1px 0 0!important;padding:3px 0 0!important;
+  color:#9daebc;font-size:11px;font-weight:500;
+  letter-spacing:0;line-height:1.45;text-align:center
+}
+@media(pointer:coarse){
+  body .app .exercise .set-row input.weight,
+  body .app .exercise .set-row input.reps{
+    touch-action:none;-webkit-user-select:none;user-select:none;
+    -webkit-touch-callout:none
+  }
+}
+body .app .exercise input.awc-scrubbing{
+  border-color:var(--accent)!important;
+  background:rgba(var(--accent-rgb,46,229,128),.12)!important;
+  box-shadow:0 0 0 2px rgba(var(--accent-rgb,46,229,128),.18)!important
+}
+.awc-scrub-value{
+  position:fixed!important;z-index:95!important;transform:translateX(-50%);
+  display:block;min-width:112px;max-width:180px;
+  padding:10px 14px;border:1px solid rgba(var(--accent-rgb,46,229,128),.65);
+  border-radius:14px;background:#24303a;color:#f6f8f9;
+  box-shadow:0 10px 24px rgba(0,0,0,.4);
+  font-size:18px;font-weight:770;line-height:1.15;
+  font-variant-numeric:tabular-nums;text-align:center;
+  pointer-events:none;white-space:nowrap
+}

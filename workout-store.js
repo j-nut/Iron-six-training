@@ -1,7 +1,7 @@
 /* An edit is an immutable record, not a replacement of a user's entire profile. */
 (() => {
   const PREFIX='ironSixEntry:', events=new Map();
-  let db=null, localError='', cloudError='', flushing=null, timer=null, transport=null;
+  let db=null, localError='', cloudError='', flushing=null, timer=null, transport=null, lastHistoryStatusStamp=null;
   const owner=()=>window.ironSixAccountScope||'guest';
   const copy=value=>JSON.parse(JSON.stringify(value));
   const uuid=()=>crypto.randomUUID();
@@ -159,7 +159,14 @@
   }
   function schedule(){clearTimeout(timer);timer=setTimeout(flush,250)}
   function status(){
-    if(document.getElementById('history')?.classList.contains('active'))renderTable();
+    // Status messages update frequently during automatic sync. The History table
+    // should only rebuild if the underlying user's journal entries changed.
+    if(document.getElementById('history')?.classList.contains('active')){
+      const u=typeof activeUser==='function'?activeUser():null;
+      const stamp=u?owner()+':'+u.id+':'+all().filter(e=>e.profile_client_id===u.id)
+        .map(e=>e.event_id+':'+(e.sequence||0)+':'+Number(!!e.completed)).join('|'):null;
+      if(stamp!==lastHistoryStatusStamp){lastHistoryStatusStamp=stamp;renderTable()}
+    }else lastHistoryStatusStamp=null;
     const items=pending(),unsaved=items.some(e=>!e._durable),scope=owner();
     const message=unsaved?'NOT SAVED — keep this page open':localError||
       (scope==='guest'?'Saved on this device only — sign in to back up':items.length?`${items.length} edits saved locally · ${cloudError?'cloud retry needed':navigator.onLine===false?'offline':'sending to database…'}`:'All workout edits saved to database');

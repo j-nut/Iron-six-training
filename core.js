@@ -53,7 +53,18 @@ function stableNumber(value){let h=2166136261;for(const c of String(value||'')){
 function generatedOptionsForSlot(u,options){const sample=options?.[0],key=u.program?.currentWorkoutKey||'lower_strength';if(!sample)return [];return (u.program?.generatedExercises||[]).filter(x=>x&&x.base===sample.base&&x.seedKey===sample.seedKey&&(!x.workoutKeys?.length||x.workoutKeys.includes(key))).map(x=>({name:String(x.name||'').slice(0,80),requires:Array.isArray(x.requires)?x.requires.slice(0,4):[],requiresCustom:Array.isArray(x.requiresCustom)?x.requiresCustom.map(normalizeEquipmentName).filter(Boolean).slice(0,2):[],prescription:String(x.prescription||sample.prescription).slice(0,80),sets:Math.max(1,Math.min(6,Math.round(Number(x.sets)||sample.sets||3))),tag:String(x.tag||sample.tag||'Accessory').slice(0,30),base:sample.base,seedKey:sample.seedKey,priority:Math.max(1,Math.min(3,Math.round(Number(x.priority)||sample.priority||2))),equipmentName:normalizeEquipmentName(x.equipmentName),equipmentId:String(x.equipmentId||''),source:x.source==='curated'?'curated':'groq'})).filter(x=>x.name&&exerciseAvailable(u,x))}
 function exerciseRecentPenalty(u,o){let penalty=0;(u.history||[]).slice(0,12).forEach((h,sessionIndex)=>{(h.details||[]).forEach(d=>{if(String(d.name).toLowerCase()===o.name.toLowerCase())penalty+=Math.max(8,120-sessionIndex*13);else if(d.base===o.base)penalty+=Math.max(0,12-sessionIndex)})});return penalty}
 function currentSelectionKey(u,base){const key=u.program?.currentWorkoutKey||'lower_strength',exposure=Number(u.program?.exposures?.[key])||0;return `${key}:${exposure}:${base}`}
-function clearCurrentSelectionCache(u){const key=u.program?.currentWorkoutKey||'lower_strength',prefix=`${key}:${Number(u.program?.exposures?.[key])||0}:`;for(const cacheKey of Object.keys(u.program?.selectionCache||{}))if(cacheKey.startsWith(prefix))delete u.program.selectionCache[cacheKey]}
+function clearCurrentSelectionCache(u){
+  const key=u.program?.currentWorkoutKey||'lower_strength';
+  const prefix=`${key}:${Number(u.program?.exposures?.[key])||0}:`;
+  // The balanced-program selector stores accessory picks as v5:<key>:<slot>:<exposure>.
+  // Clear those as well when preferences or coach recommendations change. Keep
+  // four-exposure :block anchors stable for meaningful overload comparisons.
+  const programPrefix=`v5:${key}:`;
+  for(const cacheKey of Object.keys(u.program?.selectionCache||{})){
+    if(cacheKey.startsWith(prefix)||(cacheKey.startsWith(programPrefix)&&!cacheKey.includes(':block')))
+      delete u.program.selectionCache[cacheKey];
+  }
+}
 function choose(u,options){const original=Array.isArray(options)?options:[],pool=[...original,...generatedOptionsForSlot(u,original)].filter((o,index,all)=>o?.name&&exerciseAvailable(u,o)&&all.findIndex(x=>x.name.toLowerCase()===o.name.toLowerCase())===index);if(!pool.length)return null;const difficulty=window.IronSixDifficulty?.effectiveFor(u)||'balanced',cacheKey=currentSelectionKey(u,pool[0].base)+(difficulty==='balanced'?'':':difficulty:'+difficulty),cachedName=u.program?.selectionCache?.[cacheKey],cached=pool.find(x=>x.name===cachedName);const usesEquipment=o=>!!(o.requires?.length||o.requiresCustom?.length),equipped=pool.some(usesEquipment);const ranked=cached||pool.map((o,index)=>({o,score:exerciseRecentPenalty(u,o)+index*1.5+(o.source==='groq'?2:0)+(equipped&&!usesEquipment(o)?24:0)+(window.IronSixDifficulty?.selectionPenalty(u,o)||0),tie:stableNumber(`${cacheKey}:${o.name}`)})).sort((a,b)=>a.score-b.score||a.tie-b.tie)[0].o;u.program.selectionCache=u.program.selectionCache||{};u.program.selectionCache[cacheKey]=ranked.name;const alternatives=pool.filter(x=>x.name!==ranked.name).map(x=>({...x}));return {...ranked,_alternatives:alternatives}}
 function ex(name,requires,prescription,sets,tag,base,seedKey,priority=2){return {name,requires,prescription,sets,tag,base,seedKey:seedKey||base,priority}}
 function slot(u,options){return choose(u,options)}
