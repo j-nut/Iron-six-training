@@ -93,6 +93,7 @@ test('the standalone design preview uses sample-only interactions and five app d
   }
   const dom=new JSDOM(preview,{url:'https://iron-six.test/studio-preview.html',runScripts:'dangerously'});
   try{
+    dom.window.scrollTo=()=>{}; // jsdom has no real viewport scroll
     const d=dom.window.document;
     assert.equal(d.querySelector('#today').classList.contains('active'),true);
     d.querySelector('[data-preview-view="plan"]').click();
