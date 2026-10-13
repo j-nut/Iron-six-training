@@ -518,3 +518,24 @@ body.ix-studio .app #sessionCardNav .sc-step strong .ix-step-count>span{
   display:inline!important;margin:0!important;padding:0!important;
   font:inherit!important;line-height:inherit!important;color:inherit!important
 }
+
+
+/* Native Android safe-area guard. The Studio's responsive .app padding
+   shorthands use !important; those otherwise beat the WebView's earlier
+   safe-area padding and allow the logo to sit under the status bar.
+   Apply this after all mobile breakpoints, with an explicit native selector. */
+.iron-six-native body.ix-studio .app{
+  padding-top:calc(24px + var(--app-safe-top,28px))!important;
+}
+@media(max-width:520px){
+  .iron-six-native body.ix-studio .app{
+    padding-top:calc(16px + var(--app-safe-top,28px))!important;
+  }
+}
+
+/* SessionCards toggles .sc-hidden on the exercise navigator until Begin and
+   while in circuit/review modes. The Studio display:grid!important rule must
+   never override that state or float over bottom tabs/system gestures. */
+body.ix-studio .app #sessionCardNav.sc-hidden{
+  display:none!important;
+}
