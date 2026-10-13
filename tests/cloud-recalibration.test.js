@@ -2,10 +2,11 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
+const {loadApiSource}=require('./helpers/load-api.js');
 async function calibrate(level,proposed,providerOk=true){
   let result,request;
   const context={process:{env:{GROQ_API_KEY:'test'}},fetch:async(_,init)=>{request=JSON.parse(init.body);return{ok:providerOk,json:async()=>({choices:[{message:{content:JSON.stringify({factor:proposed})}}]})}}};
-  vm.createContext(context);vm.runInContext(fs.readFileSync('api/recalculate.js','utf8').replace('export default async function handler','async function handler'),context);
+  vm.createContext(context);vm.runInContext(loadApiSource('api/recalculate.js'),context);
   await context.handler({method:'POST',body:{deterministicFactor:1.06,profile:{workoutDifficulty:level},completed:[{weight:50,reps:10,rir:5}]}},{status(){return this},json(x){result=x;return this}});
   return{result,request};
 }

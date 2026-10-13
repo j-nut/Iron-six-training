@@ -11,6 +11,7 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
+const {loadApiSource}=require('./helpers/load-api.js');
 const media=require('../exercise-media-catalog.js');
 const resolver=require('../exercise-media-resolver.js');
 const catalog=require('../equipment-catalog.js');
@@ -19,9 +20,7 @@ const library=require('../equipment-exercise-library.js');
 function api(groq){
   const ctx={media,catalog,library,resolver,process:{env:groq?{GROQ_API_KEY:'test'}:{}},fetch:async()=>({ok:true,json:async()=>({choices:[{message:{content:JSON.stringify({exercises:groq})}}]})})};
   vm.createContext(ctx);
-  const source=fs.readFileSync('api/equipment-exercises.js','utf8')
-    .replace(/^import .*$/gm,'')
-    .replace('export default async function handler','async function handler');
+  const source=loadApiSource('api/equipment-exercises.js');
   vm.runInContext(source+'\nthis.handler=handler;',ctx);
   return async equipment=>{let output;await ctx.handler({method:'POST',body:{equipment}},{status(){return this},json(body){output=body}});return output};
 }

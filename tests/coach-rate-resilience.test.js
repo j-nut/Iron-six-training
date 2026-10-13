@@ -1,9 +1,9 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
+const {loadApiSource}=require('./helpers/load-api.js');
 
-let source = fs.readFileSync('api/coach.js', 'utf8');
-source = source.replace('export default async function handler', 'async function handler');
+let source = loadApiSource('api/coach.js');
 source += '\nthis.__coachTest = { handler, compactContext, compactConversation, cleanModelOutput, wantsAction, formattingInstruction };';
 
 function response(ok, status, body, headers = {}) {
