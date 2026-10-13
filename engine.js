@@ -30,9 +30,16 @@ function exerciseLoadEquipment(ex){
  if(/bodyweight|push[- ]?up|pull[- ]?up|chin[- ]?up|plank|single-leg hip hinge|cyclist squat/i.test(name))return 'bodyweight';
  return 'other';
 }
+// Smallest load change the user's equipment allows. Dumbbells and barbells default to 5 lb;
+// a profile can opt into 2.5 lb (fractional dumbbells, 1.25 lb plates) so light lifts can progress.
+function loadIncrement(ex,u){
+ const equipment=exerciseLoadEquipment(ex);
+ const raw=equipment==='dumbbell'?u?.capacities?.dumbbellStep:['barbell','landmine'].includes(equipment)?u?.capacities?.barbellStep:null;
+ return Number(raw)===2.5?2.5:5;
+}
 function roundLoad(x,ex,u){
  if(!Number.isFinite(x)||x<=0)return null;
- const equipment=exerciseLoadEquipment(ex);let r=Math.max(5,Math.round(x/5)*5);
+ const equipment=exerciseLoadEquipment(ex),step=loadIncrement(ex,u);let r=Math.max(step,Math.round(x/step)*step);
  const cap=Number(equipment==='dumbbell'?u.capacities?.dumbbellMax:['barbell','landmine'].includes(equipment)?u.capacities?.barbellMax:null);
  if(Number.isFinite(cap)&&cap>0)r=Math.min(r,cap);
  return r;

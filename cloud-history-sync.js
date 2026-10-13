@@ -20,7 +20,7 @@
   loadRuntimeScript('auth-hardening.js?v=2','auth-hardening','__ironSixAuthHardened');
   loadRuntimeScript('account-polish.js?v=1','account-polish','__ironSixAccountPolish');
   loadRuntimeScript('profile-delete.js?v=3','profile-delete','__ironSixProfileDeleteLoaded');
-  loadRuntimeScript('load-progression-v2.js?v=1','load-progression-v2','__ironSixLoadProgressionV2Loaded');
+  loadRuntimeScript('load-progression-v2.js?v=2','load-progression-v2','__ironSixLoadProgressionV2Loaded');
   loadRuntimeScript('bodyweight-load-fix.js?v=2','bodyweight-load-fix','__ironSixBodyweightLoadFix');
   loadRuntimeScript('adaptive-insights.js?v=3','adaptive-insights','__ironSixAdaptiveInsightsLoaded');
   loadRuntimeScript('trainer-intelligence-v2.js?v=4','trainer-intelligence-v2','__ironSixTrainerIntelligenceV2Loaded');
