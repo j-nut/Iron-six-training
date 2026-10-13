@@ -28,6 +28,9 @@ test('Studio design is active on the real web entrypoint and copied into the nat
   assert(html.includes('src="studio-ui.js?v=3"'));
   const android=fs.readFileSync('scripts/build-android-web.mjs','utf8');
   assert(android.includes("'studio-ui.css'"));
+  const web=fs.readFileSync('scripts/build-web.mjs','utf8');
+  for(const file of ["'studio-ui.css'","'workout-polish.css'","'studio-preview.html'"])
+    assert(web.includes(file),'Vercel must include '+file);
   const css=fs.readFileSync('studio-ui.css','utf8');
   for(const token of ['--ix-panel','--ix-edge','--ix-type',
       '#exerciseList.awc-focus','#sessionCardNav','.ix-set-summary',
