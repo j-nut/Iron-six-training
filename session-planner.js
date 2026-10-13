@@ -21,6 +21,29 @@ function sessionSeconds(u,plan){
   }
   return base+plan.reduce((n,e)=>n+45+e.sets*traditionalSetSeconds(e),0);
 }
+/* Rolling completed-work coverage for short sessions.
+ * Floors are direct completed sets expected over COVERAGE_WINDOW completed sessions (1.5 rotation
+ * cycles). They only rank which optional movement earns a scarce slot; they never add catch-up sets.
+ * Doses count sets with done===true, never planned sets. */
+const COVERAGE_WINDOW=9;
+const SMALL_GROUP_FLOORS={lateral_delts:4,triceps:4,lat_iso:4,rear_delts:3,biceps:5,hamstrings:4,calves:4,core:3,hip_extension:3};
+const COMPOUND_GROUP_FLOORS={chest_press:12,overhead_press:4,vertical_pull:6,row:6,squat:8,hinge:6,unilateral:4};
+function programCategoryOf(seedKey){
+  const s=seedKey;
+  if(['bench','chest_press','fly'].includes(s))return 'chest_press';
+  if(s==='overhead_press')return 'overhead_press';if(s==='lateral_raise')return 'lateral_delts';if(s==='triceps')return 'triceps';
+  if(s==='pullup')return 'vertical_pull';if(s==='row')return 'row';if(s==='lat_iso')return 'lat_iso';if(s==='rear_delt')return 'rear_delts';if(['curl','hammer_curl'].includes(s))return 'biceps';
+  if(s==='squat')return 'squat';if(s==='hinge')return 'hinge';if(s==='split_squat')return 'unilateral';if(s==='hip_thrust')return 'hip_extension';if(s==='ham_curl')return 'hamstrings';if(s==='calves')return 'calves';if(s==='core')return 'core';
+  return null;
+}
+function rollingCoverage(u,windowSize=COVERAGE_WINDOW){
+  const sessions=(u?.history||[]).filter(h=>(h.details||[]).some(d=>(d.sets||[]).some(x=>x?.done===true))).slice(0,windowSize),dose={};
+  for(const h of sessions)for(const d of h.details||[]){const k=programCategoryOf(d.seedKey);if(k)dose[k]=(dose[k]||0)+(d.sets||[]).filter(x=>x?.done===true).length}
+  const scale=Math.max(.35,Math.min(1,sessions.length/windowSize));
+  // need: 0 = adequately dosed in the window, 1 = no completed direct work. New users start at 1 everywhere.
+  const need=key=>{const floor=SMALL_GROUP_FLOORS[key]||COMPOUND_GROUP_FLOORS[key];return floor?Math.max(0,1-(dose[key]||0)/(floor*scale)):0};
+  return {sessions:sessions.length,dose,need};
+}
 function budgetSessionWorkout(u,workout){
   const circuit=u.trainingMode==='circuit',light=window.IronSixDifficulty?.effectiveFor(u)==='light',minutes=Number(u.workoutMinutes||60),budget=Math.max(600,Math.min(7200,minutes*60));
   const used=new Set();
@@ -31,14 +54,7 @@ function budgetSessionWorkout(u,workout){
   const exposure=Number(u.program?.exposures?.[u.program?.currentWorkoutKey])||0;
   const specificity=e=>e.seedKey==='calves'?['calves']:e.seedKey==='core'?['core']:e.seedKey==='ham_curl'?['hamstrings']:exerciseMuscles(e);
   const recentDose=e=>(u.history||[]).slice(0,6).reduce((n,h)=>n+(h.details||[]).reduce((v,d)=>v+(d.seedKey===e.seedKey?(d.sets||[]).filter(s=>s.done===true).length:0),0),0);
-  const programCategory=e=>{
-    const s=e.seedKey;
-    if(['bench','chest_press','fly'].includes(s))return 'chest_press';
-    if(s==='overhead_press')return 'overhead_press';if(s==='lateral_raise')return 'lateral_delts';if(s==='triceps')return 'triceps';
-    if(s==='pullup')return 'vertical_pull';if(s==='row')return 'row';if(s==='lat_iso')return 'lat_iso';if(s==='rear_delt')return 'rear_delts';if(['curl','hammer_curl'].includes(s))return 'biceps';
-    if(s==='squat')return 'squat';if(s==='hinge')return 'hinge';if(s==='split_squat')return 'unilateral';if(s==='hip_thrust')return 'hip_extension';if(s==='ham_curl')return 'hamstrings';if(s==='calves')return 'calves';if(s==='core')return 'core';
-    return null;
-  };
+  const programCategory=e=>programCategoryOf(e.seedKey);
   const deficitRows=window.IronSixProgramV3?.deficits?.(u)||[],deficitMap=new Map(deficitRows.map(x=>[x.key,x]));
   const programNeed=e=>{const row=deficitMap.get(programCategory(e));return row?Math.max(0,Math.min(2,row.deficit/Math.max(1,row.expected))):0};
   pool=pool.map((e,i)=>({...e,_position:i}));
@@ -60,24 +76,56 @@ function budgetSessionWorkout(u,workout){
       : new Set();
   const protectedAccessories=accessories.filter(e=>protectedPullSlots.has(e._programSlot));
   const otherAccessories=accessories.filter(e=>!protectedPullSlots.has(e._programSlot));
-  let selected=[...anchors,...protectedAccessories,...otherAccessories].slice(0,count).map(e=>{
-    const baseMax=Math.max(1,e.sets);
-    const volumeBonus=!light&&!circuit&&minutes>=60&&e.priority!==1?1:0;
-    return {...e,sets:1,_max:baseMax+volumeBonus};
-  });
-  const covered=new Set(selected.flatMap(exerciseMuscles));
-  const neglected=accessories.find(e=>!selected.some(x=>x.name===e.name)&&(programNeed(e)>.25||specificity(e).some(m=>due.has(m)&&!covered.has(m))));
-  // A neglected accessory may replace another optional accessory, but it cannot
-  // silently erase a protected horizontal/vertical pull or curl angle. The selected
-  // slot order is subsequently restored to the original workout sequence.
-  const replaceAt=selected.reduce((index,e,i)=>
-    e.priority!==1&&!protectedPullSlots.has(e._programSlot)?i:index,-1);
-  if(neglected&&selected.length>2&&replaceAt>=0){
-    const baseMax=Math.max(1,neglected.sets),volumeBonus=!light&&!circuit&&minutes>=60?1:0;
-    selected[replaceAt]={...neglected,sets:1,_max:baseMax+volumeBonus};
+  // Slot allocation. Anchors keep the highest-value lifts (at 10 minutes only the first anchor is
+  // guaranteed). One open slot is reserved for the most under-dosed small muscle group, judged on
+  // completed sets in a rolling window, and it is ranked against the strongest second compound
+  // (protected pull pattern, displaced anchor, or secondary lift) instead of always losing to it.
+  // Protected curl angles win ties but yield once biceps are adequately dosed and another group is not.
+  const cov=rollingCoverage(u),isSmall=e=>Boolean(SMALL_GROUP_FLOORS[programCategory(e)]);
+  const keep=anchors.slice(0,Math.max(1,Math.min(anchors.length,count-(minutes<=10&&!circuit?1:0)-(anchors.length>=count?1:0))));
+  const dropped=anchors.filter(e=>!keep.includes(e));
+  const leftover=[...dropped,...protectedAccessories,...otherAccessories];
+  const tie=(a,b)=>Number(protectedPullSlots.has(b._programSlot))-Number(protectedPullSlots.has(a._programSlot))||Number(specificity(b).some(m=>due.has(m)))-Number(specificity(a).some(m=>due.has(m)))||recentDose(a)-recentDose(b)||((a._position+exposure)%Math.max(1,pool.length))-((b._position+exposure)%Math.max(1,pool.length));
+  // A muscle absent from (or last trained 4+ sessions ago in) the eight-session muscle log is urgent, so
+  // exclusive muscles such as calves and core cannot be starved by redundant hamstring/glute accessories.
+  const urgent=e=>specificity(e).some(m=>coverage.last[m]===null||coverage.last[m]>=4);
+  const needOf=e=>Math.min(1.6,cov.need(programCategory(e))+(urgent(e)?.6:0));
+  const smalls=leftover.filter(e=>isSmall(e)&&needOf(e)>=.2).sort((a,b)=>needOf(b)-needOf(a)||tie(a,b));
+  const compounds=leftover.filter(e=>!isSmall(e));
+  const reserved=smalls[0],secondCompound=compounds[0];
+  const order=[...keep];
+  const openSlots=count-keep.length;
+  if(reserved&&secondCompound){
+    if(openSlots>=2)order.push(reserved,secondCompound);
+    else{
+      // Protected pull patterns and displaced anchors get a modest edge; ordinary secondary lifts do not.
+      const edge=protectedPullSlots.has(secondCompound._programSlot)||dropped.includes(secondCompound)?.15:0;
+      order.push(needOf(reserved)>=needOf(secondCompound)+edge?reserved:secondCompound);
+    }
+  }else if(reserved||secondCompound)order.push(reserved||secondCompound);
+  // Fill in priority order; a candidate that cannot fit even at one set is skipped so a cheaper
+  // under-dosed accessory can use the time instead of leaving it unused.
+  const candidates=[...new Set([...order,...smalls,...leftover])];
+  let selected=[];
+  for(const e of candidates){
+    if(selected.length>=count)break;
+    // Short-session small accessories are micro-doses (max 2 sets); missed volume is not crammed into one day.
+    const baseMax=Math.max(1,e.sets),volumeBonus=!light&&!circuit&&minutes>=60&&e.priority!==1?1:0,microCap=!circuit&&minutes<=30&&isSmall(e)?2:Infinity;
+    const next=[...selected,{...e,sets:1,_max:Math.min(microCap,baseMax+volumeBonus),_rank:selected.length}];
+    if(!selected.length||sessionSeconds(u,next)<=budget)selected=next;
   }
   selected.sort((a,b)=>a._position-b._position);
-  while(selected.length>1&&sessionSeconds(u,selected)>budget)selected.pop();
+  // Micro-dose: if time remains after the compounds' two-set floor, add one more under-dosed small
+  // accessory at 1 set (max 2) rather than spending that time on a third set of an already-dosed lift.
+  if(!circuit&&count<pool.length){
+    const extras=leftover.filter(e=>isSmall(e)&&needOf(e)>=.2&&!selected.some(x=>x.name===e.name)).sort((a,b)=>needOf(b)-needOf(a)||tie(a,b));
+    for(const e of extras){
+      if(selected.length>=count+1)break;
+      const next=[...selected,{...e,sets:1,_max:Math.min(2,Math.max(1,e.sets)),_rank:selected.length}].sort((a,b)=>a._position-b._position);
+      // The extra may not cost the compound lifts their normal two sets.
+      if(sessionSeconds(u,next.map(x=>({...x,sets:isSmall(x)?x.sets:Math.min(2,x._max)})))<=budget)selected=next;
+    }
+  }
   if(circuit){
     const maxRounds=Number(u.readiness?.energy||4)<=2?4:light?6:8;
     while(selected.length&&selected[0].sets<maxRounds){const next=selected.map(e=>({...e,sets:e.sets+1}));if(sessionSeconds(u,next)>budget)break;selected=next}
@@ -87,7 +135,7 @@ function budgetSessionWorkout(u,workout){
     let grew=true;
     while(grew){grew=false;for(const e of selected){if(e.sets>=e._max)continue;e.sets++;if(sessionSeconds(u,selected)>budget)e.sets--;else grew=true}}
   }
-  return selected.map(({_position,_max,...e})=>({...e,prescription:circuit?circuitPace(u).work+'s controlled work · '+e.sets+' rounds':String(e.prescription).replace(/^\d+\s*×/,e.sets+' ×')}));
+  return selected.map(({_position,_max,_rank,...e})=>({...e,prescription:circuit?circuitPace(u).work+'s controlled work · '+e.sets+' rounds':String(e.prescription).replace(/^\d+\s*×/,e.sets+' ×')}));
 }
 function circuitTimeline(u,plan){
   const pace=circuitPace(u),steps=[{kind:'warmup',seconds:sessionWarmup(u),title:'Warm up',cue:'Easy movement, then light practice reps of today’s exercises.'}];
