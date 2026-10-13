@@ -85,6 +85,7 @@ At five completed strength sessions/week, a six-session cycle averages 8.4 days 
 - Audit against actual phone behavior before declaring the whole system at trainer-grade parity.
 
 ## Change log for this review
-- `session-planner.js`: protect Pull A/Pull B pulling patterns and planned complementary biceps slots for sessions >=15 min.
+- `session-planner.js`: protect Pull A/Pull B pulling patterns and planned complementary biceps slots for sessions >=15 min, including the later neglected-muscle rebalance stage.
+- `core.js`: invalidate current-version accessory cache entries when the session is replanned, while preserving stable benchmark-lift anchors.
 - `tests/expert-program-guardrails.test.js`: multi-mode, multi-duration, multi-equipment, three-cycle checks.
 - This report. Changes are held on a separate review branch and **not** a production deployment.
