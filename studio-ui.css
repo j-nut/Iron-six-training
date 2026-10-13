@@ -513,3 +513,8 @@ body.ix-studio .app #sessionCardNav .sc-step strong .ix-step-count{
   background:rgba(var(--accent-rgb,46,229,128),.085)!important;
   border-radius:6px!important
 }
+
+body.ix-studio .app #sessionCardNav .sc-step strong .ix-step-count>span{
+  display:inline!important;margin:0!important;padding:0!important;
+  font:inherit!important;line-height:inherit!important;color:inherit!important
+}
