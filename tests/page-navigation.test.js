@@ -91,3 +91,17 @@ test('profile groups keep labeled editable fields and saving still updates the a
     assert.deepEqual(a.errors,[]);
   }finally{a.close()}
 });
+
+
+test('switching tabs never smooth-scrolls the previous long screen through the viewport',()=>{
+  const a=app();
+  try{
+    const calls=[];
+    a.w.scrollTo=(arg)=>calls.push(arg);
+    a.w.document.querySelector('.navbtn[data-view="history"]').click();
+    a.w.document.querySelector('.navbtn[data-view="today"]').click();
+    assert(calls.length>=2);
+    assert(calls.every(arg=>arg?.behavior==='instant'),'tab switch should jump directly to top');
+    assert.deepEqual(a.errors,[]);
+  }finally{a.close()}
+});
