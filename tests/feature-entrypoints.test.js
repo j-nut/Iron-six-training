@@ -6,7 +6,7 @@ const required = [
 ];
 for (const page of ['index.html','live.html']) {
   const html=fs.readFileSync(page,'utf8');
-  assert(html.includes('core.js?v=22'));assert(html.includes('assets/brand/logo-horizontal.png'),`${page} must carry the brand lockup`);assert(html.includes('assets/brand/icon-32.png'),`${page} must declare a favicon`);assert(html.includes('engine.js?v=21'));assert(html.includes('ui1.js?v=20'));assert(html.includes('ui3.js?v=21'));assert(html.includes('ui2.js?v=18'));
+  assert(html.includes('core.js?v=22'));assert(html.includes('assets/brand/logo-horizontal.png'),`${page} must carry the brand lockup`);assert(html.includes('assets/brand/icon-32.png'),`${page} must declare a favicon`);assert(html.includes('engine.js?v=21'));assert(html.includes('ui1.js?v=20'));assert(html.includes('ui3.js?v=22'));assert(html.includes('ui2.js?v=18'));
   assert(html.indexOf('history-explorer.js')>html.indexOf('ui2.js') && html.indexOf('history-explorer.js')<html.indexOf('ui3.js'));
   assert(html.indexOf('exercise-media-catalog.js?v=1')<html.indexOf('exercise-media.js?'));
   assert(html.indexOf('exercise-media.js?')<html.indexOf('ui2.js?v=18'));

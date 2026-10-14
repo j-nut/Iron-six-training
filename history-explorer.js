@@ -105,8 +105,8 @@
     const key=h=>String(h.sessionId || h.ts || '')+':'+String(h.name||'');
     host.innerHTML=list.slice(0,limit).map(h=>{
       const keyValue=key(h),actual=number(h.elapsedMinutes),planned=number(h.duration);
-      const time=actual>0?actual+' min recorded':planned>0?planned+' min planned':'';
-      return '<details class="history-session" data-history-key="'+esc(keyValue)+'" '+(opened.has(keyValue)?'open':'')+'><summary><strong>'+esc(h.name||'Workout')+'</strong><span>'+esc(date(h))+' · '+count(h)+(number(h.plannedSets)>0?' / '+Number(h.plannedSets):'')+' sets'+(time?' · '+time:'')+' · '+esc(h.trainingMode||'traditional')+'</span></summary>'+
+      const time=actual>0?actual+' min recorded':planned>0?planned+' min planned':'';const energy=h.energy||window.IronSixEnergy?.estimateSession(user?.weight,h),energyText=energy?window.IronSixEnergy?.label(energy)||'':'';
+      return '<details class="history-session" data-history-key="'+esc(keyValue)+'" '+(opened.has(keyValue)?'open':'')+'><summary><strong>'+esc(h.name||'Workout')+'</strong><span>'+esc(date(h))+' · '+count(h)+(number(h.plannedSets)>0?' / '+Number(h.plannedSets):'')+' sets'+(time?' · '+time:'')+(energyText?' · '+energyText+' est.':'')+' · '+esc(h.trainingMode||'traditional')+'</span></summary>'+
         (details(h).map(e=>{
           const earlier=exerciseSessions(user,e.name).find(t=>stamp(t.session)>0&&stamp(t.session)<stamp(h));
           return '<div class="history-exercise"><h3>'+esc(e.name)+'</h3><button type="button" class="btn secondary" data-history-exercise="'+esc(e.name)+'">View exercise progress</button>'+
@@ -117,7 +117,7 @@
     }).join('') || '<div class="note">'+(sessions(user).length?'No sessions match these filters. Clear filters to see your full history.':'Complete your first workout to see your sets and progress here.')+'</div>';
     host.querySelectorAll('[data-history-exercise]').forEach(button=>button.onclick=()=>{update('exercise',button.dataset.historyExercise);document.getElementById('historyExercise').focus()});
     if(list.length>limit){const more=document.createElement('button');more.type='button';more.className='btn secondary';more.textContent='Show 20 more sessions';more.onclick=()=>{limit+=20;render()};host.append(more)}
-    const note=document.createElement('p');note.className='note';note.textContent='Volume = entered load × completed reps. Bodyweight, timed holds and unentered loads are not estimated. Dumbbell loads stay exactly as logged. RIR = reps left in reserve; — = not entered.';host.append(note);
+    const note=document.createElement('p');note.className='note';note.textContent='Volume = entered load × completed reps. Bodyweight, timed holds and unentered loads are not estimated. Dumbbell loads stay exactly as logged. RIR = reps left in reserve; — = not entered. kcal est. = a rough range from body weight, session time and how hard your sets were; strength training cannot be measured precisely, so treat it as a guide, not a target.';host.append(note);
     if (tools.contains(document.getElementById(focusedId))) {
       const replacement=document.getElementById(focusedId);replacement?.focus();
       if(selection)replacement?.setSelectionRange(...selection);
