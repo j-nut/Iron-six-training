@@ -75,6 +75,16 @@ function lowStimulusPenalty(e,pool){
   if(!LOW_STIMULUS_FALLBACKS.has(e.name))return 0;
   return pool.some(x=>!LOW_STIMULUS_FALLBACKS.has(x.name))?1000:0;
 }
+/* A main (benchmark) lift is where progressive overload happens, so recency and A/B variety may
+   rotate it between loaded options but never push it onto an unloaded one while a free-weight
+   option is available (e.g. Single-Leg Hip Hinge over Dumbbell Romanian Deadlift). Applies to the
+   2-4 day splits; the default six-day rotation keeps its established (snapshot-tested) choices. */
+// Body-weight only: a bench or rack supports the movement but adds no load (a pull-up bar is different).
+function unloadedLift(e){return (e?.requires||[]).every(r=>r==='bench'||r==='rack')&&equipmentClass(e)!=='free'}
+function unloadedMainPenalty(u,e,pool,anchor){
+  if(!anchor||!unloadedLift(e)||typeof rotationFor!=='function'||rotationFor(u)===ROTATION)return 0;
+  return pool.some(x=>equipmentClass(x)==='free')?500:0;
+}
 
 const VERTICAL_FIRST={pull_a:'Pull-Up',pull_b:'Chin-Up',upper_a:'Pull-Up',upper_b:'Chin-Up',full_b:'Pull-Up',full_c:'Chin-Up',full2_a:'Chin-Up',full2_b:'Pull-Up',full_a:'Chin-Up'};
 function programSlot(u,id,source,index,sets,priority=2,anchor=false){
@@ -142,7 +152,7 @@ function programSlot(u,id,source,index,sets,priority=2,anchor=false){
       const equipmentPenalty=equipmentPreferencePenalty(u,id,e,pool,anchor);
       // A strength benchmark ignores recency and A/B variety: the builder's listed order (barbell first) wins.
       const history=stableAnchor?i*6:exactPenalty(e)+counterpartPenalty(u,key,e);
-      return {e,score:history+patternPenalty+legacyBias+noEquipmentBias+equipmentPenalty+lowStimulusPenalty(e,pool)+(window.IronSixDifficulty?.selectionPenalty(u,e)||0)};
+      return {e,score:history+patternPenalty+legacyBias+noEquipmentBias+equipmentPenalty+lowStimulusPenalty(e,pool)+unloadedMainPenalty(u,e,pool,anchor)+(window.IronSixDifficulty?.selectionPenalty(u,e)||0)};
     }).sort((a,b)=>a.score-b.score||stableNumber(`${token}:${a.e.name}`)-stableNumber(`${token}:${b.e.name}`))[0].e;
     u.program.selectionCache[token]=selected.name;
   }
@@ -170,8 +180,15 @@ function buildBalancedProgram(key,u){
     // An optional fallback slot (7th element) keeps a pattern when equipment rules the first one out,
     // e.g. a pull-up when no row is possible. The original slot is still reported as a gap.
     // A low-stimulus last resort (e.g. Prone Lat Pull) also gives way to a loaded fallback pattern.
+    // A bodyweight main lift (e.g. Push-Up on a no-bench setup) gives way to a free-weight lift of
+    // the other plane (e.g. Barbell Overhead Press), so loaded progression is never left on the table.
     let e=programSlot(u,...spec.slice(0,6));
-    if(Array.isArray(spec[6])&&(!e||LOW_STIMULUS_FALLBACKS.has(e.name))){const fallback=programSlot(u,...spec[6]);if(fallback&&!LOW_STIMULUS_FALLBACKS.has(fallback.name)){missing.push(spec[0]);e=fallback}}
+    const weak=x=>!x||LOW_STIMULUS_FALLBACKS.has(x.name)||(spec[5]&&unloadedLift(x));
+    if(Array.isArray(spec[6])&&weak(e)){
+      const fallback=programSlot(u,...spec[6]);
+      const better=fallback&&!LOW_STIMULUS_FALLBACKS.has(fallback.name)&&!chosen.some(x=>x.name===fallback.name)&&(!e||LOW_STIMULUS_FALLBACKS.has(e.name)||equipmentClass(fallback)==='free');
+      if(better){missing.push(spec[0]);e=fallback}
+    }
     if(!e){missing.push(spec[0]);continue}
     if(chosen.some(x=>x.name===e.name)){
       const alternate=e._alternatives.find(x=>!chosen.some(y=>y.name===x.name));
@@ -186,12 +203,12 @@ function buildBalancedProgram(key,u){
 /* Lower-frequency splits reuse the same slots (and so the same option lists, equipment fallbacks and
  * media). Slot: [id, source builder, option index, base sets, priority, benchmark anchor, fallback]. */
 const SPLIT_SPECS={
-  upper_a:[['press','chest',0,3,1,true],['vertical','back',0,3,1,true,['row','back',1,3,1,true]],['row','back',1,3,2],['fly','chest',2,2,2],['lateral','shoulders_arms',1,3,2],['curl_long','shoulders_arms',3,2,2],['triceps','chest',3,2,2]],
+  upper_a:[['press','chest',0,3,1,true,['overhead','shoulders_arms',0,3,1,true]],['vertical','back',0,3,1,true,['row','back',1,3,1,true]],['row','back',1,3,2],['fly','chest',2,2,2],['lateral','shoulders_arms',1,3,2],['curl_long','shoulders_arms',3,2,2],['triceps','chest',3,2,2]],
   upper_b:[['overhead','shoulders_arms',0,3,1,true],['row','back',1,3,1,true,['vertical','back',0,3,1,true]],['press','chest',1,3,2],['vertical','back',0,2,2,false,['lat_iso','back',3,2,2]],['rear','back',2,2,2],['lateral','shoulders_arms',1,2,2],['hammer','shoulders_arms',5,2,2],['triceps','shoulders_arms',4,2,2]],
-  full_a:[['squat','lower_strength',0,3,1,true],['press','chest',0,3,1,true],['row','back',1,3,1,true,['vertical','back',0,3,1,true]],['ham','lower_strength',4,2,2],['lateral','shoulders_arms',1,2,2],['curl_long','shoulders_arms',3,2,2]],
-  full_b:[['hinge','lower_hypertrophy',1,3,1,true],['overhead','shoulders_arms',0,3,1,true],['vertical','back',0,3,1,true,['row','back',1,3,1,true]],['secondary','chest',1,2,2],['single','lower_strength',1,2,2],['triceps','shoulders_arms',4,2,2],['calves','lower_strength',5,3,2]],
-  full_c:[['squat','lower_hypertrophy',0,3,1,true],['press','chest',1,3,1,true],['vertical','back',0,3,1,true,['row','back',1,3,1,true]],['row','back',1,2,2],['rear','back',2,2,2],['core','chest',4,2,2],['hammer','shoulders_arms',5,2,3]],
-  full2_a:[['squat','lower_strength',0,3,1,true],['press','chest',0,3,1,true],['row','back',1,3,1,true,['vertical','back',0,3,1,true]],['ham','lower_strength',4,2,2],['lateral','shoulders_arms',1,2,2],['curl_long','shoulders_arms',3,2,2],['calves','lower_strength',5,2,2]],
-  full2_b:[['hinge','lower_hypertrophy',1,3,1,true],['overhead','shoulders_arms',0,3,1,true],['vertical','back',0,3,1,true,['row','back',1,3,1,true]],['secondary','chest',1,3,2],['single','lower_strength',1,2,2],['triceps','shoulders_arms',4,2,2],['rear','back',2,2,2],['core','chest',4,2,2]]
+  full_a:[['squat','lower_strength',0,3,1,true],['press','chest',0,3,1,true,['overhead','shoulders_arms',0,3,1,true]],['row','back',1,3,1,true,['vertical','back',0,3,1,true]],['ham','lower_strength',4,2,2,false,['hinge','lower_hypertrophy',1,2,2]],['lateral','shoulders_arms',1,2,2],['curl_long','shoulders_arms',3,2,2]],
+  full_b:[['hinge','lower_hypertrophy',1,3,1,true],['overhead','shoulders_arms',0,3,1,true,['press','chest',0,3,1,true]],['vertical','back',0,3,1,true,['row','back',1,3,1,true]],['secondary','chest',1,2,2],['single','lower_strength',1,2,2],['triceps','shoulders_arms',4,2,2],['calves','lower_strength',5,3,2]],
+  full_c:[['squat','lower_hypertrophy',0,3,1,true],['press','chest',1,3,1,true,['overhead','shoulders_arms',0,3,1,true]],['vertical','back',0,3,1,true,['row','back',1,3,1,true]],['row','back',1,2,2],['rear','back',2,2,2],['core','chest',4,2,2],['hammer','shoulders_arms',5,2,3]],
+  full2_a:[['squat','lower_strength',0,3,1,true],['press','chest',0,3,1,true,['overhead','shoulders_arms',0,3,1,true]],['row','back',1,3,1,true,['vertical','back',0,3,1,true]],['ham','lower_strength',4,2,2,false,['hinge','lower_hypertrophy',1,2,2]],['lateral','shoulders_arms',1,2,2],['curl_long','shoulders_arms',3,2,2],['calves','lower_strength',5,2,2]],
+  full2_b:[['hinge','lower_hypertrophy',1,3,1,true],['overhead','shoulders_arms',0,3,1,true,['press','chest',0,3,1,true]],['vertical','back',0,3,1,true,['row','back',1,3,1,true]],['secondary','chest',1,3,2],['single','lower_strength',1,2,2],['triceps','shoulders_arms',4,2,2],['rear','back',2,2,2],['core','chest',4,2,2]]
 };
 for(const key of [...ROTATION,...Object.keys(SPLIT_SPECS)])WORKOUT_BUILDERS[key]=(variant,u)=>buildBalancedProgram(key,u);

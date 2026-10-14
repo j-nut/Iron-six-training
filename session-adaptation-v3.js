@@ -32,6 +32,20 @@
     hip:[[/good morning|barbell romanian|bulgarian/,3],[/hip thrust/,name=>/banded/.test(name)?1:2],[/romanian deadlift|reverse lunge|split squat|hip hinge/,2],[/glute bridge/,1]],
     knee:[[/back squat|hack squat|bulgarian|cyclist|1½-rep|leg extension/,3],[/box squat|front squat|landmine squat|reverse lunge|split squat|tempo bodyweight squat/,2],[/goblet/,1]]
   };
+  /* A limitation never strips the load from a lift: a loaded exercise can always be done lighter, so
+   * it is only swapped for another loaded (or band-resisted) option. A strength lifter's main lift keeps
+   * its equipment (barbell stays barbell, e.g. Box Squat) or stays as it is, lighter, so the benchmark
+   * and the strength check stay meaningful. */
+  const LOADED_GEAR=/barbell|dumbbell|landmine|kettlebell|band|cable|machine|medball|sled|weight/;
+  const gearText=ex=>lower((ex?.requires||[]).join(' '));
+  const isLoaded=ex=>LOADED_GEAR.test(gearText(ex))||/barbell|dumbbell|landmine|kettlebell|weighted|band/.test(lower(ex?.name));
+  const loadClass=ex=>{const g=gearText(ex)+' '+lower(ex?.name);return /barbell|landmine/.test(g)?'barbell':/dumbbell|kettlebell/.test(g)?'dumbbell':isLoaded(ex)?'other':'bodyweight'};
+  function goalOf(u){return typeof programGoal==='function'?programGoal(u):u?.goal}
+  function swapAllowed(u,original,alt){
+    if(isLoaded(original)&&!isLoaded(alt))return false;
+    if(n(original?.priority)===1&&goalOf(u)==='strength'&&isLoaded(original))return loadClass(alt)===loadClass(original);
+    return true;
+  }
   function limitationAreas(u){
     const raw=u?.limitations;if(!Array.isArray(raw))return [];
     const given=raw.map(x=>lower(x).trim().replace(/[\s-]+/g,'_'));
@@ -79,7 +93,7 @@
       const areas=limitationAreas(u),before=limitationStress(areas,chosen);
       if(areas.length&&before>0){
         const hit=areas.filter(a=>areaStress(a,chosen)>0),original=chosen;
-        const best=(chosen._alternatives||[]).filter(a=>a?.name&&a.base===chosen.base&&!occupied.has(String(a.name).toLowerCase())&&!recentPain(u,a.name)&&(typeof exerciseAvailable!=='function'||exerciseAvailable(u,a))&&(u.trainingMode!=='circuit'||typeof circuitSuitable!=='function'||circuitSuitable(a))&&(u.trainingMode==='circuit'||typeof traditionalSetSeconds!=='function'||traditionalSetSeconds({...chosen,...a,priority:chosen.priority})<=traditionalSetSeconds(chosen))).map(a=>({a,stress:limitationStress(areas,a)})).filter(x=>x.stress<before).sort((x,y)=>x.stress-y.stress)[0];
+        const best=(chosen._alternatives||[]).filter(a=>a?.name&&a.base===chosen.base&&swapAllowed(u,chosen,a)&&!occupied.has(String(a.name).toLowerCase())&&!recentPain(u,a.name)&&(typeof exerciseAvailable!=='function'||exerciseAvailable(u,a))&&(u.trainingMode!=='circuit'||typeof circuitSuitable!=='function'||circuitSuitable(a))&&(u.trainingMode==='circuit'||typeof traditionalSetSeconds!=='function'||traditionalSetSeconds({...chosen,...a,priority:chosen.priority})<=traditionalSetSeconds(chosen))).map(a=>({a,stress:limitationStress(areas,a)})).filter(x=>x.stress<before).sort((x,y)=>x.stress-y.stress)[0];
         if(best){
           occupied.delete(String(chosen.name).toLowerCase());occupied.add(String(best.a.name).toLowerCase());
           chosen={...chosen,...best.a,sets:original.sets,priority:original.priority,_programSlot:original._programSlot,_anchor:original._anchor,_alternatives:[original,...original._alternatives].filter(x=>x.name!==best.a.name),_adaptReason:original._adaptReason};

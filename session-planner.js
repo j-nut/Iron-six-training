@@ -27,7 +27,9 @@ function restProfile(minutes){
  * main-lift sets; general fitness trains a little further from failure and can rest less. */
 const GOAL_REST={strength:{main:1.25,compound:1.15,accessory:1},general:{main:.85,compound:.9,accessory:1}};
 function goalRestProfile(minutes,goal){
-  const prof=restProfile(minutes),f=GOAL_REST[goal];
+  // In 30 minutes or less a strength lifter is better served by three full sets of each main lift
+  // at the session's normal main-lift rest (about 1¾ min) than by longer rests and fewer sets.
+  const prof=restProfile(minutes),f=goal==='strength'&&minutes<=30?{...GOAL_REST.strength,main:1}:GOAL_REST[goal];
   return f?{...prof,main:Math.round(prof.main*f.main),compound:Math.round(prof.compound*f.compound),accessory:Math.round(prof.accessory*f.accessory)}:prof;
 }
 function traditionalSetSeconds(ex,minutes=60,goal='muscle'){
@@ -175,16 +177,21 @@ function budgetSessionWorkout(u,workout){
   // Above 20 minutes, split days (and any non-default goal) only add a movement that fits at a real
   // dose: two working sets, three for strength main lifts. Default six-day muscle plans are unchanged.
   const floorSets=!circuit&&minutes>20&&((typeof rotationFor==='function'&&rotationFor(u)!==ROTATION)||goal!=='muscle')?2:1;
-  const floorOf=x=>Math.min(x._max,goal==='strength'&&x.priority===1&&floorSets>1?3:floorSets);
+  /* Strength: the main lifts earn three working sets before any accessory is added. A main lift the
+   * day keeps (full-body lower/press/pull) is admitted at the normal floor so a long first lift cannot
+   * push the pull or press out of a short session; accessories must fit with every main lift at three. */
+  const strengthMain=goal==='strength'&&!circuit&&!light;
+  const floorOf=(x,adding)=>Math.min(x._max,strengthMain&&x.priority===1&&!(fullBody&&keep.includes(adding))?3:floorSets);
   let selected=[];
   for(const e of candidates){
     if(selected.length>=count)break;
     // Short-session small accessories are micro-doses (max 2 sets); missed volume is not crammed into one day.
     const baseMax=Math.max(1,e.sets),microCap=!circuit&&minutes<=30&&isSmall(e)?2:Infinity;
-    const next=[...selected,{...e,sets:1,_max:Math.min(6,microCap,baseMax+setsBonus(e)),_rank:selected.length}];
+    const strengthFloor=strengthMain&&e.priority===1?3:0;
+    const next=[...selected,{...e,sets:1,_max:Math.max(strengthFloor,Math.min(6,microCap,baseMax+setsBonus(e))),_rank:selected.length}];
     // Upper/lower and full-body days list more movements; above 20 minutes each one must fit at two
     // working sets, otherwise it waits for a later session instead of becoming a one-set token.
-    const fit=floorSets>1?next.map(x=>({...x,sets:floorOf(x)})):next;
+    const fit=floorSets>1||strengthMain?next.map(x=>({...x,sets:floorOf(x,e)})):next;
     if(!selected.length||sessionSeconds(u,fit)<=budget)selected=next;
   }
   selected.sort((a,b)=>a._position-b._position);
@@ -195,8 +202,8 @@ function budgetSessionWorkout(u,workout){
     for(const e of extras){
       if(selected.length>=count+1)break;
       const next=[...selected,{...e,sets:1,_max:Math.min(2,Math.max(1,e.sets)),_rank:selected.length}].sort((a,b)=>a._position-b._position);
-      // The extra may not cost the compound lifts their normal two sets.
-      if(sessionSeconds(u,next.map(x=>({...x,sets:isSmall(x)?x.sets:Math.min(2,x._max)})))<=budget)selected=next;
+      // The extra may not cost the compound lifts their normal two sets (three for strength main lifts).
+      if(sessionSeconds(u,next.map(x=>({...x,sets:isSmall(x)?x.sets:Math.min(strengthMain&&x.priority===1?3:2,x._max)})))<=budget)selected=next;
     }
   }
   if(circuit){
@@ -214,6 +221,9 @@ function budgetSessionWorkout(u,workout){
     // Per-session cap of 10 direct sets per movement category keeps long sessions sensible.
     const catSets=cat=>cat?selected.filter(x=>programCategory(x)===cat).reduce((n,x)=>n+x.sets,0):0;
     let grew=true;
+    // Strength main lifts reach three working sets before any other lift grows.
+    if(strengthMain)while(grew){grew=false;for(const e of selected){if(e.priority!==1||e.sets>=Math.min(3,e._max))continue;e.sets++;if(sessionSeconds(u,selected)>budget)e.sets--;else grew=true}}
+    grew=true;
     while(grew){grew=false;for(const e of selected){if(e.sets>=e._max||(programCategory(e)&&catSets(programCategory(e))>=10))continue;e.sets++;if(sessionSeconds(u,selected)>budget)e.sets--;else grew=true}}
   }
   const result=selected.map(({_position,_max,_rank,...e})=>({...e,prescription:circuit?circuitPace(u).work+'s controlled work · '+e.sets+' rounds':String(e.prescription).replace(/^\d+\s*×/,e.sets+' ×')}));

@@ -26,7 +26,7 @@
   loadRuntimeScript('trainer-intelligence-v2.js?v=5','trainer-intelligence-v2','__ironSixTrainerIntelligenceV2Loaded');
   loadRuntimeScript('program-intelligence-v3.js?v=2','program-intelligence-v3','__ironSixProgramIntelligenceV3Loaded');
   loadRuntimeScript('progress-analytics-v2.js?v=3','progress-analytics-v2','__ironSixProgressAnalyticsV2Loaded');
-  loadRuntimeScript('session-adaptation-v3.js?v=4','session-adaptation-v3','__ironSixSessionAdaptationV3Loaded');
+  loadRuntimeScript('session-adaptation-v3.js?v=5','session-adaptation-v3','__ironSixSessionAdaptationV3Loaded');
   loadRuntimeScript('media-experience-v2.js?v=2','media-experience-v2','__ironSixMediaExperienceV2Loaded');
   loadRuntimeScript('music-originals.js?v=1','music-originals','__ironSixMusicOriginalsLoaded');
   loadRuntimeScript('music.js?v=2','music','__ironSixMusicLoaded');
