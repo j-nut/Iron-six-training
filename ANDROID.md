@@ -123,3 +123,32 @@ After a signed build passes, the workflow publishes a GitHub Release tagged
 Release notes identify the exact source commit and Actions run. A rerun preserves
 an existing release's original assets. Repository write permission is confined
 to the publishing job; signing secrets remain in the build job.
+
+### In-app updates
+
+From the first build that includes `AppUpdatePlugin`, the app checks for a newer signed release
+on launch and when it returns to the foreground (at most every 6 hours). If one exists it shows a
+non-blocking banner: **Update** or **Later** (snoozes that build for 24 hours). The profile menu has
+an **App updates** row showing the installed build with an on-demand check.
+
+- `/api/app-version` (Vercel) reads this repository's public GitHub Releases, picks the highest
+  `android-build-<N>` that has `iron-six.apk`, and returns its download URL plus the SHA-256 from
+  that release's `SHA256SUMS.txt`. Only `https://github.com/j-nut/Iron-six-training/releases/download/`
+  URLs are ever returned. Successful answers are cached for 5 minutes at the edge.
+- **Update** saves the current workout, downloads the APK into the app's private cache, checks its
+  SHA-256 on the phone (a mismatch is deleted), then opens Android's installer. Android only accepts
+  the update when it is signed with the same release key, so keep using one key.
+- **One-time permission:** the first time, Android asks to allow installs from Iron Six
+  (Settings > Apps > Special app access > Install unknown apps > Iron Six). Turn it on, return to the
+  app and tap **Update** again. Android still asks you to confirm every install.
+- If a build lacks the native plugin, **Update** opens the APK download in the browser instead.
+- Builds before the first one with this feature (build 1020 and earlier) have no update check: install
+  the next release manually once; later releases update in-app.
+- On the web, the site watches `/release.json` and offers **Reload** when a new version is deployed.
+
+Optional Vercel environment variables:
+
+- `MIN_ANDROID_BUILD` - builds below this versionCode see a persistent "This version is no longer
+  supported — update to keep syncing" banner with no snooze. Logging and data are never blocked.
+- `GITHUB_TOKEN` - a token for GitHub API requests, to avoid the 60 requests/hour unauthenticated
+  limit. No scopes are required because the repository is public.

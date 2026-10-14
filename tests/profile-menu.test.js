@@ -52,6 +52,7 @@ test('signed out, the menu says so and offers a way in',()=>{
     assert.match(a.head(),/Not signed in/);
     const items=a.items();
     assert(items.some(t=>/Sign in or create account/.test(t)),'a signed-out menu must offer sign-in');
+    assert(items.some(t=>/App updates/.test(t)&&/Web app/.test(t)),'the menu must offer an App updates check');
     assert(!items.some(t=>/^Sign out/.test(t)),'a signed-out menu must not offer sign-out');
     assert(a.w.document.getElementById('pmAvatar').classList.contains('guest'),'the avatar must read as a guest');
   }finally{a.close()}
