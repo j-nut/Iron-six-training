@@ -190,6 +190,16 @@
       const newestDate = Math.max(...sets.map(set => Number(set._date) || 0));
       const newest = sets.filter(set => (Number(set._date) || 0) === newestDate);
       let rec = recommendationFromSet(user, exercise, representativeSet(newest), true);
+      // After two or more weeks away, strength drops: start about 5% lighter per two weeks off,
+      // never more than 20%, and don't add load on the first session back.
+      const daysOff = (Date.now() - newestDate) / 864e5;
+      // History dated before 2024 (imported without real timestamps) is never treated as a layoff.
+      if (rec && daysOff >= 14 && newestDate >= Date.UTC(2024, 0, 1)) {
+        const weight = loadValue(representativeSet(newest)?.weight) || rec.load;
+        const factor = Math.max(0.8, 1 - 0.05 * Math.floor(daysOff / 14));
+        const load = rounded(Math.min(rec.load, weight) * factor, exercise, user) || rec.load;
+        rec = {...rec, load, direction: 'down', label: `Welcome back after ${Math.round(daysOff)} days — start lighter and rebuild`};
+      }
       // A set that fell below the rep range means the load is not yet owned: hold, don't add.
       if (rec?.direction === 'up' && rec.load > (loadValue(representativeSet(newest)?.weight) || 0)) {
         const [lo] = rangeFor(exercise);
@@ -223,7 +233,14 @@
         const rec = nextSetRecommendation(user, exercise, exerciseIndex);
         if (rec) return {load: rec.load, target: rec.reps, text: `${rec.load} lb × about ${rec.reps}`, confidence: 'Updated from today', detail: rec.text};
       }
-      return originalSuggested(user, exercise, exerciseIndex);
+      const result = originalSuggested(user, exercise, exerciseIndex);
+      // Session adaptation marks deload and pain-affected exercises with a lighter load factor.
+      const factor = Number(exercise?._loadFactor);
+      if (result?.load && factor > 0 && factor < 1) {
+        const load = rounded(result.load * factor, exercise, user);
+        if (load && load < result.load) return {...result, load, text: `${load} lb × about ${result.target}`, detail: exercise._adaptReason || result.detail};
+      }
+      return result;
     };
   }
 
