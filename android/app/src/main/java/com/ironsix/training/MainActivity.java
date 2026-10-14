@@ -13,6 +13,7 @@ public class MainActivity extends BridgeActivity {
     @Override public void onCreate(Bundle savedInstanceState) {
         registerPlugin(WorkoutBackupPlugin.class);
         registerPlugin(VoiceCommandPlugin.class);
+        registerPlugin(AppUpdatePlugin.class);
         super.onCreate(savedInstanceState);
         // Android 15+ draws the WebView beneath system bars. CSS env(safe-area-
         // inset-top) is often zero in Android WebView; export native insets in

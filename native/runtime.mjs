@@ -3,7 +3,7 @@
 // silently breaks Coach, equipment generation, recalculation, the workout review and sign-in status.
 export const API_ORIGIN='https://iron-six-training.vercel.app';
 export const AUTH_REDIRECT='com.ironsix.training://auth/callback';
-const API_PATHS=new Set(['/api/config','/api/coach','/api/equipment-exercises','/api/recalculate','/api/review-workout','/api/auth-status','/api/music']);
+const API_PATHS=new Set(['/api/config','/api/coach','/api/equipment-exercises','/api/recalculate','/api/review-workout','/api/auth-status','/api/music','/api/app-version']);
 
 export function apiUrl(value,localOrigin){
   const url=new URL(value,localOrigin);
@@ -54,7 +54,13 @@ function validBackup(json){
   try{const value=JSON.parse(json);return !!value&&typeof value==='object'&&Array.isArray(value.entries)&&value.profiles&&typeof value.profiles==='object'&&typeof value.exportedAt==='string'}catch(_){return false}
 }
 
-export function installNative({win,App,Browser,createClient,WorkoutBackup,VoiceCommand=null}){
+// Only this repository's signed release downloads may be fetched or opened by the updater.
+export const UPDATE_DOWNLOAD_PREFIX='https://github.com/j-nut/Iron-six-training/releases/download/android-build-';
+export function updateUrlAllowed(url,build){
+  return Number.isInteger(build)&&build>0&&url===UPDATE_DOWNLOAD_PREFIX+build+'/iron-six.apk';
+}
+
+export function installNative({win,App,Browser,createClient,WorkoutBackup,VoiceCommand=null,AppUpdate=null}){
   let client=null,pendingUrl=null,notify=()=>{},lastCode=null,inFlightCode=null;
   let callbacks=Promise.resolve();
   installSafeArea(win);
@@ -135,6 +141,30 @@ export function installNative({win,App,Browser,createClient,WorkoutBackup,VoiceC
       return VoiceCommand.listen({language:String(options.language||'en-US').slice(0,32)});
     },
     async stopVoice(){if(VoiceCommand?.stop)await VoiceCommand.stop();},
+    // Installed build: Capacitor reports versionCode as the string `build`.
+    async appInfo(){
+      const info=await App.getInfo();const build=Number(info?.build);
+      return {build:Number.isInteger(build)&&build>0?build:null,version:String(info?.version||'')};
+    },
+    canInstallUpdates:()=>!!AppUpdate?.download&&!!AppUpdate?.install,
+    async downloadUpdate({url,sha256,build}={}){
+      if(!AppUpdate?.download)throw Object.assign(new Error('In-app updates are unavailable in this build.'),{code:'UNIMPLEMENTED'});
+      if(!updateUrlAllowed(url,build)||!/^[a-f0-9]{64}$/i.test(String(sha256||'')))throw Object.assign(new Error('This update link is not an Iron Six release.'),{code:'INVALID'});
+      return AppUpdate.download({url,sha256:String(sha256).toLowerCase(),build});
+    },
+    async installUpdate({build,sha256}={}){
+      if(!AppUpdate?.install)throw Object.assign(new Error('In-app updates are unavailable in this build.'),{code:'UNIMPLEMENTED'});
+      if(!Number.isInteger(build)||build<=0)throw Object.assign(new Error('Unknown update build.'),{code:'INVALID'});
+      return AppUpdate.install(sha256?{build,sha256:String(sha256).toLowerCase()}:{build});
+    },
+    async onUpdateProgress(fn){
+      if(!AppUpdate?.addListener)return {remove:async()=>{}};
+      return AppUpdate.addListener('downloadProgress',event=>{try{fn(event)}catch(_){}});
+    },
+    async openUpdateDownload(url){
+      if(!/^https:\/\/github\.com\/j-nut\/Iron-six-training\/releases\/download\/android-build-[1-9][0-9]*\/iron-six\.apk$/.test(String(url)))throw new Error('Invalid update URL');
+      await Browser.open({url});
+    },
     async connectCloud(value,message){
       client=value;notify=message;await ready;
       const launch=await App.getLaunchUrl();
