@@ -27,7 +27,7 @@ test('opt-in features are labelled as opt-in, not as things that just work',()=>
   // pose-spike.js refuses to start unless ironSixPoseSpike is set. Describing the camera and
   // voice features as always-on would be a promise the app does not keep.
   const spike=fs.readFileSync('pose-spike.js','utf8');
-  assert.match(spike,/if\(!readFlag\(\)\)return/,'this test exists because the camera spike is flag-gated');
+  assert.match(spike,/if\(readFlag\(\)\)\{boot\(\);return\}/,'this test exists because the camera spike is flag-gated');
   for(const feature of ['Camera','Voice'])
     assert.match(text,new RegExp(feature+' beta'),feature+' is gated, so the page must mark it beta');
   assert.match(text,/opt-in/,'the page must say these are opt-in');

@@ -12,7 +12,14 @@
 (() => {
   const ROTATION = ['push_a','lower_a','pull_a','push_b','lower_b','pull_b'];
   const LEGACY_ROTATION = ['chest','shoulders_arms','lower_strength','back','upper_specialization','lower_hypertrophy'];
-  const LEG_KEYS = ['lower_a','lower_b','lower_strength','lower_hypertrophy'];
+  // Every training split is a rotation. Marks are history-derived and must never be lost when the
+  // user changes how many days they train, so stats combine all splits; scaled values keep "six"
+  // targets meaning "one full rotation's worth" for a 2-, 3- or 4-day split.
+  const SPLITS = [ROTATION, ['upper_a','lower_a','upper_b','lower_b'], ['full_a','full_b','full_c'], ['full2_a','full2_b']];
+  const PROGRAM_KEYS = [...new Set(SPLITS.flat())];
+  const LEG_KEYS = ['lower_a','lower_b','lower_strength','lower_hypertrophy','full_a','full_b','full_c','full2_a','full2_b'];
+  const splitFor = user => { const d = Math.round(Number(user?.daysPerWeek)); return !Number.isFinite(d) || user?.daysPerWeek == null || d >= 5 ? ROTATION : d <= 2 ? SPLITS[3] : d === 3 ? SPLITS[2] : SPLITS[1]; };
+  const scaled = (n, keys) => keys.length === 6 ? n : Math.floor(n * 6 / keys.length);
   const DAY = 864e5;
 
   // Ring tiers come from completed rotations. Colors are fixed metals, independent of accent theme.
@@ -66,15 +73,21 @@
   // Every mark reads one stats snapshot. value is progress toward target; unlocked when value >= target.
   function stats(sessions) {
     const good = sessions.filter(qualifies), forged = good;
-    const perKey = Object.fromEntries(ROTATION.map(k => [k, count(good, k)]));
-    const levels = ROTATION.map(k => level(count(forged, k)));
-    let orderedRun = 0, bestRun = 0, prevKey = null, runKeys = new Set();
-    for (const h of sessions) {
-      const i = ROTATION.indexOf(h.workoutKey), follows = prevKey !== null && ROTATION[(ROTATION.indexOf(prevKey) + 1) % 6] === h.workoutKey;
-      if (i < 0 || !qualifies(h)) { orderedRun = 0; runKeys = new Set(); prevKey = null; continue; }
-      if (follows && !runKeys.has(h.workoutKey)) { orderedRun++; runKeys.add(h.workoutKey); }
-      else { orderedRun = 1; runKeys = new Set([h.workoutKey]); }
-      bestRun = Math.max(bestRun, orderedRun); prevKey = h.workoutKey;
+    const perKey = Object.fromEntries(PROGRAM_KEYS.map(k => [k, count(good, k)]));
+    // A split only earns credit once one of its own days (not a shared Legs day) has been trained.
+    const used = keys => keys === ROTATION || keys.some(k => !ROTATION.includes(k) && perKey[k] > 0);
+    const best = fn => Math.max(...SPLITS.map(keys => used(keys) ? scaled(fn(keys), keys) : 0));
+    let bestRun = 0;
+    for (const keys of SPLITS.filter(used)) {
+      let orderedRun = 0, prevKey = null, runKeys = new Set(), splitBest = 0;
+      for (const h of sessions) {
+        const i = keys.indexOf(h.workoutKey), follows = prevKey !== null && keys[(keys.indexOf(prevKey) + 1) % keys.length] === h.workoutKey;
+        if (i < 0 || !qualifies(h)) { orderedRun = 0; runKeys = new Set(); prevKey = null; continue; }
+        if (follows && !runKeys.has(h.workoutKey)) { orderedRun++; runKeys.add(h.workoutKey); }
+        else { orderedRun = 1; runKeys = new Set([h.workoutKey]); }
+        splitBest = Math.max(splitBest, orderedRun); prevKey = h.workoutKey;
+      }
+      bestRun = Math.max(bestRun, scaled(splitBest, keys));
     }
     let comebacks = 0;
     for (let i = 1; i < sessions.length; i++) if (qualifies(sessions[i]) && sessions[i].ts - sessions[i - 1].ts >= 14 * DAY) comebacks++;
@@ -83,14 +96,15 @@
     return {
       sessions: sessions.length,
       qualifying: good.length,
-      rotations: minOver(good, ROTATION) + minOver(good, LEGACY_ROTATION),
-      keysDone: ROTATION.filter(k => perKey[k] > 0).length,
-      momentumKeys: levels.filter(l => l >= 2).length,
-      apexKeys: levels.filter(l => l >= 3).length,
-      bestExposures: Math.max(...ROTATION.map(k => count(forged, k))),
-      blocks: ROTATION.reduce((n, k) => n + Math.floor(count(forged, k) / 4), 0),
+      rotations: SPLITS.reduce((n, keys) => n + minOver(good, keys), 0) + minOver(good, LEGACY_ROTATION),
+      keysDone: best(keys => keys.filter(k => perKey[k] > 0).length),
+      momentumKeys: best(keys => keys.filter(k => level(count(forged, k)) >= 2).length),
+      apexKeys: best(keys => keys.filter(k => level(count(forged, k)) >= 3).length),
+      bestExposures: Math.max(...PROGRAM_KEYS.map(k => count(forged, k))),
+      blocks: PROGRAM_KEYS.reduce((n, k) => n + Math.floor(count(forged, k) / 4), 0),
       legDays: good.filter(h => LEG_KEYS.includes(h.workoutKey)).length,
-      pushPull: Math.min(perKey.push_a, perKey.push_b, perKey.pull_a, perKey.pull_b),
+      // Upper days include both pushing and pulling; full-body days include everything.
+      pushPull: Math.min(perKey.push_a, perKey.push_b, perKey.pull_a, perKey.pull_b) + Math.min(perKey.upper_a, perKey.upper_b) + Math.min(perKey.full_a, perKey.full_b, perKey.full_c) + Math.min(perKey.full2_a, perKey.full2_b),
       orderedRun: bestRun,
       honest: good.filter(everySetHasRir).length,
       complete: good.filter(h => (Number(h.sets) || 0) >= (Number(h.plannedSets) || Infinity)).length,
@@ -143,26 +157,34 @@
     return events;
   }
 
-  function blocksOf(sessions, improvements) {
-    const completed = [], counts = Object.fromEntries(ROTATION.map(k => [k,0]));
+  function splitBlocks(sessions, improvements, keys) {
+    const completed = [], counts = Object.fromEntries(keys.map(k => [k,0]));
     let start = null, total = 0;
     for (const h of sessions) {
-      if (!qualifies(h) || !ROTATION.includes(h.workoutKey)) continue;
+      if (!qualifies(h) || !keys.includes(h.workoutKey)) continue;
       if (start == null) start = h.ts;
       counts[h.workoutKey]++; total++;
-      if (ROTATION.every(k => counts[k] >= 4)) {
+      if (keys.every(k => counts[k] >= 4)) {
         const progress = improvements.filter(e => e.ts >= start && e.ts <= h.ts);
-        completed.push({number:completed.length + 1,start,end:h.ts,sessions:total,counts:{...counts},improvements:progress});
-        ROTATION.forEach(k => { counts[k] = 0; });start = null;total = 0;
+        completed.push({start,end:h.ts,sessions:total,counts:{...counts},improvements:progress});
+        keys.forEach(k => { counts[k] = 0; });start = null;total = 0;
       }
     }
-    return {completed,current:{number:completed.length+1,start,sessions:total,counts,done:ROTATION.reduce((n,k)=>n+Math.min(4,counts[k]),0),target:24}};
+    return {completed,current:{start,sessions:total,counts,done:keys.reduce((n,k)=>n+Math.min(4,counts[k]),0),target:4*keys.length}};
+  }
+  // A balanced block is four successful sessions of every day in a split. Blocks finished under any
+  // split stay finished; the current block follows the user's present split.
+  function blocksOf(sessions, improvements, rotation = ROTATION) {
+    const all = SPLITS.map(keys => ({keys, ...splitBlocks(sessions, improvements, keys)}));
+    const completed = all.flatMap(x => x.completed).sort((a,b) => a.end - b.end).map((b,i) => ({number:i + 1,...b}));
+    const current = (all.find(x => x.keys === rotation) || all[0]).current;
+    return {completed,current:{number:completed.length+1,...current}};
   }
 
   const PROGRESS_MARKS = [
     ...[1,5,12,25].map((n,i)=>({id:`progress_confirmed_${n}`,group:'progress',title:['Progress, Repeated','Building on Better','Lasting Progress','Progress Practice'][i],text:`Confirm ${n} rep improvement${n===1?'':'s'} on another day at the same load and logged RIR.`,target:n,metric:'improvements'})),
     ...[3,6].map(n=>({id:`progress_variety_${n}`,group:'progress',title:n===3?'Across the Board':'Growing Your Range',text:`Confirm rep improvements in ${n} different exercises.`,target:n,metric:'exercises'})),
-    ...[1,3,6,12].map((n,i)=>({id:`balanced_blocks_${n}`,group:'blocks',title:['Built in Balance','Balance Builder','Seasoned Practice','A Body of Work'][i],text:`Finish ${n} balanced block${n===1?'':'s'}: four successful sessions of each of the six program days per block.`,target:n,metric:'blocks'}))
+    ...[1,3,6,12].map((n,i)=>({id:`balanced_blocks_${n}`,group:'blocks',title:['Built in Balance','Balance Builder','Seasoned Practice','A Body of Work'][i],text:`Finish ${n} balanced block${n===1?'':'s'}: four successful sessions of each program day in your split per block.`,target:n,metric:'blocks'}))
   ];
   const TITLES = [
     {id:'none',label:'No title',mark:null},
@@ -175,8 +197,8 @@
   ];
   const EVOLUTIONS = [{level:1,label:'Original',factor:1},{level:2,label:'Etched',factor:2},{level:3,label:'Masterwork',factor:4}];
 
-  function depthOf(sessions) {
-    const improvements = performanceOf(sessions), blocks = blocksOf(sessions, improvements);
+  function depthOf(sessions, rotation = ROTATION) {
+    const improvements = performanceOf(sessions), blocks = blocksOf(sessions, improvements, rotation);
     const unique = [];const names = new Set();
     for (const e of improvements) if (!names.has(e.exercise)) { names.add(e.exercise);unique.push(e); }
     const metrics = {improvements,exercises:unique,blocks:blocks.completed.map(b=>({ts:b.end}))};
@@ -187,7 +209,7 @@
     return {improvements,blocks,marks};
   }
 
-  const DAY_NAMES = {push_a:'Push A',lower_a:'Legs A',pull_a:'Pull A',push_b:'Push B',lower_b:'Legs B',pull_b:'Pull B'};
+  const DAY_NAMES = {push_a:'Push A',lower_a:'Legs A',pull_a:'Pull A',push_b:'Push B',lower_b:'Legs B',pull_b:'Pull B',upper_a:'Upper A',upper_b:'Upper B',full_a:'Full A',full_b:'Full B',full_c:'Full C',full2_a:'Full A',full2_b:'Full B'};
   // Recommendations are presentation only: every mark remains in the full collection.
   // Do not encourage rigid ordering or training through fatigue to earn a cosmetic.
   function closestMarks(result, limit = 3) {
@@ -204,31 +226,31 @@
     const key = user?.program?.currentWorkoutKey;
     const done = result.stats.qualifying;
     if (!done) return {kind:'unlock',label:'Next unlock',id:'first_rep',title:'Your first Iron Mark',text:'Finish your planned session at the effort that suits today. First Rep starts your collection.',value:0,target:1};
-    const current = result.depth.blocks.current;
-    if (ROTATION.includes(key) && current.counts[key] < 4) {
+    const current = result.depth.blocks.current, rotation = splitFor(user);
+    if (rotation.includes(key) && current.counts[key] < 4) {
       const value=current.counts[key];
-      return {kind:'block',label:'Current block',id:`block_${current.number}_${key}`,title:`Block ${current.number} · ${DAY_NAMES[key]}`,text:`Today's planned session can bring ${DAY_NAMES[key]} to ${value+1} of 4. Every program day contributes to this balanced block.`,value:current.done,target:24};
+      return {kind:'block',label:'Current block',id:`block_${current.number}_${key}`,title:`Block ${current.number} · ${DAY_NAMES[key]}`,text:`Today's planned session can bring ${DAY_NAMES[key]} to ${value+1} of 4. Every program day contributes to this balanced block.`,value:current.done,target:current.target};
     }
     const next = result.marks.find(m=>m.id==='full_six'&&!m.unlocked) || result.marks.find(m=>m.id==='six_six'&&!m.unlocked);
     if (next && !next.hidden) return {kind:'unlock',label:'Next unlock',id:next.id,title:next.title,text:next.text,value:next.value,target:next.target};
-    return {kind:'progress',label:'Your progress',id:'steady',title:'Keep building at your pace',text:'Follow today’s plan. Your completed sessions and repeatable progress keep building your collection.',value:current.done,target:24};
+    return {kind:'progress',label:'Your progress',id:'steady',title:'Keep building at your pace',text:'Follow today’s plan. Your completed sessions and repeatable progress keep building your collection.',value:current.done,target:current.target};
   }
 
   const MARKS = [
     // The Six
     {id:'first_rep', group:'six', title:'First Rep', text:'Finish your first successful session.', target:1, value:s => s.qualifying, emblem:'spark'},
-    {id:'full_six', group:'six', title:'Full Six', text:'Finish all six sessions of the rotation.', target:6, value:s => s.keysDone, emblem:'hex'},
+    {id:'full_six', group:'six', title:'Full Six', text:'Finish every session of your rotation.', target:6, value:s => s.keysDone, emblem:'hex'},
     ...RINGS.map(r => ({id:`rotations_${r.rotations}`, group:'six', title:`${r.label} Ring`, text:`Complete ${r.rotations} full rotations.`, target:r.rotations, value:s => s.rotations, ring:r.id})),
     {id:'six_six', group:'six', title:'Sixty-Six', text:'Finish 66 successful sessions.', target:66, value:s => s.qualifying, emblem:'sixsix', hidden:true},
     // The Forge
     {id:'momentum', group:'forge', title:'Momentum', text:'Bring any session up to Momentum (4 successful sessions of it).', target:4, value:s => s.bestExposures, emblem:'hammer'},
-    {id:'all_momentum', group:'forge', title:'Forged', text:'Bring all six sessions up to Momentum.', target:6, value:s => s.momentumKeys, emblem:'anvil'},
+    {id:'all_momentum', group:'forge', title:'Forged', text:'Bring every session of your rotation up to Momentum.', target:6, value:s => s.momentumKeys, emblem:'anvil'},
     {id:'apex', group:'forge', title:'Apex', text:'Bring any session up to Apex (8 successful sessions of it).', target:8, value:s => s.bestExposures},
-    {id:'full_apex', group:'forge', title:'Full Apex', text:'Bring all six sessions up to Apex.', target:6, value:s => s.apexKeys, emblem:'crown'},
+    {id:'full_apex', group:'forge', title:'Full Apex', text:'Bring every session of your rotation up to Apex.', target:6, value:s => s.apexKeys, emblem:'crown'},
     {id:'benchmark_block', group:'forge', title:'Benchmark Block', text:'Complete a four-session benchmark block.', target:1, value:s => s.blocks},
     // Balance
     {id:'leg_day', group:'balance', title:'Never Skip Leg Day', text:'Finish 12 leg sessions.', target:12, value:s => s.legDays, emblem:'kettlebell'},
-    {id:'push_pull', group:'balance', title:'Push–Pull Harmony', text:'Finish both Push and both Pull days five times.', target:5, value:s => s.pushPull},
+    {id:'push_pull', group:'balance', title:'Push–Pull Harmony', text:'Finish both Push and both Pull days (or every upper or full-body day) five times.', target:5, value:s => s.pushPull},
     {id:'no_detours', group:'balance', title:'No Detours', text:'Finish a whole rotation in order, without changing workouts.', target:6, value:s => s.orderedRun, emblem:'compass'},
     // Showing up
     {id:'back_at_it', group:'consistency', title:'Back at It', text:'Return and finish a session after two weeks or more away.', target:1, value:s => s.comebacks, emblem:'sunrise'},
@@ -251,7 +273,7 @@
   ];
 
   function evaluate(user) {
-    const sessions = sessionsOf(user), final = stats(sessions);
+    const sessions = sessionsOf(user), final = stats(sessions), rotation = splitFor(user);
     // unlockedAt: the finish time of the session that first crossed the target. Every mark's value
     // only grows as history grows, so a binary search over history prefixes finds it; prefix stats
     // are memoised because marks share most of their probes.
@@ -269,7 +291,7 @@
     });
     const ring = [...RINGS].reverse().find(r => final.rotations >= r.rotations) || null;
     const nextRing = RINGS.find(r => final.rotations < r.rotations) || null;
-    const depth = depthOf(sessions);
+    const depth = depthOf(sessions, rotation);
     const allMarks = [...marks,...depth.marks];
     const comeback = marks.find(m=>m.id==='back_at_it');
     const growthAt = (state,list) => ({
@@ -316,7 +338,7 @@
     return {ring,emblem,detail:emblem?detail:0,title:state.title==='none'?null:title||null};
   }
 
-  const api = {ROTATION, RINGS, EMBLEMS, MARKS, GROUPS, qualifies, evaluate, avatarFor, performanceOf, blocksOf, nextGoal, closestMarks, DAY_NAMES, EVOLUTIONS, TITLES};
+  const api = {ROTATION, SPLITS, splitFor, RINGS, EMBLEMS, MARKS, GROUPS, qualifies, evaluate, avatarFor, performanceOf, blocksOf, nextGoal, closestMarks, DAY_NAMES, EVOLUTIONS, TITLES};
   if (typeof window !== 'undefined') window.IronSixMarksEngine = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })();

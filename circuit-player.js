@@ -1,5 +1,15 @@
 (() => {
-  let clock=null,steps=[],bound=null,audio=null,wake=null,lastCount=-1,lastCheckpoint=0,note='',muted=false;
+  let clock=null,steps=[],bound=null,audio=null,wake=null,lastCount=-1,lastCheckpoint=0,note='',muted=false,mutedByPref=false,soundTouched=false;
+  // Onboarding can ask for silent cues. The timer still runs; only the beeps are off until the user turns sound on.
+  const soundsPref=()=>{try{const v=activeUser()?.preferences?.sounds;return typeof v==='boolean'?v:null}catch(_){return null}};
+  function applySoundPref(){
+    if(soundTouched)return;
+    const wasPref=mutedByPref;
+    if(soundsPref()===false){muted=true;mutedByPref=true}
+    else if(mutedByPref){muted=false;mutedByPref=false}
+    if(!mutedByPref&&!wasPref)return;
+    const b=document.getElementById('circuitSound');if(b){b.textContent=muted?'Sound off':'Sound on';b.setAttribute('aria-pressed',String(!muted))}
+  }
   const $=id=>document.getElementById(id);
   const owner=()=>window.ironSixAccountScope||'guest';
   const binding=()=>owner()+':'+activeUser().id+':'+(activeUser().workoutDraft?.id||'');
@@ -33,7 +43,7 @@
   }
   async function start(){
     const u=activeUser();IronSixJournal.ensure(u,finalWorkout(u));bind();
-    const original=bound;await unlockAudio();if(original!==binding())return;
+    const original=bound;applySoundPref();if(!mutedByPref||soundTouched)await unlockAudio();if(original!==binding())return;
     clock.start(Date.now());note='';checkpoint();beep(true);keepAwake();paint();
   }
   function skip(){
@@ -71,6 +81,7 @@
   }
   function render(){
     install();if(!$('trainingModes'))return;
+    applySoundPref();
     const u=activeUser(),circuit=u.trainingMode==='circuit';
     if(bound&&bound!==binding()){pause('Profile or workout changed');clock=null;bound=null}
     document.querySelectorAll('[data-training-mode]').forEach(b=>{const active=b.dataset.trainingMode===(u.trainingMode||'traditional');b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
@@ -90,8 +101,8 @@
     const player=document.createElement('div');player.id='circuitPlayer';player.hidden=true;player.innerHTML='<div id="circuitPhase" role="status" aria-live="polite"></div><h2 id="circuitTitle"></h2><div id="circuitClock" role="timer" aria-label="Interval time remaining">0:00</div><p id="circuitCue"></p><p id="circuitNext"></p><progress id="circuitProgress" aria-label="Circuit progress"></progress><div class="circuit-controls"><button type="button" class="btn primary" id="circuitStart">Start circuit</button><button type="button" class="btn secondary" id="circuitSkip">Skip interval</button><button type="button" class="btn secondary" id="circuitLog">Log this set</button></div><div class="circuit-controls"><button type="button" class="btn secondary" id="circuitSound" aria-pressed="true">Sound on</button><button type="button" class="btn secondary" id="circuitTest">Test sound</button></div><p id="circuitStatus" role="status"></p><small>Leaving this screen pauses the timer. Skipped intervals are not marked complete.</small>';
     $('exerciseList')?.before(player);
     $('circuitStart').onclick=()=>clock?.state.running?pause():start();$('circuitSkip').onclick=skip;$('circuitLog').onclick=logInterval;
-    $('circuitSound').onclick=()=>{muted=!muted;$('circuitSound').textContent=muted?'Sound off':'Sound on';$('circuitSound').setAttribute('aria-pressed',String(!muted))};
-    $('circuitTest').onclick=async()=>{if(await unlockAudio()){muted=false;$('circuitSound').textContent='Sound on';$('circuitSound').setAttribute('aria-pressed','true');beep(true)}};
+    $('circuitSound').onclick=()=>{soundTouched=true;mutedByPref=false;muted=!muted;$('circuitSound').textContent=muted?'Sound off':'Sound on';$('circuitSound').setAttribute('aria-pressed',String(!muted))};
+    $('circuitTest').onclick=async()=>{if(await unlockAudio()){soundTouched=true;mutedByPref=false;muted=false;$('circuitSound').textContent='Sound on';$('circuitSound').setAttribute('aria-pressed','true');beep(true)}};
     const style=document.createElement('style');style.textContent='.training-mode-picker{display:grid;grid-template-columns:1fr 1fr;gap:10px}.training-mode-picker button{min-height:72px;text-align:left}.training-mode-picker small{display:block;font-weight:400;margin-top:7px}.training-mode-picker .active{border-color:var(--accent);background:rgba(46,229,128,.12)}#trainingModes p{font-size:13px;color:var(--muted);line-height:1.5}#circuitSettings{margin-top:15px}#circuitSettings select{display:block;width:100%;padding:12px;margin-top:8px;background:var(--surface2);color:var(--text);border:1px solid var(--line);border-radius:12px}#circuitPlayer{padding:22px 18px;margin:16px 0;border:2px solid var(--accent);border-radius:20px;background:var(--surface2);text-align:center}#circuitPlayer[data-phase="rest"],#circuitPlayer[data-phase="roundRest"]{border-color:#7cbcff}#circuitPhase{letter-spacing:.12em;font-size:12px;font-weight:800}#circuitClock{font-size:clamp(64px,20vw,104px);line-height:1.1;font-variant-numeric:tabular-nums;font-weight:900;margin:16px 0}#circuitPlayer h2{font-size:23px}#circuitPlayer p{line-height:1.5}#circuitPlayer progress{width:100%;height:10px;accent-color:var(--accent)}.circuit-controls{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:15px}.circuit-controls button{min-height:48px;flex:1}#circuitStatus,#circuitPlayer small{font-size:12px;color:var(--muted)}';
     document.head.append(style);
   }

@@ -32,10 +32,12 @@ function registryOptionsForSlot(u,sample){
     tag:sample.tag||'Accessory',base:sample.base,seedKey:sample.seedKey,priority:sample.priority||2,source:'registry'
   })).filter(e=>exerciseAvailable(u,e));
 }
-function counterpartKey(key){return ({push_a:'push_b',push_b:'push_a',lower_a:'lower_b',lower_b:'lower_a',pull_a:'pull_b',pull_b:'pull_a'})[key]||null}
+function counterpartKey(key){return ({push_a:'push_b',push_b:'push_a',lower_a:'lower_b',lower_b:'lower_a',pull_a:'pull_b',pull_b:'pull_a',upper_a:'upper_b',upper_b:'upper_a',full2_a:'full2_b',full2_b:'full2_a'})[key]||null}
+// Sibling days of the same split prefer different accessory angles (A/B, or A/B/C for full body).
+function counterpartKeys(key){return /^full_[abc]$/.test(key)?['full_a','full_b','full_c'].filter(k=>k!==key):[counterpartKey(key)].filter(Boolean)}
 function counterpartPenalty(u,key,e){
-  const other=counterpartKey(key);if(!other)return 0;
-  return (u.history||[]).slice(0,8).reduce((n,h,i)=>n+(h.workoutKey===other&&(h.details||[]).some(d=>d.name===e.name)?Math.max(12,70-i*8):0),0);
+  const others=counterpartKeys(key);if(!others.length)return 0;
+  return (u.history||[]).slice(0,8).reduce((n,h,i)=>n+(others.includes(h.workoutKey)&&(h.details||[]).some(d=>d.name===e.name)?Math.max(12,70-i*8):0),0);
 }
 function patternRecentPenalty(u,e){
   return (u.history||[]).slice(0,6).reduce((n,h,i)=>n+((h.details||[]).some(d=>d.seedKey===e.seedKey)?Math.max(0,8-i):0),0);
@@ -73,16 +75,29 @@ function lowStimulusPenalty(e,pool){
   if(!LOW_STIMULUS_FALLBACKS.has(e.name))return 0;
   return pool.some(x=>!LOW_STIMULUS_FALLBACKS.has(x.name))?1000:0;
 }
+/* A main (benchmark) lift is where progressive overload happens, so recency and A/B variety may
+   rotate it between loaded options but never push it onto an unloaded one while a free-weight
+   option is available (e.g. Single-Leg Hip Hinge over Dumbbell Romanian Deadlift). Applies to the
+   2-4 day splits; the default six-day rotation keeps its established (snapshot-tested) choices. */
+// Body-weight only: a bench or rack supports the movement but adds no load (a pull-up bar is different).
+function unloadedLift(e){return (e?.requires||[]).every(r=>r==='bench'||r==='rack')&&equipmentClass(e)!=='free'}
+function unloadedMainPenalty(u,e,pool,anchor){
+  if(!anchor||!unloadedLift(e)||typeof rotationFor!=='function'||rotationFor(u)===ROTATION)return 0;
+  return pool.some(x=>equipmentClass(x)==='free')?500:0;
+}
 
+const VERTICAL_FIRST={pull_a:'Pull-Up',pull_b:'Chin-Up',upper_a:'Pull-Up',upper_b:'Chin-Up',full_b:'Pull-Up',full_c:'Chin-Up',full2_a:'Chin-Up',full2_b:'Pull-Up',full_a:'Chin-Up'};
 function programSlot(u,id,source,index,sets,priority=2,anchor=false){
   const key=u.program.currentWorkoutKey,exposure=Number(u.program.exposures[key])||0;
-  const variation=anchor?Math.floor(exposure/4)%3:exposure%3;
+  // Strength keeps one benchmark per slot (the foundation lift) instead of rotating it every block.
+  const goal=typeof programGoal==='function'?programGoal(u):'muscle',stableAnchor=anchor&&goal==='strength';
+  const variation=stableAnchor?0:anchor?Math.floor(exposure/4)%3:exposure%3;
   const original=programOptions(source,variation,u)[index]||[];
   let pool=[...original];
 
-  if(id==='vertical'&&/^pull_/.test(key)){
+  if(id==='vertical'&&VERTICAL_FIRST[key]){
     pool=[0,1,2].flatMap(v=>programOptions('back',v,u)[0]||[]);
-    const order=key==='pull_a'
+    const order=VERTICAL_FIRST[key]==='Pull-Up'
       ? ['Pull-Up','Chin-Up','Band Lat Pulldown','Prone Lat Pull']
       : ['Chin-Up','Pull-Up','Band Lat Pulldown','Prone Lat Pull'];
     pool.sort((a,b)=>{const ai=order.indexOf(a.name),bi=order.indexOf(b.name);return (ai<0?99:ai)-(bi<0?99:bi)});
@@ -124,7 +139,7 @@ function programSlot(u,id,source,index,sets,priority=2,anchor=false){
 
   const cacheVersion='v5';
   const difficulty=window.IronSixDifficulty?.effectiveFor(u)||'balanced';
-  const token=`${cacheVersion}:${key}:${id}:${anchor?'block'+Math.floor(exposure/4):exposure}${difficulty==='heavy'?':difficulty:heavy':''}`;
+  const token=`${cacheVersion}:${key}:${id}:${stableAnchor?'block-strength':anchor?'block'+Math.floor(exposure/4):exposure}${difficulty==='heavy'?':difficulty:heavy':''}`;
   const cached=u.program.selectionCache[token];
   let selected=pool.find(e=>e.name===cached);
   if(!selected){
@@ -135,12 +150,18 @@ function programSlot(u,id,source,index,sets,priority=2,anchor=false){
       const noEquipmentBias=equipped&&!e.requires?.length?10:0;
       const patternPenalty=anchor?0:patternRecentPenalty(u,e);
       const equipmentPenalty=equipmentPreferencePenalty(u,id,e,pool,anchor);
-      return {e,score:exactPenalty(e)+counterpartPenalty(u,key,e)+patternPenalty+legacyBias+noEquipmentBias+equipmentPenalty+lowStimulusPenalty(e,pool)+(window.IronSixDifficulty?.selectionPenalty(u,e)||0)};
+      // A strength benchmark ignores recency and A/B variety: the builder's listed order (barbell first) wins.
+      const history=stableAnchor?i*6:exactPenalty(e)+counterpartPenalty(u,key,e);
+      return {e,score:history+patternPenalty+legacyBias+noEquipmentBias+equipmentPenalty+lowStimulusPenalty(e,pool)+unloadedMainPenalty(u,e,pool,anchor)+(window.IronSixDifficulty?.selectionPenalty(u,e)||0)};
     }).sort((a,b)=>a.score-b.score||stableNumber(`${token}:${a.e.name}`)-stableNumber(`${token}:${b.e.name}`))[0].e;
     u.program.selectionCache[token]=selected.name;
   }
-  const reason=anchor?'Benchmark lift: repeat within the block to measure progress.':'Accessory selected to balance recent work, A/B variety, available equipment, and free-weight priority.';
-  return {...selected,sets,priority,prescription:String(selected.prescription).replace(/^.*then \d+ ×\s*/,sets+' × ').replace(/^\d+ ×\s*/,sets+' × '),_programSlot:id,_anchor:anchor,_selectionReason:reason,_alternatives:pool.filter(e=>e.name!==selected.name).map(e=>({...e,sets,priority}))};
+  const reason=stableAnchor?'Benchmark lift: kept the same so strength progress is measured on one lift.':anchor?'Benchmark lift: repeat within the block to measure progress.':'Accessory selected to balance recent work, A/B variety, available equipment, and free-weight priority.';
+  const result={...selected,sets,priority,prescription:String(selected.prescription).replace(/^.*then \d+ ×\s*/,sets+' × ').replace(/^\d+ ×\s*/,sets+' × '),_programSlot:id,_anchor:anchor,_selectionReason:reason,_alternatives:pool.filter(e=>e.name!==selected.name).map(e=>({...e,sets,priority}))};
+  if(goal==='muscle'||typeof goalPrescription!=='function')return result;
+  // Goal ranges apply to the chosen lift and every swap option, so a swap keeps the goal's reps.
+  const main=priority===1;
+  return {...result,prescription:goalPrescription(goal,result,main),_goal:goal,_alternatives:result._alternatives.map(e=>({...e,prescription:goalPrescription(goal,e,main)}))};
 }
 function buildBalancedProgram(key,u){
   const specs={
@@ -151,8 +172,24 @@ function buildBalancedProgram(key,u){
     lower_b:[['hinge','lower_hypertrophy',1,3,1,true],['squat','lower_hypertrophy',0,3,1,true],['glute','lower_hypertrophy',3,3,2],['ham','lower_hypertrophy',4,3,2],['calves','lower_hypertrophy',5,3,2]],
     pull_b:[['row','back',1,3,1,true],['vertical','back',0,2,2],['rear','back',2,3,2],['hammer','shoulders_arms',5,3,2],['lat_iso_b','back',3,2,3]]
   };
+  Object.assign(specs,SPLIT_SPECS);
+  // In the upper/lower split the legs days also carry the week's direct core work.
+  const daySpecs=[...(specs[key]||[]),...(/^lower_[ab]$/.test(key)&&typeof rotationFor==='function'&&rotationFor(u).length===4?[['core','chest',4,2,2]]:[])];
   const chosen=[],missing=[];
-  for(const spec of specs[key]||[]){let e=programSlot(u,...spec);if(!e){missing.push(spec[0]);continue}
+  for(const spec of daySpecs){
+    // An optional fallback slot (7th element) keeps a pattern when equipment rules the first one out,
+    // e.g. a pull-up when no row is possible. The original slot is still reported as a gap.
+    // A low-stimulus last resort (e.g. Prone Lat Pull) also gives way to a loaded fallback pattern.
+    // A bodyweight main lift (e.g. Push-Up on a no-bench setup) gives way to a free-weight lift of
+    // the other plane (e.g. Barbell Overhead Press), so loaded progression is never left on the table.
+    let e=programSlot(u,...spec.slice(0,6));
+    const weak=x=>!x||LOW_STIMULUS_FALLBACKS.has(x.name)||(spec[5]&&unloadedLift(x));
+    if(Array.isArray(spec[6])&&weak(e)){
+      const fallback=programSlot(u,...spec[6]);
+      const better=fallback&&!LOW_STIMULUS_FALLBACKS.has(fallback.name)&&!chosen.some(x=>x.name===fallback.name)&&(!e||LOW_STIMULUS_FALLBACKS.has(e.name)||equipmentClass(fallback)==='free');
+      if(better){missing.push(spec[0]);e=fallback}
+    }
+    if(!e){missing.push(spec[0]);continue}
     if(chosen.some(x=>x.name===e.name)){
       const alternate=e._alternatives.find(x=>!chosen.some(y=>y.name===x.name));
       if(alternate)e={...e,...alternate,_alternatives:e._alternatives.filter(x=>x.name!==alternate.name)};
@@ -163,4 +200,15 @@ function buildBalancedProgram(key,u){
   u.program.planGaps={key,slots:missing};
   return chosen;
 }
-for(const key of ROTATION)WORKOUT_BUILDERS[key]=(variant,u)=>buildBalancedProgram(key,u);
+/* Lower-frequency splits reuse the same slots (and so the same option lists, equipment fallbacks and
+ * media). Slot: [id, source builder, option index, base sets, priority, benchmark anchor, fallback]. */
+const SPLIT_SPECS={
+  upper_a:[['press','chest',0,3,1,true,['overhead','shoulders_arms',0,3,1,true]],['vertical','back',0,3,1,true,['row','back',1,3,1,true]],['row','back',1,3,2],['fly','chest',2,2,2],['lateral','shoulders_arms',1,3,2],['curl_long','shoulders_arms',3,2,2],['triceps','chest',3,2,2]],
+  upper_b:[['overhead','shoulders_arms',0,3,1,true],['row','back',1,3,1,true,['vertical','back',0,3,1,true]],['press','chest',1,3,2],['vertical','back',0,2,2,false,['lat_iso','back',3,2,2]],['rear','back',2,2,2],['lateral','shoulders_arms',1,2,2],['hammer','shoulders_arms',5,2,2],['triceps','shoulders_arms',4,2,2]],
+  full_a:[['squat','lower_strength',0,3,1,true],['press','chest',0,3,1,true,['overhead','shoulders_arms',0,3,1,true]],['row','back',1,3,1,true,['vertical','back',0,3,1,true]],['ham','lower_strength',4,2,2,false,['hinge','lower_hypertrophy',1,2,2]],['lateral','shoulders_arms',1,2,2],['curl_long','shoulders_arms',3,2,2]],
+  full_b:[['hinge','lower_hypertrophy',1,3,1,true],['overhead','shoulders_arms',0,3,1,true,['press','chest',0,3,1,true]],['vertical','back',0,3,1,true,['row','back',1,3,1,true]],['secondary','chest',1,2,2],['single','lower_strength',1,2,2],['triceps','shoulders_arms',4,2,2],['calves','lower_strength',5,3,2]],
+  full_c:[['squat','lower_hypertrophy',0,3,1,true],['press','chest',1,3,1,true,['overhead','shoulders_arms',0,3,1,true]],['vertical','back',0,3,1,true,['row','back',1,3,1,true]],['row','back',1,2,2],['rear','back',2,2,2],['core','chest',4,2,2],['hammer','shoulders_arms',5,2,3]],
+  full2_a:[['squat','lower_strength',0,3,1,true],['press','chest',0,3,1,true,['overhead','shoulders_arms',0,3,1,true]],['row','back',1,3,1,true,['vertical','back',0,3,1,true]],['ham','lower_strength',4,2,2,false,['hinge','lower_hypertrophy',1,2,2]],['lateral','shoulders_arms',1,2,2],['curl_long','shoulders_arms',3,2,2],['calves','lower_strength',5,2,2]],
+  full2_b:[['hinge','lower_hypertrophy',1,3,1,true],['overhead','shoulders_arms',0,3,1,true,['press','chest',0,3,1,true]],['vertical','back',0,3,1,true,['row','back',1,3,1,true]],['secondary','chest',1,3,2],['single','lower_strength',1,2,2],['triceps','shoulders_arms',4,2,2],['rear','back',2,2,2],['core','chest',4,2,2]]
+};
+for(const key of [...ROTATION,...Object.keys(SPLIT_SPECS)])WORKOUT_BUILDERS[key]=(variant,u)=>buildBalancedProgram(key,u);

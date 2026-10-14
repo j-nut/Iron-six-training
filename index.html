@@ -269,13 +269,99 @@
 <option value="advanced">Advanced</option>
 </select>
 </div>
+</div>
+</fieldset>
+<fieldset class="pr-profile-group" id="profileGoalGroup">
+<legend class="pr-group-title">Goal and schedule</legend>
+<p class="pr-group-copy">Your goal and how often you train shape how your program is split.</p>
+<div class="pr-fields">
 <div class="setting">
-<label for="benchBest">Bench reference <span class="pr-optional">Optional</span>
-</label>
-<input id="benchBest" type="text" placeholder="155 lb × 12 reps">
-<div class="helper">Enter one real set you have completed.</div>
+<label for="profileGoal">Goal</label>
+<select id="profileGoal"><option value="">Not set</option><option value="strength">Get stronger</option><option value="muscle">Build muscle</option><option value="general">General fitness</option></select>
+</div>
+<div class="setting">
+<label for="profileDays">Days per week</label>
+<select id="profileDays"><option value="">Not set</option><option value="2">2 days</option><option value="3">3 days</option><option value="4">4 days</option><option value="5">5 days</option><option value="6">6 days</option></select>
+</div>
+<div class="setting">
+<label for="profileMinutes">Session length (minutes)</label>
+<input id="profileMinutes" type="number" inputmode="numeric" min="10" max="120" step="5">
+</div>
+<div class="setting">
+<label for="profileMode">Training style</label>
+<select id="profileMode"><option value="traditional">Traditional sets</option><option value="circuit">Guided circuit</option></select>
+</div>
+<div class="setting">
+<label for="profileDifficulty">Default difficulty</label>
+<select id="profileDifficulty"><option value="light">Light</option><option value="balanced">Balanced</option><option value="heavy">Heavy</option></select>
 </div>
 </div>
+<div class="helper" id="profileSessionLock" role="note" hidden>A workout is in progress. Finish or reset it to change session length, style or difficulty.</div>
+</fieldset>
+<fieldset class="pr-profile-group" id="profileStrengthGroup">
+<legend class="pr-group-title">Strength references <span class="pr-optional">Optional</span></legend>
+<p class="pr-group-copy">A recent hard set you really completed, such as 155 lb × 8 reps. Leave a lift blank if you are not sure. For dumbbells, enter the weight of one dumbbell.</p>
+<div class="pr-lift" role="group" aria-labelledby="refLabel_squat">
+<div class="pr-field-label" id="refLabel_squat">Squat</div>
+<div class="pr-lift-inputs">
+<input id="ref_squat_weight" type="number" inputmode="decimal" min="1" max="2000" step="any" placeholder="lb" aria-label="Squat weight in pounds">
+<span aria-hidden="true">×</span>
+<input id="ref_squat_reps" type="number" inputmode="numeric" min="1" max="50" placeholder="reps" aria-label="Squat reps">
+<select id="ref_squat_equipment" aria-label="Squat equipment"><option value="barbell">Barbell</option><option value="dumbbell">Dumbbells (each)</option></select>
+</div>
+</div>
+<div class="pr-lift" role="group" aria-labelledby="refLabel_bench">
+<div class="pr-field-label" id="refLabel_bench">Bench press</div>
+<div class="pr-lift-inputs">
+<input id="ref_bench_weight" type="number" inputmode="decimal" min="1" max="2000" step="any" placeholder="lb" aria-label="Bench press weight in pounds">
+<span aria-hidden="true">×</span>
+<input id="ref_bench_reps" type="number" inputmode="numeric" min="1" max="50" placeholder="reps" aria-label="Bench press reps">
+<select id="ref_bench_equipment" aria-label="Bench press equipment"><option value="barbell">Barbell</option><option value="dumbbell">Dumbbells (each)</option></select>
+</div>
+</div>
+<div class="pr-lift" role="group" aria-labelledby="refLabel_hinge">
+<div class="pr-field-label" id="refLabel_hinge">Deadlift or Romanian deadlift</div>
+<div class="pr-lift-inputs">
+<input id="ref_hinge_weight" type="number" inputmode="decimal" min="1" max="2000" step="any" placeholder="lb" aria-label="Deadlift or Romanian deadlift weight in pounds">
+<span aria-hidden="true">×</span>
+<input id="ref_hinge_reps" type="number" inputmode="numeric" min="1" max="50" placeholder="reps" aria-label="Deadlift or Romanian deadlift reps">
+<select id="ref_hinge_equipment" aria-label="Deadlift or Romanian deadlift equipment"><option value="barbell">Barbell</option><option value="dumbbell">Dumbbells (each)</option></select>
+</div>
+</div>
+<div class="pr-lift" role="group" aria-labelledby="refLabel_overhead_press">
+<div class="pr-field-label" id="refLabel_overhead_press">Overhead press</div>
+<div class="pr-lift-inputs">
+<input id="ref_overhead_press_weight" type="number" inputmode="decimal" min="1" max="2000" step="any" placeholder="lb" aria-label="Overhead press weight in pounds">
+<span aria-hidden="true">×</span>
+<input id="ref_overhead_press_reps" type="number" inputmode="numeric" min="1" max="50" placeholder="reps" aria-label="Overhead press reps">
+<select id="ref_overhead_press_equipment" aria-label="Overhead press equipment"><option value="barbell">Barbell</option><option value="dumbbell">Dumbbells (each)</option></select>
+</div>
+</div>
+<div class="pr-lift" role="group" aria-labelledby="refLabel_row">
+<div class="pr-field-label" id="refLabel_row">Row</div>
+<div class="pr-lift-inputs">
+<input id="ref_row_weight" type="number" inputmode="decimal" min="1" max="2000" step="any" placeholder="lb" aria-label="Row weight in pounds">
+<span aria-hidden="true">×</span>
+<input id="ref_row_reps" type="number" inputmode="numeric" min="1" max="50" placeholder="reps" aria-label="Row reps">
+<select id="ref_row_equipment" aria-label="Row equipment"><option value="barbell">Barbell</option><option value="dumbbell">Dumbbells (each)</option></select>
+</div>
+</div>
+</fieldset>
+<fieldset class="pr-profile-group" id="profileLimitsGroup">
+<legend class="pr-group-title">Injuries and limits <span class="pr-optional">Optional</span></legend>
+<p class="pr-group-copy">Pick any areas to go easy on. We start those movements lighter. This is not medical advice; see a professional for pain.</p>
+<div class="equipment-grid" id="limitationsEditor" role="group" aria-label="Areas to go easy on"><label class="equip"><input type="checkbox" data-limit="shoulder"><span>Shoulders</span></label><label class="equip"><input type="checkbox" data-limit="elbow"><span>Elbows</span></label><label class="equip"><input type="checkbox" data-limit="wrist"><span>Wrists</span></label><label class="equip"><input type="checkbox" data-limit="lower_back"><span>Lower back</span></label><label class="equip"><input type="checkbox" data-limit="hip"><span>Hips</span></label><label class="equip"><input type="checkbox" data-limit="knee"><span>Knees</span></label></div>
+</fieldset>
+<fieldset class="pr-profile-group" id="profilePrefsGroup">
+<legend class="pr-group-title">Phone features <span class="pr-optional">Optional</span></legend>
+<p class="pr-group-copy">Turning on camera or voice asks your phone for permission. Nothing is recorded or uploaded.</p>
+<div class="equipment-grid" id="preferencesEditor" role="group" aria-label="Phone features and music">
+<label class="equip"><input type="checkbox" id="prefMusic"><span>Music during workouts</span></label>
+<label class="equip"><input type="checkbox" id="prefSounds"><span>Workout sounds and cues</span></label>
+<label class="equip"><input type="checkbox" id="prefCamera"><span>Camera rep counting</span></label>
+<label class="equip"><input type="checkbox" id="prefVoice"><span>Voice logging</span></label>
+</div>
+<div class="helper" id="prefsStatus" role="status" aria-live="polite"></div>
 </fieldset>
 <fieldset class="pr-profile-group pr-equipment-group">
 <legend class="pr-group-title">Your equipment</legend>
@@ -329,7 +415,7 @@
 <div class="modal-backdrop" id="newUserModal" role="dialog" aria-modal="true" aria-labelledby="newUserTitle">
 <div class="modal">
 <h3 id="newUserTitle">Add a profile</h3>
-<p>Create a separate training profile. You can fine-tune equipment after creating it.</p>
+<p>Create a separate training profile. Next, a short setup asks about goals, schedule and equipment.</p>
 <div class="setting">
 <label for="newUserName">Name</label>
 <input id="newUserName" type="text" maxlength="30" placeholder="Name">
@@ -361,7 +447,7 @@
 </div>
 </div>
 </div>
-<script src="core.js?v=21">
+<script src="core.js?v=22">
 </script>
 <script src="workout-difficulty.js?v=4"></script>
 <script src="workout-lower.js">
@@ -376,15 +462,17 @@
 </script>
 <script src="workout-upper.js?v=2">
 </script>
-<script src="workout-dispatch.js?v=4">
+<script src="workout-dispatch.js?v=6">
 </script>
-<script src="engine.js?v=20">
+<script src="engine.js?v=21">
 </script>
-<script src="session-planner.js?v=5">
+<script src="session-planner.js?v=7">
 </script>
 <script src="workout-store.js?v=7">
 </script>
-<script src="ui1.js?v=19">
+<script src="profile-schema.js?v=2">
+</script>
+<script src="ui1.js?v=20">
 </script>
 <script src="exercise-media-catalog.js?v=1">
 </script>
@@ -400,7 +488,7 @@
 </script>
 <script src="history-explorer.js?v=1">
 </script>
-<script src="ui3.js?v=19">
+<script src="ui3.js?v=21">
 </script>
 <script src="exercise-guide.js?v=9">
 </script>
@@ -418,25 +506,25 @@
 </script>
 <script src="equipment-manager.js?v=1">
 </script>
-<script src="circuit-player.js?v=4">
+<script src="circuit-player.js?v=5">
 </script>
 <script src="social-auth.js?v=3">
 </script>
-<script src="cloud-sync.js?v=18">
+<script src="cloud-sync.js?v=19">
 </script>
-<script src="cloud-history-sync.js?v=13">
+<script src="cloud-history-sync.js?v=14">
 </script>
-<script src="backup-restore.js?v=2">
+<script src="backup-restore.js?v=3">
 </script>
 <script src="profile-delete.js?v=3">
 </script>
-<script src="ui-shell.js?v=2">
+<script src="ui-shell.js?v=3">
 </script>
 <script src="profile-menu.js?v=1">
 </script>
 <script src="session-cards.js?v=1">
 </script>
-<script src="onboarding.js?v=1">
+<script src="onboarding.js?v=2">
 </script>
 <script src="pose-person-isolation.js?v=6">
 </script>
@@ -452,7 +540,7 @@
 </script>
 <script src="workout-voice.js?v=1">
 </script>
-<script src="pose-spike.js?v=7">
+<script src="pose-spike.js?v=8">
 </script>
 <script src="cardio-companion.js?v=1">
 </script>

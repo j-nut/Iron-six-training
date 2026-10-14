@@ -60,6 +60,11 @@ test('native callbacks handle PKCE, bridged Google, cancellation, safe areas and
   const imageLink=win.document.createElement('a');imageLink.href='/assets/exercises/push-ups-1.png';imageLink.innerHTML='<img alt="Push-up position 1">';win.document.body.append(imageLink);imageLink.click();
   assert(win.document.querySelector('dialog[open] img').src.endsWith('/assets/exercises/push-ups-1.png'));
   events.backButton();assert.equal(win.document.querySelector('dialog'),null,'Android Back closes the image instead of leaving the workout');
+  let stepped=0,showView=0;const obBack=win.document.createElement('button');obBack.id='obBack';obBack.onclick=()=>{stepped++};win.document.body.append(obBack);
+  const previousShowView=win.showView;win.showView=()=>{showView++};win.IronSixOnboarding={isOpen:()=>true};
+  events.backButton();assert.equal(stepped,1,'Android Back steps back through setup');
+  obBack.hidden=true;events.backButton();assert.equal(stepped,1);assert.equal(showView,0,'on the first setup question Back stays put instead of leaving setup');
+  delete win.IronSixOnboarding;obBack.remove();win.showView=previousShowView;
   await assert.rejects(native.openOAuth('javascript:alert(1)'));
   dom.window.close();
 });

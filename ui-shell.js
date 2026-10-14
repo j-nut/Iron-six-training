@@ -139,7 +139,9 @@
     const cardio = user?.program?.cardio?.enabled === true ? 'Cardio on' : 'Cardio off';
     setSummary('sessionSetup', `${minutes} min · ${mode} · ${describeReadiness(user)} · ${cardio}`);
     const music = window.IronSixMusic;
-    setSummary('musicPanel', music && music.nowPlaying ? music.nowPlaying() : 'Free radio, Iron Six originals, or your own service');
+    try { music?.applyGate?.(); } catch (_) {}
+    const musicOff = (() => { try { return music?.musicOff?.() === true; } catch (_) { return false; } })();
+    setSummary('musicPanel', musicOff ? 'Off — turn on whenever you like' : music && music.nowPlaying ? music.nowPlaying() : 'Free radio, Iron Six originals, or your own service');
   }
 
   function restructurePlan() {

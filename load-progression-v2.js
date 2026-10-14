@@ -18,7 +18,8 @@
   };
   const rangeFor = exercise => typeof repRange === 'function' ? repRange(exercise) : [8, 12];
   const midpointFor = exercise => typeof repTarget === 'function' ? repTarget(exercise) : Math.round(rangeFor(exercise).reduce((a, b) => a + b, 0) / 2);
-  const targetRirFor = user => user?.trainingLevel === 'advanced' ? 1.5 : 2;
+  // Goal-aware (core.js goalTargetRir): general fitness works about one rep further from failure.
+  const targetRirFor = user => typeof goalTargetRir === 'function' ? goalTargetRir(user) : user?.trainingLevel === 'advanced' ? 1.5 : 2;
   const feedbackSupport = feedback => feedback === 'easy' ? 1 : feedback === 'hard' ? -0.5 : 0;
 
   function rounded(load, exercise, user) {
@@ -175,6 +176,44 @@
     return typeof applyTrainerMemory === 'function' ? applyTrainerMemory(user, exercise, result) : result;
   }
 
+  // First-day loads from the strength check done in onboarding. Only used when the exercise has
+  // no logged history (exact or related lift). A barbell reference never seeds a per-hand
+  // dumbbell exercise and vice versa; a landmine exercise counts as barbell-class at 70%.
+  const STRENGTH_REF_KEYS = {squat: 'squat', bench: 'bench', chest_press: 'bench', hinge: 'hinge', overhead_press: 'overhead_press', row: 'row'};
+  const STRENGTH_REF_LABELS = {squat: 'squat', bench: 'bench press', hinge: 'hinge (deadlift-style) lift', overhead_press: 'overhead press', row: 'row'};
+  function readStrengthRef(user, key) {
+    const raw = user && user.strengthRefs && typeof user.strengthRefs === 'object' ? user.strengthRefs[key] : null;
+    if (!raw || typeof raw !== 'object') return null;
+    const weight = Number(raw.weight), reps = Math.round(Number(raw.reps));
+    const equipment = raw.equipment === 'dumbbell' || raw.equipment === 'barbell' ? raw.equipment : null;
+    if (!equipment || !(weight > 0 && weight <= 1500) || !(reps >= 1 && reps <= 30)) return null;
+    return {weight, reps, equipment};
+  }
+  function seedStrength(exercise) {
+    const factors = typeof SEED_FACTORS !== 'undefined' ? SEED_FACTORS : {};
+    return /good morning/i.test(String(exercise?.name || '')) ? 0.25 : factors[exercise?.seedKey];
+  }
+  function strengthRefBaseline(user, exercise, base) {
+    if (!freeWeight(exercise) || typeof exerciseLoadEquipment !== 'function') return null;
+    const key = STRENGTH_REF_KEYS[String(exercise.seedKey || '')];
+    const ref = key ? readStrengthRef(user, key) : null;
+    if (!ref) return null;
+    const equipment = exerciseLoadEquipment(exercise);
+    if (ref.equipment !== (equipment === 'dumbbell' ? 'dumbbell' : 'barbell')) return null;
+    const own = seedStrength(exercise), reference = typeof SEED_FACTORS !== 'undefined' ? SEED_FACTORS[key] : null;
+    // Related movements (chest press vs bench, good morning vs hinge) start proportionally lighter,
+    // and no variant ever starts heavier than the reference lift itself.
+    const slotRatio = own && reference ? Math.min(1, own / reference) : 1;
+    const ratio = Math.min(1, slotRatio * variantFactor(String(exercise.name || '').toLowerCase()) * (equipment === 'landmine' ? 0.7 : 1));
+    const e1 = ref.weight * (1 + Math.min(ref.reps, 12) / 30);
+    const target = Number(base?.target) || midpointFor(exercise);
+    let load = rounded(e1 * ratio * 0.95 / (1 + (target + targetRirFor(user)) / 30), exercise, user);
+    if (load && equipment === 'barbell') load = Math.max(load, Math.min(45, ref.weight));
+    if (!load) return null;
+    const result = {...base, load, target, text: `${load} lb × about ${target}`, confidence: 'From your strength check', detail: `Based on the ${STRENGTH_REF_LABELS[key]} you entered during setup (${ref.weight} lb${ref.equipment === 'dumbbell' ? ' per hand' : ''} × ${ref.reps}); your first sets here replace this estimate.`};
+    return typeof applyTrainerMemory === 'function' ? applyTrainerMemory(user, exercise, result) : result;
+  }
+
   nextSetRecommendation = function (user, exercise, exerciseIndex) {
     const sets = typeof currentSessionCompleted === 'function' ? currentSessionCompleted(user, exerciseIndex) : [];
     if (!sets.length) return null;
@@ -186,7 +225,7 @@
       const base = originalBaseline(user, exercise);
       if (typeof priorPerformance !== 'function') return base;
       const sets = priorPerformance(user, exercise)?.sets || [];
-      if (!sets.length) return relatedLiftBaseline(user, exercise, base) || base;
+      if (!sets.length) return relatedLiftBaseline(user, exercise, base) || strengthRefBaseline(user, exercise, base) || base;
       const newestDate = Math.max(...sets.map(set => Number(set._date) || 0));
       const newest = sets.filter(set => (Number(set._date) || 0) === newestDate);
       let rec = recommendationFromSet(user, exercise, representativeSet(newest), true);
@@ -256,5 +295,5 @@
     });
   }
 
-  window.IronSixLoadProgressionV2 = {recommendationFromSet};
+  window.IronSixLoadProgressionV2 = {recommendationFromSet, strengthRefBaseline};
 })();
