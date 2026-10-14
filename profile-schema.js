@@ -217,10 +217,17 @@
       }
     }
 
+    // Goal and schedule go through the programming API so the next session moves into the new
+    // split straight away (or after the workout in progress) instead of a rotation later.
+    const program = window.IronSixProgram;
+    const programKeys = typeof program?.applySettings === 'function' ? ['goal', 'daysPerWeek'] : [];
     for (const key of ['name', 'weight', 'age', 'heightIn', 'trainingLevel', 'goal', 'daysPerWeek', 'workoutMinutes', 'trainingMode', 'workoutDifficulty', 'limitations']) {
       if (!Object.hasOwn(values, key)) continue;
-      if (values[key] === undefined) delete u[key]; else u[key] = values[key];
+      if (values[key] === undefined) delete u[key];
+      else if (!programKeys.includes(key)) u[key] = values[key];
     }
+    const programSettings = Object.fromEntries(programKeys.filter(key => Object.hasOwn(values, key) && values[key] !== undefined).map(key => [key, values[key]]));
+    if (Object.keys(programSettings).length) program.applySettings(u, programSettings);
     if (values.equipment) u.equipment = { ...u.equipment, ...values.equipment };
     if (values.capacities) u.capacities = { ...(u.capacities || {}), ...values.capacities };
     if (values.preferences) u.preferences = { ...(u.preferences || {}), ...values.preferences };

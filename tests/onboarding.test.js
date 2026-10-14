@@ -385,7 +385,7 @@ test('a user can postpone finishing setup, but only an existing profile can',asy
     assert.equal(a.shown(),false);
     a.run('IronSixOnboarding.check()');
     assert.equal(a.shown(),false,'not asked again this session');
-    assert.equal(a.json('activeUser().onboarding===undefined'),true,'postponing writes nothing');
+    assert.equal(a.json('activeUser().onboarding==null'),true,'postponing writes nothing');
   }finally{a.close()}
 });
 

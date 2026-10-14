@@ -101,6 +101,8 @@ export function installNative({win,App,Browser,createClient,WorkoutBackup,VoiceC
   });
   App.addListener('backButton',()=>{
     if(win.document.getElementById('poseSheet')?.classList.contains('show')){win.IronSixPoseSpike?.close?.();return}
+    // Setup is required: Back steps to the previous question and never minimises mid-setup.
+    if(win.IronSixOnboarding?.isOpen?.()){const back=win.document.getElementById('obBack');if(back&&!back.hidden)back.click();return}
     win.IronSixCircuit?.pause('Paused');
     const imageDialog=win.document.querySelector('dialog[data-exercise-image][open]');
     if(imageDialog){imageDialog.close();return}
