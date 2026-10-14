@@ -267,7 +267,6 @@ test('Android wiring: permission, provider, cache path, plugin registration and 
   for(const builder of ['scripts/build-web.mjs','scripts/build-android-web.mjs'])assert(fs.readFileSync(builder,'utf8').includes('<script src="([^"?]+)'),`${builder} packages index.html scripts`);
   const html=fs.readFileSync('index.html','utf8');
   assert([...html.matchAll(/<script src="([^"?]+)(?:\?[^" ]*)?"/g)].map(m=>m[1]).includes('app-update.js'));
-  require('node:child_process').execFileSync(process.execPath,['scripts/build-android-web.mjs'],{stdio:'pipe'});
-  assert(fs.existsSync('www/app-update.js'),'the Android bundle carries app-update.js');
+  // The builder is exercised by tests/android.test.js; running it here too raced that test for www/.
   assert(fs.readFileSync('profile-menu.js','utf8').includes('data-action="updates"'),'the profile menu offers App updates');
 });
