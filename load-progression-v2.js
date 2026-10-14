@@ -25,15 +25,22 @@
     return originalRound ? originalRound(load, exercise, user) : Math.max(5, Math.round(load / 5) * 5);
   }
 
+  const stepFor = (exercise, user) => typeof loadIncrement === 'function' ? loadIncrement(exercise, user) : 5;
+  const freeWeight = exercise => typeof exerciseLoadEquipment === 'function' && ['barbell', 'dumbbell', 'landmine'].includes(exerciseLoadEquipment(exercise));
+
   function discreteStep(weight, exercise, user, direction) {
-    const delta = direction > 0 ? 5 : -5;
+    const step = stepFor(exercise, user);
+    const delta = direction > 0 ? step : -step;
     let candidate = rounded(weight + delta, exercise, user);
     if (direction > 0 && candidate <= weight) candidate = rounded(weight * 1.08, exercise, user);
-    if (direction < 0 && candidate >= weight && weight > 5) candidate = rounded(Math.max(5, weight * 0.92), exercise, user);
+    if (direction < 0 && candidate >= weight && weight > step) candidate = rounded(Math.max(step, weight * 0.92), exercise, user);
     return candidate;
   }
 
-  function recommendationFromSet(user, exercise, set) {
+  // `between` marks a judgement about the next session rather than the next set. Between
+  // sessions, normal end-of-session fatigue is expected: reaching the top of the range with
+  // one rep left earns more load, and a hard but in-range set is repeated, not cut.
+  function recommendationFromSet(user, exercise, set, between = false) {
     const weight = loadValue(set?.weight), reps = numeric(set?.reps);
     if (!weight || !reps || reps < 1) return null;
     const [lo, hi] = rangeFor(exercise), midpoint = clampValue(midpointFor(exercise), lo, hi);
@@ -42,34 +49,45 @@
     const feedback = String(set?.feedback || '').toLowerCase();
     const targetRir = targetRirFor(user);
     const wideRange = hi - lo >= 6;
-    const finish = (load, target, label, direction = 'hold') => ({
-      load,
-      reps: clampValue(Math.round(target), lo, hi),
-      label,
-      direction,
-      text: `${label}: try about ${load} lb × ${clampValue(Math.round(target), lo, hi)} next set.`
-    });
+    const finish = (load, target, label, direction = 'hold', maxReps = hi) => {
+      const repsOut = clampValue(Math.round(target), lo, maxReps);
+      return {load, reps: repsOut, label, direction, text: `${label}: try about ${load} lb × ${repsOut} next set.`};
+    };
+    // On light free weights one step can be a huge jump (10 → 15 lb lateral raises is +50%).
+    // Jumps over 15% first build reps a little past the range, then move up.
+    const extraReps = Math.max(2, Math.round((hi - lo) / 2));
+    const up = (load, target, label) => {
+      if (freeWeight(exercise) && load > weight * 1.15) {
+        if (reps < hi + extraReps) {
+          const hint = stepFor(exercise, user) > 2.5 ? ' (or set a 2.5 lb jump in your profile if your weights allow it)' : '';
+          return finish(weight, reps + 1, `${load} lb is too big a jump from ${weight} lb — build reps first${hint}`, 'up', hi + extraReps);
+        }
+        return finish(load, lo, 'Move up — expect fewer reps at the heavier weight at first', 'up');
+      }
+      return finish(load, target, label, 'up');
+    };
 
     if (feedback === 'pain') {
       return finish(weight, clampValue(reps, lo, hi), 'Pain/discomfort noted — do not increase the load', 'hold');
     }
 
-    if (reps < lo || rir === 0) {
+    if (reps < lo || (rir === 0 && !between)) {
       const lower = discreteStep(weight, exercise, user, -1);
       if (lower && lower < weight) return finish(lower, midpoint, 'That set was too hard — reduce the load', 'down');
       return finish(weight, lo, 'That set was too hard — reduce reps and reassess', 'down');
     }
+    if (between && rir === 0) return finish(weight, Math.min(reps, hi), 'Hard but in range — repeat this load before adding weight', 'hold');
 
     if (rir === null) {
       if (feedback === 'easy') {
         if (reps + 2 <= hi) return finish(weight, Math.max(midpoint, reps + 2), 'Too easy — add reps before making a large load jump', 'up');
         const higher = discreteStep(weight, exercise, user, 1);
-        if (higher > weight) return finish(higher, wideRange ? lo : midpoint, 'Too easy — increase the load', 'up');
+        if (higher > weight) return up(higher, wideRange ? lo : midpoint, 'Too easy — increase the load');
       }
       if (feedback === 'hard') return finish(weight, Math.max(lo, Math.min(reps, midpoint)), 'That felt hard — hold the load and reassess', 'hold');
       if (reps > hi) {
         const higher = discreteStep(weight, exercise, user, 1);
-        if (higher > weight) return finish(higher, midpoint, 'Reps were above the target — increase the load', 'up');
+        if (higher > weight) return up(higher, midpoint, 'Reps were above the target — increase the load');
       }
       return finish(weight, Math.max(lo, Math.min(hi, reps)), reps > hi ? 'Reps were high; add RIR next time for a sharper adjustment' : 'Repeat this load; add RIR for a sharper adjustment');
     }
@@ -77,9 +95,9 @@
     const gap = rir - targetRir;
     const supportedGap = gap + feedbackSupport(feedback);
 
-    if (reps >= hi && rir >= 2) {
+    if (reps >= hi && rir >= (between ? 1 : 2)) {
       const higher = discreteStep(weight, exercise, user, 1);
-      if (higher > weight) return finish(higher, midpoint, 'You beat the target — add a little weight', 'up');
+      if (higher > weight) return up(higher, midpoint, 'You beat the target — add a little weight');
       return finish(weight, hi, 'You beat the target, but this is your configured load limit', 'hold');
     }
 
@@ -91,21 +109,70 @@
       const estimatedMax = weight * (1 + effectiveReps / 30);
       const ideal = rounded(estimatedMax / (1 + (resetTarget + targetRir) / 30), exercise, user);
       const higher = discreteStep(weight, exercise, user, 1);
-      if (higher > weight && ideal > weight) return finish(higher, resetTarget, feedback === 'easy' ? 'Too easy with plenty in reserve — increase the load' : 'Plenty left in reserve — increase the load', 'up');
+      if (higher > weight && ideal > weight) return up(higher, resetTarget, feedback === 'easy' ? 'Too easy with plenty in reserve — increase the load' : 'Plenty left in reserve — increase the load');
       if (reps < hi) return finish(weight, Math.min(hi, reps + Math.max(2, Math.round(supportedGap))), 'Plenty left in reserve — add reps', 'up');
     }
 
     if (supportedGap >= 1.5 || rir >= 4) {
       if (reps < hi) return finish(weight, Math.min(hi, reps + Math.max(1, Math.round(supportedGap))), feedback === 'easy' ? 'Too easy — add reps' : 'More reps available — progress the reps', 'up');
       const higher = discreteStep(weight, exercise, user, 1);
-      if (higher > weight) return finish(higher, midpoint, 'Too much left in reserve — increase the load', 'up');
+      if (higher > weight) return up(higher, midpoint, 'Too much left in reserve — increase the load');
     }
 
     if (reps >= lo && reps <= hi && rir >= 1 && rir <= 3) {
+      if (between && feedback !== 'hard') return finish(weight, Math.max(midpoint, reps + 1), 'Right on target — same load, aim for one more rep', 'hold');
       return finish(weight, midpoint, feedback === 'hard' ? 'RIR is on target; hold the load and reassess' : 'Right on target — repeat this load', 'hold');
     }
 
     return finish(weight, midpoint, 'Keep the same load', 'hold');
+  }
+
+  // The set that best shows what the lifter can do: a pain report wins outright, otherwise the
+  // strongest set by estimated max. Later sets normally lose reps to fatigue, so judging the
+  // session by its last set would cut the load after a perfectly good workout.
+  function representativeSet(sets) {
+    const pain = sets.find(set => String(set?.feedback || '').toLowerCase() === 'pain');
+    if (pain) return pain;
+    let best = null, bestScore = -Infinity;
+    for (const set of sets) {
+      const weight = loadValue(set?.weight), reps = numeric(set?.reps);
+      if (!weight || !reps) continue;
+      const rir = numeric(String(set?.rir ?? '').trim() === '' ? null : set.rir) ?? 0;
+      const score = weight * (1 + (reps + rir) / 30);
+      if (score > bestScore) { best = set; bestScore = score; }
+    }
+    return best || sets[sets.length - 1];
+  }
+
+  // Relative strength of common variants within one movement and equipment type. Only ratios
+  // below 1 are applied, so a new variant never starts heavier than the lift it came from.
+  const VARIANT_FACTORS = [[/\bpaused?\b/, 0.9], [/\btempo\b/, 0.85], [/\bincline\b/, 0.82], [/\bclose-grip\b/, 0.9], [/\bbox squat\b/, 0.95], [/\bfront squat\b/, 0.8], [/\bdeficit\b/, 0.9]];
+  const variantFactor = name => VARIANT_FACTORS.reduce((f, [pattern, factor]) => pattern.test(name) ? f * factor : f, 1);
+
+  // When the program rotates to a variant with no history (Bench -> Incline Bench), start from
+  // the related lift on the same equipment instead of a body-weight guess.
+  function relatedLiftBaseline(user, exercise, base) {
+    if (base?.confidence === 'Benchmark-based' || !freeWeight(exercise)) return null;
+    if (typeof historySetsFor !== 'function' || typeof e1rmFromSet !== 'function') return null;
+    const name = String(exercise.name || '').trim().toLowerCase(), equipment = exerciseLoadEquipment(exercise);
+    const related = historySetsFor(user, d => d.base === exercise.base && String(d.name || '').trim().toLowerCase() !== name && exerciseLoadEquipment(d) === equipment);
+    const bestBySession = new Map();
+    for (const set of related) {
+      const e1 = e1rmFromSet(set);
+      if (!e1) continue;
+      const key = `${set._date}|${set._exercise}`;
+      const ratio = Math.min(1, variantFactor(name) / variantFactor(String(set._exercise || '').toLowerCase()));
+      const adjusted = e1 * ratio * 0.95;
+      if (!bestBySession.has(key) || bestBySession.get(key).adjusted < adjusted) bestBySession.set(key, {adjusted, source: set._exercise, date: set._date});
+    }
+    const recent = [...bestBySession.values()].sort((a, b) => b.date - a.date).slice(0, 3);
+    if (!recent.length) return null;
+    const e1 = recent.map(r => r.adjusted).sort((a, b) => a - b)[Math.floor(recent.length / 2)];
+    const target = Number(base?.target) || midpointFor(exercise);
+    const load = rounded(e1 / (1 + (target + targetRirFor(user)) / 30), exercise, user);
+    if (!load) return null;
+    const result = {...base, load, target, text: `${load} lb × about ${target}`, confidence: 'Estimated from a related lift', detail: `Estimated conservatively from your ${recent[0].source}; your first sets here will replace this estimate.`};
+    return typeof applyTrainerMemory === 'function' ? applyTrainerMemory(user, exercise, result) : result;
   }
 
   nextSetRecommendation = function (user, exercise, exerciseIndex) {
@@ -119,11 +186,19 @@
       const base = originalBaseline(user, exercise);
       if (typeof priorPerformance !== 'function') return base;
       const sets = priorPerformance(user, exercise)?.sets || [];
-      if (!sets.length) return base;
+      if (!sets.length) return relatedLiftBaseline(user, exercise, base) || base;
       const newestDate = Math.max(...sets.map(set => Number(set._date) || 0));
       const newest = sets.filter(set => (Number(set._date) || 0) === newestDate);
-      const latest = newest[newest.length - 1] || sets[sets.length - 1];
-      const rec = recommendationFromSet(user, exercise, latest);
+      let rec = recommendationFromSet(user, exercise, representativeSet(newest), true);
+      // A set that fell below the rep range means the load is not yet owned: hold, don't add.
+      if (rec?.direction === 'up' && rec.load > (loadValue(representativeSet(newest)?.weight) || 0)) {
+        const [lo] = rangeFor(exercise);
+        const missed = newest.some(set => numeric(set?.reps) !== null && numeric(set.reps) < lo);
+        if (missed) {
+          const weight = loadValue(representativeSet(newest).weight);
+          rec = {load: weight, reps: midpointFor(exercise), label: 'One set fell short of the range — repeat this load', direction: 'hold'};
+        }
+      }
       if (!rec || !rec.load) return base;
       const currentLoad = Number(base?.load) || 0;
       // The newest completed performance outranks older medians, including a manual
