@@ -102,16 +102,55 @@
     window.IronSixProgressV2?.render();
     const summary=document.getElementById('freshnessSummary');if(summary){const key=user.program?.currentWorkoutKey||'lower_strength',muscles=(typeof WORKOUT_META!=='undefined'&&WORKOUT_META[key]?.muscles)||[],scores=muscles.flatMap(m=>{const k=String(m).toLowerCase().replace('front delts','shoulders').replace('rear delts','shoulders').replace('arms','biceps');return a.freshness[k]?[a.freshness[k].score]:[]});const avg=scores.length?Math.round(scores.reduce((x,y)=>x+y,0)/scores.length):100;summary.textContent=`Training freshness for today’s main muscles: ${avg}% · combined with your energy and soreness check-in.`}
   }
+  // Only the most recently completed set asks "How did that set feel?". Answered sets collapse to a
+  // small chip (tap to change); the recorded feedback itself is never removed here.
+  let latestDoneKey=null;
+  function feedbackBox(row){const next=row.nextElementSibling;return next?.classList?.contains('set-feedback')||next?.classList?.contains('set-feedback-chip-row')?next:null}
   function feedbackPrompt(row,key,current){
-    let box=row.nextElementSibling;
+    let box=feedbackBox(row);
     if(box?.classList?.contains('set-feedback')&&box.dataset.setKey===key){box.querySelectorAll('.set-feedback-btn').forEach(b=>b.classList.toggle('active',b.dataset.setFeedback===current));return box}
-    if(box?.classList?.contains('set-feedback'))box.remove();
+    if(box)box.remove();
     box=document.createElement('div');box.className='set-feedback';box.dataset.setKey=key;box.innerHTML=`<div class="set-feedback-label">How did that set feel?</div><div class="set-feedback-actions">${Object.entries(FEEDBACK).map(([value,meta])=>`<button type="button" class="set-feedback-btn ${current===value?'active':''}" data-set-feedback="${value}">${meta.label}</button>`).join('')}</div>`;row.insertAdjacentElement('afterend',box);return box;
   }
+  function feedbackChip(row,key,value){
+    let box=feedbackBox(row);
+    if(box?.classList?.contains('set-feedback-chip-row')&&box.dataset.setKey===key&&box.dataset.feedback===value)return box;
+    if(box)box.remove();
+    box=document.createElement('div');box.className='set-feedback-chip-row';box.dataset.setKey=key;box.dataset.feedback=value;box.style.cssText='grid-column:1/-1;padding:2px 0 4px';
+    box.innerHTML=`<button type="button" class="set-feedback-chip" data-feedback-edit="${esc(key)}" aria-label="Feel for this set: ${esc(FEEDBACK[value]?.label||value)}. Tap to change." style="font-size:11px;padding:2px 10px;border-radius:999px;border:1px solid var(--line,#2d3e4f);background:transparent;color:var(--muted,#8fa3b6);min-height:0">Felt: ${esc(FEEDBACK[value]?.label||value)}</button>`;
+    row.insertAdjacentElement('afterend',box);return box;
+  }
+  function newestDoneKey(user){
+    let best=null,at=-1;
+    for(const [key,set] of Object.entries(user?.today||{})){if(!set?.done)continue;const t=Number(set._updatedAt)||0;if(t>=at){at=t;best=key}}
+    return best;
+  }
+  function syncFeedback(){
+    if(typeof document==='undefined'||typeof activeUser!=='function')return;
+    const list=document.getElementById('exerciseList');if(!list)return;
+    const user=activeUser();if(!user)return;
+    if(!latestDoneKey||!user.today?.[latestDoneKey]?.done)latestDoneKey=newestDoneKey(user);
+    list.querySelectorAll('.done').forEach(done=>{
+      const row=done.closest('.set-row'),card=done.closest('[data-exercise-index]');if(!row||!card)return;
+      const rows=[...row.parentElement.querySelectorAll('.set-row')],key=`${Number(card.dataset.exerciseIndex)}-${rows.indexOf(row)}`;
+      const existing=feedbackBox(row);
+      if(!done.classList.contains('active')){if(existing)existing.remove();return}
+      const answered=user.today?.[key]?.feedback||'';
+      if(answered){
+        // The set being re-answered right now keeps its prompt open until a choice is made.
+        if(existing?.classList?.contains('set-feedback')&&existing.dataset.reopened==='1')return;
+        feedbackChip(row,key,answered);return;
+      }
+      if(key===latestDoneKey)feedbackPrompt(row,key,'');
+      else if(existing)existing.remove();
+    });
+  }
   function showFeedbackForDone(done){
-    const row=done?.closest?.('.set-row');if(!row)return;
-    if(!done.classList.contains('active')){if(row.nextElementSibling?.classList?.contains('set-feedback'))row.nextElementSibling.remove();return}
-    const card=done.closest('[data-exercise-index]');if(!card)return;const ei=Number(card.dataset.exerciseIndex),rows=[...row.parentElement.querySelectorAll('.set-row')],si=rows.indexOf(row),key=`${ei}-${si}`,user=activeUser();feedbackPrompt(row,key,user.today?.[key]?.feedback||'');
+    const row=done?.closest?.('.set-row'),card=done?.closest?.('[data-exercise-index]');if(!row||!card)return;
+    if(done.classList.contains('active')){
+      const rows=[...row.parentElement.querySelectorAll('.set-row')];latestDoneKey=`${Number(card.dataset.exerciseIndex)}-${rows.indexOf(row)}`;
+    }
+    syncFeedback();
   }
   function recordFeedback(button){
     const value=button.dataset.setFeedback,meta=FEEDBACK[value],box=button.closest('.set-feedback');if(!meta||!box)return;const user=activeUser(),key=box.dataset.setKey,state=user.today?.[key];if(!state||!state.done)return;
@@ -120,16 +159,16 @@
     const record={ts:Date.now(),workoutKey:user.program?.currentWorkoutKey||'',exercise:exercise?.name||'',base:exercise?.base||'',set:si+1,feedback:value,weight:state.weight||'',reps:state.reps||'',rir:state.rir||''};
     user.trainingFeedback.unshift(record);user.trainingFeedback=user.trainingFeedback.slice(0,300);
     if((state.rir===''||state.rir==null)&&value!=='pain'&&meta.delta!==1){const prior=num(user.sessionCalibration?.factor)||1;user.sessionCalibration={factor:clamp(prior*meta.delta,.9,1.1),source:'Set feedback',summary:`${meta.label} feedback adjusted the remaining session conservatively.`,updatedAt:Date.now()};}
-    if(window.IronSixJournal?.captureSet&&exercise)window.IronSixJournal.captureSet(user,workout,ei,si,state);if(typeof saveData==='function')saveData();box.querySelectorAll('.set-feedback-btn').forEach(b=>b.classList.toggle('active',b===button));
+    if(window.IronSixJournal?.captureSet&&exercise)window.IronSixJournal.captureSet(user,workout,ei,si,state);if(typeof saveData==='function')saveData();box.querySelectorAll('.set-feedback-btn').forEach(b=>b.classList.toggle('active',b===button));{const row=box.previousElementSibling;if(row?.classList?.contains('set-row')){delete box.dataset.reopened;feedbackChip(row,key,value)}}
     if(value==='pain'){if(typeof toast==='function')toast('Pain noted • stop this movement if pain is sharp or worsening and choose a pain-free substitute.')}else if(typeof refreshRemainingWorkout==='function'&&(state.rir===''||state.rir==null)){refreshRemainingWorkout(user,workout);if(typeof toast==='function')toast('Set feedback saved • remaining targets refreshed')}else if(typeof toast==='function')toast('Set feedback saved');
   }
   function install(){
     if(typeof document==='undefined')return;ensureUI();render();
-    document.addEventListener('click',e=>{const feedback=e.target.closest?.('[data-set-feedback]');if(feedback){recordFeedback(feedback);return}const done=e.target.closest?.('.done');if(done)setTimeout(()=>showFeedbackForDone(done),0);const nav=e.target.closest?.('[data-view="history"]');if(nav)setTimeout(render,0)});
+    document.addEventListener('click',e=>{const feedback=e.target.closest?.('[data-set-feedback]');if(feedback){recordFeedback(feedback);return}const edit=e.target.closest?.('[data-feedback-edit]');if(edit){const chipRow=edit.closest('.set-feedback-chip-row'),row=chipRow?.previousElementSibling;if(row){const key=chipRow.dataset.setKey,prior=activeUser().today?.[key]?.feedback||'';latestDoneKey=key;const box=feedbackPrompt(row,key,prior);box.dataset.reopened='1'}return}const done=e.target.closest?.('.done');if(done)setTimeout(()=>showFeedbackForDone(done),0);const nav=e.target.closest?.('[data-view="history"]');if(nav)setTimeout(render,0)});
     document.getElementById('userSelect')?.addEventListener('change',()=>setTimeout(render,0));document.getElementById('energy')?.addEventListener('change',()=>setTimeout(render,0));document.getElementById('soreness')?.addEventListener('change',()=>setTimeout(render,0));document.getElementById('finishBtn')?.addEventListener('click',()=>setTimeout(render,0));
     const history=document.getElementById('historyList');if(history)new MutationObserver(()=>render()).observe(history,{childList:true});
-    const list=document.getElementById('exerciseList');if(list)new MutationObserver(()=>{list.querySelectorAll('.done').forEach(showFeedbackForDone)}).observe(list,{childList:true,subtree:true});
+    const list=document.getElementById('exerciseList');if(list)new MutationObserver(()=>syncFeedback()).observe(list,{childList:true,subtree:true});
   }
-  window.IronSixInsights={estimatedMax,flattenHistory,muscleFreshness,analyze,render,FEEDBACK};
+  window.IronSixInsights={syncFeedback,estimatedMax,flattenHistory,muscleFreshness,analyze,render,FEEDBACK};
   if(typeof document!=='undefined')install();
 })();

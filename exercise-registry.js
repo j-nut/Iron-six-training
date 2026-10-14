@@ -1445,8 +1445,7 @@ const exercises=[
   "name": "One-Arm Dumbbell Row",
   "aliases": [],
   "equipment": [
-   "dumbbells",
-   "bench"
+   "dumbbells"
   ],
   "muscles": [
    "back",

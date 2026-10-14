@@ -77,7 +77,7 @@
     $('circuitPlayer').hidden=!circuit;$('circuitSettings').hidden=!circuit;
     $('circuitPace').value=u.circuitPace||'balanced';
     const plan=finalWorkout(u),seconds=sessionSeconds(u,plan);
-    $('sessionBudget').textContent=(circuit?'Circuit':'Traditional')+' · about '+Math.ceil(seconds/60)+' of '+u.workoutMinutes+' minutes planned, including '+sessionWarmup(u)/60+' min warm-up, setup/rest, and 1 min cool-down. '+(circuit?'Rotate through one interval of each exercise, then repeat. The last round may be shorter to fit your time.':'Finish each exercise’s sets before moving on. Allow more rest when you need it.');
+    $('sessionBudget').textContent=(circuit?'Circuit':'Traditional')+' · about '+Math.ceil(seconds/60)+' of '+u.workoutMinutes+' minutes planned, including '+sessionWarmup(u)/60+' min warm-up, setup/rest, and 1 min cool-down. '+(circuit?'Rotate through one interval of each exercise, then repeat. The last round may be shorter to fit your time.':'Finish each exercise’s sets before moving on. Allow more rest when you need it.')+(circuit?'':plan.filter(e=>e._rampText).map(e=>' Ramp-up before '+e.name+': '+e._rampText+'.').join(''));
     $('sessionPriorities').textContent='Priorities: '+[...new Set(plan.flatMap(exerciseMuscles))].join(', ')+'. Major movement patterns come first; overdue muscles receive a reserved slot.';
     const order=document.querySelector('.workout-order-note');if(order)order.textContent=circuit?'Circuit: follow the timer through each station, then repeat for the next round. Log your real reps as you go — the timer never fills them in for you.':'Finish all sets of one exercise, resting in between, before moving to the next. Rests are already counted in your time.';
     if(circuit){bind();paint()}

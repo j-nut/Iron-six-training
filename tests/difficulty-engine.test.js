@@ -19,9 +19,10 @@ test('session override is scoped to workout and exposure; a draft survives saved
   const run=app();const result=run(`const u=makeUser();u.workoutDifficulty='heavy';u.sessionDifficulty={level:'light',workoutKey:'push_a',exposure:0};const values=[IronSixDifficulty.effectiveFor(u)];u.program.exposures.push_a=1;values.push(IronSixDifficulty.effectiveFor(u));u.workoutDraft={difficulty:'balanced',plan:[{name:'Pinned',sets:3}]};u.workoutDifficulty='light';values.push(IronSixDifficulty.effectiveFor(u));u.sessionDifficulty=null;const before=JSON.stringify(finalWorkout(u));u.workoutDifficulty='heavy';values.push(JSON.stringify(finalWorkout(u))===before);return values;`);
   assert.deepEqual(result,['light','heavy','balanced',true]);
 });
-test('Light selects unloaded patterns and Heavy prioritizes owned Olympic equipment',()=>{
+test('Light keeps the balanced exercises while Heavy prioritizes owned Olympic equipment',()=>{
   const run=app();const out=run(`const rows={};for(const level of ['light','balanced','heavy']){const u=makeUser();u.program.currentWorkoutKey='lower_a';u.workoutDifficulty=level;rows[level]=finalWorkout(u).map(e=>({name:e.name,kind:IronSixDifficulty.equipmentKind(e),seed:e.seedKey,sets:e.sets}));}return rows;`);
-  assert(out.light.filter(e=>e.kind==='bodyweight').length>=3);
+  assert.deepEqual(out.light.map(e=>e.name),out.balanced.map(e=>e.name));
+  assert(out.light.every((e,i)=>e.sets<=out.balanced[i].sets));
   assert(out.heavy.some(e=>e.seed==='squat'&&e.kind==='barbell'));
   assert(out.heavy.some(e=>e.seed==='hinge'&&e.kind==='barbell'));
   assert.deepEqual(out.light.map(e=>e.seed),out.heavy.map(e=>e.seed));
@@ -42,7 +43,9 @@ test('explicit day changes retain entered slot identity, all saved rows and draf
   const run=app();const out=run(`const u=makeUser();u.program.currentWorkoutKey='lower_a';const old=finalWorkout(u);u.workoutDraft={id:'stable',difficulty:'balanced',plan:old};u.today={'0-0':{weight:'100',reps:'8',done:true},'1-0':{weight:'55',reps:'',done:false}};const before=JSON.stringify(u.today);const next=IronSixDifficulty.replanRemaining(u,'light');return {old,next,unchanged:before===JSON.stringify(u.today),id:u.workoutDraft.id};`);
   assert(out.unchanged);assert.equal(out.id,'stable');assert.equal(out.next.length,out.old.length);
   for(const index of [0,1]){assert.equal(out.next[index].name,out.old[index].name);assert.equal(out.next[index].sets,out.old[index].sets);assert.equal(out.next[index]._difficulty,'light');}
-  assert(out.next.slice(2).some((e,i)=>e.name!==out.old[i+2].name));
+  // Light keeps the same movements for the remaining slots and trims volume instead.
+  assert.deepEqual(out.next.slice(2).map(e=>e.name),out.old.slice(2).map(e=>e.name));
+  assert(out.next.slice(2).some((e,i)=>e.sets<out.old[i+2].sets));
   assert.equal(new Set(out.next.map(e=>e.name)).size,out.next.length);
 });
 test('Light replan is idempotent and cannot grow a live workout or mutate the original plan',()=>{
