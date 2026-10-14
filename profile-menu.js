@@ -47,6 +47,10 @@
       .pm-item:hover{background:var(--surface2)}
       .pm-item b{flex:1;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       .pm-item small{color:var(--muted);font-size:11px}
+      .pm-update-ready small{color:var(--accent);font-weight:700}
+      .pm-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:8px;vertical-align:middle}
+      .pm-avatar{position:relative}
+      .pm-avatar.pm-has-update::after{content:'';position:absolute;top:-1px;right:-1px;width:9px;height:9px;border-radius:50%;background:var(--accent);border:2px solid var(--bg,#081017)}
       .pm-item .pm-tick{color:var(--accent);font-weight:850}
       .pm-item.danger{color:#ff9b9b}
       .topbar{position:relative}
@@ -102,7 +106,10 @@
     // Iron Marks may swap the initials for an earned emblem and add a rotation ring.
     try { window.IronSixMarks?.decorateAvatar?.($('pmAvatar'), user); } catch (_) {}
     $('pmName').textContent = user?.name || 'Profile';
-    button.setAttribute('aria-label', `${user?.name || 'Profile'} — ${signedIn ? 'signed in as ' + account.email : 'not signed in'}`);
+    // A small dot on the avatar keeps a dismissed update findable until it is installed.
+    const updateReady = !!window.IronSixAppUpdate?.pending?.();
+    $('pmAvatar').classList.toggle('pm-has-update', updateReady);
+    button.setAttribute('aria-label', `${user?.name || 'Profile'} — ${signedIn ? 'signed in as ' + account.email : 'not signed in'}${updateReady ? ' — update available' : ''}`);
     if (menu.hidden) return;
 
     const profiles = (data?.users || []).map(u => `<button type="button" role="menuitem" class="pm-item" data-switch="${esc(u.id)}"><b>${esc(u.name)}</b>${u.id === user?.id ? '<span class="pm-tick">✓</span>' : ''}</button>`).join('');
@@ -113,7 +120,9 @@
       + (window.IronSixMarks ? `<button type="button" role="menuitem" class="pm-item" data-action="marks"><b>Iron Marks</b><small>${esc(window.IronSixMarks.summary(user))}</small></button>` : '')
       + `<button type="button" role="menuitem" class="pm-item" data-action="equipment"><b>Manage equipment</b></button>`
       + `<button type="button" role="menuitem" class="pm-item" data-action="account"><b>${signedIn ? 'Account & backup' : 'Sign in or create account'}</b></button>`
-      + (window.IronSixAppUpdate ? `<button type="button" role="menuitem" class="pm-item" data-action="updates" aria-label="App updates, ${esc(window.IronSixAppUpdate.label())}. Check for updates"><b>App updates</b><small>${esc(window.IronSixAppUpdate.label())} · Check</small></button>` : '')
+      + (window.IronSixAppUpdate ? (window.IronSixAppUpdate.pending?.()
+        ? `<button type="button" role="menuitem" class="pm-item pm-update-ready" data-action="update-now" aria-label="Update available, ${esc(window.IronSixAppUpdate.label())}. Update now"><b><span class="pm-dot" aria-hidden="true"></span>Update available</b><small>${esc(window.IronSixAppUpdate.label())} · Update now</small></button>`
+        : `<button type="button" role="menuitem" class="pm-item" data-action="updates" aria-label="App updates, ${esc(window.IronSixAppUpdate.label())}. Check for updates"><b>App updates</b><small>${esc(window.IronSixAppUpdate.label())} · Check</small></button>`) : '')
       + (signedIn ? `<button type="button" role="menuitem" class="pm-item" data-action="sync"><b>Sync now</b></button>` : '')
       + `</div>`
       + (signedIn ? `<div class="pm-group"><button type="button" role="menuitem" class="pm-item danger" data-action="signout"><b>Sign out</b></button></div>` : '');
@@ -132,6 +141,7 @@
       if (action === 'sync') cloud()?.syncNow?.(true);
       if (action === 'marks') window.IronSixMarks?.open?.();
       if (action === 'updates') void window.IronSixAppUpdate?.checkNow?.();
+      if (action === 'update-now') void window.IronSixAppUpdate?.updateNow?.();
       if (action === 'signout') { cloud()?.openAccount?.(); $('accountSignOut')?.click(); }
       if (action === 'equipment') {
         if (typeof showView === 'function') showView('profiles');

@@ -165,6 +165,30 @@ test('Later snoozes for 24 hours and checks are throttled to every 6 hours',asyn
   }finally{a.close()}
 });
 
+test('after Later, the menu keeps offering the update and Update now installs straight away',async()=>{
+  const a=client({installed:1021,latest:1025});
+  try{
+    await settle();
+    a.$('appUpdateLater').click();assert(!a.shown());
+    assert.deepEqual(JSON.parse(JSON.stringify(a.api().pending())),{from:1021,to:1025},'a dismissed update is still pending');
+    assert.equal(a.api().label(),'Build 1021 → 1025');
+    await a.api().updateNow();
+    assert(a.log.calls.some(c=>Array.isArray(c)&&c[0]==='download'&&c[1].build===1025),'Update now downloads without waiting out the snooze');
+    assert(a.log.calls.some(c=>Array.isArray(c)&&c[0]==='install'));
+  }finally{a.close()}
+  const b=client({installed:1025,latest:1025});
+  try{await settle();assert.equal(b.api().pending(),null);assert.equal(b.api().label(),'Build 1025')}finally{b.close()}
+});
+
+test('the profile menu shows "Update available" with a dot while an update is pending',()=>{
+  const menu=fs.readFileSync('profile-menu.js','utf8');
+  assert(menu.includes('window.IronSixAppUpdate.pending?.()'));
+  assert(menu.includes('data-action="update-now"')&&menu.includes('Update available'));
+  assert(menu.includes("if (action === 'update-now') void window.IronSixAppUpdate?.updateNow?.();"));
+  assert(menu.includes("classList.toggle('pm-has-update', updateReady)"),'the avatar carries a dot');
+  assert(fs.readFileSync('app-update.js','utf8').includes('window.IronSixProfileMenu?.render?.()'),'the menu refreshes when update state changes');
+});
+
 test('below the minimum build the banner is persistent and cannot be snoozed',async()=>{
   const a=client({installed:1020,latest:1025,minimum:1022});
   try{
@@ -262,7 +286,7 @@ test('Android wiring: permission, provider, cache path, plugin registration and 
   assert(plugin.includes('FLAG_GRANT_READ_URI_PERMISSION')&&plugin.includes('"SHA-256"'));
   const entry=fs.readFileSync('native/entry.mjs','utf8');assert(entry.includes("registerPlugin('AppUpdate')"));
   const native=fs.readFileSync('native/runtime.mjs','utf8');assert(native.includes("'/api/app-version'"));
-  for(const page of ['index.html','live.html'])assert(fs.readFileSync(page,'utf8').includes('app-update.js?v=1'),`${page} loads app-update.js`);
+  for(const page of ['index.html','live.html'])assert(fs.readFileSync(page,'utf8').includes('app-update.js?v=2'),`${page} loads app-update.js`);
   // Both builders package every <script src> in index.html, so app-update.js ships on web and Android.
   for(const builder of ['scripts/build-web.mjs','scripts/build-android-web.mjs'])assert(fs.readFileSync(builder,'utf8').includes('<script src="([^"?]+)'),`${builder} packages index.html scripts`);
   const html=fs.readFileSync('index.html','utf8');

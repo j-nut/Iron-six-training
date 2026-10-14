@@ -108,6 +108,8 @@
     clearTimeout(state.retry);
     if (!alive()) return;
     state.kind = decide();
+    // Keep the profile menu's "Update available" row and avatar dot in step with this state.
+    try { window.IronSixProfileMenu?.render?.(); } catch (_) {}
     const el = $('appUpdateBanner');
     if (!state.kind) { if (el) el.hidden = true; return; }
     if (blocked() && !state.busy) {
@@ -262,12 +264,33 @@
     location.reload();
   }
 
+  /* An update the user already knows about, even after tapping Later: the menu keeps offering it so
+   * nobody has to wait out the 24-hour snooze. Android: {from, to}; web: {reload:true}. */
+  function pending() {
+    if (!isAndroid()) return state.webCurrent && state.webBaseline && state.webCurrent !== state.webBaseline ? { reload: true } : null;
+    const latest = state.latest, installed = state.installed;
+    return latest && installed && latest.build > installed ? { from: installed, to: latest.build } : null;
+  }
+
   function label() {
-    if (!isAndroid()) return 'Web app';
+    const ready = pending();
+    if (!isAndroid()) return ready ? 'New version ready' : 'Web app';
+    if (ready) return `Build ${ready.from} → ${ready.to}`;
     return state.installed ? `Build ${state.installed}` : 'Android app';
   }
 
-  window.IronSixAppUpdate = { check, checkNow, update, render, label, later, decide, state };
+  // The menu's "Update now": clears any snooze, shows the banner and starts the update straight away.
+  async function updateNow() {
+    try { localStorage.removeItem(KEY_SNOOZE); } catch (_) {}
+    state.webDismissed = null;
+    if (!pending()) return checkNow();
+    if (!isAndroid()) { render(); return { kind: state.kind }; }
+    render();
+    await update();
+    return { kind: state.kind };
+  }
+
+  window.IronSixAppUpdate = { check, checkNow, update, updateNow, pending, render, label, later, decide, state };
 
   const kick = () => { check(false).catch(() => {}); };
   addEventListener('pageshow', kick);
