@@ -1,5 +1,7 @@
 # Iron Six New Illustration Progress
 
+2026-09-21: The ten landmine-equipment guides (including Meadows Row) were rejected by the user and remade. Their v2 format uses one reviewed pose with three movement instructions, superseding the three-pose rule below for this subset. See `landmine-illustration-review.md` and `landmine-illustration-prompts.json` for sources, rejected drafts, selected setups and validation.
+
 Source of truth: `exercise-registry.js` on `main`.
 
 Rules for this replacement set:

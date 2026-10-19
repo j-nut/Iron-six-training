@@ -2002,18 +2002,18 @@ const media=[
  {
   "id": "ironsix-half-kneeling-landmine-press",
   "tier": "professional",
-  "style": "ironsix-form-guide-v1",
+  "style": "ironsix-form-guide-v2",
   "status": "approved",
   "layout": "composite",
   "title": "Half-Kneeling Landmine Press",
-  "thumbnail": "assets/exercise-illustrations/half-kneeling-landmine-press.webp",
-  "start": "assets/exercise-illustrations/half-kneeling-landmine-press.webp",
+  "thumbnail": "assets/exercise-illustrations/half-kneeling-landmine-press-v2.webp",
+  "start": "assets/exercise-illustrations/half-kneeling-landmine-press-v2.webp",
   "finish": null,
   "motion": [
-   "assets/exercise-illustrations/half-kneeling-landmine-press.webp"
+   "assets/exercise-illustrations/half-kneeling-landmine-press-v2.webp"
   ],
-  "width": 960,
-  "height": 540,
+  "width": 1200,
+  "height": 800,
   "muscles": [
    "shoulders",
    "triceps"
@@ -2212,18 +2212,18 @@ const media=[
  {
   "id": "ironsix-landmine-hack-squat",
   "tier": "professional",
-  "style": "ironsix-form-guide-v1",
+  "style": "ironsix-form-guide-v2",
   "status": "approved",
   "layout": "composite",
   "title": "Landmine Hack Squat",
-  "thumbnail": "assets/exercise-illustrations/landmine-hack-squat.webp",
-  "start": "assets/exercise-illustrations/landmine-hack-squat.webp",
+  "thumbnail": "assets/exercise-illustrations/landmine-hack-squat-v2.webp",
+  "start": "assets/exercise-illustrations/landmine-hack-squat-v2.webp",
   "finish": null,
   "motion": [
-   "assets/exercise-illustrations/landmine-hack-squat.webp"
+   "assets/exercise-illustrations/landmine-hack-squat-v2.webp"
   ],
-  "width": 960,
-  "height": 540,
+  "width": 1200,
+  "height": 800,
   "muscles": [
    "quads",
    "glutes"
@@ -2238,18 +2238,18 @@ const media=[
  {
   "id": "ironsix-landmine-press",
   "tier": "professional",
-  "style": "ironsix-form-guide-v1",
+  "style": "ironsix-form-guide-v2",
   "status": "approved",
   "layout": "composite",
   "title": "Landmine Press",
-  "thumbnail": "assets/exercise-illustrations/landmine-press.webp",
-  "start": "assets/exercise-illustrations/landmine-press.webp",
+  "thumbnail": "assets/exercise-illustrations/landmine-press-v2.webp",
+  "start": "assets/exercise-illustrations/landmine-press-v2.webp",
   "finish": null,
   "motion": [
-   "assets/exercise-illustrations/landmine-press.webp"
+   "assets/exercise-illustrations/landmine-press-v2.webp"
   ],
-  "width": 960,
-  "height": 540,
+  "width": 1200,
+  "height": 800,
   "muscles": [
    "shoulders",
    "triceps"
@@ -2264,18 +2264,18 @@ const media=[
  {
   "id": "ironsix-landmine-reverse-lunge",
   "tier": "professional",
-  "style": "ironsix-form-guide-v1",
+  "style": "ironsix-form-guide-v2",
   "status": "approved",
   "layout": "composite",
   "title": "Landmine Reverse Lunge",
-  "thumbnail": "assets/exercise-illustrations/landmine-reverse-lunge.webp",
-  "start": "assets/exercise-illustrations/landmine-reverse-lunge.webp",
+  "thumbnail": "assets/exercise-illustrations/landmine-reverse-lunge-v2.webp",
+  "start": "assets/exercise-illustrations/landmine-reverse-lunge-v2.webp",
   "finish": null,
   "motion": [
-   "assets/exercise-illustrations/landmine-reverse-lunge.webp"
+   "assets/exercise-illustrations/landmine-reverse-lunge-v2.webp"
   ],
-  "width": 960,
-  "height": 540,
+  "width": 1200,
+  "height": 800,
   "muscles": [
    "quads",
    "glutes"
@@ -2290,18 +2290,18 @@ const media=[
  {
   "id": "ironsix-landmine-romanian-deadlift",
   "tier": "professional",
-  "style": "ironsix-form-guide-v1",
+  "style": "ironsix-form-guide-v2",
   "status": "approved",
   "layout": "composite",
   "title": "Landmine Romanian Deadlift",
-  "thumbnail": "assets/exercise-illustrations/landmine-romanian-deadlift.webp",
-  "start": "assets/exercise-illustrations/landmine-romanian-deadlift.webp",
+  "thumbnail": "assets/exercise-illustrations/landmine-romanian-deadlift-v2.webp",
+  "start": "assets/exercise-illustrations/landmine-romanian-deadlift-v2.webp",
   "finish": null,
   "motion": [
-   "assets/exercise-illustrations/landmine-romanian-deadlift.webp"
+   "assets/exercise-illustrations/landmine-romanian-deadlift-v2.webp"
   ],
-  "width": 960,
-  "height": 540,
+  "width": 1200,
+  "height": 800,
   "muscles": [
    "hamstrings",
    "glutes"
@@ -2316,18 +2316,18 @@ const media=[
  {
   "id": "ironsix-landmine-rotation",
   "tier": "professional",
-  "style": "ironsix-form-guide-v1",
+  "style": "ironsix-form-guide-v2",
   "status": "approved",
   "layout": "composite",
   "title": "Landmine Rotation",
-  "thumbnail": "assets/exercise-illustrations/landmine-rotation.webp",
-  "start": "assets/exercise-illustrations/landmine-rotation.webp",
+  "thumbnail": "assets/exercise-illustrations/landmine-rotation-v2.webp",
+  "start": "assets/exercise-illustrations/landmine-rotation-v2.webp",
   "finish": null,
   "motion": [
-   "assets/exercise-illustrations/landmine-rotation.webp"
+   "assets/exercise-illustrations/landmine-rotation-v2.webp"
   ],
-  "width": 960,
-  "height": 540,
+  "width": 1200,
+  "height": 800,
   "muscles": [
    "core"
   ],
@@ -2341,18 +2341,18 @@ const media=[
  {
   "id": "ironsix-landmine-row",
   "tier": "professional",
-  "style": "ironsix-form-guide-v1",
+  "style": "ironsix-form-guide-v2",
   "status": "approved",
   "layout": "composite",
   "title": "Landmine Row",
-  "thumbnail": "assets/exercise-illustrations/landmine-row.webp",
-  "start": "assets/exercise-illustrations/landmine-row.webp",
+  "thumbnail": "assets/exercise-illustrations/landmine-row-v2.webp",
+  "start": "assets/exercise-illustrations/landmine-row-v2.webp",
   "finish": null,
   "motion": [
-   "assets/exercise-illustrations/landmine-row.webp"
+   "assets/exercise-illustrations/landmine-row-v2.webp"
   ],
-  "width": 960,
-  "height": 540,
+  "width": 1200,
+  "height": 800,
   "muscles": [
    "back",
    "biceps"
@@ -2367,18 +2367,18 @@ const media=[
  {
   "id": "ironsix-landmine-squat",
   "tier": "professional",
-  "style": "ironsix-form-guide-v1",
+  "style": "ironsix-form-guide-v2",
   "status": "approved",
   "layout": "composite",
   "title": "Landmine Squat",
-  "thumbnail": "assets/exercise-illustrations/landmine-squat.webp",
-  "start": "assets/exercise-illustrations/landmine-squat.webp",
+  "thumbnail": "assets/exercise-illustrations/landmine-squat-v2.webp",
+  "start": "assets/exercise-illustrations/landmine-squat-v2.webp",
   "finish": null,
   "motion": [
-   "assets/exercise-illustrations/landmine-squat.webp"
+   "assets/exercise-illustrations/landmine-squat-v2.webp"
   ],
-  "width": 960,
-  "height": 540,
+  "width": 1200,
+  "height": 800,
   "muscles": [
    "quads",
    "glutes"
@@ -2393,18 +2393,18 @@ const media=[
  {
   "id": "ironsix-landmine-t-bar-row",
   "tier": "professional",
-  "style": "ironsix-form-guide-v1",
+  "style": "ironsix-form-guide-v2",
   "status": "approved",
   "layout": "composite",
   "title": "Landmine T-Bar Row",
-  "thumbnail": "assets/exercise-illustrations/landmine-t-bar-row.webp",
-  "start": "assets/exercise-illustrations/landmine-t-bar-row.webp",
+  "thumbnail": "assets/exercise-illustrations/landmine-t-bar-row-v2.webp",
+  "start": "assets/exercise-illustrations/landmine-t-bar-row-v2.webp",
   "finish": null,
   "motion": [
-   "assets/exercise-illustrations/landmine-t-bar-row.webp"
+   "assets/exercise-illustrations/landmine-t-bar-row-v2.webp"
   ],
-  "width": 960,
-  "height": 540,
+  "width": 1200,
+  "height": 800,
   "muscles": [
    "back",
    "biceps"
@@ -2444,18 +2444,18 @@ const media=[
  {
   "id": "ironsix-meadows-row",
   "tier": "professional",
-  "style": "ironsix-form-guide-v1",
+  "style": "ironsix-form-guide-v2",
   "status": "approved",
   "layout": "composite",
   "title": "Meadows Row",
-  "thumbnail": "assets/exercise-illustrations/meadows-row.webp",
-  "start": "assets/exercise-illustrations/meadows-row.webp",
+  "thumbnail": "assets/exercise-illustrations/meadows-row-v2.webp",
+  "start": "assets/exercise-illustrations/meadows-row-v2.webp",
   "finish": null,
   "motion": [
-   "assets/exercise-illustrations/meadows-row.webp"
+   "assets/exercise-illustrations/meadows-row-v2.webp"
   ],
-  "width": 960,
-  "height": 540,
+  "width": 1200,
+  "height": 800,
   "muscles": [
    "back",
    "biceps"
