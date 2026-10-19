@@ -98,7 +98,7 @@ jobs:
             echo "::error::This build used the debug key. Check the signing secrets."
             exit 1
           fi
-      - uses: actions/upload-artifact@v7.0.1
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: iron-six-android-release
           retention-days: 90
