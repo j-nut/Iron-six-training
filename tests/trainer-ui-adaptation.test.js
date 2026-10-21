@@ -18,6 +18,58 @@ function app(saved={}){
   return {w,run,storage,errors,close:()=>dom.window.close()};
 }
 
+function completionApp(saved={}){
+  const a=app(saved);
+  a.run(fs.readFileSync('set-coach-feedback.js','utf8'));
+  a.run("finalWorkout=()=>[{name:'Barbell Overhead Press',base:'Vertical press',requires:['barbell'],seedKey:'overhead_press',sets:2,prescription:'2 × 5–8'}];renderExercises()");
+  return a;
+}
+
+test('trainer replaces next-set advice with completion after the last set, including without feedback',()=>{
+  const a=completionApp();
+  try{
+    const d=a.w.document,rows=d.querySelectorAll('.set-row');
+    rows[0].querySelector('.done').click();
+    a.run("activeUser().today['0-0'].feedback='easy';refreshRemainingWorkout(activeUser(),finalWorkout(activeUser()))");
+    assert.match(d.querySelector('.set-coach-cue').textContent,/next/i);
+    rows[1].querySelector('.done').click();
+    assert(d.querySelector('.set-coach-cue').classList.contains('complete'));
+    assert.match(d.querySelector('.set-coach-cue').textContent,/Exercise complete/);
+    assert.doesNotMatch(d.querySelector('.set-coach-cue').textContent,/next|lb|repeat/i);
+    rows[1].querySelector('.done').click();
+    assert(!d.querySelector('.set-coach-cue').classList.contains('complete'));
+    assert.match(d.querySelector('.set-coach-cue').textContent,/next/i);
+  }finally{a.close()}
+});
+
+test('completion survives reload and clears when the workout is reset',()=>{
+  let a=completionApp();
+  try{
+    for(const row of a.w.document.querySelectorAll('.set-row'))row.querySelector('.done').click();
+    const saved=a.storage();a.close();a=completionApp(saved);
+    assert.match(a.w.document.querySelector('.set-coach-cue').textContent,/Exercise complete/);
+    a.run('activeUser().today={};renderExercises()');
+    const cue=a.w.document.querySelector('.set-coach-cue');
+    assert.equal(cue.textContent,'Trainer');
+    assert(!cue.classList.contains('show'));
+    assert.deepEqual(a.errors,[]);
+  }finally{a.close()}
+});
+
+test('a completed last row cannot hide unfinished earlier sets; completion retains pain feedback',()=>{
+  const a=completionApp();
+  try{
+    const d=a.w.document,rows=d.querySelectorAll('.set-row');
+    rows[1].querySelector('.done').click();
+    a.run("activeUser().today['0-1'].feedback='pain';refreshRemainingWorkout(activeUser(),finalWorkout(activeUser()))");
+    assert(d.querySelector('.set-coach-cue').classList.contains('pain'));
+    assert.doesNotMatch(d.querySelector('.set-coach-cue').textContent,/Exercise complete/);
+    rows[0].querySelector('.done').click();
+    assert.match(d.querySelector('.set-coach-cue').textContent,/Exercise complete.*pain noted/);
+    assert.doesNotMatch(d.querySelector('.set-coach-cue').textContent,/next|lb/i);
+  }finally{a.close()}
+});
+
 test('completed set edits immediately update untouched rows and preserve feedback across render',()=>{
   const a=app(),d=a.w.document;
   a.run("nextSetRecommendation=(u,ex,ei)=>currentSessionCompleted(u,ei).length?{load:Number(u.today[ei+'-0'].weight)+5,reps:12,text:'Updated'}:null");
@@ -31,6 +83,42 @@ test('completed set edits immediately update untouched rows and preserve feedbac
   a.run('renderExercises()');
   assert.equal(d.querySelectorAll('[data-exercise-index="0"] .weight')[1].value,'65');
   assert.equal(d.querySelectorAll('[data-exercise-index="0"] .weight')[0].value,'60');a.close();
+});
+
+test('Too hard with numeric RIR refreshes future targets immediately and survives reload',()=>{
+  let a=app();
+  const load=()=>{
+    for(const file of ['load-progression-v2.js','adaptive-insights.js','set-coach-feedback.js'])a.run(fs.readFileSync(file,'utf8'));
+    a.run("finalWorkout=()=>[{name:'Barbell Overhead Press',base:'Vertical press',requires:['barbell'],seedKey:'overhead_press',sets:4,prescription:'4 × 5–8'}];renderExercises()");
+  };
+  try{
+    load();
+    const d=a.w.document,rows=d.querySelectorAll('.set-row');
+    // A manually edited future set must remain a draft, while untouched rows adapt.
+    rows[2].querySelector('.weight').value='80';
+    rows[2].querySelector('.weight').dispatchEvent(new a.w.Event('input',{bubbles:true}));
+    rows[0].querySelector('.weight').value='95';
+    rows[0].querySelector('.reps').value='7';
+    rows[0].querySelector('.rir').value='1';
+    rows[0].querySelector('.done').click();
+    a.w.IronSixInsights.syncFeedback();
+    d.querySelector('[data-set-feedback="hard"]').click();
+    a.w.IronSixSetCoachFeedback.update();
+    assert.equal(rows[0].querySelector('.weight').value,'95','completed performance is unchanged');
+    assert.equal(rows[1].querySelector('.weight').value,'90');
+    assert.equal(rows[1].querySelector('.reps').value,'7');
+    assert.equal(rows[2].querySelector('.weight').value,'80','manual future draft is preserved');
+    assert.equal(rows[3].querySelector('.weight').value,'90');
+    assert.match(d.querySelector('.set-coach-cue').textContent,/Back off slightly.*90 lb/);
+    const saved=a.storage();a.close();a=app(saved);load();
+    const restored=a.w.document.querySelectorAll('.set-row');
+    assert.equal(restored[0].querySelector('.weight').value,'95');
+    assert.equal(restored[0].querySelector('.rir').value,'1');
+    assert.equal(a.run("activeUser().today['0-0'].feedback"),'hard');
+    assert.equal(restored[1].querySelector('.weight').value,'90');
+    assert.equal(restored[2].querySelector('.weight').value,'80');
+    assert.deepEqual(a.errors,[]);
+  }finally{a.close()}
 });
 test('backoff load uses actual top set once and evaluates later backoffs in their own rep range',()=>{
   const a=app();

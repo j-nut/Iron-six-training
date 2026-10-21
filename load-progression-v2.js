@@ -79,6 +79,20 @@
     }
     if (between && rir === 0) return finish(weight, Math.min(reps, hi), 'Hard but in range — repeat this load before adding weight', 'hold');
 
+    // A completed heavier manual set proves strength, but does not make its effort
+    // appropriate for the remaining sets. Honour "Too hard" before progression,
+    // and use the actual goal's reserve target instead of treating all RIR 1–3 alike.
+    if (!between && (feedback === 'hard' || (rir !== null && rir < targetRir))) {
+      if (feedback !== 'hard' && reps > lo) {
+        return finish(weight, Math.max(lo, Math.min(hi, reps - Math.ceil(targetRir - rir))), 'Less reserve than planned — reduce reps', 'down');
+      }
+      const lower = discreteStep(weight, exercise, user, -1);
+      if (lower && lower < weight) return finish(lower, Math.min(reps, midpoint), 'That set was too hard — reduce the load', 'down');
+      if (reps > lo) return finish(weight, Math.min(reps - 1, midpoint), 'That set was too hard — reduce reps', 'down');
+      return finish(weight, lo, 'At the minimum load and rep target — rest longer or choose an easier variation', 'hold');
+    }
+    if (between && feedback === 'hard') return finish(weight, Math.min(reps, hi), 'Hard but in range — repeat this load before adding weight', 'hold');
+
     if (rir === null) {
       if (feedback === 'easy') {
         if (reps + 2 <= hi) return finish(weight, Math.max(midpoint, reps + 2), 'Too easy — add reps before making a large load jump', 'up');

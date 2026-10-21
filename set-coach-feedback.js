@@ -32,16 +32,19 @@
     const ei=Number(card.dataset.exerciseIndex);
     if(!Number.isInteger(ei)) return null;
     const rows=[...card.querySelectorAll('.set-row')];
+    const complete=rows.length>0&&rows.every((row,i)=>user.today?.[`${ei}-${i}`]?.done);
     let latest=null;
     for(let i=0;i<rows.length;i++){
       const set=user.today?.[`${ei}-${i}`];
-      if(set?.done) latest={set,index:i,user,ei};
+      if(set?.done) latest={set,index:i,user,ei,complete};
     }
     return latest;
   }
 
   function recommendation(latest,exercise){
-    if(!latest||!exercise||!latest.set?.feedback) return null;
+    if(!latest||!exercise) return null;
+    if(latest.complete) return {tone:'complete',text:latest.set.feedback==='pain'?'Exercise complete · pain noted.':'Exercise complete · all working sets logged.'};
+    if(!latest.set?.feedback) return null;
     const {set,user,ei}=latest;
     let rec=null;
     try{ if(typeof nextSetRecommendation==='function') rec=nextSetRecommendation(user,exercise,ei); }catch(_){ }
@@ -78,7 +81,7 @@
     let exercise=null;
     try{ exercise=typeof finalWorkout==='function'&&typeof activeUser==='function'?finalWorkout(activeUser())[Number(card.dataset.exerciseIndex)]:null; }catch(_){ }
     const rec=recommendation(latestSetFor(card),exercise);
-    cue.classList.remove('show','up','down','hold','pain');
+    cue.classList.remove('show','up','down','hold','pain','complete');
     if(!rec){ cue.querySelector('.scf-text').textContent=''; return; }
     cue.querySelector('.scf-text').innerHTML=esc(rec.text);
     cue.classList.add('show',rec.tone||'hold');
@@ -87,6 +90,13 @@
   function update(){
     injectStyle();
     document.querySelectorAll('#exerciseList [data-exercise-index]').forEach(updateCard);
+  }
+
+  // Restored sessions and workout redraws refresh targets without a click.
+  // Keep completion in sync on those paths as well as on Done/Undo.
+  if(typeof window.refreshRemainingWorkout==='function'){
+    const base=window.refreshRemainingWorkout;
+    window.refreshRemainingWorkout=function(){const result=base.apply(this,arguments);update();return result;};
   }
 
   document.addEventListener('click',event=>{
