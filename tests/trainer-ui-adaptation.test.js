@@ -32,6 +32,42 @@ test('completed set edits immediately update untouched rows and preserve feedbac
   assert.equal(d.querySelectorAll('[data-exercise-index="0"] .weight')[1].value,'65');
   assert.equal(d.querySelectorAll('[data-exercise-index="0"] .weight')[0].value,'60');a.close();
 });
+
+test('Too hard with numeric RIR refreshes future targets immediately and survives reload',()=>{
+  let a=app();
+  const load=()=>{
+    for(const file of ['load-progression-v2.js','adaptive-insights.js','set-coach-feedback.js'])a.run(fs.readFileSync(file,'utf8'));
+    a.run("finalWorkout=()=>[{name:'Barbell Overhead Press',base:'Vertical press',requires:['barbell'],seedKey:'overhead_press',sets:4,prescription:'4 × 5–8'}];renderExercises()");
+  };
+  try{
+    load();
+    const d=a.w.document,rows=d.querySelectorAll('.set-row');
+    // A manually edited future set must remain a draft, while untouched rows adapt.
+    rows[2].querySelector('.weight').value='80';
+    rows[2].querySelector('.weight').dispatchEvent(new a.w.Event('input',{bubbles:true}));
+    rows[0].querySelector('.weight').value='95';
+    rows[0].querySelector('.reps').value='7';
+    rows[0].querySelector('.rir').value='1';
+    rows[0].querySelector('.done').click();
+    a.w.IronSixInsights.syncFeedback();
+    d.querySelector('[data-set-feedback="hard"]').click();
+    a.w.IronSixSetCoachFeedback.update();
+    assert.equal(rows[0].querySelector('.weight').value,'95','completed performance is unchanged');
+    assert.equal(rows[1].querySelector('.weight').value,'90');
+    assert.equal(rows[1].querySelector('.reps').value,'7');
+    assert.equal(rows[2].querySelector('.weight').value,'80','manual future draft is preserved');
+    assert.equal(rows[3].querySelector('.weight').value,'90');
+    assert.match(d.querySelector('.set-coach-cue').textContent,/Back off slightly.*90 lb/);
+    const saved=a.storage();a.close();a=app(saved);load();
+    const restored=a.w.document.querySelectorAll('.set-row');
+    assert.equal(restored[0].querySelector('.weight').value,'95');
+    assert.equal(restored[0].querySelector('.rir').value,'1');
+    assert.equal(a.run("activeUser().today['0-0'].feedback"),'hard');
+    assert.equal(restored[1].querySelector('.weight').value,'90');
+    assert.equal(restored[2].querySelector('.weight').value,'80');
+    assert.deepEqual(a.errors,[]);
+  }finally{a.close()}
+});
 test('backoff load uses actual top set once and evaluates later backoffs in their own rep range',()=>{
   const a=app();
   a.run("var ex={name:'Barbell Bench Press',base:'Horizontal press',sets:3,prescription:'1 top set × 4–6, then 2 × 8–10'};activeUser().today={'0-0':{weight:'100',reps:'5',rir:'2',done:true}};roundLoad=x=>Math.round(x)");

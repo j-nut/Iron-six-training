@@ -160,7 +160,8 @@
     user.trainingFeedback.unshift(record);user.trainingFeedback=user.trainingFeedback.slice(0,300);
     if((state.rir===''||state.rir==null)&&value!=='pain'&&meta.delta!==1){const prior=num(user.sessionCalibration?.factor)||1;user.sessionCalibration={factor:clamp(prior*meta.delta,.9,1.1),source:'Set feedback',summary:`${meta.label} feedback adjusted the remaining session conservatively.`,updatedAt:Date.now()};}
     if(window.IronSixJournal?.captureSet&&exercise)window.IronSixJournal.captureSet(user,workout,ei,si,state);if(typeof saveData==='function')saveData();box.querySelectorAll('.set-feedback-btn').forEach(b=>b.classList.toggle('active',b===button));{const row=box.previousElementSibling;if(row?.classList?.contains('set-row')){delete box.dataset.reopened;feedbackChip(row,key,value)}}
-    if(value==='pain'){if(typeof toast==='function')toast('Pain noted • stop this movement if pain is sharp or worsening and choose a pain-free substitute.')}else if(typeof refreshRemainingWorkout==='function'&&(state.rir===''||state.rir==null)){refreshRemainingWorkout(user,workout);if(typeof toast==='function')toast('Set feedback saved • remaining targets refreshed')}else if(typeof toast==='function')toast('Set feedback saved');
+    if(typeof refreshRemainingWorkout==='function')refreshRemainingWorkout(user,workout);
+    if(value==='pain'){if(typeof toast==='function')toast('Pain noted • stop this movement if pain is sharp or worsening and choose a pain-free substitute.')}else if(typeof toast==='function')toast('Set feedback saved • remaining targets refreshed');
   }
   function install(){
     if(typeof document==='undefined')return;ensureUI();render();

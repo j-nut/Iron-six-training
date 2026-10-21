@@ -6,6 +6,23 @@
   const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const visible = el => !!el && !el.classList.contains('sc-hidden') && getComputedStyle(el).display !== 'none';
   let applying = false;
+  let activeScrub = null;
+
+  // Android can deliver release outside the overlay, or lose pointer capture
+  // during a render/interruption. Keep a single gesture owner with page fallbacks.
+  const endScrub = (event, cancelled = true) => activeScrub?.end(event, cancelled);
+  window.addEventListener('pointerup', event => endScrub(event, false), true);
+  window.addEventListener('pointercancel', event => endScrub(event), true);
+  for (const type of ['touchend', 'touchcancel']) {
+    window.addEventListener(type, event => {
+      if (!event.touches?.length) endScrub(null);
+    }, {capture:true, passive:true});
+  }
+  window.addEventListener('blur', () => endScrub(null));
+  window.addEventListener('pagehide', () => endScrub(null));
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) endScrub(null);
+  });
 
   function injectStyles() {
     if (document.getElementById('activeWorkoutCleanStyles')) return;
@@ -225,21 +242,25 @@
       let drag=null;
       const finish=()=>{
         if(!drag)return;
-        clearTimeout(drag.timer);
-        drag.bubble?.remove();
-        input.classList.remove('awc-scrubbing');
-        try{overlay.releasePointerCapture?.(drag.id)}catch(_){}
+        const prior=drag;
         drag=null;
+        activeScrub=null;
+        clearTimeout(prior.timer);
+        prior.bubble?.remove();
+        input.classList.remove('awc-scrubbing');
+        try{overlay.releasePointerCapture?.(prior.id)}catch(_){}
       };
       overlay.addEventListener('pointerdown',event=>{
         if((event.pointerType!=='touch'&&event.pointerType!=='pen')||event.isPrimary===false||drag)return;
+        endScrub(null);
         if(event.cancelable)event.preventDefault();
         const next={id:event.pointerId,startY:event.clientY,startX:event.clientX,
           initial:input.value,changed:false,armed:false,moved:false,bubble:null,timer:null};
         drag=next;
+        activeScrub={input,end};
         try{overlay.setPointerCapture?.(event.pointerId)}catch(_){}
         next.timer=setTimeout(()=>{
-          if(drag!==next||next.moved)return;
+          if(drag!==next||next.moved||!input.isConnected)return;
           next.armed=true;
           input.blur();
           input.classList.add('awc-scrubbing');
@@ -272,13 +293,13 @@
         }
       },{passive:false});
       const end=(event,cancelled=false)=>{
-        if(!drag||event.pointerId!==drag.id)return;
+        if(!drag||(event&&event.pointerId!==drag.id))return;
         const armed=drag.armed,moved=drag.moved,changed=drag.changed;
-        if(event.cancelable)event.preventDefault();
+        if(event?.cancelable)event.preventDefault();
         finish();
         if(armed){
-          if(changed)input.dispatchEvent(new Event('input',{bubbles:true}));
-        }else if(!cancelled&&!moved){
+          if(changed&&input.isConnected)input.dispatchEvent(new Event('input',{bubbles:true}));
+        }else if(!cancelled&&!moved&&input.isConnected){
           // This is the only touch path that focuses an editable element.
           // The native keyboard must never open during touch-down or hold.
           input.focus();
@@ -286,6 +307,7 @@
       };
       overlay.addEventListener('pointerup',event=>end(event));
       overlay.addEventListener('pointercancel',event=>end(event,true));
+      overlay.addEventListener('lostpointercapture',event=>end(event,true));
       overlay.addEventListener('click',event=>event.preventDefault());
       overlay.addEventListener('contextmenu',event=>event.preventDefault());
     }
@@ -307,6 +329,7 @@
 
   function apply() {
     if (applying) return;
+    if(activeScrub&&!activeScrub.input.isConnected)endScrub(null);
     applying = true;
     try {
       injectStyles();
@@ -327,13 +350,13 @@
 
   if (typeof window.renderExercises === 'function' && !window.renderExercises.__awcWrapped) {
     const base = window.renderExercises;
-    const wrapped = function(){ const result = base.apply(this, arguments); scheduleApply(); return result; };
+    const wrapped = function(){ endScrub(null); const result = base.apply(this, arguments); scheduleApply(); return result; };
     wrapped.__awcWrapped = true;
     window.renderExercises = wrapped;
   }
   if (typeof window.renderAll === 'function' && !window.renderAll.__awcWrapped) {
     const base = window.renderAll;
-    const wrapped = function(){ const result = base.apply(this, arguments); scheduleApply(); return result; };
+    const wrapped = function(){ endScrub(null); const result = base.apply(this, arguments); scheduleApply(); return result; };
     wrapped.__awcWrapped = true;
     window.renderAll = wrapped;
   }
@@ -358,5 +381,5 @@
 
   scheduleApply();
   addEventListener('load', apply);
-  window.IronSixActiveWorkoutClean = { apply, scrubValue, version: 7, observer: false, layout: 'premium-mobile-workout' };
+  window.IronSixActiveWorkoutClean = { apply, scrubValue, version: 8, observer: false, layout: 'premium-mobile-workout' };
 })();
