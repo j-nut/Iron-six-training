@@ -18,6 +18,58 @@ function app(saved={}){
   return {w,run,storage,errors,close:()=>dom.window.close()};
 }
 
+function completionApp(saved={}){
+  const a=app(saved);
+  a.run(fs.readFileSync('set-coach-feedback.js','utf8'));
+  a.run("finalWorkout=()=>[{name:'Barbell Overhead Press',base:'Vertical press',requires:['barbell'],seedKey:'overhead_press',sets:2,prescription:'2 × 5–8'}];renderExercises()");
+  return a;
+}
+
+test('trainer replaces next-set advice with completion after the last set, including without feedback',()=>{
+  const a=completionApp();
+  try{
+    const d=a.w.document,rows=d.querySelectorAll('.set-row');
+    rows[0].querySelector('.done').click();
+    a.run("activeUser().today['0-0'].feedback='easy';refreshRemainingWorkout(activeUser(),finalWorkout(activeUser()))");
+    assert.match(d.querySelector('.set-coach-cue').textContent,/next/i);
+    rows[1].querySelector('.done').click();
+    assert(d.querySelector('.set-coach-cue').classList.contains('complete'));
+    assert.match(d.querySelector('.set-coach-cue').textContent,/Exercise complete/);
+    assert.doesNotMatch(d.querySelector('.set-coach-cue').textContent,/next|lb|repeat/i);
+    rows[1].querySelector('.done').click();
+    assert(!d.querySelector('.set-coach-cue').classList.contains('complete'));
+    assert.match(d.querySelector('.set-coach-cue').textContent,/next/i);
+  }finally{a.close()}
+});
+
+test('completion survives reload and clears when the workout is reset',()=>{
+  let a=completionApp();
+  try{
+    for(const row of a.w.document.querySelectorAll('.set-row'))row.querySelector('.done').click();
+    const saved=a.storage();a.close();a=completionApp(saved);
+    assert.match(a.w.document.querySelector('.set-coach-cue').textContent,/Exercise complete/);
+    a.run('activeUser().today={};renderExercises()');
+    const cue=a.w.document.querySelector('.set-coach-cue');
+    assert.equal(cue.textContent,'Trainer');
+    assert(!cue.classList.contains('show'));
+    assert.deepEqual(a.errors,[]);
+  }finally{a.close()}
+});
+
+test('a completed last row cannot hide unfinished earlier sets; completion retains pain feedback',()=>{
+  const a=completionApp();
+  try{
+    const d=a.w.document,rows=d.querySelectorAll('.set-row');
+    rows[1].querySelector('.done').click();
+    a.run("activeUser().today['0-1'].feedback='pain';refreshRemainingWorkout(activeUser(),finalWorkout(activeUser()))");
+    assert(d.querySelector('.set-coach-cue').classList.contains('pain'));
+    assert.doesNotMatch(d.querySelector('.set-coach-cue').textContent,/Exercise complete/);
+    rows[0].querySelector('.done').click();
+    assert.match(d.querySelector('.set-coach-cue').textContent,/Exercise complete.*pain noted/);
+    assert.doesNotMatch(d.querySelector('.set-coach-cue').textContent,/next|lb/i);
+  }finally{a.close()}
+});
+
 test('completed set edits immediately update untouched rows and preserve feedback across render',()=>{
   const a=app(),d=a.w.document;
   a.run("nextSetRecommendation=(u,ex,ei)=>currentSessionCompleted(u,ei).length?{load:Number(u.today[ei+'-0'].weight)+5,reps:12,text:'Updated'}:null");

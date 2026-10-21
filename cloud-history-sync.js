@@ -33,7 +33,7 @@
   loadRuntimeScript('session-resume.js?v=1','session-resume','__ironSixSessionResumeLoaded');
   loadRuntimeScript('accent-theme.js?v=1','accent-theme','__ironSixAccentThemeLoaded');
   loadRuntimeScript('active-workout-clean.js?v=3','active-workout-clean','__ironSixActiveWorkoutCleanLoaded');
-  loadRuntimeScript('set-coach-feedback.js?v=1','set-coach-feedback','__ironSixSetCoachFeedbackLoaded');
+  loadRuntimeScript('set-coach-feedback.js?v=2','set-coach-feedback','__ironSixSetCoachFeedbackLoaded');
   loadRuntimeScript('iron-marks-engine.js?v=3','iron-marks-engine','IronSixMarksEngine');
   loadRuntimeScript('iron-marks.js?v=4','iron-marks','__ironSixMarksLoaded');
   loadRuntimeScript('workout-difficulty-ui.js?v=1','workout-difficulty-ui','__ironSixDifficultyUILoaded');
