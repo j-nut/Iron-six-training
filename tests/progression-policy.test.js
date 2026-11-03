@@ -51,6 +51,8 @@ test('next exposure builds one rep from actual performance and explicit hard fee
   save([set(8,2)]);assert.equal(baseline(u,exercise).target,9);
   save([set(12,3),set(10,2,'hard')]);
   const held=baseline(u,exercise);assert.equal(held.load,100);assert(held.target<=10);
+  save([set(8,2),set(5,0)]);
+  assert.equal(baseline(u,exercise).target,8,'a missed later set also blocks a next-session rep increase');
 });
 
 test('bodyweight work respects effort, pain, missing RIR, and Light without inventing loads',()=>{

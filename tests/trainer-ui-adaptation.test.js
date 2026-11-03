@@ -133,11 +133,12 @@ test('backoff recommendations reach untouched rows and survive reload without re
   let a=app();
   const setup=()=>{
     a.run(fs.readFileSync('load-progression-v2.js','utf8'));
+    a.run(fs.readFileSync('set-coach-feedback.js','utf8'));
     a.run("finalWorkout=()=>[{name:'Barbell Bench Press',base:'Horizontal press',seedKey:'bench',sets:4,prescription:'1 top set × 4–6, then 3 × 8–12'}];activeUser().trainingLevel='intermediate';activeUser().goal='muscle';activeUser().workoutDifficulty='balanced';renderExercises()");
   };
   try{
     setup();
-    a.run("activeUser().today={'0-0':{weight:'100',reps:'5',rir:'2',done:true},'0-1':{weight:'90',reps:'10',rir:'4',done:true},'0-3':{weight:'85',reps:'9',rir:'',done:false}};saveData();renderExercises()");
+    a.run("activeUser().today={'0-0':{weight:'100',reps:'5',rir:'2',done:true},'0-1':{weight:'90',reps:'10',rir:'4',feedback:'right',done:true},'0-3':{weight:'85',reps:'9',rir:'',done:false}};saveData();renderExercises()");
     const check=()=>{
       const rows=a.w.document.querySelectorAll('.set-row');
       assert.equal(rows[2].querySelector('.weight').value,'90');
@@ -145,6 +146,7 @@ test('backoff recommendations reach untouched rows and survive reload without re
       assert.equal(rows[3].querySelector('.weight').value,'85');
       assert.equal(rows[3].querySelector('.reps').value,'9');
       assert.match(a.w.document.querySelector('.suggestion strong').textContent,/90 lb × about 12/);
+      assert.match(a.w.document.querySelector('.set-coach-cue').textContent,/90 lb × about 12/,'Trainer and next backoff row must agree');
     };
     check();const saved=a.storage();a.close();a=app(saved);setup();check();
     assert.deepEqual(a.errors,[]);

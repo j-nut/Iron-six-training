@@ -6,6 +6,7 @@ function plannedSetTarget(u,exercise,suggestion,setIndex,exerciseIndex){
   if(!structure)return {load:suggestion.load??null,reps:suggestion.target||suggestion.reps||null,label:null};
   const range=setIndex===0?structure.top:structure.backoff;
   let reps=Math.round((range[0]+range[1])/2);
+  let recommendation=null;
   if(setIndex===0&&Number(suggestion.target||suggestion.reps)>0)reps=Math.max(range[0],Math.min(range[1],Number(suggestion.target||suggestion.reps)));
   let load=suggestion.load??null;
   const top=u.today?.[`${exerciseIndex}-0`];
@@ -15,9 +16,9 @@ function plannedSetTarget(u,exercise,suggestion,setIndex,exerciseIndex){
     if(load&&typeof roundLoad==='function')load=roundLoad(load*.90,exercise,u);
     const backoffToday=Object.fromEntries(Object.entries(u.today||{}).filter(([key])=>key.startsWith(`${exerciseIndex}-`)&&Number(key.split('-')[1])>0));
     const rec=nextSetRecommendation({...u,today:backoffToday},{...exercise,prescription:`${exercise.sets-1} × ${range[0]}–${range[1]}`},exerciseIndex);
-    if(rec){load=rec.load;if(Number(rec.reps)>0)reps=Math.max(range[0],Math.min(range[1],Number(rec.reps)))}
+    if(rec){recommendation=rec;load=rec.load;if(Number(rec.reps)>0)reps=Math.max(range[0],Math.min(range[1],Number(rec.reps)))}
   }
-  return {load,reps,label:setIndex===0?'Top set':'Backoff'};
+  return {load,reps,label:setIndex===0?'Top set':'Backoff',recommendation};
 }
 function structuredSuggestionText(u,exercise,suggestion,completed,exerciseIndex){const structure=topBackoffStructure(exercise);if(!structure)return null;if(completed>0&&exercise.sets>1){const back=plannedSetTarget(u,exercise,suggestion,1,exerciseIndex);return `${back.load?`${back.load} lb × about ${back.reps}`:`About ${back.reps} reps`} · backoff set`;}const top=plannedSetTarget(u,exercise,suggestion,0,exerciseIndex);if(exercise.sets<=1)return top.load?`${top.load} lb × about ${top.reps} · top set`:`Top set × about ${top.reps}`;const back=plannedSetTarget(u,exercise,suggestion,1,exerciseIndex);return `${top.load?`${top.load} lb × about ${top.reps}`:`Top × about ${top.reps}`} · backoffs ${back.load?`~${back.load} lb × about ${back.reps}`:`× about ${back.reps}`}`}
 function refreshRemainingWorkout(u,workout){(workout||[]).forEach((exercise,ei)=>{const card=document.querySelector(`[data-exercise-index="${ei}"]`);if(!card)return;const same=nextSetRecommendation(u,exercise,ei),suggested=suggestedLoadObject(u,exercise,ei),box=document.getElementById(`suggest-${ei}`),completed=currentSessionCompleted(u,ei).length,structured=topBackoffStructure(exercise);if(box){const structuredText=structuredSuggestionText(u,exercise,suggested,completed,ei);const detail=structured?(completed?'Use the planned backoff range after the top set.':suggested.detail):(completed&&same?same.text:suggested.detail);box.innerHTML=`<strong>${escapeHtml(structuredText||(completed&&same?same.load == null ? `Bodyweight × about ${same.reps} ${same.unit || "reps"}` : `${same.load} lb × about ${same.reps}`:suggested.text))}</strong><span class="confidence">${escapeHtml(structured?(completed?'Backoff target':suggested.confidence):(completed?'Next set':suggested.confidence))}</span><div style="margin-top:5px">${escapeHtml(detail)}</div>`}card.querySelectorAll('.set-row').forEach((row,i)=>{const saved=u.today[`${ei}-${i}`];if(saved||row.querySelector('.done').classList.contains('active'))return;if(structured){const target=plannedSetTarget(u,exercise,suggested,i,ei);if(target.load)row.querySelector('.weight').value=String(target.load);if(target.reps)row.querySelector('.reps').value=String(target.reps);return}const rec=completed&&same?same:suggested;if(rec.load!=null)row.querySelector('.weight').value=String(rec.load);if(rec.reps||rec.target)row.querySelector('.reps').value=String(rec.reps||rec.target)})})}

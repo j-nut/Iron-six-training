@@ -261,12 +261,12 @@
         rec = {...rec, load, direction: 'down', label: `Welcome back after ${Math.round(daysOff)} days — start lighter and rebuild`};
       }
       // A set that fell below the rep range means the load is not yet owned: hold, don't add.
-      if (rec?.direction === 'up' && rec.load > (loadValue(representativeSet(newest)?.weight) || 0)) {
-        const [lo] = rangeFor(exercise);
+      if (rec?.direction === 'up') {
+        const [lo, hi] = rangeFor(exercise);
         const missed = newest.some(set => numeric(set?.reps) !== null && numeric(set.reps) < lo);
         if (missed) {
-          const weight = loadValue(representativeSet(newest).weight);
-          rec = {load: weight, reps: midpointFor(exercise), label: 'One set fell short of the range — repeat this load', direction: 'hold'};
+          const weight = loadValue(evidence.weight);
+          rec = {load: weight, reps: clampValue(numeric(evidence.reps), lo, hi), label: 'One set fell short of the range — repeat before progressing', direction: 'hold'};
         }
       }
       if (!rec || !rec.load) return base;
