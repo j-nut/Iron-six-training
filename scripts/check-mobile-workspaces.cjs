@@ -97,7 +97,8 @@ async function screenshot(page,name,log=false){
     await page.setViewportSize({width,height});
     await page.evaluate(()=>showView('history'));
     const before=await page.locator('#historyHighlights').innerText();
-    await page.locator('.history-filters>summary').click();await page.locator('#historySearch').fill('no matching workout');
+    if(!(await page.locator('.history-filters').evaluate(n=>n.open)))await page.locator('.history-filters>summary').click();
+    await page.locator('#historySearch').fill('no matching workout');
     assert.equal(await page.locator('#historyHighlights').innerText(),before);
     await page.locator('#historyClear').click();
     // Enlarge all computed text without compounding descendant scaling.
