@@ -1,24 +1,24 @@
 /*
- * IRON SIX / STUDIO — mobile-first design system v3
+ * IRON SIX / ELECTRIC — shared mobile design system
  * One coherent, deliberate visual language across all five destinations.
  * This final-layer stylesheet supersedes legacy scattered declarations without
  * remounting inputs, changing workout state, or altering the user's accent.
  */
 body.ix-studio{
-  --ix-bg:#090d13; --ix-panel:#131b25; --ix-panel2:#192431;
-  --ix-edge:#344351; --ix-hair:rgba(185,207,229,.13);
-  --ix-type:#f6f8fd; --ix-mid:#c0ccda; --ix-dim:#8799ab;
+  --ix-bg:#111210; --ix-panel:#21241e; --ix-panel2:#2c2f28;
+  --ix-edge:#494e42; --ix-hair:rgba(185,207,229,.13);
+  --ix-type:#f6f8fd; --ix-mid:#c4d1b3; --ix-dim:#9aa48c;
   --ix-radius:20px; --ix-spacing:18px;
   --ix-shadow:0 28px 64px rgba(0,0,0,.35);
   --bg:var(--ix-bg);--surface:var(--ix-panel);--surface2:var(--ix-panel2);
   --line:var(--ix-edge);--text:var(--ix-type);--muted:var(--ix-mid);
   color:var(--ix-type);
-  background:radial-gradient(ellipse 100% 400px at 80% -140px,rgba(var(--accent-rgb,46,229,128),.10),transparent 88%),#090d13!important;
+  background:radial-gradient(ellipse 100% 400px at 80% -140px,rgba(var(--accent-rgb,46,229,128),.10),transparent 88%),#111210!important;
   -webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1;
 }
 body.ix-studio::before{
   content:"";position:fixed;inset:0;pointer-events:none;opacity:.32;z-index:0;
-  background-image:radial-gradient(circle at center,#415469 0.55px,transparent 0.8px);
+  background-image:radial-gradient(circle at center,#5e6556 0.55px,transparent 0.8px);
   background-size:25px 25px;mask-image:linear-gradient(180deg,#000 0%,transparent 52%);
 }
 body.ix-studio .app{position:relative;max-width:960px;padding:24px clamp(16px,4vw,38px) calc(133px + var(--app-safe-bottom,0px))!important}
@@ -34,14 +34,14 @@ body.ix-studio .app .brand{gap:6px}
 body.ix-studio .app .brand img{height:32px!important;max-width:148px!important;filter:drop-shadow(0 0 10px rgba(255,255,255,.055))}
 body.ix-studio .app .pr-brand-context{font-weight:760;letter-spacing:.22em;color:var(--ix-dim)}
 body.ix-studio .app #profileMenuButton{
-  background:#141e29!important;border:1px solid #3c4b5c!important;border-radius:15px!important;
+  background:#252722!important;border:1px solid #53584b!important;border-radius:15px!important;
   box-shadow:0 5px 18px #0002;min-height:46px
 }
 /* Page headings: editorial contrast and a strong page identity. */
 body.ix-studio .app .pr-page-hero{
   position:relative;overflow:hidden;isolation:isolate;
-  border:1px solid #32414d!important;border-radius:23px!important;
-  background:linear-gradient(125deg,#192635 0%,#121a25 66%,#101720 100%)!important;
+  border:1px solid #454a3f!important;border-radius:23px!important;
+  background:linear-gradient(125deg,#30332b 0%,#21241e 66%,#1d1f1a 100%)!important;
   padding:25px 27px 26px!important;
   margin-bottom:22px!important;
   box-shadow:0 16px 36px #0003!important
@@ -72,7 +72,7 @@ body.ix-studio .app #today.session-prestart>.pr-page-hero h1{
   font-weight:820!important;line-height:1.07!important;text-wrap:balance
 }
 body.ix-studio .app .pr-page-hero p{
-  max-width:46ch;font-size:13px!important;color:#b3c2d0!important;
+  max-width:46ch;font-size:13px!important;color:#bbc8ab!important;
   line-height:1.55!important;margin:0!important
 }
 body.ix-studio .app #today.session-prestart>.pr-page-hero{padding:30px 26px!important}
@@ -81,7 +81,7 @@ body.ix-studio .app #today.session-prestart .pr-session-summary{
 }
 body.ix-studio .app .pr-session-summary>*,body.ix-studio .app .metrics .metric{
   min-width:0;padding:12px!important;border-radius:12px!important;
-  border:1px solid #304050!important;background:rgba(6,12,18,.4)!important
+  border:1px solid #484d42!important;background:rgba(6,12,18,.4)!important
 }
 body.ix-studio .app .pr-session-summary strong,body.ix-studio .app .metric strong{
   font-size:clamp(18px,4vw,27px)!important;font-weight:800!important;letter-spacing:-.045em!important;
@@ -108,22 +108,22 @@ body.ix-studio .app #sessionBeginBtn{
   font-size:15px!important;letter-spacing:-.01em;
   border:1px solid rgba(255,255,255,.14)!important;
   background:linear-gradient(135deg,var(--accent),rgba(var(--accent-rgb,46,229,128),.8))!important;
-  color:#081017!important;box-shadow:0 9px 28px rgba(var(--accent-rgb,46,229,128),.18)!important
+  color:#151613!important;box-shadow:0 9px 28px rgba(var(--accent-rgb,46,229,128),.18)!important
 }
 body.ix-studio .app .btn.secondary,body.ix-studio .app .awc-action,body.ix-studio .app .iconbtn{
-  border:1px solid #435466!important;background:#1a2633!important;color:#e9eff7!important;
+  border:1px solid #5c6254!important;background:#2e312a!important;color:#deedcb!important;
   border-radius:12px!important;font-size:13px!important;font-weight:700!important
 }
 body.ix-studio .app #sessionStart{
-  display:block!important;border:1px solid #3c4d5d!important;border-radius:20px!important;
-  background:linear-gradient(150deg,rgba(var(--accent-rgb,46,229,128),.12),#1b2937 38%,#111924)!important;
+  display:block!important;border:1px solid #54594c!important;border-radius:20px!important;
+  background:linear-gradient(150deg,rgba(var(--accent-rgb,46,229,128),.12),#32352d 38%,#20231e)!important;
   box-shadow:0 13px 33px #0003!important;padding:22px!important
 }
 body.ix-studio .app #today.session-prestart #sessionStart h3{font-size:21px!important;font-weight:790!important;letter-spacing:-.045em}
 body.ix-studio .app #sessionStart p{color:var(--ix-mid)!important}
 body.ix-studio .app .duration-picker{gap:7px!important}
 body.ix-studio .app .duration-btn{
-  border-radius:11px!important;background:#192633!important;border-color:#3c4c5b!important;
+  border-radius:11px!important;background:#2e312a!important;border-color:#52574b!important;
   font-size:13px!important;font-weight:770!important;box-shadow:inset 0 1px rgba(255,255,255,.025)
 }
 body.ix-studio .app .duration-btn.active{
@@ -132,8 +132,8 @@ body.ix-studio .app .duration-btn.active{
   box-shadow:0 0 0 1px rgba(var(--accent-rgb,46,229,128),.1)!important
 }
 body.ix-studio .app .shell-panel,body.ix-studio .app .select-wrap{
-  border:1px solid #334455!important;border-radius:16px!important;
-  background:linear-gradient(140deg,#192633,#121b26)!important;
+  border:1px solid #4c5246!important;border-radius:16px!important;
+  background:linear-gradient(140deg,#2e312a,#22241f)!important;
   box-shadow:0 8px 26px #0002!important
 }
 body.ix-studio .app .shell-toggle{min-height:60px!important;padding:14px 16px!important}
@@ -159,7 +159,7 @@ body.ix-studio .app #sessionCardNav{
   z-index:18!important;
   display:grid!important;grid-template-columns:44px minmax(0,1fr) 46px 72px!important;
   gap:9px!important;padding:11px 12px 17px!important;
-  margin:0 0 13px!important;border:1px solid #344454!important;
+  margin:0 0 13px!important;border:1px solid #4c5145!important;
   border-radius:16px!important;
   background:rgba(19,28,39,.97)!important;
   box-shadow:0 12px 26px rgba(0,0,0,.28)!important;
@@ -179,8 +179,8 @@ body.ix-studio .app #sessionCardNav .sc-step span{
 body.ix-studio .app #sessionCardNav .sc-arrow,
 body.ix-studio .app #sessionCardNav .awc-overview-proxy{
   height:43px!important;min-height:43px!important;min-width:0!important;width:100%!important;
-  background:#253241!important;border:1px solid #465669!important;
-  border-radius:11px!important;color:#f2f5fa!important;
+  background:#3a3e35!important;border:1px solid #5e6556!important;
+  border-radius:11px!important;color:#e1f0cd!important;
   box-shadow:inset 0 1px rgba(255,255,255,.06)!important
 }
 body.ix-studio .app #sessionCardNav #scPrev{width:44px!important}
@@ -193,14 +193,14 @@ body.ix-studio .app #sessionCardNav #scNextBtn{
 }
 body.ix-studio .app #sessionCardNav .sc-progress-track{
   position:absolute;bottom:0;left:10px;right:10px;height:3px!important;
-  border-radius:4px;background:#2b3947!important
+  border-radius:4px;background:#40443a!important
 }
 body.ix-studio .app #sessionCardNav .sc-progress-fill{height:100%;background:var(--accent)!important}
 body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden){
   position:relative;overflow:hidden;
   border-radius:20px!important;padding:0!important;
-  border:1px solid #364b5f!important;
-  background:linear-gradient(160deg,#1e2b3b 0%,#121c28 58%,#101821 100%)!important;
+  border:1px solid #565b4e!important;
+  background:linear-gradient(160deg,#353930 0%,#242621 58%,#1e201b 100%)!important;
   box-shadow:0 18px 44px #0005!important
 }
 body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden)::before{
@@ -223,7 +223,7 @@ body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-
   text-wrap:balance
 }
 body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-title>span{
-  font-size:13px!important;font-weight:600!important;color:#a9bccb!important;margin-top:8px!important
+  font-size:13px!important;font-weight:600!important;color:#b7c3a6!important;margin-top:8px!important
 }
 body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion{
   border:1px solid rgba(var(--accent-rgb,46,229,128),.25)!important;
@@ -234,7 +234,7 @@ body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestio
   background:linear-gradient(90deg,rgba(var(--accent-rgb,46,229,128),.115),rgba(var(--accent-rgb,46,229,128),.035))!important
 }
 body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion::before{
-  content:"COACH'S TARGET";color:#a9bac7;font-size:9px;font-weight:850;
+  content:"COACH'S TARGET";color:#b3bfa3;font-size:9px;font-weight:850;
   letter-spacing:.14em
 }
 body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion strong{
@@ -247,14 +247,14 @@ body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .awc-actio
 body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .awc-action{
   min-height:38px!important;min-width:75px!important;
   padding:8px 13px!important;border-radius:10px!important;
-  background:#243244!important;border-color:#435569!important;
-  color:#dfebf5!important;font-size:12px!important;
+  background:#3d4138!important;border-color:#5e6556!important;
+  color:#dcebc9!important;font-size:12px!important;
   box-shadow:inset 0 1px rgba(255,255,255,.025)
 }
 body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .sets{
   position:relative;order:1;min-width:0;width:100%;
   padding:19px 17px 18px!important;margin:0!important;
-  border-top:1px solid #364858!important;
+  border-top:1px solid #4f5448!important;
   background:rgba(5,12,20,.38)!important
 }
 body.ix-studio .app .ix-set-summary{
@@ -263,13 +263,13 @@ body.ix-studio .app .ix-set-summary{
   border-bottom:1px solid var(--ix-hair)
 }
 body.ix-studio .app .ix-set-summary b{
-  color:#e4eef7;font-size:10px;font-weight:850;letter-spacing:.14em;text-transform:uppercase
+  color:#deedcb;font-size:10px;font-weight:850;letter-spacing:.14em;text-transform:uppercase
 }
 body.ix-studio .app .ix-set-summary span{
   color:var(--ix-dim);font-size:10px;font-weight:620;white-space:nowrap
 }
 body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .field-labels{
-  margin:0 0 8px!important;color:#91aabd!important;
+  margin:0 0 8px!important;color:#aab59b!important;
   font-size:10px!important;font-weight:800!important;letter-spacing:.09em!important
 }
 body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row{
@@ -277,8 +277,8 @@ body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row{
 }
 body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .field{
   height:52px!important;min-height:52px!important;
-  color:#fff!important;background:#111e2a!important;
-  border:1px solid #3f5368!important;border-radius:11px!important;
+  color:#fff!important;background:#262822!important;
+  border:1px solid #5e6455!important;border-radius:11px!important;
   font-size:18px!important;font-weight:800!important;
   box-shadow:inset 0 2px 5px #0002!important
 }
@@ -291,41 +291,41 @@ body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .
 }
 body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .done{
   width:100%!important;min-width:40px!important;min-height:52px!important;height:52px!important;
-  border:1px solid #42586b!important;border-radius:11px!important;
-  background:#203042!important;color:#c0ceda!important
+  border:1px solid #606758!important;border-radius:11px!important;
+  background:#3b3f36!important;color:#c4d1b3!important
 }
 body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .done.active{
-  color:#06111a!important;background:var(--accent)!important;border-color:var(--accent)!important
+  color:#171915!important;background:var(--accent)!important;border-color:var(--accent)!important
 }
 body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-num{
   font-size:12px!important;font-weight:760!important;color:var(--ix-dim)!important
 }
 body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .awc-scrub-tip{
   display:flex;align-items:center;gap:7px;margin:12px 0 0!important;
-  color:#8399ab!important;font-size:10px!important
+  color:#9aa48c!important;font-size:10px!important
 }
 body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .awc-scrub-tip::before{
   content:"↕";display:grid;place-items:center;width:16px;height:16px;
-  border-radius:4px;background:#25374a;color:var(--accent);font-size:12px
+  border-radius:4px;background:#43473d;color:var(--accent);font-size:12px
 }
 body.ix-studio .app .exercise .awc-form-guide{
-  order:2;margin:0!important;border:0!important;border-top:1px solid #354958!important;
-  border-radius:0!important;background:#182431!important
+  order:2;margin:0!important;border:0!important;border-top:1px solid #4f5448!important;
+  border-radius:0!important;background:#2c2f28!important
 }
 body.ix-studio .app .exercise .awc-form-guide>summary{
   min-height:53px!important;padding:13px 17px!important;
-  font-size:12px!important;font-weight:790!important;color:#e4edf7!important
+  font-size:12px!important;font-weight:790!important;color:#deedcb!important
 }
 body.ix-studio .app .exercise .awc-form-guide>summary span{
-  margin-left:auto;font-size:11px!important;color:#8fa3b6!important
+  margin-left:auto;font-size:11px!important;color:#a4af95!important
 }
 body.ix-studio .app .exercise .awc-form-guide>summary::after{font-size:21px!important}
 body.ix-studio .app .set-feedback-actions{
-  background:#142131!important;border-radius:12px!important
+  background:#2c2f28!important;border-radius:12px!important
 }
 /* Compact utility cards: secondary actions never outshine the movement. */
 body.ix-studio .app #musicPanel.shell-panel{
-  background:#111b27!important;border-color:#2d3e4f!important;
+  background:#232520!important;border-color:#474c41!important;
   box-shadow:none!important
 }
 body.ix-studio .app #musicPanel .shell-toggle{
@@ -337,7 +337,7 @@ body.ix-studio .app #musicPanel .shell-toggle-text span{font-size:10px!important
 body.ix-studio .bottom-nav{
   left:12px!important;right:12px!important;bottom:calc(10px + var(--app-safe-bottom,0px))!important;
   max-width:700px!important;padding:6px!important;border-radius:18px!important;
-  border:1px solid #3a4b5c!important;
+  border:1px solid #53584b!important;
   background:rgba(16,25,35,.97)!important;
   box-shadow:0 12px 42px #0008!important
 }
@@ -345,7 +345,7 @@ body.ix-studio .bottom-nav .bottom-inner{gap:2px!important}
 body.ix-studio .bottom-nav .navbtn{
   position:relative;min-height:63px!important;
   gap:6px!important;border-radius:12px!important;
-  color:#9db0c2!important;font-size:10px!important;font-weight:720!important;
+  color:#afba9f!important;font-size:10px!important;font-weight:720!important;
   transition:background .15s,color .15s!important
 }
 body.ix-studio .bottom-nav .navbtn.active{
@@ -366,8 +366,8 @@ body.ix-studio.ix-editing-set .bottom-nav{
 body.ix-studio .app .pr-schedule-grid{gap:12px!important}
 body.ix-studio .app .pr-schedule-card{
   position:relative;overflow:hidden;padding:23px!important;
-  border-radius:17px!important;border-color:#394b5d!important;
-  background:linear-gradient(135deg,#1d2b39,#111b26 74%)!important;
+  border-radius:17px!important;border-color:#54594c!important;
+  background:linear-gradient(135deg,#33372f,#22241f 74%)!important;
   box-shadow:0 13px 34px #0003!important
 }
 body.ix-studio .app .pr-schedule-card::before{
@@ -376,7 +376,7 @@ body.ix-studio .app .pr-schedule-card::before{
 }
 body.ix-studio .app .pr-schedule-current{
   border-color:rgba(var(--accent-rgb,46,229,128),.55)!important;
-  background:linear-gradient(140deg,rgba(var(--accent-rgb,46,229,128),.15),#1b2b37 65%,#121b26)!important
+  background:linear-gradient(140deg,rgba(var(--accent-rgb,46,229,128),.15),#32352d 65%,#22241f)!important
 }
 body.ix-studio .app .pr-kicker{
   font-size:10px!important;letter-spacing:.12em;font-weight:800!important;text-transform:uppercase;color:var(--ix-dim)!important
@@ -386,35 +386,35 @@ body.ix-studio .app .pr-schedule-card h3{
   margin:16px 0 10px!important;font-size:clamp(23px,5vw,31px)!important;
   font-weight:810!important;letter-spacing:-.055em!important
 }
-body.ix-studio .app .pr-schedule-card p{font-size:12px!important;color:#acbdcc!important}
+body.ix-studio .app .pr-schedule-card p{font-size:12px!important;color:#b8c4a7!important}
 body.ix-studio .app :is(.pr-guide,.pr-analysis,.pr-profile-group,.profile-card){
-  border:1px solid #384b5c!important;border-radius:16px!important;
-  background:linear-gradient(155deg,#1b2937,#111a25)!important;
+  border:1px solid #53584b!important;border-radius:16px!important;
+  background:linear-gradient(155deg,#32352d,#21241e)!important;
   box-shadow:0 9px 23px #0002!important
 }
 body.ix-studio .app :is(.pr-guide,.pr-analysis)>summary{
   padding:17px 19px!important;min-height:68px!important
 }
 body.ix-studio .app :is(.pr-guide,.pr-analysis)>summary strong,
-body.ix-studio .app .pr-guide-title{font-size:13px!important;color:#eaf1f8!important;font-weight:780!important}
-body.ix-studio .app .pr-guide-description,body.ix-studio .app .pr-analysis>summary small{font-size:11px!important;color:#8fa4b7!important}
+body.ix-studio .app .pr-guide-title{font-size:13px!important;color:#dfeecb!important;font-weight:780!important}
+body.ix-studio .app .pr-guide-description,body.ix-studio .app .pr-analysis>summary small{font-size:11px!important;color:#a5b096!important}
 body.ix-studio .app .history-item{
-  padding:17px!important;background:#172331!important;
-  margin-bottom:9px;border:1px solid #34485b!important;border-radius:13px!important
+  padding:17px!important;background:#2c2f28!important;
+  margin-bottom:9px;border:1px solid #52574b!important;border-radius:13px!important
 }
-body.ix-studio .app .history-item strong{font-weight:790!important;color:#f3f7fb}
-body.ix-studio .app .history-item span{font-size:11px!important;color:#9bafbf!important}
+body.ix-studio .app .history-item strong{font-weight:790!important;color:#e2f1ce}
+body.ix-studio .app .history-item span{font-size:11px!important;color:#acb79d!important}
 body.ix-studio .app #historyList input,body.ix-studio .app #historyList select,
 body.ix-studio .app .setting input,body.ix-studio .app .setting select{
-  min-height:49px!important;background:#101c28!important;border:1px solid #40546a!important;
+  min-height:49px!important;background:#242621!important;border:1px solid #5f6657!important;
   color:var(--ix-type)!important;border-radius:11px!important
 }
 body.ix-studio .app .pr-profile-group{padding:21px!important}
 body.ix-studio .app .pr-group-title{font-size:17px!important;font-weight:800!important}
-body.ix-studio .app .pr-group-copy{font-size:12px!important;line-height:1.55!important;color:#9bafc0!important}
+body.ix-studio .app .pr-group-copy{font-size:12px!important;line-height:1.55!important;color:#adb89d!important}
 body.ix-studio .app .profile-card.active{border-color:var(--accent)!important}
 body.ix-studio .app .equip{
-  border-radius:11px!important;background:#142231!important;border-color:#364c60!important
+  border-radius:11px!important;background:#2c2f28!important;border-color:#565c4f!important
 }
 body.ix-studio .app .equip:has(input:checked){
   border-color:rgba(var(--accent-rgb,46,229,128),.65)!important;
@@ -422,8 +422,8 @@ body.ix-studio .app .equip:has(input:checked){
 }
 /* Coach should look like a dedicated assistant workspace, not a form appended to a page. */
 body.ix-studio .app .coach-chat{
-  padding:17px!important;border:1px solid #394a5c!important;
-  border-radius:20px!important;background:linear-gradient(155deg,#182532,#111923)!important;
+  padding:17px!important;border:1px solid #53584b!important;
+  border-radius:20px!important;background:linear-gradient(155deg,#2d3029,#20221d)!important;
   box-shadow:0 15px 37px #0003
 }
 body.ix-studio .app .coach-msg{
@@ -432,7 +432,7 @@ body.ix-studio .app .coach-msg{
 }
 body.ix-studio .app .coach-msg.assistant,
 body.ix-studio .app .coach-msg.ai{
-  border:1px solid #384e62!important;background:#223040!important
+  border:1px solid #585e50!important;background:#3a3d34!important
 }
 body.ix-studio .app .coach-msg.user{
   background:rgba(var(--accent-rgb,46,229,128),.12)!important;
@@ -440,11 +440,11 @@ body.ix-studio .app .coach-msg.user{
 }
 body.ix-studio .app .coach-chip{
   min-height:43px!important;border-radius:11px!important;
-  background:#1c2b3a!important;border:1px solid #41576b!important;
+  background:#343830!important;border:1px solid #606758!important;
   font-size:11px!important;font-weight:700!important
 }
 body.ix-studio .app .coach-compose{
-  border-radius:16px!important;background:#121d29!important;border-color:#394d5e!important
+  border-radius:16px!important;background:#252722!important;border-color:#555a4d!important
 }
 @media(max-width:520px){
   body.ix-studio .app{padding:15px 13px calc(119px + var(--app-safe-bottom,0px))!important}
@@ -503,7 +503,7 @@ body.ix-studio .app #sessionCardNav .sc-step strong{
 }
 body.ix-studio .app #sessionCardNav .sc-step strong .ix-step-title{
   display:inline!important;min-width:0!important;font-size:11px!important;
-  color:#e9f1f8!important;font-weight:820!important;white-space:nowrap!important;margin:0!important
+  color:#dfeecb!important;font-weight:820!important;white-space:nowrap!important;margin:0!important
 }
 body.ix-studio .app #sessionCardNav .sc-step strong .ix-step-count{
   display:inline-block!important;flex:0 0 auto!important;
@@ -599,3 +599,143 @@ body.ix-studio .app #today.session-compact:not(.session-prestart) .ix-active-wor
 body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .exercise-name-link{font-size:clamp(20px,5.5vw,24px)!important;line-height:1.15!important;max-width:none!important}
 body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden):not(.awc-details) .awc-why-btn{display:none!important}
 body.ix-studio .app #exerciseList .sc-set-focus .sc-set-picker .sc-next-set{flex:0 0 54px;width:54px;min-height:44px!important;margin:0;padding:8px!important;font-size:12px!important}
+
+/* Approved Electric identity. Local fonts also work in an offline Android APK. */
+@font-face{font-family:'IX Display';src:url('assets/brand/fonts/BarlowCondensed-BoldItalic.ttf') format('truetype');font-weight:700 900;font-style:italic;font-display:swap}
+@font-face{font-family:'IX Numbers';src:url('assets/brand/fonts/BarlowCondensed-SemiBold.ttf') format('truetype');font-weight:500 800;font-style:normal;font-display:swap}
+@font-face{font-family:'IX Text';src:url('assets/brand/fonts/Manrope.ttf') format('truetype');font-weight:200 800;font-style:normal;font-display:swap}
+body.ix-studio{
+  --ix-bg:#10120f;--ix-panel:#1b1f18;--ix-panel2:#242b1f;--ix-edge:#3c4535;
+  --ix-hair:#333b2d;--ix-type:#f1f4e9;--ix-mid:#b3bca8;--ix-dim:#a0ab94;
+  --ix-shadow:none;--accent:#c6f54b;--accent-rgb:198,245,75;
+  --bg:var(--ix-bg);--surface:var(--ix-panel);--surface2:var(--ix-panel2);
+  --line:var(--ix-edge);--text:var(--ix-type);--muted:var(--ix-mid);
+  font-family:'IX Text',system-ui,sans-serif;background:var(--ix-bg)!important;
+}
+/* Explicit profile color choices are preserved by accent-theme.js. */
+body.ix-studio{--accent:inherit;--accent-rgb:inherit}
+body.ix-studio::before{display:none}
+body.ix-studio :is(button,input,select,textarea){font-family:'IX Text',system-ui,sans-serif}
+body.ix-studio .app .topbar{min-height:54px;gap:12px}
+body.ix-studio .app .topbar::after{height:2px;width:38px;background:var(--accent);box-shadow:none}
+body.ix-studio .app .brand{min-width:0;display:flex!important;flex-direction:row!important;text-decoration:none}
+body.ix-studio .app .brand>img,body.ix-studio .app .brand>.pr-brand-context{display:none!important}
+body.ix-studio .ix-brand-lockup{display:flex;align-items:center;gap:9px;white-space:nowrap}
+body.ix-studio .ix-brand-emblem{display:grid;place-items:center;background:var(--accent);color:#172008;width:32px;height:35px;font-family:'IX Display',Impact,sans-serif;font-size:29px;font-weight:700;font-style:italic;letter-spacing:-3px;padding-right:4px;clip-path:polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px)}
+body.ix-studio .ix-brand-copy{display:grid;gap:4px}
+body.ix-studio .ix-brand-name{font-family:'IX Display',Impact,sans-serif;font-style:italic;font-size:25px;font-weight:700;letter-spacing:.04em;line-height:1;color:var(--text)}
+body.ix-studio .ix-brand-line{font-size:9px;line-height:1;letter-spacing:.14em;font-weight:700;color:var(--muted)}
+body.ix-studio .app #profileMenuButton{max-width:42vw;min-height:44px;background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:5px 13px 5px 13px!important;box-shadow:none}
+body.ix-studio #profileMenuButton>span:not(.pm-avatar):not(.pm-caret){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.ix-studio .app .pr-page-hero{background:var(--surface)!important;border-color:var(--line)!important;border-radius:4px 20px 4px 20px!important;box-shadow:none!important}
+body.ix-studio .app .pr-page-hero::before{height:2px;background:var(--accent)}
+body.ix-studio .app .pr-page-hero::after{font-family:'IX Display',Impact,sans-serif;font-weight:700;font-style:italic;right:9px;bottom:-17px;font-size:155px;letter-spacing:-.06em;transform:none;color:rgba(var(--accent-rgb),.07)}
+body.ix-studio .app .pr-page-hero .eyebrow{font-size:11px!important;letter-spacing:.14em!important;line-height:1.5}
+body.ix-studio .app .pr-page-hero .eyebrow::before{display:none}
+body.ix-studio .app :is(h1,h2,h3){font-family:'IX Display',Impact,'Arial Narrow',sans-serif;font-style:italic;font-weight:700;text-transform:uppercase;letter-spacing:.005em}
+body.ix-studio .app .pr-page-hero h1,
+body.ix-studio .app #today.session-prestart>.pr-page-hero h1{font-size:clamp(34px,8.5vw,48px)!important;line-height:.98!important;font-weight:700!important;letter-spacing:0!important;max-width:24ch}
+body.ix-studio .app :is(#plan,#history)>.pr-page-hero h1{font-size:34px!important;line-height:1.02!important;letter-spacing:0!important}
+body.ix-studio .app .pr-page-hero p{color:var(--muted)!important;font-size:12px!important;line-height:1.6!important}
+body.ix-studio .app .section-head h2{font-size:25px!important;line-height:1.05!important;font-weight:700!important;letter-spacing:.015em!important}
+body.ix-studio .app :is(.btn,.iconbtn,.awc-action,.duration-btn){box-shadow:none!important;border-radius:4px 11px 4px 11px!important}
+body.ix-studio .app .btn.primary,body.ix-studio .app #sessionBeginBtn{background:var(--accent)!important;border-color:var(--accent)!important;color:#172008!important;font-family:'IX Display',Impact,sans-serif;font-weight:700!important;font-style:italic;font-size:23px!important;letter-spacing:.035em;text-transform:uppercase;min-height:50px!important;box-shadow:none!important}
+body.ix-studio .app :is(.btn.secondary,.iconbtn,.awc-action){background:var(--surface2)!important;color:var(--text)!important;border-color:var(--line)!important}
+body.ix-studio .app .btn:active{transform:translateY(1px)}
+body.ix-studio :is(button,input,select,textarea):focus-visible{outline:2px solid var(--accent)!important;outline-offset:3px}
+body.ix-studio .app :is(.shell-panel,.pr-guide,.pr-analysis,.profile-card,.history-session,.pr-profile-group,.pr-schedule-card){background:var(--surface)!important;border-color:var(--line)!important;box-shadow:none!important;border-radius:4px 16px 4px 16px!important}
+body.ix-studio .app :is(.shell-toggle-text strong,.pr-guide-title,.pr-analysis>summary strong){color:var(--text)!important}
+body.ix-studio .app :is(.shell-toggle-text span,.pr-guide-description,.pr-analysis>summary small){color:var(--muted)!important}
+body.ix-studio .app .pr-session-summary>*{border:0!important;border-radius:0!important;background:transparent!important;padding:5px 0!important}
+body.ix-studio .app .pr-session-summary strong{font-family:'IX Numbers',sans-serif;font-size:30px!important;font-weight:600!important;color:var(--text)!important;letter-spacing:0!important}
+body.ix-studio .app #sessionStart{background:var(--surface)!important;border-color:var(--line)!important;box-shadow:none!important;border-radius:4px 16px 4px 16px!important;padding:16px!important}
+body.ix-studio .app #today.session-prestart #sessionStart h3{font-family:'IX Display',Impact,sans-serif;font-size:25px!important;font-weight:700!important;letter-spacing:.015em}
+body.ix-studio .app #sessionStart p{color:var(--muted)!important}
+body.ix-studio .app #sessionCardNav{background:var(--surface)!important;border-color:var(--line)!important;border-radius:4px 13px 4px 13px!important;box-shadow:none!important;backdrop-filter:none}
+body.ix-studio .app #sessionCardNav :is(.sc-arrow,.awc-overview-proxy){background:var(--surface2)!important;border-color:var(--line)!important;color:var(--text)!important;border-radius:5px!important;box-shadow:none!important}
+body.ix-studio .app #sessionCardNav #scNextBtn{background:var(--accent)!important;color:#172008!important;border-color:var(--accent)!important;font-weight:800!important;box-shadow:none!important}
+body.ix-studio .app #sessionCardNav .sc-progress-track{background:var(--line)!important}
+body.ix-studio .app #sessionCardNav .sc-step strong .ix-step-title{color:var(--text)!important}
+body.ix-studio .app #sessionCardNav .sc-step strong .ix-step-count{border:0!important;border-radius:0!important;background:transparent!important;color:var(--accent)!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden){background:var(--surface)!important;border:1px solid var(--line)!important;border-top:2px solid var(--accent)!important;border-radius:4px 17px 4px 17px!important;box-shadow:none!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden)::before{display:none}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-name-link{font-family:'IX Display',Impact,sans-serif;font-style:italic;font-size:clamp(24px,6.5vw,31px)!important;line-height:1.03!important;font-weight:700!important;letter-spacing:.005em!important;text-transform:uppercase;color:var(--text)!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .exercise-title>span{color:var(--muted)!important;font-size:12px!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion{background:transparent!important;border:0!important;border-radius:0!important;padding:5px 0!important;margin-top:10px!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .suggestion strong{font-family:'IX Numbers',sans-serif;font-size:25px!important;font-weight:600!important;line-height:1.1!important;color:var(--accent)!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .sets{background:var(--ix-bg)!important;border-color:var(--line)!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .field{background:var(--surface)!important;border-color:var(--line)!important;border-radius:5px!important;color:var(--text)!important;box-shadow:none!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row input.field{font-family:'IX Numbers',sans-serif;font-size:26px!important;font-weight:600!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .done{background:var(--surface2)!important;border-color:var(--line)!important;border-radius:5px!important;color:var(--text)!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise:not(.sc-hidden) .set-row .done.active{background:var(--accent)!important;color:#172008!important;border-color:var(--accent)!important}
+body.ix-studio .app #exerciseList .sc-set-focus .sc-set-choice{border-radius:4px!important;background:var(--surface)!important;color:var(--muted)!important;border-color:var(--line)!important}
+body.ix-studio .app #exerciseList .sc-set-focus .sc-set-choice[aria-pressed="true"]{color:var(--accent)!important;border-color:var(--accent)!important}
+body.ix-studio .app .exercise .awc-form-guide{background:var(--surface)!important;border-color:var(--line)!important}
+body.ix-studio .app .exercise .awc-form-guide>summary{color:var(--text)!important}
+body.ix-studio .app .exercise .awc-form-guide>summary span{color:var(--muted)!important}
+body.ix-studio .app .set-coach-cue{background:rgba(var(--accent-rgb),.06)!important;border-color:var(--line)!important;border-radius:4px 10px 4px 10px}
+body.ix-studio .app .plan-agenda h3{font-size:32px;letter-spacing:0;line-height:1.05}
+body.ix-studio .app .plan-next>strong{font-family:'IX Numbers',sans-serif;font-size:23px;font-weight:600}
+body.ix-studio .app .history-highlight-grid strong{font-family:'IX Numbers',sans-serif;font-size:36px;font-weight:600;letter-spacing:0}
+body.ix-studio .app .history-record>strong{font-size:14px}
+body.ix-studio .app .history-session{padding:12px}
+body.ix-studio .app .history-session summary strong{font-size:14px}
+body.ix-studio .app .history-tools :is(input,select),body.ix-studio .app .setting :is(input,select),body.ix-studio .app .equip{background:var(--ix-bg)!important;border-color:var(--line)!important;color:var(--text)!important;border-radius:5px!important}
+body.ix-studio .app .equip:has(input:checked){border-color:var(--accent)!important;background:rgba(var(--accent-rgb),.06)!important}
+body.ix-studio .app #profiles fieldset.pr-profile-group{padding:0!important;margin:9px 0!important}
+body.ix-studio .app #profiles fieldset.pr-profile-group>legend{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+body.ix-studio .ix-profile-details>summary{padding:14px 15px;min-height:48px;font-size:13px;font-weight:700;cursor:pointer}
+body.ix-studio .ix-profile-details[open]>summary{border-bottom:1px solid var(--line);color:var(--accent)}
+body.ix-studio .ix-profile-content{padding:0 15px 15px}
+body.ix-studio .app .pr-profile-save{position:sticky;bottom:calc(93px + var(--app-safe-bottom,0px));z-index:9;padding:10px;background:var(--ix-bg);border-top:1px solid var(--line);margin-top:12px}
+body.ix-studio .app .pr-profile-save .btn{width:100%}
+body.ix-studio .app #profiles .profile-card{flex-wrap:nowrap;padding:14px;gap:10px}
+body.ix-studio .app #profiles .profile-actions{width:auto;flex:0 0 auto}
+body.ix-studio .app #profiles .profile-card strong{font-size:16px}
+body.ix-studio .app #profiles .profile-card span{font-size:12px}
+@media(max-width:375px){
+  body.ix-studio .app #profiles>.pr-page-hero{padding:16px!important;margin-bottom:12px!important}
+  body.ix-studio .app #profiles>.pr-page-hero h1{font-size:30px!important}
+}
+body.ix-studio .app #coach>.section>.section-head{display:none}
+body.ix-studio .ix-quick-questions>summary{min-height:44px;padding:12px 0;font-size:13px;cursor:pointer}
+body.ix-studio .app .coach-quick{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+body.ix-studio .app .coach-chip{white-space:normal!important;min-height:44px!important;min-width:0;line-height:1.4;background:var(--surface)!important;border-color:var(--line)!important;border-radius:5px!important;color:var(--text)!important}
+body.ix-studio .app .coach-chat{max-height:35svh;overflow:auto;padding:12px!important;background:var(--surface)!important;border-color:var(--line)!important;border-radius:4px 16px 4px 16px!important;box-shadow:none}
+body.ix-studio .app .coach-msg{max-width:100%!important;font-size:13px!important;line-height:1.6!important;padding:12px!important;border-radius:4px 12px 4px 12px!important}
+body.ix-studio .app .coach-msg:is(.assistant,.ai){background:var(--surface2)!important;border-color:var(--line)!important}
+body.ix-studio .app .coach-msg.user{background:rgba(var(--accent-rgb),.1)!important;border-color:var(--line)!important;color:var(--text)!important}
+body.ix-studio .app .coach-compose{position:sticky;bottom:calc(94px + var(--app-safe-bottom,0px));z-index:9;display:grid!important;grid-template-columns:minmax(0,1fr) 72px!important;align-items:stretch!important;gap:8px!important;padding:8px;background:var(--ix-bg)!important;border-color:var(--line)!important;border-radius:4px!important;margin-top:10px!important}
+body.ix-studio .app .coach-compose textarea{min-height:64px!important;padding:10px!important;border-radius:5px!important;background:var(--surface)!important;color:var(--text)!important;border-color:var(--line)!important;font-size:16px!important}
+body.ix-studio .app .coach-compose .coach-send{min-width:0!important;width:72px!important;justify-self:stretch}
+body.ix-studio .app #musicPanel.shell-panel{background:var(--surface)!important;border-color:var(--line)!important}
+body.ix-studio .bottom-nav{background:var(--ix-bg)!important;border-color:var(--line)!important;border-radius:4px 17px 4px 17px!important;box-shadow:none!important;backdrop-filter:none}
+body.ix-studio .bottom-nav .navbtn{border-radius:4px!important;color:var(--muted)!important;font-size:11px!important}
+body.ix-studio .bottom-nav .navbtn.active{background:rgba(var(--accent-rgb),.055)!important;color:var(--text)!important}
+body.ix-studio .bottom-nav .navbtn.active::before{box-shadow:none!important;height:2px;width:20px;left:calc(50% - 10px);border-radius:0}
+body.ix-studio :is(.modal,.accent-modal,.im-modal,#profileMenu){background:var(--surface)!important;border-color:var(--line)!important;border-radius:4px 17px 4px 17px!important}
+body.ix-studio .toast{font-family:'IX Text',system-ui,sans-serif;font-size:12px;line-height:1.5;border-radius:4px 12px 4px 12px;max-width:calc(100vw - 32px);background:var(--text);color:var(--bg);box-shadow:none}
+@media(max-width:375px){body.ix-studio .ix-brand-name{font-size:22px}body.ix-studio .ix-brand-emblem{width:29px;height:33px}body.ix-studio .ix-brand-lockup{gap:7px}body.ix-studio .ix-brand-line{font-size:8px}}
+@media(prefers-reduced-motion:reduce){body.ix-studio .app .btn:active{transform:none}}
+/* Keep the starting action above navigation even on a narrow phone. */
+@media(max-width:375px){
+  body.ix-studio .app #today.session-prestart>.pr-page-hero{padding:12px 16px!important;margin-bottom:12px!important}
+  body.ix-studio .app #today.session-prestart .pr-session-summary{margin-top:10px;padding-top:8px!important}
+  body.ix-studio .app #today.session-prestart #sessionStart{padding:12px!important}
+  body.ix-studio .app #today.session-prestart #sessionStart h3{margin-top:0!important;margin-bottom:8px!important}
+  body.ix-studio .app #today.session-prestart #sessionStart p{margin:8px 0!important}
+}
+/* Presentation must always yield to the existing session and inset contracts. */
+body.ix-studio .app #sessionCardNav.sc-hidden{
+  display:none!important;
+}
+body.ix-studio .app #sessionStart.sc-hidden{display:none!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .set-row.sc-set-hidden{display:none!important}
+.iron-six-native body.ix-studio .app{
+  padding-top:calc(24px + var(--app-safe-top,28px))!important;
+}
+@media(max-width:520px){
+  .iron-six-native body.ix-studio .app{
+    padding-top:calc(16px + var(--app-safe-top,28px))!important;
+  }
+}

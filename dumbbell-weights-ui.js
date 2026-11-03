@@ -72,6 +72,7 @@
     button.addEventListener('click',()=>{
       showView('profiles');renderProfileEditor();const root=rootFor('profileDb');if(!root)return;
       root.querySelector('[data-db-mode]').value='exact';update(root);
+      const disclosure=root.closest('details');if(disclosure)disclosure.open=true;
       root.scrollIntoView?.({block:'center'});root.querySelector('[data-db-mode]').focus();
       if(typeof toast==='function')toast('Select the dumbbells you own, then Save profile. Logged sets are kept.');
     });

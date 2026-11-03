@@ -48,6 +48,8 @@ async function screenshot(page,name,log=false){
   await page.route('**/*',route=>route.request().url().startsWith(origin)?route.continue():route.abort());
   await page.goto(origin,{waitUntil:'networkidle'});
   await page.waitForFunction(()=>window.IronSixActiveWorkoutClean&&window.IronSixSetCoachFeedback&&window.IronSixInsights);
+  const fonts=await page.evaluate(async()=>{const out=[];for(const face of ['italic 700 24px "IX Display"','600 24px "IX Numbers"','400 14px "IX Text"'])out.push((await document.fonts.load(face)).length);return out;});
+  assert(fonts.every(n=>n>0),'Bundled Electric fonts must load without external services');
   for(const [width,height] of [[390,844],[360,800],[320,740]]){
     let exerciseIndex=0;
     await page.setViewportSize({width,height});await seed(page);
@@ -56,6 +58,9 @@ async function screenshot(page,name,log=false){
     for(const [view,selector] of [['plan','#planOpenWorkout'],['history','.history-record'],['today','.sc-set-focus .set-row:not(.sc-set-hidden) .done']]){
       await page.evaluate(v=>showView(v),view);
       if(view==='today'){
+        const start=await metrics(page,'today-start','#sessionBeginBtn');console.log('IRON_SIX_QA_LAYOUT '+JSON.stringify(start));
+        await screenshot(page,'today-start-'+width,width===390);
+        assert(start.primary&&start.primary.bottom<=start.navTop-4,'Begin workout must stay in the first viewport');
         await page.locator('#sessionSetup .shell-toggle').click();
         assert(await page.locator('#todayDifficulty').isVisible(),'Difficulty must remain available in setup');
         await page.locator('#sessionSetup .shell-toggle').click();
@@ -107,6 +112,18 @@ async function screenshot(page,name,log=false){
     await screenshot(page,'history-large-text-'+width);
     // Remove the enlargement before the next viewport.
     await page.evaluate(()=>document.querySelectorAll('#history *').forEach(n=>n.style.removeProperty('font-size')));
+    for(const [view,selector] of [['coach','#coachInput'],['profiles','#saveProfile']]){
+      await page.evaluate(v=>showView(v),view);await page.waitForTimeout(120);await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
+      const m=await metrics(page,view,selector);console.log('IRON_SIX_QA_LAYOUT '+JSON.stringify(m));
+      await screenshot(page,view+'-'+width,width===390);
+      assert(!m.overflow,'Horizontal overflow in '+view);
+      assert(m.primary&&m.primary.top>=0&&m.primary.bottom<=m.navTop-4,'Important '+view+' control must remain reachable: '+JSON.stringify(m));
+    }
+    const personal=page.locator('#profiles .ix-profile-details').first();if(!(await personal.evaluate(n=>n.open)))await personal.locator('summary').click();
+    await page.locator('#profileName').fill('Electric QA');await page.locator('#saveProfile').click();
+    assert.equal(await page.evaluate(()=>activeUser().name),'Electric QA','Profile disclosures must preserve saving');
+    const equipment=page.locator('#profiles .pr-equipment-group details');if(!(await equipment.evaluate(n=>n.open)))await equipment.locator('summary').click();
+    assert(await page.locator('#dumbbellInventoryEditor').isVisible(),'Exact inventory remains available in the equipment group');
   }
   assert.deepEqual(errors,[],'Uncaught browser errors');
   console.log('IRON_SIX_QA_PASS mobile layouts, set feedback, logging/undo, available loads, filters, keyboard state and larger text');
