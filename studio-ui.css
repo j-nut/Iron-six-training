@@ -709,6 +709,14 @@ body.ix-studio :is(.modal,.accent-modal,.im-modal,#profileMenu){background:var(-
 body.ix-studio .toast{font-family:'IX Text',system-ui,sans-serif;font-size:12px;line-height:1.5;border-radius:4px 12px 4px 12px;max-width:calc(100vw - 32px);background:var(--text);color:var(--bg);box-shadow:none}
 @media(max-width:375px){body.ix-studio .ix-brand-name{font-size:22px}body.ix-studio .ix-brand-emblem{width:29px;height:33px}body.ix-studio .ix-brand-lockup{gap:7px}body.ix-studio .ix-brand-line{font-size:8px}}
 @media(prefers-reduced-motion:reduce){body.ix-studio .app .btn:active{transform:none}}
+/* Keep the starting action above navigation even on a narrow phone. */
+@media(max-width:375px){
+  body.ix-studio .app #today.session-prestart>.pr-page-hero{padding:12px 16px!important;margin-bottom:12px!important}
+  body.ix-studio .app #today.session-prestart .pr-session-summary{margin-top:10px;padding-top:8px!important}
+  body.ix-studio .app #today.session-prestart #sessionStart{padding:12px!important}
+  body.ix-studio .app #today.session-prestart #sessionStart h3{margin-top:0!important;margin-bottom:8px!important}
+  body.ix-studio .app #today.session-prestart #sessionStart p{margin:8px 0!important}
+}
 /* Presentation must always yield to the existing session and inset contracts. */
 body.ix-studio .app #sessionCardNav.sc-hidden{
   display:none!important;
