@@ -147,7 +147,7 @@
     const allowedSwaps = workout.map((e,i) => ({ targetIndex:i, targetName:e.name, targetBase:e.base, replacements:availableOptions(u,e).map(o=>o.name) })).filter(x=>x.replacements.length);
     const today = Object.entries(u.today || {}).map(([key,s]) => ({ key, weight:s.weight, reps:s.reps, rir:s.rir, done:!!s.done })).filter(x=>x.weight||x.reps||x.done).slice(-30);
     return {
-      profile:{ name:u.name, bodyWeight:u.weight, age:u.age, heightIn:u.heightIn, trainingLevel:u.trainingLevel, equipment:[...EQUIPMENT.filter(([k])=>has(u,k)).map(([,label])=>label),...(u.customEquipment||[])], capacities:u.capacities, workoutMinutes:u.workoutMinutes,workoutDifficulty:window.IronSixDifficulty?.effectiveFor(u)||'balanced' },
+      profile:{ name:u.name, bodyWeight:u.weight, age:u.age, heightIn:u.heightIn, trainingLevel:u.trainingLevel, equipment:window.IronSixDifficulty?.effectiveFor(u)==='bodyweight'?[]:[...EQUIPMENT.filter(([k])=>has(u,k)).map(([,label])=>label),...(u.customEquipment||[])], capacities:u.capacities, workoutMinutes:u.workoutMinutes,workoutDifficulty:window.IronSixDifficulty?.effectiveFor(u)||'balanced' },
       equipmentCoverage:equipmentCoverage(u),
       readiness:u.readiness,
       workout:workout.map((e,i)=>({ index:i, name:e.name, sets:e.sets, prescription:e.prescription, base:e.base, suggested:suggestedLoadObject(u,e,i) })),
@@ -280,7 +280,7 @@ Anything else you want to know about ${guide.name}? Ask about load, warm-up sets
   function equipmentId(item){return item.custom?`custom:${item.name.toLowerCase()}`:`builtin:${item.key}`}
   function builtinItem(key,label){return {id:`builtin:${key}`,key,name:label,custom:false}}
   function customItem(name){return {id:`custom:${name.toLowerCase()}`,name,custom:true}}
-  function pruneGeneratedExercises(u){u.program.generatedExercises=(u.program.generatedExercises||[]).filter(exercise=>exerciseAvailable(u,exercise));clearCurrentSelectionCache(u)}
+  function pruneGeneratedExercises(u){u.program.generatedExercises=(u.program.generatedExercises||[]).filter(exercise => exerciseEquipmentAvailable(u, exercise));clearCurrentSelectionCache(u)}
 
   window.renderCustomEquipmentEditor=function renderCustomEquipmentEditor(){
     const u=activeUser(),grid=document.getElementById('equipmentEditor');

@@ -2,8 +2,8 @@
 (() => {
   const root=typeof window!=='undefined'?window:globalThis;
   if(root.IronSixDifficulty)return;
-  const LEVELS=['light','balanced','heavy'];
-  const normalize=value=>{const text=String(value||'').toLowerCase();return text==='light'?'light':text==='heavy'?'heavy':'balanced'};
+  const LEVELS=['light','balanced','heavy','bodyweight'];
+  const normalize=value=>{const text=String(value||'').toLowerCase();return LEVELS.includes(text)?text:'balanced'};
   const sessionKey=u=>u?.program?.currentWorkoutKey||'lower_strength';
   const exposureFor=u=>Number(u?.program?.exposures?.[sessionKey(u)])||0;
   const loadNumber=value=>typeof parseLoad==='function'?parseLoad(value):Number(String(value||'').match(/\d+(?:\.\d+)?/)?.[0])||null;
@@ -22,6 +22,12 @@
     if(req.includes('bands')||/\bband|banded/i.test(name))return 'band';
     if(req.includes('pullup')||/pull[- ]?up|chin[- ]?up|pike push[- ]?up|ab wheel|ab roller/i.test(name))return 'challenging-bodyweight';
     return 'bodyweight';
+  }
+  function noEquipment(ex){
+    if(ex?.requires?.length||ex?.requiresCustom?.length||ex?.equipmentId)return false;
+    const kind=equipmentKind(ex);
+    return (kind==='bodyweight'||kind==='challenging-bodyweight')
+      && !/towel|lean-away|cyclist squat|ab wheel|ab roller|pull[- ]?up|chin[- ]?up/i.test(ex?.name||'');
   }
   function selectionPenalty(u,ex,level=effectiveFor(u)){
     // Light changes effort, not the movement: same exercises and equipment the user would get
@@ -47,7 +53,7 @@
     // Rendering, changing a saved default, or a calendar tick cannot rewrite a draft.
     if(u?.workoutDraft?.plan?.length)return workout;
     const level=effectiveFor(u);
-    if(level==='balanced')return workout;
+    if(level==='balanced'||level==='bodyweight')return workout;
     const used=new Set();
     return (workout||[]).map(ex=>{
       const chosen=selectAlternative(u,ex,used,level);used.add(chosen.name.toLowerCase());
@@ -148,7 +154,7 @@
     };
     return true;
   }
-  const api={lightSets,levels:LEVELS,labels:{light:'Light',balanced:'Balanced',heavy:'Heavy'},normalize,effectiveFor,validOverride,selectionPenalty,equipmentKind,transformWorkout,replanRemaining,adjustSuggestion,installLoadAdjustment};
+  const api={lightSets,levels:LEVELS,labels:{light:'Light',balanced:'Balanced',heavy:'Heavy',bodyweight:'Bodyweight only'},noEquipment,normalize,effectiveFor,validOverride,selectionPenalty,equipmentKind,transformWorkout,replanRemaining,adjustSuggestion,installLoadAdjustment};
   root.IronSixDifficulty=api;
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })();

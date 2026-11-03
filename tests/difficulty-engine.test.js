@@ -116,3 +116,27 @@ test('long imported prescriptions cannot cause numeric-range backtracking during
   assert.equal(out.plain.load,20,'non-time text still uses the lighter working load');assert.equal(out.timed.load,null,'time units still suppress invented pound targets');
   assert(elapsed<2000,`two long imported prescriptions took ${elapsed}ms; detection should scan text directly`);
 });
+
+test('travel sessions generate equipment-free plans across every split and mode',()=>{
+  const run=app(true,true);
+  const count=run(`
+    let count=0;
+    for(const key of Object.keys(WORKOUT_META))for(const mode of ['traditional','circuit']){
+      const u=makeUser('Travel');
+      u.customEquipment=['Cable machine'];
+      u.program.currentWorkoutKey=key;
+      u.trainingMode=mode;
+      finalWorkout(u);
+      u.sessionDifficulty={level:'bodyweight',workoutKey:key,exposure:0};
+      const plan=finalWorkout(u);
+      const valid=e=>!e.requires?.length&&!e.requiresCustom?.length
+        &&!/towel|lean-away|cyclist squat|pull[- ]?up|chin[- ]?up/i.test(e.name);
+      if(!plan.length||plan.some((e,i)=>!valid(e)||suggestedLoadObject(u,e,i).load>0
+        ||swapOptionsForExercise(u,e).some(x=>!valid(x))))throw Error(key+' '+mode+': '+JSON.stringify(plan));
+      if(!u.equipment.dumbbells||u.customEquipment[0]!=='Cable machine')throw Error('Saved equipment changed');
+      count++;
+    }
+    return count;
+  `);
+  assert.equal(count,38);
+});

@@ -36,5 +36,5 @@
   loadRuntimeScript('set-coach-feedback.js?v=3','set-coach-feedback','__ironSixSetCoachFeedbackLoaded');
   loadRuntimeScript('iron-marks-engine.js?v=3','iron-marks-engine','IronSixMarksEngine');
   loadRuntimeScript('iron-marks.js?v=4','iron-marks','__ironSixMarksLoaded');
-  loadRuntimeScript('workout-difficulty-ui.js?v=2','workout-difficulty-ui','__ironSixDifficultyUILoaded');
+  loadRuntimeScript('workout-difficulty-ui.js?v=3','workout-difficulty-ui','__ironSixDifficultyUILoaded');
 })();

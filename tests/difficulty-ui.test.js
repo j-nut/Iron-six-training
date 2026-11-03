@@ -276,3 +276,28 @@ test('difficulty metadata excludes unrelated credential-shaped fields from norma
     assert.equal(a.run('IronSixDifficulty.effectiveFor(activeUser())'),'light','valid session intent must survive data minimization');
   }finally{a.close()}
 });
+
+test('Bodyweight only survives reload, restores equipment and protects logged work',()=>{
+  const a=app();
+  let b;
+  try{
+    const user='activeUser()';
+    const equipment=a.json(user+'.equipment');
+    a.choose('todayDifficulty','bodyweight');
+    assert.equal(a.run('IronSixDifficulty.effectiveFor(activeUser())'),'bodyweight');
+    assert.equal(a.w.document.getElementById('difficultySaveDefault').hidden,true);
+    assert.equal(a.run('activeUser().workoutDifficulty'),'balanced');
+    a.w.document.getElementById('sessionBeginBtn').click();
+    b=app(a.storage());
+    assert.equal(b.w.document.getElementById('todayDifficulty').value,'bodyweight');
+    assert(b.run('finalWorkout(activeUser()).every(IronSixDifficulty.noEquipment)'));
+    b.w.document.getElementById('difficultyUseDefault').click();
+    assert(b.run('finalWorkout(activeUser()).some(ex=>ex.requires.length)'));
+    assert.deepEqual(b.json(user+'.equipment'),equipment);
+    b.run("activeUser().today['0-0']={weight:'10',reps:'8',done:true}");
+    const before=b.json('({today:activeUser().today,plan:finalWorkout(activeUser())})');
+    b.choose('todayDifficulty','bodyweight');
+    assert.deepEqual(b.json('({today:activeUser().today,plan:finalWorkout(activeUser())})'),before);
+    assert.equal(b.w.document.getElementById('todayDifficulty').value,'balanced');
+  }finally{a.close();b?.close()}
+});
