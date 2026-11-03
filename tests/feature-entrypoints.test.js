@@ -3,7 +3,7 @@ const fs = require('node:fs');
 for(const page of ['index.html','live.html']){const html=fs.readFileSync(page,'utf8');assert(html.includes('dumbbell-weights-ui.js?v=1'));assert(html.indexOf('dumbbell-weights-ui.js')<html.indexOf('ui1.js'));assert(html.includes('id="dumbbellInventoryEditor"'));}
 
 const required = [
-  'exercise-guide.js?v=9','exercise-visuals.js?v=9','equipment-catalog.js?v=1','equipment-exercise-library.js?v=1','equipment-coverage.js?v=1','local-ai-fallback.js?v=8','coach.js?v=15','equipment-manager.js?v=1','social-auth.js?v=3','cloud-sync.js?v=19','cloud-history-sync.js?v=16','backup-restore.js?v=3','profile-delete.js?v=3','ui-shell.js?v=3','profile-menu.js?v=3','session-cards.js?v=2','onboarding.js?v=3','cardio-companion.js?v=1','app-update.js?v=2'
+  'exercise-guide.js?v=9','exercise-visuals.js?v=9','equipment-catalog.js?v=1','equipment-exercise-library.js?v=1','equipment-coverage.js?v=1','local-ai-fallback.js?v=8','coach.js?v=15','equipment-manager.js?v=1','social-auth.js?v=3','cloud-sync.js?v=19','cloud-history-sync.js?v=16','backup-restore.js?v=3','profile-delete.js?v=3','ui-shell.js?v=4','profile-menu.js?v=3','session-cards.js?v=2','onboarding.js?v=3','cardio-companion.js?v=1','app-update.js?v=2'
 ];
 for (const page of ['index.html','live.html']) {
   const html=fs.readFileSync(page,'utf8');

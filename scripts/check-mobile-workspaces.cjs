@@ -36,7 +36,7 @@ async function metrics(page,view,selector){
   },{view,selector});
 }
 async function screenshot(page,name,log=false){
-  const bytes=await page.screenshot({path:path.join(output,name+'.jpg'),type:'jpeg',quality:65});
+  const bytes=await page.screenshot({path:path.join(output,name+'.jpg'),type:'jpeg',quality:65,fullPage:name.startsWith('today-')});
   if(log)console.log('IRON_SIX_QA_IMAGE '+name+' '+bytes.toString('base64'));
 }
 (async()=>{
@@ -54,11 +54,18 @@ async function screenshot(page,name,log=false){
     await page.evaluate(()=>{document.documentElement.classList.add('iron-six-native');document.documentElement.style.setProperty('--app-safe-top','28px');document.documentElement.style.setProperty('--app-safe-bottom','24px');});
     for(const [view,selector] of [['plan','#planOpenWorkout'],['history','.history-record'],['today','.sc-set-focus .sc-next-set']]){
       await page.evaluate(v=>showView(v),view);
-      if(view==='today')await page.locator('#sessionBeginBtn').click();
+      if(view==='today'){
+        await page.locator('#sessionSetup .shell-toggle').click();
+        assert(await page.locator('#todayDifficulty').isVisible(),'Difficulty must remain available in setup');
+        await page.locator('#sessionSetup .shell-toggle').click();
+        await page.locator('#sessionBeginBtn').click();
+        assert(await page.locator('.sc-set-focus .db-weight-shortcut').isVisible(),'Missing-weight shortcut must remain reachable');
+      }
       await page.waitForTimeout(120);
       await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
       const m=await metrics(page,view,selector);console.log('IRON_SIX_QA_LAYOUT '+JSON.stringify(m));
       await screenshot(page,view+'-'+width,width===390);
+      if(m.primary?.bottom>m.navTop-4)console.log('IRON_SIX_QA_PARTS '+JSON.stringify(await page.evaluate(()=>[...document.querySelectorAll('#today #sessionStart,#today #sessionSetup,#today .workout-switch-row,#today #workoutSaveStatus,#today #sessionCardNav,#today .sc-set-focus,#today .sc-set-focus .exercise-head,#today .sc-set-focus .sets,#today .sc-set-focus .set-row,#today .sc-set-focus .suggestion,#today .sc-set-focus .sc-set-picker,#today .sc-set-focus .awc-form-guide')].map(n=>({name:n.id||n.className,height:Math.round(n.getBoundingClientRect().height),top:Math.round(n.getBoundingClientRect().top)})))));
       assert(!m.overflow,'Horizontal overflow: '+JSON.stringify(m));
       assert(m.primary&&m.primary.top>=0&&m.primary.bottom<=m.navTop-4,'Primary content requires scrolling or overlaps navigation: '+JSON.stringify(m));
       if(view==='today')assert.equal(await page.locator('.sc-set-focus .set-row:visible').count(),1);

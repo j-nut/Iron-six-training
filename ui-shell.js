@@ -105,7 +105,7 @@
     const musicBody = music.querySelector('.shell-body');
 
     if (setup.parentNode !== today || hero.nextElementSibling !== setup) hero.after(setup);
-    for (const node of [$('durationSection'), sectionContaining('readinessNote'), $('cardioCompanion')])
+    for (const node of [$('durationSection'), sectionContaining('readinessNote'), $('cardioCompanion'), $('workoutDifficulty'), today.querySelector('.workout-switch-row'), today.querySelector('.workout-order-note')])
       if (node && node.parentNode !== setupBody) setupBody.appendChild(node);
 
     // Startup order is deliberate: hero -> setup -> Begin workout -> workout details.

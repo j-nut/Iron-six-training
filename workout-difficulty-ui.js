@@ -133,7 +133,8 @@
       node.querySelector('#difficultyUseDefault').addEventListener('click',()=>changeToday(normal(current()?.workoutDifficulty),true));
       node.querySelector('#difficultySaveDefault').addEventListener('click',()=>changeToday(effective(current()),true));
     }
-    if (node.parentNode !== hero) hero.appendChild(node);
+    const host=document.querySelector('#sessionSetup .shell-body')||hero;
+    if (node.parentNode !== host) host.appendChild(node);
     return node;
   }
 

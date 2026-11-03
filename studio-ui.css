@@ -539,6 +539,7 @@ body.ix-studio .app #sessionCardNav .sc-step strong .ix-step-count>span{
 body.ix-studio .app #sessionCardNav.sc-hidden{
   display:none!important;
 }
+body.ix-studio .app #sessionStart.sc-hidden{display:none!important}
 
 /* Primary tasks stay together. Expandable references can grow without clipping,
    shrinking touch targets, or imposing a fixed-height screen at larger text sizes. */
@@ -586,5 +587,11 @@ body.ix-studio .app #exerciseList .sc-set-focus .sc-next-set{display:block;min-h
 body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .exercise-head{padding:15px 16px 12px!important}
 body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .sets{padding:13px 13px 14px!important}
 body.ix-studio .app #exerciseList .sc-set-focus .ix-set-summary{display:none}
+body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .ix-movement-index{display:none!important}
 body.ix-studio .app #exerciseList .sc-set-focus .set-feedback-btn{min-height:44px!important}
 body.ix-studio .app #exerciseList .sc-set-focus .set-feedback-btn::after{font-size:11px!important}
+body.ix-studio:has(#today.active.session-compact:not(.session-prestart)) .app .topbar{min-height:48px!important;margin-bottom:8px!important;padding-bottom:8px!important}
+body.ix-studio .app #today.session-compact:not(.session-prestart) #workoutSaveStatus{padding:5px 8px!important;margin:4px 0!important;font-size:11px!important;line-height:1.4!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .suggestion{margin-top:10px!important;padding:8px 10px!important;gap:4px!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .suggestion::before{display:none!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .awc-action{min-width:0!important;min-height:44px!important;padding:8px!important;font-size:11px!important}
