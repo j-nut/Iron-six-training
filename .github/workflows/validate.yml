@@ -9,6 +9,32 @@ permissions:
   contents: read
 
 jobs:
+  mobile-layout:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Install pinned browser driver
+        run: npm install --prefix "$RUNNER_TEMP/iron-six-browser" --no-save --ignore-scripts playwright@1.58.2
+      - name: Check actual mobile workspaces with the runner browser
+        env:
+          NODE_PATH: ${{ runner.temp }}/iron-six-browser/node_modules
+        run: |
+          CHROME_BIN="$(command -v google-chrome)"
+          export CHROME_BIN
+          node scripts/check-mobile-workspaces.cjs
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: iron-six-mobile-layout
+          path: artifacts/mobile-qa
+          if-no-files-found: ignore
+          retention-days: 14
   validate:
     runs-on: ubuntu-24.04
     steps:
