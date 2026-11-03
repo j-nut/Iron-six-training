@@ -7,9 +7,11 @@
   const completed = s => s && s.done !== false && (s.done === true || Number(s.reps) > 0 || Number(s.seconds) > 0 || Number(s.duration) > 0);
   const sets = e => (Array.isArray(e?.sets) ? e.sets : []).filter(completed);
   const details = h => (Array.isArray(h?.details) ? h.details : []).filter(e => sets(e).length);
+  const timed = e => /^(?:\d+\s*[×x]\s*)?\d+(?:\s*[–-]\s*\d+)?\s*s(?:ec(?:ond)?s?)?\b/i.test(String(e?.prescription||'').trim());
+  const repSets = e => timed(e) ? [] : sets(e).filter(s=>!(number(s.seconds ?? s.duration)>0));
   const stamp = h => Number.isFinite(Number(h?.ts)) && Number(h.ts) > 0 ? Number(h.ts) : 0;
   const date = h => stamp(h) ? new Date(stamp(h)).toLocaleString(undefined, {year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : String(h.date || 'Date unavailable');
-  const volume = e => sets(e).reduce((total, s) => {
+  const volume = e => repSets(e).reduce((total, s) => {
     const w = number(s.weight), r = number(s.reps);
     return total + (w > 0 && r > 0 ? w * r : 0);
   }, 0);
@@ -28,6 +30,58 @@
   }
   function summarize(list) {
     return {sessions:list.length,sets:list.reduce((n,h)=>n+count(h),0),volume:Math.round(list.reduce((n,h)=>n+details(h).reduce((v,e)=>v+volume(e),0),0))};
+  }
+  function highlights(user, now = Date.now()) {
+    // Unknown dates remain in lifetime totals, but never earn a recent record or streak.
+    const all=sessions(user).filter(h=>!stamp(h)||stamp(h)<=now),dated=all.filter(stamp);
+    const records=[],baseline=new Map();
+    for(const h of dated.slice().sort((a,b)=>stamp(a)-stamp(b))) {
+      const grouped=new Map();
+      for(const e of details(h)) {
+        const key=String(e.name||'').trim().toLowerCase();
+        if(!key)continue;
+        const group=grouped.get(key)||{name:e.name,sets:[]};
+        group.sets.push(...repSets(e).filter(s=>number(s.weight)>=0&&number(s.weight)!=null&&number(s.reps)>0));grouped.set(key,group);
+      }
+      for(const [key,e] of grouped) {
+        if(!e.sets.length)continue;
+        const prior=baseline.get(key),heaviest=bestSet(e.sets);
+        // One record per exercise per workout. Compare to earlier workouts, never another
+        // set in the same workout. More reps only count at a previously logged load.
+        const loadPR=prior&&number(heaviest.weight)>prior.weight;
+        const repSet=prior&&bestSet(e.sets.filter(s=>prior.reps.has(number(s.weight))&&number(s.reps)>prior.reps.get(number(s.weight))));
+        if(loadPR||repSet)records.push({name:e.name,ts:stamp(h),type:loadPR?'Heaviest load':'More reps at this weight',set:loadPR?heaviest:repSet});
+        const next=prior||{weight:0,reps:new Map()};
+        for(const s of e.sets){const w=number(s.weight);next.weight=Math.max(next.weight,w);next.reps.set(w,Math.max(next.reps.get(w)||0,number(s.reps)));}
+        baseline.set(key,next);
+      }
+    }
+    const weekStart=ts=>{const d=new Date(ts);d.setHours(0,0,0,0);d.setDate(d.getDate()-(d.getDay()+6)%7);return d.getTime()};
+    const weekKeys=new Set(dated.map(h=>weekStart(stamp(h))));
+    let cursor=new Date(weekStart(now)),streak=0;
+    if(!weekKeys.has(cursor.getTime()))cursor.setDate(cursor.getDate()-7);
+    while(weekKeys.has(cursor.getTime())){streak++;cursor.setDate(cursor.getDate()-7);}
+    const timed=all.filter(h=>number(h.elapsedMinutes)>0),last30=records.filter(r=>r.ts>=now-30*DAY).reverse();
+    return {...summarize(all),reps:all.reduce((sum,h)=>sum+details(h).reduce((n,e)=>n+repSets(e).reduce((r,s)=>r+Math.max(0,number(s.reps)||0),0),0),0),
+      sessions7:dated.filter(h=>stamp(h)>=now-7*DAY).length,weeklyStreak:streak,
+      elapsedMinutes:Math.round(timed.reduce((sum,h)=>sum+number(h.elapsedMinutes),0)),timedSessions:timed.length,
+      records:last30,datedSessions:dated.length};
+  }
+  function renderHighlights(user) {
+    const host=document.getElementById('historyList'),hero=document.querySelector('#history > .hero');
+    let node=document.getElementById('historyHighlights');
+    if(!node){node=document.createElement('section');node.id='historyHighlights';node.setAttribute('aria-label','Your training accomplishments');if(hero)hero.append(node);else host.before(node);}
+    const h=highlights(user),fmt=n=>n.toLocaleString();
+    if(!h.sessions){node.innerHTML='<p class="history-welcome">Your first workout starts the story. Finish a session to see your progress here.</p>';return;}
+    const moreOpen=node.querySelector('.history-lifetime')?.open;
+    node.innerHTML='<div class="history-highlight-grid">'+[
+      [fmt(h.sessions),'Workouts completed'],[fmt(h.sets),'Sets completed'],[fmt(h.records.length),'Records · last 30 days'],[fmt(h.sessions7),'Workouts · last 7 days']
+    ].map(([value,label])=>'<div><strong>'+value+'</strong><span>'+label+'</span></div>').join('')+'</div>'+
+      '<p class="history-consistency">'+(h.weeklyStreak?h.weeklyStreak+' '+(h.weeklyStreak===1?'week':'weeks')+' of showing up. At least one workout each week.':'Every session counts. Pick up where you left off.')+'</p>'+
+      (h.records.length?'<div class="history-record"><span>Latest record</span><strong>'+esc(h.records[0].name)+'</strong><p>'+esc(setLabel(h.records[0].set))+' · '+esc(h.records[0].type)+'</p></div>':'')+
+      '<details class="history-lifetime" '+(moreOpen?'open':'')+'><summary>More of your progress</summary><p>'+fmt(h.reps)+' reps completed · '+fmt(h.volume)+' logged lb-reps</p><p>'+(h.timedSessions?fmt(h.elapsedMinutes)+' min of logged session time across '+h.timedSessions+' of '+h.sessions+' workouts.':'No session time recorded yet.')+'</p>'+
+      (h.records.length>1?'<ul>'+h.records.slice(1,6).map(r=>'<li>'+esc(r.name)+': '+esc(setLabel(r.set))+' · '+esc(r.type)+'</li>').join('')+'</ul>':'')+
+      '<p class="history-compare">Records beat an earlier workout: a heavier load, or more reps at the same load. Your first entry sets the baseline. Time uses saved elapsed minutes, which include a warm-up allowance; planned minutes are excluded. Volume uses load as entered, without doubling dumbbells or estimating bodyweight. Weekly streaks allow rest days and stay active through the following week.</p></details>';
   }
   function exerciseSessions(user, name) {
     return sessions(user).flatMap(h => {
@@ -67,17 +121,19 @@
     style();
     const identity=(window.ironSixAccountScope || 'guest')+':'+user.id;
     if (owner !== identity) { owner=identity;options={query:'',days:'',mode:'',exercise:''};limit=20; }
-    document.getElementById('historyTitle').textContent=user.name+'’s training history.';
+    renderHighlights(user);
+    document.getElementById('historyTitle').textContent=user.name+'’s progress.';
     let tools=document.getElementById('historyExplorerTools');
     if (!tools) { tools=document.createElement('div');tools.id='historyExplorerTools';host.before(tools); }
     const names=[...new Set(sessions(user).flatMap(h=>details(h).map(e=>e.name)).filter(Boolean))].sort();
     const focused=document.activeElement,focusedId=focused?.id;
     const selection=focusedId==='historySearch'?[focused.selectionStart,focused.selectionEnd]:null;
-    tools.innerHTML='<div class="history-tools"><label>Search workouts or exercises<input id="historySearch" type="search" placeholder="e.g. bench press" value="'+esc(options.query)+'"></label>'+
+    const filtersOpen=tools.querySelector('details')?.open||Boolean(options.query||options.days||options.exercise||options.mode);
+    tools.innerHTML='<details class="history-filters" '+(filtersOpen?'open':'')+'><summary>Find a workout or check a lift</summary><div class="history-tools"><label>Search workouts or exercises<input id="historySearch" type="search" placeholder="e.g. bench press" value="'+esc(options.query)+'"></label>'+
       '<label>Time range<select id="historyRange">'+[['','All time'],['30','Last 30 days'],['90','Last 90 days'],['365','Last year']].map(([v,t])=>'<option value="'+v+'" '+(options.days===v?'selected':'')+'>'+t+'</option>').join('')+'</select></label>'+
       '<label>Exercise progress<select id="historyExercise"><option value="">All exercises</option>'+names.map(name=>'<option '+(name===options.exercise?'selected':'')+'>'+esc(name)+'</option>').join('')+'</select></label>'+
       '<label>Workout mode<select id="historyMode">'+[['','All modes'],['traditional','Traditional'],['circuit','Circuit']].map(([v,t])=>'<option value="'+v+'" '+(options.mode===v?'selected':'')+'>'+t+'</option>').join('')+'</select></label></div>'+
-      '<div class="history-actions"><button type="button" class="btn secondary" id="historyClear">Clear filters</button><button type="button" class="btn secondary" id="historyExport">Export filtered sets (CSV)</button></div><div id="historyResultsSummary" class="history-stats" role="status" aria-live="polite"></div><div id="historyExerciseTrend"></div>';
+      '<div class="history-actions"><button type="button" class="btn secondary" id="historyClear">Clear filters</button><button type="button" class="btn secondary" id="historyExport">Export sets (CSV)</button></div></details><div id="historyResultsSummary" class="history-stats" role="status" aria-live="polite"></div><div id="historyExerciseTrend"></div>';
     const list=filter(user,options),total=summarize(list);
     document.getElementById('historyResultsSummary').textContent=total.sessions+' sessions · '+total.sets+' completed sets · '+total.volume.toLocaleString()+' logged lb-reps';
     const update=(key,value)=>{options[key]=value;limit=20;render()};
@@ -123,7 +179,7 @@
       if(selection)replacement?.setSelectionRange(...selection);
     }
   }
-  window.IronSixHistory={sessions,filter,summarize,exerciseSessions,bestSet,setLabel,csv,completed,render};
+  window.IronSixHistory={sessions,filter,summarize,highlights,exerciseSessions,bestSet,setLabel,csv,completed,render};
   const original=window.renderHistory;
   window.renderHistory=function(){if(!document.getElementById('historyList'))return original?.apply(this,arguments);render()};
   render();

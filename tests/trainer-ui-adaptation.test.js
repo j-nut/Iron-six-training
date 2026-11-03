@@ -196,3 +196,14 @@ test('timed bodyweight rows label seconds and preserve completed hold duration a
   assert.equal(a.run("activeUser().today['0-0'].done"),true);
  }finally{a.close()}
 });
+test('tempo push-ups remain repetitions with effort-based progression',()=>{
+ const a=app();try{
+  a.run(fs.readFileSync('bodyweight-load-fix.js','utf8'));
+  a.run("finalWorkout=()=>[{name:'Tempo Push-Up',base:'Horizontal press',sets:3,prescription:'3 × 8–15 • 3 sec down',requires:[]}];activeUser().today={};renderExercises()");
+  const card=a.w.document.querySelector('[data-exercise-index="0"]');
+  assert(!card.classList.contains('timed-exercise'));
+  assert.match(card.querySelector('.reps').getAttribute('aria-label'),/reps/);
+  const recommendation=a.run("IronSixBodyweightLoad.bodyweightRecommendation(finalWorkout(activeUser())[0],{reps:10,rir:0},activeUser())");
+  assert.equal(recommendation.unit,'reps');assert(recommendation.target<10);
+ }finally{a.close()}
+});

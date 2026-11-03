@@ -23,12 +23,14 @@ function app(saved={}){
   return {w,run,choose,errors,json:code=>JSON.parse(run(`JSON.stringify(${code})`)),storage:()=>Object.fromEntries(Object.keys(w.localStorage).map(k=>[k,w.localStorage.getItem(k)])),close:()=>w.close()};
 }
 
-test('difficulty is visible on Today and profile preference has readable, connected labels',()=>{
+test('difficulty stays reachable in Today setup and profile preference has connected labels',()=>{
   const a=app();try{
     const d=a.w.document;
     assert.equal(d.getElementById('todayDifficulty').value,'balanced');
     assert.equal(d.querySelector('label[for="todayDifficulty"]').textContent,'Today’s difficulty');
-    assert.equal(d.getElementById('todayDifficulty').closest('.hero').parentElement.id,'today');
+    assert.equal(d.getElementById('todayDifficulty').closest('.shell-panel').id,'sessionSetup');
+    const setup=d.querySelector('#sessionSetup .shell-toggle');setup.click();
+    assert.equal(setup.getAttribute('aria-expanded'),'true');
     assert.equal(d.getElementById('profileWorkoutDifficulty').value,'balanced');
     assert.equal(d.getElementById('profileDifficultySetting').previousElementSibling.querySelector('select').id,'trainingLevel');
     assert.match(d.getElementById('profileDifficultyHelp').textContent,/Saves automatically/);
