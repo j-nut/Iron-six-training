@@ -689,6 +689,14 @@ body.ix-studio .ix-profile-details[open]>summary{border-bottom:1px solid var(--l
 body.ix-studio .ix-profile-content{padding:0 15px 15px}
 body.ix-studio .app .pr-profile-save{position:sticky;bottom:calc(93px + var(--app-safe-bottom,0px));z-index:9;padding:10px;background:var(--ix-bg);border-top:1px solid var(--line);margin-top:12px}
 body.ix-studio .app .pr-profile-save .btn{width:100%}
+body.ix-studio .app #profiles .profile-card{flex-wrap:nowrap;padding:14px;gap:10px}
+body.ix-studio .app #profiles .profile-actions{width:auto;flex:0 0 auto}
+body.ix-studio .app #profiles .profile-card strong{font-size:16px}
+body.ix-studio .app #profiles .profile-card span{font-size:12px}
+@media(max-width:375px){
+  body.ix-studio .app #profiles>.pr-page-hero{padding:16px!important;margin-bottom:12px!important}
+  body.ix-studio .app #profiles>.pr-page-hero h1{font-size:30px!important}
+}
 body.ix-studio .app #coach>.section>.section-head{display:none}
 body.ix-studio .ix-quick-questions>summary{min-height:44px;padding:12px 0;font-size:13px;cursor:pointer}
 body.ix-studio .app .coach-quick{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
