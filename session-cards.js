@@ -208,14 +208,16 @@
     let picker=container.querySelector('.sc-set-picker');
     if(!picker){picker=document.createElement('div');picker.className='sc-set-picker';picker.setAttribute('role','group');picker.setAttribute('aria-label','Choose a working set');container.prepend(picker);}
     // Reuse the picker while logging; leave the actual weight/reps/RIR inputs mounted.
-    if(picker.children.length!==rows.length){picker.replaceChildren(...rows.map((_,i)=>{
+    if(picker.querySelectorAll('.sc-set-choice').length!==rows.length){picker.replaceChildren(...rows.map((_,i)=>{
       const button=document.createElement('button');button.type='button';button.className='sc-set-choice';
       button.onclick=()=>{selectedSets.set(index,i);apply();};return button;
     }));}
-    [...picker.children].forEach((button,i)=>{const done=!!user.today?.[`${index}-${i}`]?.done;button.textContent=`Set ${i+1}${done?' ✓':''}`;button.setAttribute('aria-pressed',String(i===selected));button.setAttribute('aria-label',`Set ${i+1}${done?', logged':''}${i===selected?', selected':''}`);});
+    [...picker.querySelectorAll('.sc-set-choice')].forEach((button,i)=>{const done=!!user.today?.[`${index}-${i}`]?.done;button.textContent=`Set ${i+1}${done?' ✓':''}`;button.setAttribute('aria-pressed',String(i===selected));button.setAttribute('aria-label',`Set ${i+1}${done?', logged':''}${i===selected?', selected':''}`);});
     let next=container.querySelector('.sc-next-set');
-    if(!next){next=document.createElement('button');next.type='button';next.className='btn secondary sc-next-set';container.append(next);}
-    next.textContent=selected<rows.length-1?'Next set →':index<workout.length-1?'Next exercise →':'Review workout →';
+    if(!next){next=document.createElement('button');next.type='button';next.className='btn secondary sc-next-set';}
+    if(next.parentNode!==picker)picker.append(next);
+    next.textContent='Next';
+    next.setAttribute('aria-label',selected<rows.length-1?'Next set':index<workout.length-1?'Next exercise':'Review workout');
     next.onclick=()=>{if(selected<rows.length-1){selectedSets.set(index,selected+1);apply();}else goTo(index+1,workout);};
   }
 

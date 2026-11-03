@@ -162,7 +162,7 @@
       <div class="awc-why" role="status"></div>`;
     host.appendChild(actions);
     const weights=host.querySelector('.db-weight-shortcut');
-    if(weights){weights.classList.remove('exercise-help-btn');weights.classList.add('awc-action');actions.appendChild(weights);}
+    if(weights){weights.setAttribute('aria-label',weights.textContent);weights.textContent='Missing weight?';weights.classList.remove('exercise-help-btn');weights.classList.add('awc-action');actions.appendChild(weights);}
 
     const details = actions.querySelector('.awc-details-btn');
     details.addEventListener('click', () => {

@@ -53,7 +53,7 @@ async function screenshot(page,name,log=false){
     await page.setViewportSize({width,height});await seed(page);
     // Simulate the native inset contract; a physical-device check is still distinct.
     await page.evaluate(()=>{document.documentElement.classList.add('iron-six-native');document.documentElement.style.setProperty('--app-safe-top','28px');document.documentElement.style.setProperty('--app-safe-bottom','24px');});
-    for(const [view,selector] of [['plan','#planOpenWorkout'],['history','.history-record'],['today','.sc-set-focus .sc-next-set']]){
+    for(const [view,selector] of [['plan','#planOpenWorkout'],['history','.history-record'],['today','.sc-set-focus .set-row:not(.sc-set-hidden) .done']]){
       await page.evaluate(v=>showView(v),view);
       if(view==='today'){
         await page.locator('#sessionSetup .shell-toggle').click();
