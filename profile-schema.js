@@ -11,7 +11,7 @@
  *   strengthRefs {squat,bench,hinge,overhead_press,row: {weight,reps,equipment:'barbell'|'dumbbell'}}
  *   limitations  subset of LIMITATION_AREAS  preferences {music,camera,voice,sounds}
  *   onboarding   {version:1, completedAt:number|null, optionalSkipped:string[]}
- *   capacities   {dumbbellMax,barbellMax,dumbbellStep,barbellStep}
+ *   capacities   {dumbbellMax,barbellMax,dumbbellStep,barbellStep,dumbbellWeights?:number[]}
  * Wizard bookkeeping that is not part of the contract lives in u.onboardingDraft and is deleted
  * when the wizard is finished.
  *
@@ -70,7 +70,7 @@
     const cap = u.capacities || {};
     return differs || (u.customEquipment || []).length > 0
       || Number(cap.dumbbellMax) !== 30 || Number(cap.barbellMax) !== 300
-      || Number(cap.dumbbellStep) === 2.5 || Number(cap.barbellStep) === 2.5;
+      || Number(cap.dumbbellStep) === 2.5 || Number(cap.barbellStep) === 2.5 || !!cap.dumbbellWeights?.length;
   }
 
   // Required steps, in the order they are asked. present(u) is "this answer exists".
@@ -178,6 +178,14 @@
       if (has_(c, 'barbellMax')) { if (!inRange(c.barbellMax, 45, 1500)) return fail('Barbell maximum must be 45–1500'); cap.barbellMax = Number(c.barbellMax); }
       if (has_(c, 'dumbbellStep')) cap.dumbbellStep = Number(c.dumbbellStep) === 2.5 ? 2.5 : 5;
       if (has_(c, 'barbellStep')) cap.barbellStep = Number(c.barbellStep) === 2.5 ? 2.5 : 5;
+      if (has_(c, 'dumbbellWeights')) {
+        if(c.dumbbellWeights===null)cap.dumbbellWeights=null;
+        else {
+          if(!Array.isArray(c.dumbbellWeights)||!c.dumbbellWeights.length||c.dumbbellWeights.length>128||c.dumbbellWeights.some(w=>typeof w!=='number'||!Number.isFinite(w)||w<.5||w>250))return fail('Select at least one dumbbell weight between 0.5 and 250 lb');
+          cap.dumbbellWeights=[...new Set(c.dumbbellWeights)].sort((a,b)=>a-b);
+          cap.dumbbellMax=Math.max(5,cap.dumbbellWeights.at(-1));
+        }
+      }
       out.capacities = cap;
     }
     if (has('strengthRefs')) out.strengthRefs = cleanRefs(patch.strengthRefs);
@@ -230,6 +238,7 @@
     if (Object.keys(programSettings).length) program.applySettings(u, programSettings);
     if (values.equipment) u.equipment = { ...u.equipment, ...values.equipment };
     if (values.capacities) u.capacities = { ...(u.capacities || {}), ...values.capacities };
+    if(values.capacities?.dumbbellWeights===null)delete u.capacities.dumbbellWeights;
     if (values.preferences) u.preferences = { ...(u.preferences || {}), ...values.preferences };
     if (Object.hasOwn(values, 'strengthRefs')) {
       u.strengthRefs = values.strengthRefs;

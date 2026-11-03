@@ -167,6 +167,20 @@ test('required steps block, and neither the default kit nor the 30 lb dumbbell d
   }finally{a.close()}
 });
 
+test('first-run setup accepts exact dumbbells without requiring an invented regular increment',async()=>{
+  const a=app();try{
+    a.check();await a.next();
+    for(let i=0;i<8&&!T.equipment.test(a.title());i++)await answerCurrent(a);
+    assert.match(a.title(),T.equipment);a.tickEl('[data-ob-equip="dumbbells"]');
+    const mode=a.d.getElementById('obDbMode');mode.value='exact';mode.dispatchEvent(new a.w.Event('change',{bubbles:true}));
+    const root=a.d.querySelector('[data-db-prefix="obDb"]');root.querySelector('[data-db-range]').click();
+    for(const weight of [40,50])root.querySelector(`[data-db-weight="${weight}"]`).click();
+    await a.next();assert.match(a.title(),T.strength);
+    assert.deepEqual(a.json('activeUser().capacities.dumbbellWeights'),[5,10,15,20,25,30,40,50]);
+    assert.equal(a.run('activeUser().capacities.dumbbellMax'),50);assert.deepEqual(a.errors,[]);
+  }finally{a.close()}
+});
+
 test('someone with no equipment can say so explicitly',async()=>{
   const a=app();
   try{

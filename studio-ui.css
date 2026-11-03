@@ -539,3 +539,63 @@ body.ix-studio .app #sessionCardNav .sc-step strong .ix-step-count>span{
 body.ix-studio .app #sessionCardNav.sc-hidden{
   display:none!important;
 }
+body.ix-studio .app #sessionStart.sc-hidden{display:none!important}
+
+/* Primary tasks stay together. Expandable references can grow without clipping,
+   shrinking touch targets, or imposing a fixed-height screen at larger text sizes. */
+body.ix-studio .app :is(#plan,#history)>.pr-page-hero{padding:17px 19px!important;margin-bottom:12px!important}
+body.ix-studio .app :is(#plan,#history)>.pr-page-hero h1{font-size:28px!important;margin-bottom:7px!important}
+body.ix-studio .app :is(#plan,#history)>.section{margin-top:12px!important}
+body.ix-studio .app #plan .pr-plan-current>.section-head{display:none}
+body.ix-studio .app .plan-agenda{padding:0 0 12px}
+body.ix-studio .app .plan-agenda h3{font-size:26px;line-height:1.15;margin:8px 0;letter-spacing:-.04em}
+body.ix-studio .app :is(.plan-agenda,.plan-next) p{font-size:13px;color:var(--muted);line-height:1.5;margin:7px 0 12px}
+body.ix-studio .app .plan-agenda .btn{width:100%;min-height:46px}
+body.ix-studio .app .plan-exercises{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+body.ix-studio .app .plan-exercises>summary{padding:13px 0;min-height:46px;font-size:13px;cursor:pointer}
+body.ix-studio .app .plan-exercises ol{padding:0;margin:0;list-style:none}
+body.ix-studio .app .plan-exercises li{padding:10px 0;display:grid;gap:4px;border-top:1px solid var(--line);font-size:13px;overflow-wrap:anywhere}
+body.ix-studio .app .plan-exercises li span{color:var(--muted);font-size:12px}
+body.ix-studio .app .plan-next{margin:14px 0}
+body.ix-studio .app .plan-next>strong{display:block;margin-top:6px;font-size:18px}
+body.ix-studio .app #historyHighlights{margin-top:16px;position:relative}
+body.ix-studio .app .history-highlight-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px}
+body.ix-studio .app .history-highlight-grid strong{display:block;font-size:29px;line-height:1.1;letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+body.ix-studio .app .history-highlight-grid span{display:block;font-size:12px;color:var(--muted);line-height:1.4;margin-top:4px}
+body.ix-studio .app #historyHighlights .history-consistency{font-size:12px!important;margin:14px 0!important}
+body.ix-studio .app .history-record{border-left:3px solid var(--accent);padding-left:12px;margin:12px 0}
+body.ix-studio .app .history-record>span{display:block;font-size:11px;color:var(--accent);margin-bottom:4px}
+body.ix-studio .app .history-record>strong{display:block;font-size:14px;overflow-wrap:anywhere}
+body.ix-studio .app .history-record p{font-size:12px!important;margin-top:4px!important}
+body.ix-studio .app :is(.history-lifetime,.history-filters)>summary{min-height:44px;padding:12px 0;font-size:13px;cursor:pointer}
+body.ix-studio .app .history-lifetime p{font-size:12px!important;margin:9px 0!important}
+body.ix-studio .app .history-lifetime li{font-size:12px;line-height:1.6;margin:8px 0}
+body.ix-studio .app .history-filters{border-bottom:1px solid var(--line)}
+body.ix-studio .app .history-tools input,body.ix-studio .app .history-tools select{min-height:44px;font-size:16px}
+body.ix-studio .app .history-stats{font-size:12px;line-height:1.5;color:var(--muted)}
+body.ix-studio .app #today.session-compact:not(.session-prestart)>.hero{display:none!important}
+body.ix-studio .app #today.session-compact:not(.session-prestart) #sessionSetup:not(.open){margin-bottom:8px!important}
+body.ix-studio .app #today.session-compact:not(.session-prestart) #sessionSetup:not(.open) .shell-toggle{min-height:44px!important;padding:8px 12px!important}
+body.ix-studio .app #today.session-compact:not(.session-prestart) #sessionSetup:not(.open) .shell-toggle-text strong{display:none}
+body.ix-studio .app #exerciseList .sc-set-picker,body.ix-studio .app #exerciseList .sc-next-set{display:none}
+body.ix-studio .app #exerciseList .sc-set-focus .sc-set-picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+body.ix-studio .app #exerciseList .sc-set-focus .sc-set-choice{flex:1 1 54px;min-height:44px;padding:8px 6px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--muted);font-size:12px;cursor:pointer}
+body.ix-studio .app #exerciseList .sc-set-focus .sc-set-choice[aria-pressed="true"]{color:var(--accent);border-color:var(--accent);background:rgba(var(--accent-rgb,46,229,128),.09)}
+body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .set-row.sc-set-hidden{display:none!important}
+body.ix-studio .app #exerciseList.awc-focus .sc-set-focus .sc-set-hidden + :is(.set-feedback,.set-feedback-chip-row){display:none!important}
+body.ix-studio .app #exerciseList .sc-set-focus .sc-next-set{display:block;min-height:44px;width:100%;margin-top:12px}
+body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .exercise-head{padding:15px 16px 12px!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .sets{padding:13px 13px 14px!important}
+body.ix-studio .app #exerciseList .sc-set-focus .ix-set-summary{display:none}
+body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .ix-movement-index{display:none!important}
+body.ix-studio .app #exerciseList .sc-set-focus .set-feedback-btn{min-height:44px!important}
+body.ix-studio .app #exerciseList .sc-set-focus .set-feedback-btn::after{font-size:11px!important}
+body.ix-studio:has(#today.active.session-compact:not(.session-prestart)) .app .topbar{min-height:48px!important;margin-bottom:8px!important;padding-bottom:8px!important}
+body.ix-studio .app #today.session-compact:not(.session-prestart) #workoutSaveStatus{padding:5px 8px!important;margin:4px 0!important;font-size:11px!important;line-height:1.4!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .suggestion{margin-top:10px!important;padding:8px 10px!important;gap:4px!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .suggestion::before{display:none!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .awc-action{min-width:0!important;min-height:44px!important;padding:8px!important;font-size:11px!important}
+body.ix-studio .app #today.session-compact:not(.session-prestart) .ix-active-workout-section{margin-top:8px!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .exercise-name-link{font-size:clamp(20px,5.5vw,24px)!important;line-height:1.15!important;max-width:none!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden):not(.awc-details) .awc-why-btn{display:none!important}
+body.ix-studio .app #exerciseList .sc-set-focus .sc-set-picker .sc-next-set{flex:0 0 54px;width:54px;min-height:44px!important;margin:0;padding:8px!important;font-size:12px!important}

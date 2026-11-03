@@ -32,19 +32,29 @@
     const ei=Number(card.dataset.exerciseIndex);
     if(!Number.isInteger(ei)) return null;
     const rows=[...card.querySelectorAll('.set-row')];
+    const nextIndex=rows.findIndex((row,i)=>!user.today?.[`${ei}-${i}`]?.done);
+    const complete=rows.length>0&&nextIndex===-1;
     let latest=null;
     for(let i=0;i<rows.length;i++){
       const set=user.today?.[`${ei}-${i}`];
-      if(set?.done) latest={set,index:i,user,ei};
+      if(set?.done) latest={set,index:i,user,ei,complete,nextIndex};
     }
     return latest;
   }
 
   function recommendation(latest,exercise){
-    if(!latest||!exercise||!latest.set?.feedback) return null;
+    if(!latest||!exercise) return null;
+    if(latest.complete) return {tone:'complete',text:latest.set.feedback==='pain'?'Exercise complete · pain noted.':'Exercise complete · all working sets logged.'};
+    if(!latest.set?.feedback) return null;
     const {set,user,ei}=latest;
     let rec=null;
     try{ if(typeof nextSetRecommendation==='function') rec=nextSetRecommendation(user,exercise,ei); }catch(_){ }
+    // The next working row may be a backoff with a different rep range. Use the
+    // same target builder as the row instead of showing top-set advice beside it.
+    if(latest.nextIndex>0&&typeof topBackoffStructure==='function'&&topBackoffStructure(exercise)&&typeof plannedSetTarget==='function'){
+      const target=plannedSetTarget(user,exercise,{load:rec?.load,target:rec?.reps},latest.nextIndex,ei);
+      rec={...(target.recommendation||{direction:'hold',label:'Use the planned backoff range'}),load:target.load,reps:target.reps};
+    }
     const feedback=String(set.feedback||'').toLowerCase();
     const rirText=String(set.rir??'').trim();
     const rir=rirText===''?null:Number(rirText);
@@ -53,7 +63,7 @@
     if(rec?.label){
       const target=rec.load&&rec.reps?`${rec.load} lb × about ${rec.reps}`:null;
       let lead=rec.label.replace(/\s*[—-]\s*/g,' · ');
-      if(feedback==='right') lead='On target';
+      if(feedback==='right'&&(!rec.direction||rec.direction==='hold')) lead='On target';
       else if(feedback==='easy'&&rec.direction==='up') lead='You had more available';
       else if(feedback==='hard'&&rec.direction==='down') lead='Back off slightly';
       return {tone:rec.direction||'hold',text:target?`${lead} · next: ${target}`:lead};
@@ -78,7 +88,7 @@
     let exercise=null;
     try{ exercise=typeof finalWorkout==='function'&&typeof activeUser==='function'?finalWorkout(activeUser())[Number(card.dataset.exerciseIndex)]:null; }catch(_){ }
     const rec=recommendation(latestSetFor(card),exercise);
-    cue.classList.remove('show','up','down','hold','pain');
+    cue.classList.remove('show','up','down','hold','pain','complete');
     if(!rec){ cue.querySelector('.scf-text').textContent=''; return; }
     cue.querySelector('.scf-text').innerHTML=esc(rec.text);
     cue.classList.add('show',rec.tone||'hold');
@@ -87,6 +97,13 @@
   function update(){
     injectStyle();
     document.querySelectorAll('#exerciseList [data-exercise-index]').forEach(updateCard);
+  }
+
+  // Restored sessions and workout redraws refresh targets without a click.
+  // Keep completion in sync on those paths as well as on Done/Undo.
+  if(typeof window.refreshRemainingWorkout==='function'){
+    const base=window.refreshRemainingWorkout;
+    window.refreshRemainingWorkout=function(){const result=base.apply(this,arguments);update();return result;};
   }
 
   document.addEventListener('click',event=>{

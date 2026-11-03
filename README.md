@@ -6,6 +6,7 @@ Adaptive strength and hypertrophy trainer.
 
 - Multi-user profiles
 - Equipment-aware exercise substitutions
+- Optional exact dumbbell weights: select the weights you own so missing sizes are never prescribed; regular increments remain available for complete/adjustable sets.
 - Workout duration presets and custom durations
 - Adaptive load suggestions using actual weight, reps, and RIR
 - Progressive workout variation rather than random exercise rotation

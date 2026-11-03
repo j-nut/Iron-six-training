@@ -24,7 +24,7 @@ function createApp(){
 test('Studio design is active on the real web entrypoint and copied into the native Android bundle',()=>{
   const html=fs.readFileSync('index.html','utf8');
   assert.match(html,/<body class="ix-studio">/);
-  assert(html.includes('href="studio-ui.css?v=3"'));
+  assert(html.includes('href="studio-ui.css?v=5"'));
   assert(html.includes('src="studio-ui.js?v=3"'));
   const android=fs.readFileSync('scripts/build-android-web.mjs','utf8');
   assert(android.includes("'studio-ui.css'"));

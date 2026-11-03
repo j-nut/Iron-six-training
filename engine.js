@@ -37,8 +37,19 @@ function loadIncrement(ex,u){
  const raw=equipment==='dumbbell'?u?.capacities?.dumbbellStep:['barbell','landmine'].includes(equipment)?u?.capacities?.barbellStep:null;
  return Number(raw)===2.5?2.5:5;
 }
-function roundLoad(x,ex,u){
+function availableDumbbellWeights(ex,u){
+ if(exerciseLoadEquipment(ex)!=='dumbbell'||!Array.isArray(u?.capacities?.dumbbellWeights))return null;
+ const weights=[...new Set(u.capacities.dumbbellWeights.filter(x=>typeof x==='number'&&Number.isFinite(x)&&x>=.5&&x<=250))].sort((a,b)=>a-b);
+ return weights.length?weights:null;
+}
+function roundLoad(x,ex,u,direction='nearest'){
  if(!Number.isFinite(x)||x<=0)return null;
+ const weights=availableDumbbellWeights(ex,u);
+ if(weights){
+  if(direction==='down')return weights.filter(w=>w<=x).at(-1)??weights[0];
+  if(direction==='up')return weights.find(w=>w>=x)??weights.at(-1);
+  return weights.reduce((best,w)=>Math.abs(w-x)<Math.abs(best-x)?w:best,weights[0]);
+ }
  const equipment=exerciseLoadEquipment(ex),step=loadIncrement(ex,u);let r=Math.max(step,Math.round(x/step)*step);
  const configured=Number(equipment==='dumbbell'?u.capacities?.dumbbellMax:['barbell','landmine'].includes(equipment)?u.capacities?.barbellMax:null);
  // New profiles start with a 30 lb dumbbell cap nobody was asked about. While it is still that

@@ -413,8 +413,8 @@
         return `<fieldset class="ob-group"><legend class="ob-sr">Available equipment</legend><div class="ob-cards">${rows}`
           + checkRow('id="obNoEquip"', 'No equipment, bodyweight only', 'Choose this if none of the above applies.', false)
           + `</div></fieldset>`
-          + `<div class="ob-sub" id="obDbSub" hidden><label class="ob-field"><span>Heaviest single dumbbell (lb)</span><input id="obDbMax" type="number" inputmode="decimal" min="5" max="250" value="${esc(dbMax || '')}"><small>The heaviest one you can pick up, not the pair. We never program past this.</small></label>`
-          + `<fieldset class="ob-group"><legend>Smallest dumbbell jump</legend><div class="ob-cards">${radios('obDbStep', [['5', '5 lb', 'Standard pairs'], ['2.5', '2.5 lb', 'Adjustable or fractional']], stepKnown ? String(Number(caps.dumbbellStep) === 2.5 ? 2.5 : 5) : '')}</div></fieldset></div>`
+          + `<div class="ob-sub" id="obDbSub" hidden><label class="ob-field" data-db-regular="obDb"><span>Heaviest single dumbbell (lb)</span><input id="obDbMax" type="number" inputmode="decimal" min="5" max="250" value="${esc(dbMax || '')}"><small>The heaviest one you can pick up, not the pair. We never program past this.</small></label>`
+          + `<fieldset class="ob-group" data-db-regular="obDb"><legend>Smallest dumbbell jump</legend><div class="ob-cards">${radios('obDbStep', [['5', '5 lb', 'Standard pairs'], ['2.5', '2.5 lb', 'Adjustable or fractional']], stepKnown ? String(Number(caps.dumbbellStep) === 2.5 ? 2.5 : 5) : '')}</div></fieldset>${window.IronSixDumbbellWeights?.markup(caps,'obDb','obDbMax','obDbStep')||''}</div>`
           + `<div class="ob-sub" id="obBbSub" hidden><label class="ob-field"><span>Heaviest barbell load, bar included (lb)</span><input id="obBbMax" type="number" inputmode="decimal" min="45" max="1500" value="${esc(bbMax || '')}"><small>Bar plus all the plates you own.</small></label>`
           + `<fieldset class="ob-group"><legend>Smallest barbell jump</legend><div class="ob-cards">${radios('obBbStep', [['5', '5 lb total', 'Using 2.5 lb plates'], ['2.5', '2.5 lb total', 'Using 1.25 lb plates']], stepKnown ? String(Number(caps.barbellStep) === 2.5 ? 2.5 : 5) : '')}</div></fieldset></div>`;
       },
@@ -423,6 +423,7 @@
           const on = key => !!root.querySelector(`[data-ob-equip="${key}"]`)?.checked;
           $('obDbSub').hidden = !on('dumbbells');
           $('obBbSub').hidden = !on('barbell');
+          window.IronSixDumbbellWeights?.update(root.querySelector('[data-db-prefix="obDb"]'));
         };
         root.querySelectorAll('[data-ob-equip]').forEach(box => box.addEventListener('change', () => {
           if (box.checked) $('obNoEquip').checked = false;
@@ -440,10 +441,16 @@
         if (!any && !$('obNoEquip').checked) return { error: 'Tick what you have, or choose "No equipment, bodyweight only".' };
         const capacities = {};
         if (kit.dumbbells) {
+          const inventory=window.IronSixDumbbellWeights?.read('obDb')||{weights:null};
+          if(inventory.error)return {error:inventory.error};
+          if(inventory.weights){capacities.dumbbellWeights=inventory.weights;capacities.dumbbellMax=inventory.max;capacities.dumbbellStep=Number(picked('obDbStep'))===2.5?2.5:5;}
+          else {
           const max = Number(val('obDbMax'));
           if (!(max >= 5 && max <= 250)) return { error: 'Enter the heaviest single dumbbell you have (5 to 250 lb).' };
           if (!picked('obDbStep')) return { error: 'Choose your smallest dumbbell jump.' };
           capacities.dumbbellMax = max; capacities.dumbbellStep = Number(picked('obDbStep'));
+          capacities.dumbbellWeights=null;
+          }
         }
         if (kit.barbell) {
           const max = Number(val('obBbMax'));

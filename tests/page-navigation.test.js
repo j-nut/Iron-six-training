@@ -52,7 +52,11 @@ test('the Plan outlook uses the scheduler after a manual routine change and summ
     a.run("chooseWorkout('upper_specialization');renderAll()");
     const expected=JSON.parse(a.run('JSON.stringify({today:WORKOUT_META[activeUser().program.currentWorkoutKey].name,next:WORKOUT_META[nextWorkoutKey(activeUser())].name,exercises:finalWorkout(activeUser()).length,sets:finalWorkout(activeUser()).reduce((n,e)=>n+e.sets,0)})'));
     const d=a.w.document;
-    assert.deepEqual([...d.querySelectorAll('.pr-schedule-card h3')].map(x=>x.textContent),[expected.today,expected.next]);
+    assert.equal(d.querySelector('.plan-agenda h3').textContent,expected.today);
+    assert.equal(d.querySelector('.plan-next>strong').textContent,expected.next);
+    assert.equal(d.querySelectorAll('#planExercises li').length,expected.exercises);
+    d.getElementById('planOpenWorkout').click();
+    assert.equal(d.querySelector('.view.active').id,'today');
     assert.equal(d.querySelector('[data-summary="exercises"]').textContent,String(expected.exercises));
     assert.equal(d.querySelector('[data-summary="sets"]').textContent,String(expected.sets));
     assert(d.getElementById('sessionBeginBtn').isConnected);

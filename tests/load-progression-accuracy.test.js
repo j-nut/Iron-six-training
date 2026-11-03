@@ -21,6 +21,25 @@ const curl = {name: 'Dumbbell Curl', base: 'Elbow flexion', prescription: '3 × 
 const incline = {name: 'Incline Barbell Bench Press', base: 'Horizontal press', prescription: '4 × 5–8', seedKey: 'bench'};
 const paused = {name: 'Paused Barbell Bench Press', base: 'Horizontal press', prescription: '4 × 4–6', seedKey: 'bench'};
 
+test('manual 95 lb overhead press with RIR 1 and Too hard backs off the next set', () => {
+  const {recommend} = engine();
+  const u = user([]), press = {name:'Barbell Overhead Press', prescription:'4 × 5–8', seedKey:'overhead_press'};
+  for (const rir of ['1', '', '4']) {
+    u.today = {'0-0': {weight:'95', reps:'7', rir, feedback:'hard', done:true}};
+    const rec = recommend(u, press, 0);
+    assert.equal(rec.load, 90, `Too hard must reduce load even at RIR ${rir}`);
+    assert(rec.reps <= 7);
+    assert.equal(rec.direction, 'down');
+    assert(!/on target/i.test(rec.label));
+  }
+  u.today['0-0'] = {weight:'95', reps:'7', rir:'1', done:true};
+  assert.equal(recommend(u, press, 0).reps, 6, 'low reserve alone reduces next-set reps');
+  u.today['0-0'].reps = '5';
+  assert.equal(recommend(u, press, 0).load, 90, 'at the bottom of the range reduce load');
+  u.today['0-0'].feedback = 'pain';
+  assert.match(recommend(u, press, 0).label, /pain/i);
+});
+
 function user(sessions, capacities = {}) {
   return {
     weight: 200, trainingLevel: 'intermediate', today: {}, program: {currentWorkoutKey: 'push_a'},

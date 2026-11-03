@@ -104,21 +104,21 @@
   function adjustSuggestion(u,ex,base,{fromToday=false}={}){
     const level=LEVELS.includes(ex?._difficulty)?ex._difficulty:effectiveFor(u);
     if(level==='heavy'&&Number(base?.load)>0&&typeof roundLoad==='function'){
-      const load=Math.min(Number(base.load),roundLoad(Number(base.load),ex,u)||Number(base.load));
+      const load=roundLoad(Number(base.load),ex,u,'down')||Number(base.load);
       return load<Number(base.load)?{...base,load,text:`${load} lb × about ${base.target||base.reps}`,detail:'Kept within your configured equipment limit. '+String(base.detail||'')}:base;
     }
     if(level!=='light'||!base||base._difficultyAdjusted)return base;
     const prescription=String(ex?.prescription||'');
     // Detect the time-unit marker directly. Parsing overlapping numeric ranges here
     // caused quadratic backtracking on long imported exercise prescriptions.
-    const timed=/\b(?:sec|seconds?)\b/i.test(prescription)||prescription.toLowerCase().includes('s controlled work'),kind=equipmentKind(ex);
+    const timed=/^(?:\d+\s*[×x]\s*)?\d+(?:\s*[–-]\s*\d+)?\s*s(?:ec(?:ond)?s?)?\b/i.test(prescription.trim()),kind=equipmentKind(ex);
     if(timed||kind==='bodyweight'||kind==='challenging-bodyweight')return {...base,load:null,_difficultyAdjusted:true,text:timed?'Timed controlled work · comfortable effort':`Bodyweight × about ${base.target||base.reps}`,confidence:'Light effort',detail:'Light effort: keep movement controlled and leave about 4 reps in reserve. '+String(base.detail||'')};
     if(!(Number(base.load)>0))return {...base,_difficultyAdjusted:true,detail:'Light effort: choose a comfortable resistance with about 4 reps in reserve. '+String(base.detail||'')};
     const reserveFactor=Number(u?.readiness?.energy)<=2||Number(u?.readiness?.soreness)>=4?.75:.8;
     let desired=Number(base.load)*(fromToday?1:reserveFactor);
     if(Number(ex?._difficultyAnchorLoad)>0)desired=Math.min(desired,Number(ex._difficultyAnchorLoad)*reserveFactor);
     let load=typeof roundLoad==='function'?roundLoad(desired,ex,u):Math.max(5,Math.floor(desired/5)*5);
-    if(desired<Number(base.load)&&load>=Number(base.load)&&Number(base.load)>5)load=Math.max(5,Math.floor(desired/5)*5);
+    if(desired<Number(base.load)&&load>=Number(base.load)&&Number(base.load)>5)load=typeof availableDumbbellWeights==='function'&&availableDumbbellWeights(ex,u)?roundLoad(desired,ex,u,'down'):Math.max(5,Math.floor(desired/5)*5);
     load=Math.min(Number(base.load),load||Number(base.load));
     return {...base,load,_difficultyAdjusted:true,text:`${load} lb × about ${base.target||base.reps}`,confidence:'Light effort',detail:'Comfortable working resistance; leave about 4 reps in reserve. '+String(base.detail||'')};
   }
@@ -143,6 +143,7 @@
         base.load=Math.min(base.load,lower>=weight&&weight>5?Math.max(5,Math.floor(desired/5)*5):lower||weight);
       }
       const label=last?.feedback==='pain'?result.label:'Light effort — keep about 4 reps in reserve';
+      if(typeof availableDumbbellWeights==='function'&&availableDumbbellWeights(ex,u))base.load=roundLoad(base.load,ex,u,'down');
       return {...base,label,text:`${label}: try about ${base.load} lb × ${base.reps} next set.`};
     };
     return true;
