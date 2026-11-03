@@ -33,6 +33,30 @@ function app(){
   };
 }
 
+test('working set picker keeps one set in focus without replacing inputs, and allows logging and undo',()=>{
+  const a=app();
+  try{
+    a.begin();
+    const card=a.w.document.querySelector('.sc-set-focus'),rows=[...card.querySelectorAll('.set-row')];
+    assert(rows.length>1);
+    const input=rows[0].querySelector('.weight');
+    const visible=()=>rows.filter(row=>!row.classList.contains('sc-set-hidden'));
+    assert.equal(visible().length,1);assert.equal(visible()[0],rows[0]);
+    rows[0].querySelector('.done').click();
+    assert.equal(rows[0].querySelector('.done').getAttribute('aria-pressed'),'true');
+    assert.equal(visible()[0],rows[0],'stay on the logged set so effort feedback remains available');
+    card.querySelector('.sc-next-set').click();
+    assert.equal(visible()[0],rows[1]);
+    card.querySelector('.sc-set-choice').click();
+    assert.equal(visible()[0],rows[0]);assert.strictEqual(rows[0].querySelector('.weight'),input);
+    rows[0].querySelector('.done').click();assert.equal(rows[0].querySelector('.done').getAttribute('aria-pressed'),'false');
+    assert.equal(a.run("!!activeUser().today['0-0'].done"),false);
+    a.w.document.getElementById('scOverview').click();
+    assert.equal(card.classList.contains('sc-set-focus'),false,'overview restores all sets');
+    assert.deepEqual(a.errors,[]);
+  }finally{a.close()}
+});
+
 test('a fresh session starts on the setup card with no exercises showing',()=>{
   const a=app();
   try{

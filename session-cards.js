@@ -6,6 +6,7 @@
   const $ = id => document.getElementById(id);
   const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let began = false, focusName = null, showAll = false, sessionContext = null;
+  const selectedSets = new Map();
 
   function syncSession(user) {
     const next = { userId: user.id, scope: window.ironSixAccountScope, today: user.today,
@@ -14,6 +15,7 @@
         sessionContext.today !== next.today || sessionContext.key !== next.key ||
         (sessionContext.draftId && sessionContext.draftId !== next.draftId))) {
       began = false; focusName = null; showAll = false;
+      selectedSets.clear();
     }
     sessionContext = next;
   }
@@ -65,6 +67,13 @@
     style.id = 'sessionCardStyles';
     style.textContent = `
       .sc-hidden{display:none!important}
+      .sc-set-picker,.sc-next-set{display:none}
+      .sc-set-focus .sc-set-picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+      .sc-set-focus .sc-set-picker button{flex:1 1 54px;min-height:44px;border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:8px;padding:8px}
+      .sc-set-focus .sc-set-picker button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+      .sc-set-focus .sc-set-hidden{display:none!important}
+      #exerciseList.awc-focus .sc-set-focus .sc-set-hidden + .set-feedback,#exerciseList.awc-focus .sc-set-focus .sc-set-hidden + .set-feedback-chip-row{display:none!important}
+      .sc-set-focus .sc-next-set{display:block;min-height:44px;width:100%;margin-top:12px}
 
       /* Guided flow: the header names the session and gets out of the way, before and during the workout.
          Pre-workout is a launch screen, not a dashboard: keep the primary action in one viewport. */
@@ -186,6 +195,30 @@
     for (const id of ['sessionStart', 'sessionCardNav', 'sessionReview']) $(id)?.classList.add('sc-hidden');
   }
 
+  function focusWorkingSet(user, workout, index) {
+    cards().forEach(card=>card.classList.remove('sc-set-focus'));
+    const card=cards().find(card=>Number(card.dataset.exerciseIndex)===index);
+    if(!card)return;
+    const rows=[...card.querySelectorAll('.set-row')],container=card.querySelector('.sets');
+    if(!rows.length||!container)return;
+    let selected=selectedSets.get(index);
+    if(selected==null||selected>=rows.length){selected=rows.findIndex((_,i)=>!user.today?.[`${index}-${i}`]?.done);if(selected<0)selected=rows.length-1;selectedSets.set(index,selected);}
+    card.classList.add('sc-set-focus');
+    rows.forEach((row,i)=>row.classList.toggle('sc-set-hidden',i!==selected));
+    let picker=container.querySelector('.sc-set-picker');
+    if(!picker){picker=document.createElement('div');picker.className='sc-set-picker';picker.setAttribute('role','group');picker.setAttribute('aria-label','Choose a working set');container.prepend(picker);}
+    // Reuse the picker while logging; leave the actual weight/reps/RIR inputs mounted.
+    if(picker.children.length!==rows.length){picker.replaceChildren(...rows.map((_,i)=>{
+      const button=document.createElement('button');button.type='button';button.className='sc-set-choice';
+      button.onclick=()=>{selectedSets.set(index,i);apply();};return button;
+    }));}
+    [...picker.children].forEach((button,i)=>{const done=!!user.today?.[`${index}-${i}`]?.done;button.textContent=`Set ${i+1}${done?' ✓':''}`;button.setAttribute('aria-pressed',String(i===selected));button.setAttribute('aria-label',`Set ${i+1}${done?', logged':''}${i===selected?', selected':''}`);});
+    let next=container.querySelector('.sc-next-set');
+    if(!next){next=document.createElement('button');next.type='button';next.className='btn secondary sc-next-set';container.append(next);}
+    next.textContent=selected<rows.length-1?'Next set →':index<workout.length-1?'Next exercise →':'Review workout →';
+    next.onclick=()=>{if(selected<rows.length-1){selectedSets.set(index,selected+1);apply();}else goTo(index+1,workout);};
+  }
+
   function apply() {
     if (typeof activeUser !== 'function' || typeof finalWorkout !== 'function') return;
     injectStyles();
@@ -202,6 +235,7 @@
     today?.classList.toggle('session-compact', !isCircuit(user));
 
     if (isCircuit(user) || showAll || !all.length) {
+      all.forEach(card=>card.classList.remove('sc-set-focus'));
       showEverything();
       $('sessionCardFoot')?.classList.toggle('sc-hidden', isCircuit(user) || !all.length);
       cta?.classList.remove('sc-hidden');
@@ -252,6 +286,7 @@
     }
 
     const current = perExercise[index];
+    focusWorkingSet(user,workout,index);
     const step = $('scStep'), nextLabel = $('scNext');
     if (step) step.innerHTML = `<span class="ix-step-title">Exercise ${index + 1} of ${workout.length}</span><span class="ix-step-count">${current.complete}/${current.sets} sets</span>`;
     if (nextLabel) nextLabel.textContent = index + 1 < workout.length ? `Up next: ${workout[index + 1].name}` : 'Up next: Review & finish';
@@ -282,6 +317,6 @@
   window.IronSixSessionCards = {
     apply, goTo, activeIndex, firstIncomplete, progress,
     state: () => ({ began, focusName, showAll }),
-    reset: () => { began = false; focusName = null; showAll = false; apply(); }
+    reset: () => { began = false; focusName = null; showAll = false; selectedSets.clear(); apply(); }
   };
 })();
