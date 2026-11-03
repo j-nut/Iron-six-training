@@ -28,7 +28,7 @@ jobs:
           CHROME_BIN="$(command -v google-chrome)"
           export CHROME_BIN
           node scripts/check-mobile-workspaces.cjs
-      - uses: actions/upload-artifact@v7.0.1
+      - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:
           name: iron-six-mobile-layout
