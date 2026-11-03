@@ -3,7 +3,7 @@ const fs = require('node:fs');
 for(const page of ['index.html','live.html']){const html=fs.readFileSync(page,'utf8');assert(html.includes('dumbbell-weights-ui.js?v=1'));assert(html.indexOf('dumbbell-weights-ui.js')<html.indexOf('ui1.js'));assert(html.includes('id="dumbbellInventoryEditor"'));}
 
 const required = [
-  'exercise-guide.js?v=9','exercise-visuals.js?v=9','equipment-catalog.js?v=1','equipment-exercise-library.js?v=1','equipment-coverage.js?v=1','local-ai-fallback.js?v=8','coach.js?v=15','equipment-manager.js?v=1','social-auth.js?v=3','cloud-sync.js?v=19','cloud-history-sync.js?v=16','backup-restore.js?v=3','profile-delete.js?v=3','ui-shell.js?v=4','profile-menu.js?v=3','session-cards.js?v=2','onboarding.js?v=3','cardio-companion.js?v=1','app-update.js?v=2'
+  'exercise-guide.js?v=9','exercise-visuals.js?v=9','equipment-catalog.js?v=1','equipment-exercise-library.js?v=1','equipment-coverage.js?v=1','local-ai-fallback.js?v=8','coach.js?v=15','equipment-manager.js?v=1','social-auth.js?v=3','cloud-sync.js?v=19','cloud-history-sync.js?v=17','backup-restore.js?v=3','profile-delete.js?v=3','ui-shell.js?v=4','profile-menu.js?v=3','session-cards.js?v=2','onboarding.js?v=3','cardio-companion.js?v=1','app-update.js?v=2'
 ];
 for (const page of ['index.html','live.html']) {
   const html=fs.readFileSync(page,'utf8');
@@ -41,5 +41,5 @@ assert(manager.includes('refreshEquipmentExercises'),'the picker must trigger ex
 assert(manager.includes('Finish or reset the current workout before changing equipment'),'the picker must keep the mid-workout guard');
 assert(fs.readFileSync('coach.js','utf8').includes('equipmentCoverage'),'the coach must receive measured equipment coverage');
 
-for(const page of ['index.html','live.html']){const html=fs.readFileSync(page,'utf8');assert(html.indexOf('workout-difficulty.js?v=5')>html.indexOf('core.js?v=23'));assert(html.indexOf('workout-difficulty.js?v=5')<html.indexOf('engine.js?v=22'));assert(html.includes('session-planner.js?v=7'));assert(html.includes('workout-dispatch.js?v=6'));assert(html.includes('circuit-player.js?v=5'));}
+for(const page of ['index.html','live.html']){const html=fs.readFileSync(page,'utf8');assert(html.indexOf('workout-difficulty.js?v=6')>html.indexOf('core.js?v=23'));assert(html.indexOf('workout-difficulty.js?v=6')<html.indexOf('engine.js?v=22'));assert(html.includes('session-planner.js?v=7'));assert(html.includes('workout-dispatch.js?v=6'));assert(html.includes('circuit-player.js?v=5'));}
 assert(cloudHistory.indexOf('workout-difficulty-ui.js')>cloudHistory.indexOf('bodyweight-load-fix.js'),'difficulty load adjustment installs after runtime load wrappers');

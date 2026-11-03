@@ -138,3 +138,10 @@ test('timed holds saved in the reps field never become repetition or load record
     assert.match(a.api.csv(a.user.history),/"20","40"/,'raw logged values remain exportable');
   }finally{a.close()}
 });
+test('tempo instructions preserve repetition totals and records',()=>{
+  const now=Date.now(),a=app([session(now-864e5,'Tempo press',[set('30','8')]),session(now,'Tempo press',[set('30','10')])]);
+  try{
+    a.user.history.forEach(h=>h.details[0].prescription='3 × 8–15 • 3 sec down');
+    const h=a.api.highlights(a.user,now);assert.equal(h.reps,18);assert.equal(h.volume,540);assert.equal(h.records.length,1);
+  }finally{a.close()}
+});

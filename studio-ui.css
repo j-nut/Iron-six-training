@@ -581,7 +581,7 @@ body.ix-studio .app #exerciseList .sc-set-picker,body.ix-studio .app #exerciseLi
 body.ix-studio .app #exerciseList .sc-set-focus .sc-set-picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
 body.ix-studio .app #exerciseList .sc-set-focus .sc-set-choice{flex:1 1 54px;min-height:44px;padding:8px 6px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--muted);font-size:12px;cursor:pointer}
 body.ix-studio .app #exerciseList .sc-set-focus .sc-set-choice[aria-pressed="true"]{color:var(--accent);border-color:var(--accent);background:rgba(var(--accent-rgb,46,229,128),.09)}
-body.ix-studio .app #exerciseList .sc-set-focus .sc-set-hidden{display:none!important}
+body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .set-row.sc-set-hidden{display:none!important}
 body.ix-studio .app #exerciseList.awc-focus .sc-set-focus .sc-set-hidden + :is(.set-feedback,.set-feedback-chip-row){display:none!important}
 body.ix-studio .app #exerciseList .sc-set-focus .sc-next-set{display:block;min-height:44px;width:100%;margin-top:12px}
 body.ix-studio .app #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .exercise-head{padding:15px 16px 12px!important}

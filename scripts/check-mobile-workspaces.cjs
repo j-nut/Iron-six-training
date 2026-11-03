@@ -49,6 +49,7 @@ async function screenshot(page,name,log=false){
   await page.goto(origin,{waitUntil:'networkidle'});
   await page.waitForFunction(()=>window.IronSixActiveWorkoutClean&&window.IronSixSetCoachFeedback&&window.IronSixInsights);
   for(const [width,height] of [[390,844],[360,800],[320,740]]){
+    let exerciseIndex=0;
     await page.setViewportSize({width,height});await seed(page);
     // Simulate the native inset contract; a physical-device check is still distinct.
     await page.evaluate(()=>{document.documentElement.classList.add('iron-six-native');document.documentElement.style.setProperty('--app-safe-top','28px');document.documentElement.style.setProperty('--app-safe-bottom','24px');});
@@ -59,6 +60,9 @@ async function screenshot(page,name,log=false){
         assert(await page.locator('#todayDifficulty').isVisible(),'Difficulty must remain available in setup');
         await page.locator('#sessionSetup .shell-toggle').click();
         await page.locator('#sessionBeginBtn').click();
+        await page.waitForTimeout(120);
+        assert.equal(await page.locator('.sc-set-focus .set-row:visible').count(),1,'The initial exercise must show only one set, including bodyweight work');
+        exerciseIndex=await page.evaluate(()=>{const u=activeUser(),w=finalWorkout(u),i=w.findIndex(e=>exerciseLoadEquipment(e)==='dumbbell');if(i<0)throw Error('Sample workout has no dumbbell exercise');IronSixSessionCards.goTo(i,w);return i;});
       }
       await page.waitForTimeout(120);
       await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
@@ -75,15 +79,15 @@ async function screenshot(page,name,log=false){
     await weight.fill('30');await reps.fill('8');await row.locator('.rir').selectOption('1');
     await row.locator('.done').click();
     await page.locator('.sc-set-focus [data-set-feedback="hard"]:visible').click();
-    assert.equal(await page.evaluate(()=>activeUser().today['0-0'].done),true);
-    assert.equal(await page.evaluate(()=>activeUser().today['0-0'].feedback),'hard');
+    assert.equal(await page.evaluate(i=>activeUser().today[i+'-0'].done,exerciseIndex),true);
+    assert.equal(await page.evaluate(i=>activeUser().today[i+'-0'].feedback,exerciseIndex),'hard');
     await page.locator('.sc-set-focus .sc-next-set').click();
     assert.equal(await page.locator('.sc-set-focus .set-row:visible').count(),1);
     assert.equal(await page.locator('.sc-set-focus .set-feedback:visible').count(),0,'Previous set feedback must leave the working area');
     const loads=await page.locator('.sc-set-focus .set-row .weight').evaluateAll(nodes=>nodes.map(n=>n.value).filter(Boolean).map(Number));
     assert(loads.every(w=>[0,5,10,15,20,25,30,40,50].includes(w)),'A missing dumbbell size was prescribed');
     await page.locator('.sc-set-focus .sc-set-choice').first().click();await page.locator('.sc-set-focus .set-row:visible .done').click();
-    assert.equal(await page.evaluate(()=>activeUser().today['0-0'].done),false,'Undo must retain its save path');
+    assert.equal(await page.evaluate(i=>activeUser().today[i+'-0'].done,exerciseIndex),false,'Undo must retain its save path');
     // Reduced keyboard viewport: allow scrolling, keep the focused input reachable.
     await page.setViewportSize({width,height:460});await page.locator('.sc-set-focus .set-row:visible .weight').focus();
     await page.waitForTimeout(40);

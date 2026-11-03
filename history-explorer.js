@@ -7,7 +7,7 @@
   const completed = s => s && s.done !== false && (s.done === true || Number(s.reps) > 0 || Number(s.seconds) > 0 || Number(s.duration) > 0);
   const sets = e => (Array.isArray(e?.sets) ? e.sets : []).filter(completed);
   const details = h => (Array.isArray(h?.details) ? h.details : []).filter(e => sets(e).length);
-  const timed = e => /(?:\d\s*s\b|\bsec(?:onds?)?\b)/i.test(String(e?.prescription||''));
+  const timed = e => /^(?:\d+\s*[×x]\s*)?\d+(?:\s*[–-]\s*\d+)?\s*s(?:ec(?:ond)?s?)?\b/i.test(String(e?.prescription||'').trim());
   const repSets = e => timed(e) ? [] : sets(e).filter(s=>!(number(s.seconds ?? s.duration)>0));
   const stamp = h => Number.isFinite(Number(h?.ts)) && Number(h.ts) > 0 ? Number(h.ts) : 0;
   const date = h => stamp(h) ? new Date(stamp(h)).toLocaleString(undefined, {year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : String(h.date || 'Date unavailable');

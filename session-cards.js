@@ -71,7 +71,7 @@
       .sc-set-focus .sc-set-picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
       .sc-set-focus .sc-set-picker button{flex:1 1 54px;min-height:44px;border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:8px;padding:8px}
       .sc-set-focus .sc-set-picker button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
-      .sc-set-focus .sc-set-hidden{display:none!important}
+      #exerciseList.awc-focus .exercise.sc-set-focus:not(.sc-hidden) .set-row.sc-set-hidden{display:none!important}
       #exerciseList.awc-focus .sc-set-focus .sc-set-hidden + .set-feedback,#exerciseList.awc-focus .sc-set-focus .sc-set-hidden + .set-feedback-chip-row{display:none!important}
       .sc-set-focus .sc-next-set{display:block;min-height:44px;width:100%;margin-top:12px}
 

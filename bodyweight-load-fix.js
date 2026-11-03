@@ -10,6 +10,9 @@
   const originalRefreshRemaining = typeof refreshRemainingWorkout === 'function' ? refreshRemainingWorkout : null;
 
   const BODYWEIGHT_NAME = /(?:^|\b)(?:push[- ]?up|pull[- ]?up|chin[- ]?up|bodyweight|plank|ab wheel(?: rollout)?|rollout|walkout|inverted row|pike push[- ]?up|dip)(?:\b|$)/i;
+  // Only the prescribed work amount defines the unit. A tempo cue such as
+  // "8–15 reps • 3 sec down" does not turn repetitions into a timed hold.
+  const isTimed = exercise => /^(?:\d+\s*[×x]\s*)?\d+(?:\s*[–-]\s*\d+)?\s*s(?:ec(?:ond)?s?)?\b/i.test(String(exercise?.prescription||'').trim());
 
   function isBodyweightExercise(exercise) {
     const name = String(exercise?.name || '');
@@ -20,7 +23,7 @@
   }
 
   function bodyweightRecommendation(exercise, completedSet = null, user = null) {
-    const timed = /\b(?:sec(?:onds?)?|s)\b/i.test(String(exercise?.prescription || ''));
+    const timed = isTimed(exercise);
     const unit = timed ? 'sec' : 'reps';
     const range = typeof repRange === 'function' ? repRange(exercise) : [8, 12];
     const lo = Number(range?.[0]) || 8, hi = Number(range?.[1]) || 12;
@@ -107,7 +110,7 @@
       if (!isBodyweightExercise(exercise)) return;
       const card = document.querySelector(`[data-exercise-index="${exerciseIndex}"]`);
       if (!card) return;
-      const timed = /\b(?:sec(?:onds?)?|s)\b/i.test(String(exercise.prescription || ''));
+      const timed = isTimed(exercise);
       card.classList.add('bodyweight-exercise');
       card.classList.toggle('timed-exercise',timed);
       const labels = card.querySelector('.field-labels');
