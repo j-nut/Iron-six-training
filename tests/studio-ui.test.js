@@ -24,8 +24,8 @@ function createApp(){
 test('Studio design is active on the real web entrypoint and copied into the native Android bundle',()=>{
   const html=fs.readFileSync('index.html','utf8');
   assert.match(html,/<body class="ix-studio">/);
-  assert(html.includes('href="studio-ui.css?v=5"'));
-  assert(html.includes('src="studio-ui.js?v=3"'));
+  assert(html.includes('href="studio-ui.css?v=6"'));
+  assert(html.includes('src="studio-ui.js?v=4"'));
   const android=fs.readFileSync('scripts/build-android-web.mjs','utf8');
   assert(android.includes("'studio-ui.css'"));
   const web=fs.readFileSync('scripts/build-web.mjs','utf8');
@@ -84,6 +84,27 @@ test('Studio additions remain safe when switching across every destination',()=>
       assert(button.getAttribute('aria-label')?.length>0);
     }
     assert.deepEqual(a.errors,[]);
+  }finally{a.close()}
+});
+test('Electric profile disclosures keep inputs mounted, preserve open state and reveal missing weights',()=>{
+  const a=createApp();try{
+    const d=a.w.document,input=d.getElementById('profileName'),disclosure=input.closest('details');
+    assert(disclosure);disclosure.open=true;a.run('IronSixStudio.apply();IronSixStudio.apply()');
+    assert.strictEqual(d.getElementById('profileName'),input);assert.equal(disclosure.open,true);
+    input.value='Electric profile';d.getElementById('saveProfile').click();assert.equal(a.run('activeUser().name'),'Electric profile');
+    d.querySelector('.db-weight-shortcut').click();
+    assert.equal(d.getElementById('dumbbellInventoryEditor').closest('details').open,true);
+    assert.equal(d.querySelectorAll('.ix-brand-lockup').length,1);assert.equal(d.querySelectorAll('#ixCoachPrompts').length,1);
+    assert.deepEqual(a.errors,[]);
+  }finally{a.close()}
+});
+test('Electric lime defaults do not replace a saved profile accent',()=>{
+  const a=createApp();try{
+    a.run(fs.readFileSync('accent-theme.js','utf8'));
+    assert.equal(a.run('IronSixAccentTheme.current()'),'lime');
+    a.run("activeUser().accentTheme='blue';IronSixAccentTheme.apply(activeUser());IronSixStudio.apply()");
+    assert.equal(a.w.document.documentElement.style.getPropertyValue('--accent'),'#5ea8ff');
+    assert.equal(a.run('activeUser().accentTheme'),'blue');
   }finally{a.close()}
 });
 

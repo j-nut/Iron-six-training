@@ -5,12 +5,38 @@
   if(window.__ironSixStudioLoaded)return;
   window.__ironSixStudioLoaded=true;
   let applying=false;
+  function electricChrome(){
+    const brand=document.querySelector('.topbar .brand');
+    if(brand&&!brand.querySelector('.ix-brand-lockup')){
+      const lockup=document.createElement('span');lockup.className='ix-brand-lockup';lockup.setAttribute('aria-hidden','true');
+      lockup.innerHTML='<span class="ix-brand-emblem">VI</span><span class="ix-brand-copy"><span class="ix-brand-name">IRON SIX</span><span class="ix-brand-line">MAKE YOUR MARK</span></span>';
+      brand.appendChild(lockup);
+    }
+    const quick=document.getElementById('coachQuick');
+    if(quick&&!document.getElementById('ixCoachPrompts')){
+      const details=document.createElement('details');details.id='ixCoachPrompts';details.className='ix-quick-questions';
+      const summary=document.createElement('summary');summary.textContent='Quick questions';details.appendChild(summary);
+      quick.before(details);details.appendChild(quick);
+    }
+    document.querySelectorAll('#profiles fieldset.pr-profile-group').forEach(group=>{
+      if(group.querySelector('.ix-profile-details'))return;
+      const legend=group.querySelector('legend');if(!legend)return;
+      const details=document.createElement('details');details.className='ix-profile-details';
+      const summary=document.createElement('summary');summary.textContent=legend.textContent.trim();details.appendChild(summary);
+      const content=document.createElement('div');content.className='ix-profile-content';
+      [...group.children].filter(n=>n!==legend).forEach(n=>content.appendChild(n));
+      details.appendChild(content);group.appendChild(details);
+    });
+    const inventory=document.getElementById('dumbbellInventoryEditor'),equipment=document.querySelector('#profiles .pr-equipment-group .ix-profile-content');
+    if(inventory&&equipment&&inventory.parentNode!==equipment)equipment.appendChild(inventory);
+  }
   function apply(){
     // JSDOM and native navigation can close a view before a queued callback runs.
     // Do not keep work alive after its document is gone.
     if(typeof document==='undefined'||!document?.getElementById||applying)return;
     applying=true;
     try{
+      electricChrome();
       const list=document.getElementById('exerciseList');
       if(list){
         list.closest('.section')?.classList.add('ix-active-workout-section');
@@ -55,7 +81,7 @@
   document.addEventListener('click',event=>{
     if(event.target?.closest?.('#sessionBeginBtn,#sessionCardNav,.navbtn,.duration-btn'))schedule();
   });
-  window.IronSixStudio={apply,version:3,release:'preview'};
+  window.IronSixStudio={apply,version:4,release:'electric'};
   schedule();
   addEventListener('load',apply);
 })();

@@ -1,9 +1,10 @@
-/* Profile-specific accent themes. Iron Six green remains the default. */
+/* Profile-specific accent themes. Electric lime is the default; saved choices stay intact. */
 (() => {
   if (window.__ironSixAccentThemeLoaded) return;
   window.__ironSixAccentThemeLoaded = true;
 
   const PALETTE = {
+    lime:   {label:'Volt Lime', hex:'#c6f54b', rgb:'198,245,75'},
     green:  {label:'Iron Six Green', hex:'#2ee580', rgb:'46,229,128'},
     blue:   {label:'Electric Blue', hex:'#5ea8ff', rgb:'94,168,255'},
     cyan:   {label:'Arctic Cyan', hex:'#32d6e6', rgb:'50,214,230'},
@@ -15,9 +16,9 @@
   let currentProfile = null, currentTheme = null;
 
   function choiceFor(user) {
-    const stored = user?.accentTheme || user?.trainerMemory?.appearance?.accentTheme || 'green';
+    const stored = user?.accentTheme || user?.trainerMemory?.appearance?.accentTheme || 'lime';
     const key = String(stored).toLowerCase();
-    return PALETTE[key] ? key : 'green';
+    return PALETTE[key] ? key : 'lime';
   }
 
   function injectStyles() {
@@ -25,7 +26,7 @@
     const style = document.createElement('style');
     style.id = 'ironSixAccentThemeStyles';
     style.textContent = `
-      :root{--accent-rgb:46,229,128;--accent-soft:rgba(var(--accent-rgb),.12);--accent-faint:rgba(var(--accent-rgb),.075);--accent-border:rgba(var(--accent-rgb),.32)}
+      :root{--accent-rgb:198,245,75;--accent-soft:rgba(var(--accent-rgb),.12);--accent-faint:rgba(var(--accent-rgb),.075);--accent-border:rgba(var(--accent-rgb),.32)}
       .hero{background:linear-gradient(145deg,var(--accent-soft),rgba(255,255,255,.025) 45%,rgba(255,255,255,.01))!important}
       .navbtn.active{background:rgba(var(--accent-rgb),.09)!important}
       .suggestion{background:var(--accent-faint)!important;border-color:rgba(var(--accent-rgb),.18)!important}

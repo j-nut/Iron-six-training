@@ -7,9 +7,9 @@
 <title>Iron Six — Adaptive Trainer</title>
 <link rel="icon" href="assets/brand/icon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/brand/icon-180.png">
-<link rel="stylesheet" href="style.css?v=8"><link rel="stylesheet" href="premium-ui.css?v=4" data-premium-ui="true">
+<link rel="stylesheet" href="style.css?v=9"><link rel="stylesheet" href="premium-ui.css?v=4" data-premium-ui="true"><link rel="stylesheet" href="workout-polish.css?v=1"><link rel="stylesheet" href="studio-ui.css?v=6">
 </head>
-<body>
+<body class="ix-studio">
 <div class="app" id="app">
 <div class="topbar">
 <a class="brand" href="welcome" aria-label="Iron Six — what this is">
@@ -117,14 +117,14 @@
 <section id="plan" class="view">
 <div class="hero pr-page-hero">
 <div class="eyebrow">Training plan</div>
-<h1>Your next steps.</h1>
-<p>See what comes next and how your logged workouts shape the plan.</p>
+<h1>Your plan.</h1>
+<p>What you’re training next, and what comes after.</p>
 </div>
 <div class="section pr-plan-current">
 <div class="section-head">
 <div>
-<h2>Your training outlook</h2>
-<small>The active profile’s current session and next workout</small>
+<h2>Next workout</h2>
+<small>Built around your equipment and recent sessions</small>
 </div>
 </div>
 <div class="note" id="adaptiveCoachStatus">
@@ -193,14 +193,14 @@
 <section id="history" class="view">
 <div class="hero pr-page-hero">
 <div class="eyebrow">Training history</div>
-<h1 id="historyTitle">Your work, recorded.</h1>
-<p>Review completed sessions, compare exercises and find the sets you logged.</p>
+<h1 id="historyTitle">Your progress.</h1>
+<p>The work you’ve put in, and the progress you’ve made.</p>
 </div>
 <div class="section pr-history-browser">
 <div class="section-head">
 <div>
-<h2>Session library</h2>
-<small>Search and filter the active profile’s completed workouts</small>
+<h2>Recent workouts</h2>
+<small>Open a workout to see your sets or compare a lift</small>
 </div>
 </div>
 <div id="historyList">
@@ -473,7 +473,7 @@
 </script>
 <script src="profile-schema.js?v=3">
 </script>
-<script src="dumbbell-weights-ui.js?v=1"></script>
+<script src="dumbbell-weights-ui.js?v=2"></script>
 <script src="ui1.js?v=22">
 </script>
 <script src="exercise-media-catalog.js?v=1">
@@ -515,7 +515,7 @@
 </script>
 <script src="cloud-sync.js?v=19">
 </script>
-<script src="cloud-history-sync.js?v=17">
+<script src="cloud-history-sync.js?v=18">
 </script>
 <script src="backup-restore.js?v=3">
 </script>
@@ -529,11 +529,19 @@
 </script>
 <script src="onboarding.js?v=3">
 </script>
+<script src="pose-person-isolation.js?v=6">
+</script>
 <script src="pose-rep-counter.js?v=6">
 </script>
 <script src="pose-view-classifier.js?v=1">
 </script>
 <script src="pose-movement-detectors.js?v=2">
+</script>
+<script src="pose-form-coach.js?v=6">
+</script>
+<script src="pose-form-continuity.js?v=6">
+</script>
+<script src="workout-voice.js?v=1">
 </script>
 <script src="pose-spike.js?v=8">
 </script>
@@ -541,5 +549,6 @@
 </script>
 <script src="app-update.js?v=2">
 </script>
+<script src="studio-ui.js?v=4"></script>
 </body>
 </html>
