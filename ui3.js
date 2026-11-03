@@ -14,6 +14,7 @@ const patch={name,weight,age:Number($('age').value)||null,heightIn:Number($('hei
 if($('dumbbellMax'))patch.capacities.dumbbellMax=Math.max(5,Number($('dumbbellMax').value)||30);
 if($('barbellMax'))patch.capacities.barbellMax=Math.max(45,Number($('barbellMax').value)||300);
 for(const key of ['dumbbellStep','barbellStep'])if($(key))patch.capacities[key]=Number($(key).value)===2.5?2.5:5;
+if(window.IronSixDumbbellWeights){const inventory=window.IronSixDumbbellWeights.read('profileDb');if(inventory.error){toast(inventory.error);return}patch.capacities.dumbbellWeights=inventory.weights;if(inventory.max)patch.capacities.dumbbellMax=inventory.max}
 if($('profileGoal'))patch.goal=$('profileGoal').value;
 if($('profileDays'))patch.daysPerWeek=$('profileDays').value;
 if($('profileMinutes')&&!$('profileMinutes').disabled){if(!(Number($('profileMinutes').value)>=10&&Number($('profileMinutes').value)<=120)){toast('Enter a workout length from 10 to 120 minutes');return}patch.workoutMinutes=Number($('profileMinutes').value);patch.trainingMode=$('profileMode').value;patch.workoutDifficulty=$('profileDifficulty').value}

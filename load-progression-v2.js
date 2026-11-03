@@ -34,6 +34,8 @@
   const freeWeight = exercise => typeof exerciseLoadEquipment === 'function' && ['barbell', 'dumbbell', 'landmine'].includes(exerciseLoadEquipment(exercise));
 
   function discreteStep(weight, exercise, user, direction) {
+    const weights = typeof availableDumbbellWeights === 'function' ? availableDumbbellWeights(exercise, user) : null;
+    if (weights) return direction > 0 ? weights.find(w => w > weight) ?? weights.at(-1) : weights.filter(w => w < weight).at(-1) ?? weights[0];
     const step = stepFor(exercise, user);
     const delta = direction > 0 ? step : -step;
     let candidate = rounded(weight + delta, exercise, user);
@@ -55,6 +57,8 @@
     const targetRir = targetRirFor(user, exercise);
     const wideRange = hi - lo >= 6;
     const finish = (load, target, label, direction = 'hold', maxReps = hi) => {
+      const weights = typeof availableDumbbellWeights === 'function' ? availableDumbbellWeights(exercise, user) : null;
+      if (weights) load = originalRound(load, exercise, user, direction === 'up' ? 'nearest' : 'down');
       const repsOut = clampValue(Math.round(target), lo, maxReps);
       return {load, reps: repsOut, label, direction, text: `${label}: try about ${load} lb × ${repsOut} next set.`};
     };
@@ -64,7 +68,8 @@
     const up = (load, target, label) => {
       if (freeWeight(exercise) && load > weight * 1.15) {
         if (reps < hi + extraReps) {
-          const hint = stepFor(exercise, user) > 2.5 ? ' (or set a 2.5 lb jump in your profile if your weights allow it)' : '';
+          const exactWeights = typeof availableDumbbellWeights === 'function' && availableDumbbellWeights(exercise, user);
+          const hint = !exactWeights && stepFor(exercise, user) > 2.5 ? ' (or set a 2.5 lb jump in your profile if your weights allow it)' : '';
           return finish(weight, reps + 1, `${load} lb is too big a jump from ${weight} lb — build reps first${hint}`, 'up', hi + extraReps);
         }
         return finish(load, lo, 'Move up — expect fewer reps at the heavier weight at first', 'up');

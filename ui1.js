@@ -8,6 +8,7 @@ const u=activeUser(),$=id=>document.getElementById(id),S=window.IronSixProfileSc
 $('editProfileHeading').textContent=`Edit ${u.name}`;$('profileName').value=u.name;$('bodyWeight').value=u.weight;$('age').value=u.age||'';$('heightIn').value=u.heightIn||'';$('trainingLevel').value=u.trainingLevel||'unknown';
 if($('dumbbellMax'))$('dumbbellMax').value=u.capacities?.dumbbellMax||30;if($('barbellMax'))$('barbellMax').value=u.capacities?.barbellMax||300;
 for(const key of ['dumbbellStep','barbellStep'])if($(key))$(key).value=Number(u.capacities?.[key])===2.5?'2.5':'5';
+window.IronSixDumbbellWeights?.renderProfile(u);
 set('profileGoal',u.goal||'');set('profileDays',u.daysPerWeek||'');set('profileMinutes',u.workoutMinutes||60);set('profileMode',u.trainingMode==='circuit'?'circuit':'traditional');set('profileDifficulty',u.workoutDifficulty||'balanced');
 const locked=Object.keys(u.today||{}).length>0;for(const id of ['profileMinutes','profileMode','profileDifficulty'])if($(id))$(id).disabled=locked;if($('profileSessionLock'))$('profileSessionLock').hidden=!locked;
 for(const lift of ['squat','bench','hinge','overhead_press','row']){const ref=u.strengthRefs?.[lift]||(lift==='bench'&&S?S.benchRef(u):null);set(`ref_${lift}_weight`,ref?ref.weight:'');set(`ref_${lift}_reps`,ref?ref.reps:'');set(`ref_${lift}_equipment`,ref?.equipment==='dumbbell'?'dumbbell':'barbell')}

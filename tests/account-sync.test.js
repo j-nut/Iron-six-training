@@ -242,10 +242,12 @@ test('background sync preserves workout cards, input values, and keyboard focus 
 
 test('first-run setup answers upload with the profile and come back from the cloud copy',async()=>{
   const a=await accountApp();await a.signIn('owner-a');
+  a.run('activeUser().capacities.dumbbellWeights=[5,10,15,20,25,30,40,50];activeUser().capacities.dumbbellMax=50');
   a.run("Object.assign(activeUser(),{goal:'strength',daysPerWeek:4,strengthRefs:{squat:{weight:225,reps:5,equipment:'barbell'}},limitations:['knee'],preferences:{music:true,camera:false,voice:true,sounds:true},onboarding:{version:1,completedAt:1700000000000,optionalSkipped:['music']}});saveData()");
   await a.w.IronSixCloud.syncNow();
   const row=a.db.profiles.find(p=>p.user_id==='owner-a');
   assert(row,'profile uploaded');
+  assert.deepEqual(row.capacities.dumbbellWeights,[5,10,15,20,25,30,40,50]);
   assert.equal(row.runtime_state.goal,'strength');
   assert.equal(row.runtime_state.daysPerWeek,4);
   assert.deepEqual(row.runtime_state.strengthRefs.squat,{weight:225,reps:5,equipment:'barbell'});
@@ -254,9 +256,11 @@ test('first-run setup answers upload with the profile and come back from the clo
   assert.deepEqual(row.runtime_state.onboarding,{version:1,completedAt:1700000000000,optionalSkipped:['music']});
   // Another device changes the answers; this one has no unsynced edits, so it takes the cloud copy.
   row.runtime_state={...row.runtime_state,goal:'muscle',limitations:['hip'],daysPerWeek:5};
+  row.capacities.dumbbellWeights=[5,10,20,30,50];
   row.updated_at='2099-01-01T00:00:00.000Z';
   await a.w.IronSixCloud.syncNow();
   assert.equal(a.run('activeUser().goal'),'muscle');
+  assert.deepEqual(JSON.parse(a.run('JSON.stringify(activeUser().capacities.dumbbellWeights)')),[5,10,20,30,50]);
   assert.equal(a.run('activeUser().daysPerWeek'),5);
   assert.deepEqual(JSON.parse(a.run('JSON.stringify(activeUser().limitations)')),['hip']);
   assert.equal(a.run('activeUser().onboarding.completedAt'),1700000000000);
