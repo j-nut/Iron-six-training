@@ -139,7 +139,7 @@ function programSlot(u,id,source,index,sets,priority=2,anchor=false){
 
   const cacheVersion='v5';
   const difficulty=window.IronSixDifficulty?.effectiveFor(u)||'balanced';
-  const token=`${cacheVersion}:${key}:${id}:${stableAnchor?'block-strength':anchor?'block'+Math.floor(exposure/4):exposure}${difficulty==='heavy'?':difficulty:heavy':''}`;
+  const token=`${cacheVersion}:${key}:${id}:${stableAnchor?'block-strength':anchor?'block'+Math.floor(exposure/4):exposure}${['heavy','bodyweight'].includes(difficulty)?':difficulty:'+difficulty:''}`;
   const cached=u.program.selectionCache[token];
   let selected=pool.find(e=>e.name===cached);
   if(!selected){

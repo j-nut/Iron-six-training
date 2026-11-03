@@ -6,9 +6,10 @@
   window.IronSixDifficulty?.installLoadAdjustment?.();
   const $ = id => document.getElementById(id);
   const LEVELS = ['light', 'balanced', 'heavy'];
-  const LABELS = {light:'Light', balanced:'Balanced', heavy:'Heavy'};
+  const LABELS = {light:'Light', balanced:'Balanced', heavy:'Heavy', bodyweight:'Bodyweight only'};
   const COPY = {
     light:'Bodyweight and lighter loads, with more effort left in reserve.',
+    bodyweight:'No equipment needed. This applies to today’s workout only.',
     balanced:'A varied mix of bodyweight, free weights and available machines.',
     heavy:'More barbell and machine work using your available equipment. Heavy does not mean maximal.'
   };
@@ -16,7 +17,7 @@
   const current = () => typeof activeUser === 'function' ? activeUser() : null;
   const effective = user => window.IronSixDifficulty?.effectiveFor(user) || normal(user?.workoutDifficulty);
   const override = (user, level) => ({level,workoutKey:user.program.currentWorkoutKey,exposure:Number(user.program.exposures?.[user.program.currentWorkoutKey])||0});
-  const hasOverride = user => LEVELS.includes(user.sessionDifficulty?.level) && user.sessionDifficulty.workoutKey === user.program.currentWorkoutKey && user.sessionDifficulty.exposure === (Number(user.program.exposures?.[user.program.currentWorkoutKey])||0);
+  const hasOverride = user => window.IronSixDifficulty?.validOverride(user);
   let message = '', context = null;
 
   function ownsControls() {
@@ -37,8 +38,16 @@
 
   function changeToday(value, makeDefault = false) {
     if (!ownsControls()) return false;
-    const user = current(), level = normal(value), oldPlan = finalWorkout(user),previousDefault=normal(user.workoutDifficulty);
-    const helper = window.IronSixDifficulty;
+    const user = current(), helper = window.IronSixDifficulty;
+    if (makeDefault && value === 'bodyweight') return false;
+    const level = makeDefault ? normal(value) : helper?.normalize(value) || normal(value);
+    const switchingEquipment = level !== effective(user) && [level,effective(user)].includes('bodyweight');
+    if (switchingEquipment && Object.keys(user.today || {}).length) {
+      render();
+      announce('Change Bodyweight only before logging sets so your current workout stays together.');
+      return false;
+    }
+    const oldPlan = finalWorkout(user), previousDefault = normal(user.workoutDifficulty);
     if (!helper?.replanRemaining || !window.IronSixJournal?.replacePlan) {
       announce('Difficulty controls are still loading. Try again in a moment.');render();return false;
     }
@@ -49,7 +58,16 @@
     };
     if (!user.workoutDraft && Object.keys(user.today || {}).length) window.IronSixJournal.ensure(user,oldPlan);
     if (user.workoutDraft) {
-      const plan = makeDefault && level === effective(user) ? oldPlan : helper.replanRemaining(user,level,oldPlan);
+      let plan;
+      if (switchingEquipment) {
+        // Rebuild from the normal exercise pools so equipment can be restored before logging.
+        const preview = {...user, workoutDraft:null, coachOverrides:null,
+          sessionDifficulty:override(user,level),
+          program:{...user.program, selectionCache:{...user.program.selectionCache}}};
+        plan = finalWorkout(preview);
+      } else {
+        plan = level === effective(user) ? oldPlan : helper.replanRemaining(user,level,oldPlan);
+      }
       if (!window.IronSixJournal.replacePlan(user,plan,fields)) {
         render();announce('Difficulty was not changed. Your current workout is kept.');return false;
       }
@@ -128,7 +146,7 @@
     let node = $('workoutDifficulty');
     if (!node) {
       node = document.createElement('div');node.id='workoutDifficulty';
-      node.innerHTML='<div class="wd-controls"><label class="wd-label" for="todayDifficulty">Today’s difficulty</label><select id="todayDifficulty" aria-describedby="difficultyDescription difficultyDefault"><option value="light">Light</option><option value="balanced">Balanced</option><option value="heavy">Heavy</option></select></div><div class="wd-copy" id="difficultyDescription"></div><div class="wd-footer"><span class="wd-default" id="difficultyDefault"></span><button class="wd-action" id="difficultyUseDefault" type="button">Use saved default</button><button class="wd-action" id="difficultySaveDefault" type="button">Make this my default</button></div><div id="difficultyStatus" role="status" aria-live="polite"></div>';
+      node.innerHTML='<div class="wd-controls"><label class="wd-label" for="todayDifficulty">Today’s difficulty</label><select id="todayDifficulty" aria-describedby="difficultyDescription difficultyDefault"><option value="light">Light</option><option value="balanced">Balanced</option><option value="heavy">Heavy</option><option value="bodyweight">Bodyweight only</option></select></div><div class="wd-copy" id="difficultyDescription"></div><div class="wd-footer"><span class="wd-default" id="difficultyDefault"></span><button class="wd-action" id="difficultyUseDefault" type="button">Use saved default</button><button class="wd-action" id="difficultySaveDefault" type="button">Make this my default</button></div><div id="difficultyStatus" role="status" aria-live="polite"></div>';
       node.querySelector('#todayDifficulty').addEventListener('change',event=>changeToday(event.target.value));
       node.querySelector('#difficultyUseDefault').addEventListener('click',()=>changeToday(normal(current()?.workoutDifficulty),true));
       node.querySelector('#difficultySaveDefault').addEventListener('click',()=>changeToday(effective(current()),true));
@@ -176,7 +194,7 @@
     const temporary=level!==saved || hasOverride(user);
     $('difficultyDefault').textContent=temporary ? `${LABELS[saved]} default · This session only` : `${LABELS[saved]} is your saved default`;
     $('difficultyUseDefault').hidden=!temporary;
-    $('difficultySaveDefault').hidden=level===saved;
+    $('difficultySaveDefault').hidden=level===saved || level==='bodyweight';
     $('difficultyStatus').textContent=message;
   }
 

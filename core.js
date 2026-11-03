@@ -45,7 +45,7 @@ function rotationFor(u){return PROGRAM_SPLITS[normalizedDaysPerWeek(u?.daysPerWe
 function sameSequence(a,b){return Array.isArray(a)&&a.length===b.length&&new Set(a).size===b.length&&a.every(k=>b.includes(k))}
 function uid(){return 'u_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function normalizedWorkoutDifficultyOverride(value){
-  const level=value?.level==='light'?'light':value?.level==='balanced'?'balanced':value?.level==='heavy'?'heavy':null;
+  const level=['light','balanced','heavy','bodyweight'].includes(value?.level)?value.level:null;
   const workoutKey=Object.keys(WORKOUT_META).find(key=>key===value?.workoutKey),exposure=Number(value?.exposure);
   return level&&workoutKey&&Number.isSafeInteger(exposure)&&exposure>=0?{level,workoutKey,exposure}:null;
 }
@@ -89,7 +89,11 @@ function activeUser(){return data.users.find(u=>u.id===data.activeUserId)||data.
 function has(u,key){return !!u.equipment?.[key]}
 function normalizeEquipmentName(value){return String(value||'').replace(/[^a-zA-Z0-9 &'()+./-]/g,' ').replace(/\s+/g,' ').trim().slice(0,48)}
 function hasCustomEquipment(u,name){const wanted=normalizeEquipmentName(name).toLowerCase();return !!wanted&&(u.customEquipment||[]).some(x=>normalizeEquipmentName(x).toLowerCase()===wanted)}
-function exerciseAvailable(u,o){return (!o.requires||o.requires.every(k=>has(u,k)))&&(!o.requiresCustom||o.requiresCustom.every(name=>hasCustomEquipment(u,name)))}
+function exerciseAvailable(u,o){
+  if(window.IronSixDifficulty?.effectiveFor(u)==="bodyweight")return window.IronSixDifficulty.noEquipment(o);
+  return exerciseEquipmentAvailable(u,o);
+}
+function exerciseEquipmentAvailable(u,o){return (!o.requires||o.requires.every(k=>has(u,k)))&&(!o.requiresCustom||o.requiresCustom.every(name=>hasCustomEquipment(u,name)))}
 function stableNumber(value){let h=2166136261;for(const c of String(value||'')){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
 function generatedOptionsForSlot(u,options){const sample=options?.[0],key=u.program?.currentWorkoutKey||'lower_strength';if(!sample)return [];return (u.program?.generatedExercises||[]).filter(x=>x&&x.base===sample.base&&x.seedKey===sample.seedKey&&(!x.workoutKeys?.length||x.workoutKeys.includes(key))).map(x=>({name:String(x.name||'').slice(0,80),requires:Array.isArray(x.requires)?x.requires.slice(0,4):[],requiresCustom:Array.isArray(x.requiresCustom)?x.requiresCustom.map(normalizeEquipmentName).filter(Boolean).slice(0,2):[],prescription:String(x.prescription||sample.prescription).slice(0,80),sets:Math.max(1,Math.min(6,Math.round(Number(x.sets)||sample.sets||3))),tag:String(x.tag||sample.tag||'Accessory').slice(0,30),base:sample.base,seedKey:sample.seedKey,priority:Math.max(1,Math.min(3,Math.round(Number(x.priority)||sample.priority||2))),equipmentName:normalizeEquipmentName(x.equipmentName),equipmentId:String(x.equipmentId||''),source:x.source==='curated'?'curated':'groq'})).filter(x=>x.name&&exerciseAvailable(u,x))}
 function exerciseRecentPenalty(u,o){let penalty=0;(u.history||[]).slice(0,12).forEach((h,sessionIndex)=>{(h.details||[]).forEach(d=>{if(String(d.name).toLowerCase()===o.name.toLowerCase())penalty+=Math.max(8,120-sessionIndex*13);else if(d.base===o.base)penalty+=Math.max(0,12-sessionIndex)})});return penalty}

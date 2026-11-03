@@ -248,7 +248,7 @@
       const lower = removedCustomName.toLowerCase();
       u.program.generatedExercises = (u.program.generatedExercises || []).filter(exercise => exercise.equipmentId !== `custom:${lower}` && !((exercise.requiresCustom || []).some(v => v.toLowerCase() === lower)));
     }
-    u.program.generatedExercises = (u.program.generatedExercises || []).filter(exercise => exerciseAvailable(u, exercise));
+    u.program.generatedExercises = (u.program.generatedExercises || []).filter(exercise => exerciseEquipmentAvailable(u, exercise));
     clearCurrentSelectionCache(u);
     saveData();
     renderAll();
