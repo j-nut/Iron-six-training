@@ -4,7 +4,9 @@ function visiblePrescription(exercise){const structure=topBackoffStructure(exerc
 function plannedSetTarget(u,exercise,suggestion,setIndex,exerciseIndex){
   const structure=topBackoffStructure(exercise);
   if(!structure)return {load:suggestion.load??null,reps:suggestion.target||suggestion.reps||null,label:null};
-  const range=setIndex===0?structure.top:structure.backoff,reps=Math.round((range[0]+range[1])/2);
+  const range=setIndex===0?structure.top:structure.backoff;
+  let reps=Math.round((range[0]+range[1])/2);
+  if(setIndex===0&&Number(suggestion.target||suggestion.reps)>0)reps=Math.max(range[0],Math.min(range[1],Number(suggestion.target||suggestion.reps)));
   let load=suggestion.load??null;
   const top=u.today?.[`${exerciseIndex}-0`];
   if(top?.done&&parseLoad(top.weight)>0)load=parseLoad(top.weight);
@@ -13,7 +15,7 @@ function plannedSetTarget(u,exercise,suggestion,setIndex,exerciseIndex){
     if(load&&typeof roundLoad==='function')load=roundLoad(load*.90,exercise,u);
     const backoffToday=Object.fromEntries(Object.entries(u.today||{}).filter(([key])=>key.startsWith(`${exerciseIndex}-`)&&Number(key.split('-')[1])>0));
     const rec=nextSetRecommendation({...u,today:backoffToday},{...exercise,prescription:`${exercise.sets-1} × ${range[0]}–${range[1]}`},exerciseIndex);
-    if(rec)load=rec.load;
+    if(rec){load=rec.load;if(Number(rec.reps)>0)reps=Math.max(range[0],Math.min(range[1],Number(rec.reps)))}
   }
   return {load,reps,label:setIndex===0?'Top set':'Backoff'};
 }

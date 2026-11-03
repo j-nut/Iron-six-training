@@ -42,6 +42,60 @@ function field(doc,kind){
   return {input,overlay,card};
 }
 
+for(const ending of ['outside release','capture lost','touch fallback','blur','pagehide','hidden','render']) {
+  test(`scrub popup is removed and changed value saved once after ${ending}`,()=>{
+    const a=app();
+    try{
+      const w=a.w,d=w.document,{input,overlay}=field(d,'weight');
+      let arm,events=0;
+      w.setTimeout=(fn,ms)=>{if(ms===380)arm=fn;return 101};
+      input.addEventListener('input',()=>events++);
+      const baseline=Number(input.value||0);
+      pointer(w,overlay,'pointerdown',300);arm();pointer(w,overlay,'pointermove',260);
+      assert(d.querySelector('.awc-scrub-value'));
+      if(ending==='outside release'){
+        const unrelated=new w.Event('pointerup',{bubbles:true});
+        Object.defineProperty(unrelated,'pointerId',{value:99});d.body.dispatchEvent(unrelated);
+        assert(d.querySelector('.awc-scrub-value'),'another pointer must not end the gesture');
+        pointer(w,d.body,'pointerup',260);
+      }else if(ending==='capture lost')pointer(w,overlay,'lostpointercapture',260);
+      else if(ending==='touch fallback')w.dispatchEvent(new w.Event('touchend'));
+      else if(ending==='hidden'){
+        Object.defineProperty(d,'hidden',{value:true,configurable:true});
+        d.dispatchEvent(new w.Event('visibilitychange'));
+      }else if(ending==='render')a.run('renderExercises()');
+      else w.dispatchEvent(new w.Event(ending));
+      assert.equal(d.querySelector('.awc-scrub-value'),null);
+      assert(!input.classList.contains('awc-scrubbing'));
+      assert.notEqual(d.activeElement,input);
+      assert.equal(events,1);
+      assert.equal(Number(a.run("activeUser().today['0-0'].weight")),baseline+5);
+      pointer(w,overlay,'pointerup',260);
+      assert.equal(events,1,'late pointer release cannot save twice');
+      assert.deepEqual(a.errors,[]);
+    }finally{a.close()}
+  });
+}
+
+test('lost capture during release is reentrant-safe and a new drag works immediately',()=>{
+  const a=app();
+  try{
+    const w=a.w,d=w.document,{input,overlay}=field(d,'reps');
+    let arm,events=0;w.setTimeout=(fn,ms)=>{if(ms===380)arm=fn;return 101};
+    overlay.releasePointerCapture=()=>pointer(w,overlay,'lostpointercapture',260);
+    input.addEventListener('input',()=>events++);
+    const start=Number(input.value||1);
+    for(let i=0;i<2;i++){
+      pointer(w,overlay,'pointerdown',300);arm();pointer(w,overlay,'pointermove',260);
+      pointer(w,overlay,'pointerup',260);
+      assert.equal(d.querySelector('.awc-scrub-value'),null);
+    }
+    assert.equal(Number(input.value),start+4);
+    assert.equal(events,2);
+    assert.deepEqual(a.errors,[]);
+  }finally{a.close()}
+});
+
 test('scrub helper applies natural increments and clamps safe ranges',()=>{
   const a=app();
   try{

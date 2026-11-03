@@ -19,7 +19,7 @@
     return BODYWEIGHT_NAME.test(name) || (typeof exerciseLoadEquipment === 'function' && exerciseLoadEquipment(exercise) === 'bodyweight');
   }
 
-  function bodyweightRecommendation(exercise, completedSet = null) {
+  function bodyweightRecommendation(exercise, completedSet = null, user = null) {
     const timed = /\b(?:sec(?:onds?)?|s)\b/i.test(String(exercise?.prescription || ''));
     const unit = timed ? 'sec' : 'reps';
     const range = typeof repRange === 'function' ? repRange(exercise) : [8, 12];
@@ -39,24 +39,28 @@
     const rirText = String(completedSet.rir ?? '').trim();
     const rir = rirText === '' ? null : Number(rirText);
     let target = Math.max(lo, Math.min(hi, reps || midpoint));
+    const feedback = String(completedSet.feedback || '').toLowerCase();
+    const level = exercise?._difficulty || window.IronSixDifficulty?.effectiveFor?.(user) || user?.workoutDifficulty;
+    const reserve = level === 'light' ? 4 : typeof goalTargetRir === 'function' ? goalTargetRir(user) : 2;
+    if (feedback === 'pain') return {load:null,reps:Math.min(reps||target,target),target:Math.min(reps||target,target),unit,
+      label:'Pain/discomfort noted — stop and reassess this movement',
+      text:'Pain/discomfort noted — stop and reassess this movement before another set.',confidence:'Bodyweight progression',
+      detail:'Do not progress through pain. Choose a pain-free substitute when appropriate.'};
     if (timed) {
       return {load:null,reps:target,target,unit,label:'Repeat a controlled hold',
         text:`Repeat a controlled hold: aim for about ${target} sec.`,confidence:'Timed bodyweight hold',
         detail:'Keep a steady position and stop if your form breaks down. Duration is recorded in seconds.'};
     }
     let label = 'Repeat clean bodyweight reps';
-    if (reps < lo || rir === 0) {
-      target = lo;
-      label = 'Keep it bodyweight and reduce reps until form is solid';
-    } else if (reps >= hi && rir !== null && rir >= 2) {
+    if (reps < lo || feedback === 'hard' || (rir !== null && rir < reserve)) {
+      target = Math.max(1, reps - Math.max(1, Math.ceil(reserve - (rir ?? reserve))));
+      label = target < lo ? 'Use an easier variation or rest longer; keep the next set comfortable' : 'Reduce reps to leave more in reserve';
+    } else if (reps >= hi && rir !== null && rir >= reserve) {
       target = hi;
       label = 'You own this rep range — use a harder variation next time';
-    } else if (rir !== null && rir >= 3 && reps < hi) {
-      target = Math.min(hi, reps + Math.max(1, Math.round((rir - 1) / 2)));
+    } else if (rir !== null && rir - reserve >= 1.5 && reps < hi) {
+      target = Math.min(hi, reps + Math.max(1, Math.round(rir - reserve)));
       label = 'Add reps before making the variation harder';
-    } else if (reps >= lo && reps < hi) {
-      target = Math.min(hi, reps + 1);
-      label = 'Add a rep if form stays clean';
     }
     return {
       load: null,
@@ -72,7 +76,7 @@
 
   if (originalBaseline) {
     baselineLoadObject = function (user, exercise) {
-      if (isBodyweightExercise(exercise)) return bodyweightRecommendation(exercise);
+      if (isBodyweightExercise(exercise)) return bodyweightRecommendation(exercise, null, user);
       return originalBaseline(user, exercise);
     };
   }
@@ -81,7 +85,7 @@
     suggestedLoadObject = function (user, exercise, exerciseIndex) {
       if (isBodyweightExercise(exercise)) {
         const completed = typeof currentSessionCompleted === 'function' ? currentSessionCompleted(user, exerciseIndex) : [];
-        return bodyweightRecommendation(exercise, completed[completed.length - 1] || null);
+        return bodyweightRecommendation(exercise, completed[completed.length - 1] || null, user);
       }
       return originalSuggested(user, exercise, exerciseIndex);
     };
@@ -92,7 +96,7 @@
       if (isBodyweightExercise(exercise)) {
         const completed = typeof currentSessionCompleted === 'function' ? currentSessionCompleted(user, exerciseIndex) : [];
         if (!completed.length) return null;
-        return bodyweightRecommendation(exercise, completed[completed.length - 1]);
+        return bodyweightRecommendation(exercise, completed[completed.length - 1], user);
       }
       return originalNextSet(user, exercise, exerciseIndex);
     };
