@@ -59,12 +59,12 @@ async function screenshot(page,name,log=false){
         assert(await page.locator('#todayDifficulty').isVisible(),'Difficulty must remain available in setup');
         await page.locator('#sessionSetup .shell-toggle').click();
         await page.locator('#sessionBeginBtn').click();
-        assert(await page.locator('.sc-set-focus .db-weight-shortcut').isVisible(),'Missing-weight shortcut must remain reachable');
       }
       await page.waitForTimeout(120);
       await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
       const m=await metrics(page,view,selector);console.log('IRON_SIX_QA_LAYOUT '+JSON.stringify(m));
       await screenshot(page,view+'-'+width,width===390);
+      if(view==='today')await page.locator('.sc-set-focus .db-weight-shortcut').waitFor({state:'visible',timeout:5000});
       if(m.primary?.bottom>m.navTop-4)console.log('IRON_SIX_QA_PARTS '+JSON.stringify(await page.evaluate(()=>[...document.querySelectorAll('#today #sessionStart,#today #sessionSetup,#today .workout-switch-row,#today #workoutSaveStatus,#today #sessionCardNav,#today .sc-set-focus,#today .sc-set-focus .exercise-head,#today .sc-set-focus .sets,#today .sc-set-focus .set-row,#today .sc-set-focus .suggestion,#today .sc-set-focus .sc-set-picker,#today .sc-set-focus .awc-form-guide')].map(n=>({name:n.id||n.className,height:Math.round(n.getBoundingClientRect().height),top:Math.round(n.getBoundingClientRect().top)})))));
       assert(!m.overflow,'Horizontal overflow: '+JSON.stringify(m));
       assert(m.primary&&m.primary.top>=0&&m.primary.bottom<=m.navTop-4,'Primary content requires scrolling or overlaps navigation: '+JSON.stringify(m));
