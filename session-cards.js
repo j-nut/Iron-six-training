@@ -11,8 +11,9 @@
   function syncSession(user) {
     const next = { userId: user.id, scope: window.ironSixAccountScope, today: user.today,
       key: user.program?.currentWorkoutKey, draftId: user.workoutDraft?.id };
+    const sameDraft = next.draftId && sessionContext?.draftId === next.draftId;
     if (sessionContext && (sessionContext.userId !== next.userId || sessionContext.scope !== next.scope ||
-        sessionContext.today !== next.today || sessionContext.key !== next.key ||
+        (!sameDraft && sessionContext.today !== next.today) || sessionContext.key !== next.key ||
         (sessionContext.draftId && sessionContext.draftId !== next.draftId))) {
       began = false; focusName = null; showAll = false;
       selectedSets.clear();
@@ -230,7 +231,8 @@
     const user = activeUser(), workout = finalWorkout(user), all = cards();
     syncSession(user);
     const cta = $('finishBtn')?.closest('.cta') || null;
-    const started = began || anyLogged(user);
+    began ||= anyLogged(user);
+    const started = began;
     const today = $('today');
     today?.classList.toggle('session-prestart', !started && !isCircuit(user));
     // Circuit mode keeps its full header; its timer panel is the guide there.
@@ -318,6 +320,11 @@
 
   window.IronSixSessionCards = {
     apply, goTo, activeIndex, firstIncomplete, progress,
+    exerciseSwapped(user, index, previousName, replacementName) {
+      syncSession(user);
+      if (focusName === previousName) focusName = replacementName;
+      selectedSets.delete(index);
+    },
     state: () => ({ began, focusName, showAll }),
     reset: () => { began = false; focusName = null; showAll = false; selectedSets.clear(); apply(); }
   };

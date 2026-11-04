@@ -378,6 +378,7 @@ Anything else you want to know about ${guide.name}? Ask about load, warm-up sets
     u.coachOverrides.byIndex[index]={...replacement,_targetName:target.name};
     window.IronSixCircuit?.pause('Exercise swapped');calibrationRequest++;
     window.IronSixJournal?.changePlan(u,index,{...replacement,sets:target.sets,_alternatives:[target,...swapOptionsForExercise(u,target)].filter(x=>x.name!==replacement.name)});
+    window.IronSixSessionCards?.exerciseSwapped(u,index,target.name,replacement.name);
     u.sessionCalibration=null;
     saveData();renderExercises();renderTodayHeader();window.IronSixCircuit?.rebuild();toast(`${target.name} → ${option.name}`);return true;
   };

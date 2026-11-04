@@ -238,3 +238,23 @@ test('duration rebuild clears review while cancelling a rebuild preserves the ac
 test('switching to circuit and back resets the traditional guide after preserving logged work',()=>{
  const a=app();try{a.begin();a.w.document.querySelector('.done').click();a.w.document.querySelector('[data-training-mode="circuit"]').click();assert.equal(a.hidden('sessionCardNav'),true);a.w.document.querySelector('[data-training-mode="traditional"]').click();assert.equal(a.hidden('sessionStart'),false);assert.deepEqual(a.visible(),[]);assert(a.json("IronSixJournal.replay(activeUser().id).some(s=>s.status==='archived'&&s.today['0-0']?.done)"));}finally{a.close()}
 });
+
+test('swapping a focused exercise keeps the workout open through journal recovery',()=>{
+  const a=app();
+  try{
+    a.begin();
+    const index=a.run('finalWorkout(activeUser()).findIndex((ex,i)=>i>0&&swapOptionsForExercise(activeUser(),ex).length)');
+    assert(index>0,'fixture needs a swappable exercise after the first');
+    a.run(`IronSixSessionCards.goTo(${index},finalWorkout(activeUser()))`);
+    a.run(`openExerciseSwap(${index})`);
+    const option=a.w.document.querySelector('[data-swap-option]');
+    assert(option);
+    const original=a.run(`finalWorkout(activeUser())[${index}].name`);
+    option.click();
+    assert.notEqual(a.run(`finalWorkout(activeUser())[${index}].name`),original);
+    a.run('IronSixJournal.restore(activeUser());renderAll()');
+    assert.equal(a.hidden('sessionStart'),true);
+    assert.deepEqual(a.visible(),[index]);
+    assert.deepEqual(a.errors,[]);
+  }finally{a.close()}
+});
